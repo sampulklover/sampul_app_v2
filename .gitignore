@@ -1,3 +1,74 @@
+# Flutter / Dart / Pub
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+.metadata
+build/
+
+# Generated registrants (web)
+lib/generated_plugin_registrant.dart
+
+# Coverage reports
+coverage/
+
+# Android
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/**/gradle-wrapper.jar
+android/**/GeneratedPluginRegistrant.java
+
+# iOS / Xcode
+ios/Flutter/.last_build_id
+ios/Flutter/ephemeral/
+ios/.generated/
+ios/Pods/
+ios/Runner.xcworkspace/
+**/*.mode1v3
+**/*.mode2v3
+**/*.perspectivev3
+**/*.xcuserstate
+**/xcuserdata/
+**/*.moved-aside
+**/*.pbxuser
+
+# macOS / Xcode
+macos/Flutter/ephemeral/
+macos/Pods/
+**/*.xcworkspace/xcuserdata/
+
+# Linux
+# (no standard generated files to ignore beyond build/)
+
+# Windows
+# (no standard generated files to ignore beyond build/)
+
+# Web
+# (generated at build time)
+web/.dart_tool/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS / Misc
+.DS_Store
+*.log
+*.lock
+*.tmp
+*.swp
+*.orig
+
+# Flutter Version Manager (optional)
+.fvm/
+.flutter-plugins
+.flutter-plugins-dependencies
 # Miscellaneous
 *.class
 *.log
