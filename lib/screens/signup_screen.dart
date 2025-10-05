@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../controllers/auth_controller.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -36,18 +38,53 @@ class _SignupScreenState extends State<SignupScreen> {
       _isSubmitting = true;
     });
 
-    // Simulate a signup call
-    await Future<void>.delayed(const Duration(seconds: 1));
+    try {
+      final AuthResponse response = await AuthController.instance.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (!mounted) return;
-    setState(() {
-      _isSubmitting = false;
-    });
+      // Print response.user to console for debugging
+      print('Signup response.user: ${response.user}');
+      print('Signup response.user.id: ${response.user?.id}');
+      print('Signup response.user.email: ${response.user?.email}');
+      print('Signup response.user.emailConfirmedAt: ${response.user?.emailConfirmedAt}');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Account created (demo)')),
-    );
-    Navigator.of(context).pop();
+      if (!mounted) return;
+
+      if (response.user != null) {
+        // Successfully signed up
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully! Please check your email to verify your account.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate back to login screen
+        Navigator.of(context).pop();
+      } else {
+        // Handle case where user is null
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign up failed. Please try again.')),
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign up failed: ${error.message}')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $error')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
   }
 
   @override

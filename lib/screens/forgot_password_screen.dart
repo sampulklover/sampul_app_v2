@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../controllers/auth_controller.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -27,18 +28,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isSubmitting = true;
     });
 
-    // Simulate sending reset email
-    await Future<void>.delayed(const Duration(seconds: 1));
+    try {
+      await AuthController.instance.resetPassword(_emailController.text.trim());
 
-    if (!mounted) return;
-    setState(() {
-      _isSubmitting = false;
-    });
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Password reset email sent (demo)')),
-    );
-    Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password reset email sent! Please check your email.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send reset email: $error')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
   }
 
   @override

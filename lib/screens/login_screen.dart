@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../controllers/auth_controller.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'main_shell.dart';
@@ -36,17 +37,41 @@ class _LoginScreenState extends State<LoginScreen> {
       _isSubmitting = true;
     });
 
-    // Simulate a login call
-    await Future<void>.delayed(const Duration(seconds: 1));
+    try {
+      final AuthResponse response = await AuthController.instance.signInWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (!mounted) return;
-    setState(() {
-      _isSubmitting = false;
-    });
+      if (!mounted) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const MainShell()),
-    );
+      if (response.user != null) {
+        // Successfully signed in
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const MainShell()),
+        );
+      } else {
+        // Handle case where user is null
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in failed. Please try again.')),
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign in failed: ${error.message}')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $error')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
   }
 
   Future<void> _signInWithGoogle() async {
@@ -56,18 +81,25 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: <String>['email']);
-      final GoogleSignInAccount? account = await googleSignIn.signIn();
-      if (account == null) {
-        // User cancelled the sign-in flow
-        return;
-      }
-      // In a real app, exchange GoogleSignInAuthentication for backend auth
-      // final GoogleSignInAuthentication auth = await account.authentication;
-
+      final AuthResponse? response = await AuthController.instance.signInWithGoogle();
+      
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      
+      if (response?.user != null) {
+        // Successfully signed in with Google
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const MainShell()),
+        );
+      } else {
+        // User cancelled the sign-in flow or it failed
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google sign-in was cancelled or failed')),
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: ${error.message}')),
       );
     } catch (e) {
       if (!mounted) return;
