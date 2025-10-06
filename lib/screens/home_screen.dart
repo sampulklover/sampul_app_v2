@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'add_asset_screen.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
+import '../services/supabase_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'assets_list_screen.dart';
+import 'edit_asset_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -111,10 +116,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _SectionHeader(title: 'My Assets', actionText: 'See All →', onAction: null),
+                  child: _SectionHeader(
+                    title: 'My Assets',
+                    actionText: 'See All →',
+                    onAction: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
-                _AssetsList(),
+                const _AssetsList(),
                 const SizedBox(height: 16),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
@@ -248,39 +261,189 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _AssetsList extends StatelessWidget {
+class _AssetsList extends StatefulWidget {
+  const _AssetsList();
+
+  @override
+  State<_AssetsList> createState() => _AssetsListState();
+}
+
+class _AssetsListState extends State<_AssetsList> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _assets = <Map<String, dynamic>>[];
+
+  String _prettyInstruction(String? key) {
+    switch ((key ?? '').toLowerCase()) {
+      case 'faraid':
+        return 'Faraid';
+      case 'terminate':
+        return 'Terminate Subscriptions';
+      case 'transfer_as_gift':
+        return 'Transfer as Gift';
+      case 'settle':
+        return 'Settle Debts';
+      default:
+        return '';
+    }
+  }
+
+  Color _badgeBg(String? key, BuildContext context) {
+    final String k = (key ?? '').toLowerCase();
+    switch (k) {
+      case 'faraid':
+        return Colors.indigo.shade50;
+      case 'terminate':
+        return Colors.red.shade50;
+      case 'transfer_as_gift':
+        return Colors.teal.shade50;
+      case 'settle':
+        return Colors.orange.shade50;
+      default:
+        return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    }
+  }
+
+  Color _badgeFg(String? key, BuildContext context) {
+    final String k = (key ?? '').toLowerCase();
+    switch (k) {
+      case 'faraid':
+        return Colors.indigo.shade700;
+      case 'terminate':
+        return Colors.red.shade700;
+      case 'transfer_as_gift':
+        return Colors.teal.shade800;
+      case 'settle':
+        return Colors.orange.shade800;
+      default:
+        return Theme.of(context).colorScheme.onSurfaceVariant;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAssets();
+  }
+
+  Future<void> _loadAssets() async {
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      final List<dynamic> rows = await SupabaseService.instance.client
+          .from('digital_assets')
+          .select('id,new_service_platform_name,new_service_platform_logo_url,instructions_after_death')
+          .eq('uuid', user.id)
+          .order('created_at', ascending: false)
+          .limit(20);
+      if (!mounted) return;
+      setState(() {
+        _assets = rows.cast<Map<String, dynamic>>();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      height: 112,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: 8,
+        itemCount: 1 + (_assets.length),
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) {
-            return _AddCircle(label: 'Add');
+            return GestureDetector(
+              onTap: () async {
+                final bool? result = await Navigator.of(context).push(
+                  MaterialPageRoute<bool>(
+                    builder: (_) => const AddAssetScreen(),
+                  ),
+                );
+                if (result == true) {
+                  await _loadAssets();
+                }
+              },
+              child: const _AddCircle(label: 'Add'),
+            );
           }
-          final List<String> names = <String>['Amazon', 'Grammarly', 'Getty Images', 'Daily Mail'];
-          final String name = names[(index - 1) % names.length];
-          return Column(
-            children: <Widget>[
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  shape: BoxShape.circle,
+
+          if (_isLoading) {
+            return Column(
+              children: const <Widget>[
+                SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(height: 6),
+                SizedBox(width: 76, child: Text('Loading...', textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+              ],
+            );
+          }
+
+          final Map<String, dynamic> asset = _assets[index - 1];
+          final int id = (asset['id'] as num).toInt();
+          final String name = (asset['new_service_platform_name'] as String?) ?? 'Unknown';
+          final String? logoUrl = asset['new_service_platform_logo_url'] as String?;
+          final String? category = asset['instructions_after_death'] as String?;
+          final String categoryText = _prettyInstruction(category);
+          return GestureDetector(
+            onTap: () async {
+              final bool? updated = await Navigator.of(context).push(
+                MaterialPageRoute<bool>(builder: (_) => EditAssetScreen(assetId: id)),
+              );
+              if (updated == true) {
+                await _loadAssets();
+              }
+            },
+            child: Column(
+              children: <Widget>[
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: (logoUrl != null && logoUrl.isNotEmpty)
+                      ? ClipOval(child: _Logo(url: logoUrl, size: 56, fit: BoxFit.cover))
+                      : const Icon(Icons.apps),
                 ),
-                child: const Icon(Icons.apps),
-              ),
-              const SizedBox(height: 6),
-              SizedBox(
-                width: 76,
-                child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
-              ),
-            ],
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: 76,
+                  child: Column(
+                    children: <Widget>[
+                      Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+                      if (categoryText.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: _badgeBg(category, context),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            categoryText,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 9.5, color: _badgeFg(category, context), fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -351,6 +514,36 @@ class _AddCircle extends StatelessWidget {
           child: Text(label, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
         ),
       ],
+    );
+  }
+}
+
+class _Logo extends StatelessWidget {
+  final String url;
+  final double size;
+  final BoxFit fit;
+  const _Logo({required this.url, required this.size, this.fit = BoxFit.contain});
+
+  bool get _isSvg => url.toLowerCase().endsWith('.svg');
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget fallback = Icon(Icons.image_outlined, size: size);
+    if (_isSvg) {
+      return SvgPicture.network(
+        url,
+        width: size,
+        height: size,
+        fit: fit,
+        placeholderBuilder: (_) => SizedBox(width: size, height: size, child: const CircularProgressIndicator(strokeWidth: 1.5)),
+      );
+    }
+    return Image.network(
+      url,
+      width: size,
+      height: size,
+      fit: fit,
+      errorBuilder: (_, __, ___) => fallback,
     );
   }
 }
