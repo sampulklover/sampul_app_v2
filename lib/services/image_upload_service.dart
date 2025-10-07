@@ -74,6 +74,54 @@ class ImageUploadService {
     }
   }
 
+  /// Upload beloved/family member image to Supabase storage
+  Future<String> uploadBelovedImage({
+    required File imageFile,
+    required String userId,
+    required int belovedId,
+    String? existingPath,
+    Function(double)? onProgress,
+  }) async {
+    try {
+      // Always generate a new filename to avoid CDN/browser caching issues
+      // If existingPath provided, keep the same directory and change only the filename
+      final int timestamp = DateTime.now().millisecondsSinceEpoch;
+      final String extension = imageFile.path.split('.').last;
+      final String fileName = '${timestamp}-${userId.hashCode}.$extension';
+      final String baseDir = (existingPath != null && existingPath.isNotEmpty)
+          ? existingPath.substring(0, existingPath.lastIndexOf('/'))
+          : '$userId/beloved/$belovedId/avatar';
+      final String storagePath = '$baseDir/$fileName';
+
+      final response = await _client.storage
+          .from('images')
+          .uploadBinary(
+            storagePath,
+            await imageFile.readAsBytes(),
+            fileOptions: const FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+            ),
+          );
+
+      if (response.isNotEmpty) {
+        // Delete old file if we replaced an existing one (best-effort)
+        if (existingPath != null && existingPath.isNotEmpty && existingPath != storagePath) {
+          try {
+            await _client.storage.from('images').remove([existingPath]);
+          } catch (_) {
+            // ignore cleanup failures
+          }
+        }
+        return storagePath;
+      } else {
+        throw Exception('Upload failed: Empty response');
+      }
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
   /// Delete image from Supabase storage
   Future<void> deleteImage(String imagePath) async {
     try {
