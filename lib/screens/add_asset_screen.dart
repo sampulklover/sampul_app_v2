@@ -14,7 +14,7 @@ class AddAssetScreen extends StatefulWidget {
 }
 
 class _AddAssetScreenState extends State<AddAssetScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _detailsFormKey = GlobalKey<FormState>();
   final TextEditingController _assetNameController = TextEditingController();
   final TextEditingController _declaredValueController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
@@ -32,6 +32,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   bool _isLoadingBeloved = false;
   bool _isSubmitting = false;
   String? _selectedInstructionId;
+  int _currentStep = 0;
 
   static const List<Map<String, String>> _instructions = <Map<String, String>>[
     {'id': 'faraid', 'name': 'Faraid'},
@@ -136,16 +137,25 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedInstructionId == null) {
+    // Validate step 0 selection
+    if (_brandInfo == null) {
+      setState(() => _currentStep = 0);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an instruction')),
+        const SnackBar(content: Text('Please select a platform/service')),
       );
       return;
     }
-    if (_brandInfo == null) {
+
+    // Validate step 1 form
+    if (!(_detailsFormKey.currentState?.validate() ?? false)) {
+      setState(() => _currentStep = 1);
+      return;
+    }
+
+    if (_selectedInstructionId == null) {
+      setState(() => _currentStep = 1);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a platform/service')),
+        const SnackBar(content: Text('Please select an instruction')),
       );
       return;
     }
@@ -222,246 +232,301 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Asset'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: _isSubmitting ? null : _submit,
-            child: _isSubmitting
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save'),
-          ),
-        ],
       ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: <Widget>[
-              // Platform / Service search
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Platform / Service',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _brandSearchController,
-                        decoration: const InputDecoration(
-                          labelText: 'Search for a platform or service',
-                          hintText: 'e.g., Facebook, Google Drive, Maybank',
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
-                        ),
-                        onChanged: _onSearchChanged,
-                      ),
-                      const SizedBox(height: 12),
-                      if (_isSearching) const LinearProgressIndicator(minHeight: 2),
-                      if (_searchResults.isNotEmpty)
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _searchResults.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (BuildContext context, int index) {
-                            final BrandInfo item = _searchResults[index];
-                            final bool selected = _brandInfo?.websiteUrl == item.websiteUrl && _brandInfo?.name == item.name;
-                            return ListTile(
-                              leading: (item.logoUrl ?? '').isNotEmpty
-                                  ? _Logo(url: item.logoUrl!, size: 28)
-                                  : const Icon(Icons.apps_outlined),
-                              title: Text(item.name),
-                              subtitle: item.websiteUrl.isNotEmpty ? Text(item.websiteUrl) : null,
-                              trailing: selected ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                              onTap: () async {
-                                setState(() {
-                                  _brandInfo = item;
-                                  _assetNameController.text = item.name;
-                                  _searchResults = <BrandInfo>[];
-                                });
-                                // Try to enrich with full brand info (for better logo), but preserve current logo if missing
-                                try {
-                                  final String domainOrName = item.websiteUrl.isNotEmpty ? item.websiteUrl : item.name;
-                                  final BrandInfo? detailed = await BrandfetchService.instance.fetchByDomain(domainOrName);
-                                  if (!mounted) return;
-                                  if (detailed != null) {
-                                    final String mergedName = detailed.name.isNotEmpty ? detailed.name : item.name;
-                                    final String mergedWebsite = detailed.websiteUrl.isNotEmpty ? detailed.websiteUrl : item.websiteUrl;
-                                    final String? mergedLogo = (detailed.logoUrl ?? item.logoUrl);
-                                    setState(() {
-                                      _brandInfo = BrandInfo(name: mergedName, websiteUrl: mergedWebsite, logoUrl: mergedLogo);
-                                    });
-                                  }
-                                } catch (_) {
-                                  // ignore enrichment errors; keep basic selection
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      if (_brandInfo != null && _searchResults.isEmpty) ...<Widget>[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: <Widget>[
-                            if ((_brandInfo!.logoUrl ?? '').isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: _Logo(url: _brandInfo!.logoUrl!, size: 56),
-                              ),
-                            Expanded(child: Text(_brandInfo!.name)),
-                            const Icon(Icons.check_circle, color: Colors.green),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Declared value
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Value',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _declaredValueController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: <TextInputFormatter>[
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Declared Value (MYR)',
-                          helperText: 'Estimated current value of this asset',
-                          prefixIcon: Icon(Icons.payments_outlined),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (String? v) {
-                          final String value = (v ?? '').trim();
-                          if (value.isEmpty) return 'Required';
-                          final RegExp re = RegExp(r'^\d+(\.\d{1,2})?$');
-                          if (!re.hasMatch(value)) return 'Enter a valid amount (max 2 decimals)';
-                          final double? val = double.tryParse(value);
-                          if (val == null || val < 0) return 'Enter a valid amount';
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Instructions Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Instructions',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedInstructionId,
-                        items: _instructions
-                            .map((Map<String, String> c) => DropdownMenuItem<String>(
-                                  value: c['id'],
-                                  child: Text(c['name'] ?? ''),
-                                ))
-                            .toList(),
-                        onChanged: (String? v) async {
-                          setState(() {
-                            _selectedInstructionId = v;
-                            _selectedBelovedId = null;
-                          });
-                          if (v == 'transfer_as_gift' && _belovedOptions.isEmpty) {
-                            await _loadBelovedOptions();
+        child: Stepper(
+          currentStep: _currentStep,
+          onStepTapped: (int i) => setState(() => _currentStep = i),
+          controlsBuilder: (BuildContext context, ControlsDetails details) {
+            final bool isLast = _currentStep == 2;
+            return Row(
+              children: <Widget>[
+                ElevatedButton(
+                  onPressed: _isSubmitting
+                      ? null
+                      : () async {
+                          if (_currentStep == 0) {
+                            if (_brandInfo == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please select a platform/service')),
+                              );
+                              return;
+                            }
+                            setState(() => _currentStep = 1);
+                          } else if (_currentStep == 1) {
+                            if (!(_detailsFormKey.currentState?.validate() ?? false)) return;
+                            if (_selectedInstructionId == 'transfer_as_gift' && _selectedBelovedId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Gift Recipient is required')),
+                              );
+                              return;
+                            }
+                            setState(() => _currentStep = 2);
+                          } else {
+                            await _submit();
                           }
                         },
-                        decoration: const InputDecoration(
-                          labelText: 'Instructions After Death',
-                          prefixIcon: Icon(Icons.list_alt_outlined),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      if (_selectedInstructionId == 'transfer_as_gift')
-                        DropdownButtonFormField<int>(
-                          value: _selectedBelovedId,
-                          items: _belovedOptions
-                              .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
-                                    value: (b['id'] as num).toInt(),
-                                    child: Text((b['name'] as String?) ?? 'Unnamed'),
-                                  ))
-                              .toList(),
-                          onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
-                          decoration: InputDecoration(
-                            labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
-                            prefixIcon: const Icon(Icons.card_giftcard_outlined),
-                            border: const OutlineInputBorder(),
-                          ),
-                          validator: (int? v) {
-                            if (_selectedInstructionId == 'transfer_as_gift') {
-                              if (v == null) return 'Gift Recipient is required';
-                            }
-                            return null;
-                          },
-                        ),
-                    ],
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                      : Text(isLast ? 'Save' : 'Next'),
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Additional Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Additional',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _remarksController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Remarks (optional)',
-                          hintText: 'Any additional instructions or notes',
-                          prefixIcon: Icon(Icons.notes_outlined),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 12),
+                if (_currentStep > 0)
+                  TextButton(
+                    onPressed: _isSubmitting ? null : () => setState(() => _currentStep = _currentStep - 1),
+                    child: const Text('Back'),
                   ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
+          steps: <Step>[
+            Step(
+              title: const Text('Platform / Service'),
+              state: StepState.indexed,
+              isActive: _currentStep >= 0,
+              content: _buildPlatformSelector(),
+            ),
+            Step(
+              title: const Text('Details'),
+              state: StepState.indexed,
+              isActive: _currentStep >= 1,
+              content: Form(key: _detailsFormKey, child: _buildDetailsForm()),
+            ),
+            Step(
+              title: const Text('Review'),
+              state: StepState.indexed,
+              isActive: _currentStep >= 2,
+              content: _buildReview(),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildPlatformSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        TextField(
+          controller: _brandSearchController,
+          decoration: const InputDecoration(
+            labelText: 'Search for a platform or service',
+            hintText: 'e.g., Facebook, Google Drive, Maybank',
+            prefixIcon: Icon(Icons.search),
+            border: OutlineInputBorder(),
+          ),
+          onChanged: _onSearchChanged,
+        ),
+        const SizedBox(height: 12),
+        if (_isSearching) const LinearProgressIndicator(minHeight: 2),
+        if (_searchResults.isNotEmpty)
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _searchResults.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (BuildContext context, int index) {
+              final BrandInfo item = _searchResults[index];
+              final bool selected = _brandInfo?.websiteUrl == item.websiteUrl && _brandInfo?.name == item.name;
+              return ListTile(
+                leading: (item.logoUrl ?? '').isNotEmpty
+                    ? _Logo(url: item.logoUrl!, size: 28)
+                    : const Icon(Icons.apps_outlined),
+                title: Text(item.name),
+                subtitle: item.websiteUrl.isNotEmpty ? Text(item.websiteUrl) : null,
+                trailing: selected ? const Icon(Icons.check_circle, color: Colors.green) : null,
+                onTap: () async {
+                  setState(() {
+                    _brandInfo = item;
+                    _assetNameController.text = item.name;
+                    _searchResults = <BrandInfo>[];
+                  });
+                  try {
+                    final String domainOrName = item.websiteUrl.isNotEmpty ? item.websiteUrl : item.name;
+                    final BrandInfo? detailed = await BrandfetchService.instance.fetchByDomain(domainOrName);
+                    if (!mounted) return;
+                    if (detailed != null) {
+                      final String mergedName = detailed.name.isNotEmpty ? detailed.name : item.name;
+                      final String mergedWebsite = detailed.websiteUrl.isNotEmpty ? detailed.websiteUrl : item.websiteUrl;
+                      final String? mergedLogo = (detailed.logoUrl ?? item.logoUrl);
+                      setState(() {
+                        _brandInfo = BrandInfo(name: mergedName, websiteUrl: mergedWebsite, logoUrl: mergedLogo);
+                      });
+                    }
+                  } catch (_) {
+                    // ignore enrichment errors; keep basic selection
+                  }
+                },
+              );
+            },
+          ),
+        if (_brandInfo != null && _searchResults.isEmpty) ...<Widget>[
+          const SizedBox(height: 8),
+          Row(
+            children: <Widget>[
+              if ((_brandInfo!.logoUrl ?? '').isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: _Logo(url: _brandInfo!.logoUrl!, size: 56),
+                ),
+              Expanded(child: Text(_brandInfo!.name)),
+              const Icon(Icons.check_circle, color: Colors.green),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDetailsForm() {
+    return Column(
+      children: <Widget>[
+        TextFormField(
+          controller: _declaredValueController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
+          ],
+          decoration: const InputDecoration(
+            labelText: 'Declared Value (MYR)',
+            helperText: 'Estimated current value of this asset',
+            prefixIcon: Icon(Icons.payments_outlined),
+            border: OutlineInputBorder(),
+          ),
+          validator: (String? v) {
+            final String value = (v ?? '').trim();
+            if (value.isEmpty) return 'Required';
+            final RegExp re = RegExp(r'^\d+(\.\d{1,2})?$');
+            if (!re.hasMatch(value)) return 'Enter a valid amount (max 2 decimals)';
+            final double? val = double.tryParse(value);
+            if (val == null || val < 0) return 'Enter a valid amount';
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: _selectedInstructionId,
+          items: _instructions
+              .map((Map<String, String> c) => DropdownMenuItem<String>(
+                    value: c['id'],
+                    child: Text(c['name'] ?? ''),
+                  ))
+              .toList(),
+          onChanged: (String? v) async {
+            setState(() {
+              _selectedInstructionId = v;
+              _selectedBelovedId = null;
+            });
+            if (v == 'transfer_as_gift' && _belovedOptions.isEmpty) {
+              await _loadBelovedOptions();
+            }
+          },
+          decoration: const InputDecoration(
+            labelText: 'Instructions After Death',
+            prefixIcon: Icon(Icons.list_alt_outlined),
+            border: OutlineInputBorder(),
+          ),
+          validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
+        ),
+        const SizedBox(height: 16),
+        if (_selectedInstructionId == 'transfer_as_gift')
+          DropdownButtonFormField<int>(
+            value: _selectedBelovedId,
+            items: _belovedOptions
+                .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
+                      value: (b['id'] as num).toInt(),
+                      child: Text((b['name'] as String?) ?? 'Unnamed'),
+                    ))
+                .toList(),
+            onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
+            decoration: InputDecoration(
+              labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
+              prefixIcon: const Icon(Icons.card_giftcard_outlined),
+              border: const OutlineInputBorder(),
+            ),
+            validator: (int? v) {
+              if (_selectedInstructionId == 'transfer_as_gift') {
+                if (v == null) return 'Gift Recipient is required';
+              }
+              return null;
+            },
+          ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _remarksController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: 'Remarks (optional)',
+            hintText: 'Any additional instructions or notes',
+            prefixIcon: Icon(Icons.notes_outlined),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReview() {
+    final TextStyle? label = Theme.of(context).textTheme.bodySmall;
+    final TextStyle? value = Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600);
+    String? recipientName() {
+      if (_selectedBelovedId == null) return null;
+      for (final Map<String, dynamic> b in _belovedOptions) {
+        if ((b['id'] as num).toInt() == _selectedBelovedId) return (b['name'] as String?) ?? 'Unnamed';
+      }
+      return null;
+    }
+    Widget row(String k, String? v) {
+      if (v == null || v.trim().isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(width: 150, child: Text(k, style: label)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(v, style: value)),
+          ],
+        ),
+      );
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                if ((_brandInfo?.logoUrl ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: _Logo(url: _brandInfo!.logoUrl!, size: 40),
+                  ),
+                Expanded(child: Text(_brandInfo?.name ?? '-')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            row('Website', (_brandInfo?.websiteUrl ?? '').isEmpty ? null : _brandInfo!.websiteUrl),
+            row('Declared Value (MYR)', _declaredValueController.text),
+            row('Instruction', _selectedInstructionLabel()),
+            if (_selectedInstructionId == 'transfer_as_gift') row('Gift Recipient', recipientName()),
+            row('Remarks', _remarksController.text),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _selectedInstructionLabel() {
+    final String? id = _selectedInstructionId;
+    if (id == null) return '';
+    final Map<String, String> item = _instructions.firstWhere(
+      (Map<String, String> e) => e['id'] == id,
+      orElse: () => <String, String>{},
+    );
+    return item['name'] ?? id;
   }
 }
 

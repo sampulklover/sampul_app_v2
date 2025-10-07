@@ -6,6 +6,9 @@ import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
 import 'edit_asset_screen.dart';
+import 'family_list_screen.dart';
+import 'edit_family_member_screen.dart';
+import 'add_family_member_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,7 +134,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _SectionHeader(title: 'My Family', actionText: 'See All →', onAction: null),
+                  child: _SectionHeader(
+                    title: 'My Family',
+                    actionText: 'See All →',
+                    onAction: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder: (_) => const FamilyListScreen()),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _FamilyList(),
@@ -451,7 +462,90 @@ class _AssetsListState extends State<_AssetsList> {
   }
 }
 
-class _FamilyList extends StatelessWidget {
+class _FamilyList extends StatefulWidget {
+  @override
+  State<_FamilyList> createState() => _FamilyListState();
+}
+
+class _FamilyListState extends State<_FamilyList> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _family = <Map<String, dynamic>>[];
+
+  String _prettyType(String? t) {
+    switch ((t ?? '').toLowerCase()) {
+      case 'co_sampul':
+        return 'Co-sampul';
+      case 'future_owner':
+        return 'Beneficiary';
+      case 'guardian':
+        return 'Guardian';
+      default:
+        return '';
+    }
+  }
+
+  Color _badgeBg(String? key, BuildContext context) {
+    final String k = (key ?? '').toLowerCase();
+    switch (k) {
+      case 'co_sampul':
+        return Colors.indigo.shade50;
+      case 'future_owner':
+        return Colors.teal.shade50;
+      case 'guardian':
+        return Colors.orange.shade50;
+      default:
+        return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+    }
+  }
+
+  Color _badgeFg(String? key, BuildContext context) {
+    final String k = (key ?? '').toLowerCase();
+    switch (k) {
+      case 'co_sampul':
+        return Colors.indigo.shade700;
+      case 'future_owner':
+        return Colors.teal.shade800;
+      case 'guardian':
+        return Colors.orange.shade800;
+      default:
+        return Theme.of(context).colorScheme.onSurfaceVariant;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFamily();
+  }
+
+  Future<void> _loadFamily() async {
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      final List<dynamic> rows = await SupabaseService.instance.client
+          .from('beloved')
+          .select('id,name,image_path,type')
+          .eq('uuid', user.id)
+          .order('created_at', ascending: false)
+          .limit(20);
+      if (!mounted) return;
+      setState(() {
+        _family = rows.cast<Map<String, dynamic>>();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -459,15 +553,46 @@ class _FamilyList extends StatelessWidget {
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: 6,
+        itemCount: 1 + _family.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) {
-            return _AddCircle(label: 'Add');
+            return GestureDetector(
+              onTap: () async {
+                final bool? created = await Navigator.of(context).push(
+                  MaterialPageRoute<bool>(builder: (_) => const AddFamilyMemberScreen()),
+                );
+                if (created == true) {
+                  await _loadFamily();
+                }
+              },
+              child: const _AddCircle(label: 'Add'),
+            );
           }
-          final List<String> names = <String>['Aida', 'Adib', 'Akhlan', 'Kalsom', 'Anas'];
-          final String name = names[(index - 1) % names.length];
-          return Column(
+          if (_isLoading) {
+            return Column(
+              children: const <Widget>[
+                SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(height: 6),
+                SizedBox(width: 72, child: Text('Loading...', textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+              ],
+            );
+          }
+          final Map<String, dynamic> f = _family[index - 1];
+          final String name = (f['name'] as String?) ?? 'Unknown';
+          final String? imagePath = f['image_path'] as String?;
+          final String? type = f['type'] as String?;
+          final String typeText = _prettyType(type);
+          return GestureDetector(
+            onTap: () async {
+              final bool? updated = await Navigator.of(context).push(
+                MaterialPageRoute<bool>(builder: (_) => EditFamilyMemberScreen(belovedId: (f['id'] as num).toInt())),
+              );
+              if (updated == true) {
+                await _loadFamily();
+              }
+            },
+            child: Column(
             children: <Widget>[
               Container(
                 width: 56,
@@ -476,15 +601,44 @@ class _FamilyList extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Color(0xFFEAEAEA),
                 ),
-                child: const Icon(Icons.person),
+                clipBehavior: Clip.antiAlias,
+                alignment: Alignment.center,
+                child: (imagePath != null && imagePath.isNotEmpty)
+                    ? Image.network(
+                        SupabaseService.instance.getFullImageUrl(imagePath) ?? '',
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.person),
+                      )
+                    : const Icon(Icons.person),
               ),
               const SizedBox(height: 6),
               SizedBox(
                 width: 72,
-                child: Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+                child: Column(
+                  children: <Widget>[
+                    Text(name, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+                    if (typeText.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: _badgeBg(type, context),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          typeText,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 9.5, color: _badgeFg(type, context), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
-          );
+          ));
         },
       ),
     );

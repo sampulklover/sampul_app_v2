@@ -168,33 +168,23 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: <Widget>[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: <Widget>[
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEAEAEA)),
-                        clipBehavior: Clip.antiAlias,
-                        child: (_logoUrl != null && _logoUrl!.isNotEmpty)
-                            ? Image.network(_logoUrl!, fit: BoxFit.cover)
-                            : const Icon(Icons.apps),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(_name, style: Theme.of(context).textTheme.titleMedium),
-                            if ((_url ?? '').isNotEmpty)
-                              Text(_url!, style: Theme.of(context).textTheme.bodySmall),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              Center(
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEAEAEA)),
+                      clipBehavior: Clip.antiAlias,
+                      child: (_logoUrl != null && _logoUrl!.isNotEmpty)
+                          ? Image.network(_logoUrl!, fit: BoxFit.cover)
+                          : const Icon(Icons.apps, size: 36),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(_name, style: Theme.of(context).textTheme.titleMedium),
+                    if ((_url ?? '').isNotEmpty)
+                      Text(_url!, style: Theme.of(context).textTheme.bodySmall),
+                  ],
                 ),
               ),
 
@@ -206,7 +196,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('Instructions', style: Theme.of(context).textTheme.titleMedium),
+                      Text('Details', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         value: _instruction,
@@ -255,20 +245,6 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                             return null;
                           },
                         ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text('Value', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _declaredValueController,
@@ -288,20 +264,6 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                           return null;
                         },
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text('Remarks', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _remarksController,
