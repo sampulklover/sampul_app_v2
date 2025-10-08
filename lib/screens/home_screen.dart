@@ -198,13 +198,13 @@ class _SummaryCard extends StatelessWidget {
 
 class _ActionsGrid extends StatelessWidget {
   final List<_ActionItem> items = const <_ActionItem>[
-    _ActionItem(Icons.inventory_2_outlined, 'Wasiat'),
     _ActionItem(Icons.gavel_outlined, 'Trust'),
     _ActionItem(Icons.task_alt_outlined, 'Execution'),
     _ActionItem(Icons.group_outlined, 'Hibah'),
     _ActionItem(Icons.favorite_border, 'Khairat'),
     _ActionItem(Icons.health_and_safety_outlined, 'Health'),
     _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
+    _ActionItem(Icons.family_restroom, 'Family'),
     _ActionItem(Icons.more_horiz, 'Others'),
   ];
 
@@ -225,21 +225,33 @@ class _ActionsGrid extends StatelessWidget {
       ),
       itemBuilder: (BuildContext context, int index) {
         final _ActionItem item = items[index];
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
+        return GestureDetector(
+          onTap: () {
+            if (item.label == 'Family') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const FamilyListScreen(),
+                ),
+              );
+            }
+            // Add other action handlers here as needed
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(item.icon, color: theme.colorScheme.onPrimaryContainer),
               ),
-              child: Icon(item.icon, color: theme.colorScheme.onPrimaryContainer),
-            ),
-            const SizedBox(height: 8),
-            Text(item.label, style: const TextStyle(fontSize: 12)),
-          ],
+              const SizedBox(height: 8),
+              Text(item.label, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
         );
       },
     );

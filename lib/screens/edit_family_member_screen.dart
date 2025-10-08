@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
 import '../services/image_upload_service.dart';
+import '../services/will_service.dart';
 import 'dart:io';
 
 class EditFamilyMemberScreen extends StatefulWidget {
@@ -37,6 +38,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
   String? _country;
   String? _imagePath;
   File? _newImageFile;
+  bool _isInWill = false;
 
   @override
   void initState() {
@@ -69,10 +71,32 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
       _country = b['country'] as String?;
       _percentageController.text = ((b['percentage'] as num?)?.toString() ?? '');
       _imagePath = b['image_path'] as String?;
+      
+      // Check if this family member is included in the user's will
+      await _checkIfInWill();
+      
       setState(() => _isLoading = false);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _checkIfInWill() async {
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user != null) {
+        final will = await WillService.instance.getUserWill(user.id);
+        if (will != null) {
+          _isInWill = will.coSampul1 == widget.belovedId || 
+                     will.coSampul2 == widget.belovedId ||
+                     will.guardian1 == widget.belovedId ||
+                     will.guardian2 == widget.belovedId;
+        }
+      }
+    } catch (e) {
+      // If there's an error checking the will, assume not in will
+      _isInWill = false;
     }
   }
 
@@ -210,6 +234,40 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                     ),
 
                     const SizedBox(height: 16),
+
+                    // Will Sync Notice
+                    if (_isInWill)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.sync_alt,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Changes here update your will automatically.',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     Card(
                       child: Padding(
