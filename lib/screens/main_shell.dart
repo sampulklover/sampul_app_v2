@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
+import 'will_management_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -14,6 +15,7 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _tabs = const <Widget>[
     HomeScreen(),
+    WillManagementScreen(),
     SettingsScreen(),
   ];
 
@@ -29,6 +31,7 @@ class _MainShellState extends State<MainShell> {
         onTap: (int index) => setState(() => _currentIndex = index),
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: 'Will'),
           BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
         ],
       ),
