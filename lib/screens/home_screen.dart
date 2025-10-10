@@ -5,6 +5,8 @@ import '../models/user_profile.dart';
 import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
+import 'will_management_screen.dart';
+import '../services/will_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
@@ -20,11 +22,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _userProfile;
   bool _isLoadingProfile = true;
+  bool _isLoadingTotal = true;
+  double _totalAssets = 0.0;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadTotalAssets();
   }
 
   Future<void> _loadUserProfile() async {
@@ -40,6 +45,35 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _isLoadingProfile = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadTotalAssets() async {
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          setState(() {
+            _isLoadingTotal = false;
+            _totalAssets = 0.0;
+          });
+        }
+        return;
+      }
+      final assets = await WillService.instance.getUserAssets(user.id);
+      final double sum = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
+      if (mounted) {
+        setState(() {
+          _totalAssets = sum;
+          _isLoadingTotal = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingTotal = false;
         });
       }
     }
@@ -109,7 +143,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _SummaryCard(),
+                  child: _SummaryCard(
+                    isLoading: _isLoadingTotal,
+                    totalAmount: _totalAssets,
+                    onDetails: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _PrimaryActionsRow(),
                 ),
                 const SizedBox(height: 4),
                 Padding(
@@ -157,9 +204,20 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
+  final bool isLoading;
+  final double totalAmount;
+  final VoidCallback onDetails;
+
+  const _SummaryCard({
+    this.isLoading = false,
+    this.totalAmount = 0.0,
+    required this.onDetails,
+  });
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final String display = isLoading ? '••••••' : 'RM ${totalAmount.toStringAsFixed(2)}';
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -178,15 +236,23 @@ class _SummaryCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    'RM 2,578.17',
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-                  ),
+                  isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: SizedBox(width: 120, height: 12, child: LinearProgressIndicator(minHeight: 6)),
+                          ),
+                        )
+                      : Text(
+                          display,
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                 ],
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: onDetails,
               child: const Text('details'),
             ),
           ],
@@ -262,6 +328,61 @@ class _ActionItem {
   final IconData icon;
   final String label;
   const _ActionItem(this.icon, this.label);
+}
+
+class _PrimaryActionsRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: SizedBox(
+            height: 44,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // TODO: Navigate to Trust screen when available
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Trust coming soon')),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
+                backgroundColor: theme.colorScheme.surface,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              icon: const Icon(Icons.gavel_outlined, size: 18),
+              label: const Text('Trust'),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 44,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const WillManagementScreen()),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
+                backgroundColor: theme.colorScheme.surface,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              icon: const Icon(Icons.task_alt_outlined, size: 18),
+              label: const Text('Execution'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
