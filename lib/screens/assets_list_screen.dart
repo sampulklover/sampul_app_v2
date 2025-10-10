@@ -106,10 +106,16 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
               child: _assets.isEmpty
                   ? ListView(children: const <Widget>[SizedBox(height: 200), Center(child: Text('No assets yet'))])
                   : ListView.separated(
-                      itemCount: _assets.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemCount: _assets.length + 1,
+                      separatorBuilder: (BuildContext context, int index) => index == 0 ? const SizedBox.shrink() : const Divider(height: 1),
                       itemBuilder: (BuildContext context, int index) {
-                        final Map<String, dynamic> a = _assets[index];
+                        if (index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: _AssetsSummaryCard(data: _assets),
+                          );
+                        }
+                        final Map<String, dynamic> a = _assets[index - 1];
                         final int id = (a['id'] as num).toInt();
                         final String name = (a['new_service_platform_name'] as String?) ?? 'Unknown';
                         final String? logo = a['new_service_platform_logo_url'] as String?;
@@ -197,5 +203,184 @@ class _Logo extends StatelessWidget {
         errorBuilder: (_, __, ___) => fallback,
       ),
     );
+  }
+}
+
+class _AssetsSummaryCard extends StatelessWidget {
+  final List<Map<String, dynamic>> data;
+  const _AssetsSummaryCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final Map<String, double> totals = <String, double>{};
+    double grandTotal = 0;
+    for (final Map<String, dynamic> a in data) {
+      final String raw = ((a['instructions_after_death'] as String?) ?? 'unspecified').toLowerCase();
+      final String category = _prettyCategory(raw);
+      final double value = (a['declared_value_myr'] as num?)?.toDouble() ?? (a['value'] as num?)?.toDouble() ?? 0.0;
+      totals[category] = (totals[category] ?? 0.0) + value;
+      grandTotal += value;
+    }
+    // Fallback to avoid divide-by-zero
+    if (grandTotal <= 0) grandTotal = 1;
+
+    final List<_Slice> slices = <_Slice>[];
+    final entries = totals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    for (final e in entries) {
+      slices.add(_Slice(
+        label: e.key,
+        value: e.value,
+        color: _categoryColor(e.key, theme),
+      ));
+    }
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2))),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('Distribution by Category', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              'Total Assets: RM ${grandTotal == 1 ? '0.00' : grandTotal.toStringAsFixed(2)}',
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(
+                  width: 110,
+                  height: 110,
+                  child: CustomPaint(
+                    painter: _PieChartPainter(slices: slices, total: grandTotal),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: slices
+                        .map((s) {
+                          final double pct = (s.value / grandTotal * 100);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _LegendLine(
+                              color: s.color,
+                              label: '${s.label}: RM ${s.value.toStringAsFixed(2)} (${pct.toStringAsFixed(1)}%)',
+                              maxLines: 3,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          );
+                        })
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LegendLine extends StatelessWidget {
+  final Color color;
+  final String label;
+  final int? maxLines;
+  final TextStyle? style;
+  const _LegendLine({required this.color, required this.label, this.maxLines, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
+            maxLines: maxLines,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Slice {
+  final String label;
+  final double value;
+  final Color color;
+  _Slice({required this.label, required this.value, required this.color});
+}
+
+class _PieChartPainter extends CustomPainter {
+  final List<_Slice> slices;
+  final double total;
+  _PieChartPainter({required this.slices, required this.total});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final double strokeWidth = size.width * 0.24;
+    final Paint paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+
+    double startRadian = -3.14159 / 2; // start at top
+    for (final _Slice s in slices) {
+      final double sweep = (s.value / total) * 6.28318; // 2*pi
+      paint.color = s.color;
+      canvas.drawArc(rect.deflate(strokeWidth / 2), startRadian, sweep, false, paint);
+      startRadian += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PieChartPainter oldDelegate) {
+    return oldDelegate.slices != slices || oldDelegate.total != total;
+  }
+}
+
+String _prettyCategory(String key) {
+  switch (key) {
+    case 'faraid':
+      return 'Faraid';
+    case 'terminate':
+      return 'Terminate Subscriptions';
+    case 'transfer_as_gift':
+      return 'Transfer as Gift';
+    case 'settle':
+      return 'Settle Debts';
+    case 'unspecified':
+    case '':
+    default:
+      return 'Unspecified';
+  }
+}
+
+Color _categoryColor(String prettyLabel, ThemeData theme) {
+  switch (prettyLabel) {
+    case 'Faraid':
+      return Colors.indigo.shade700;
+    case 'Terminate Subscriptions':
+      return Colors.red.shade700;
+    case 'Transfer as Gift':
+      return Colors.teal.shade800;
+    case 'Settle Debts':
+      return Colors.orange.shade800;
+    default:
+      return theme.colorScheme.onSurfaceVariant;
   }
 }
