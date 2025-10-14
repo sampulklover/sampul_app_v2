@@ -10,6 +10,7 @@ import '../services/will_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
+import 'trust_management_screen.dart';
 import 'add_family_member_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -341,9 +342,8 @@ class _PrimaryActionsRow extends StatelessWidget {
             height: 44,
             child: OutlinedButton.icon(
               onPressed: () {
-                // TODO: Navigate to Trust screen when available
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Trust coming soon')),
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const TrustManagementScreen()),
                 );
               },
               style: OutlinedButton.styleFrom(
