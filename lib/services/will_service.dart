@@ -231,7 +231,7 @@ class WillService {
         final value = (asset['value'] as num).toDouble();
         final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
         
-        buffer.writeln('- ${asset['name']} (${asset['type']}) - RM ${value.toStringAsFixed(2)} (${percentage}%)');
+        buffer.writeln('- ${asset['name']} (${asset['type']}) - RM ${value.toStringAsFixed(2)} ($percentage%)');
       }
       buffer.writeln();
     }

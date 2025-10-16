@@ -5,13 +5,14 @@ import '../models/user_profile.dart';
 import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
-import 'will_management_screen.dart';
 import '../services/will_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
 import 'trust_management_screen.dart';
 import 'add_family_member_screen.dart';
+import 'executor_management_screen.dart';
+import 'checklist_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -269,7 +270,7 @@ class _ActionsGrid extends StatelessWidget {
     _ActionItem(Icons.task_alt_outlined, 'Execution'),
     _ActionItem(Icons.group_outlined, 'Hibah'),
     _ActionItem(Icons.favorite_border, 'Khairat'),
-    _ActionItem(Icons.health_and_safety_outlined, 'Health'),
+    _ActionItem(Icons.checklist_outlined, 'Checklist'),
     _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
     _ActionItem(Icons.family_restroom, 'Family'),
     _ActionItem(Icons.more_horiz, 'Others'),
@@ -298,6 +299,13 @@ class _ActionsGrid extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (context) => const FamilyListScreen(),
+                ),
+              );
+            }
+            if (item.label == 'Checklist') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const ChecklistScreen(),
                 ),
               );
             }
@@ -365,7 +373,7 @@ class _PrimaryActionsRow extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const WillManagementScreen()),
+                  MaterialPageRoute<void>(builder: (_) => const ExecutorManagementScreen()),
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -443,7 +451,7 @@ class _AssetsListState extends State<_AssetsList> {
       case 'settle':
         return Colors.orange.shade50;
       default:
-        return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+        return Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5);
     }
   }
 
@@ -627,7 +635,7 @@ class _FamilyListState extends State<_FamilyList> {
       case 'guardian':
         return Colors.orange.shade50;
       default:
-        return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+        return Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5);
     }
   }
 

@@ -309,7 +309,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
-                              value: _relationship,
+                              initialValue: _relationship,
                               isExpanded: true,
                               items: _relationshipOptions
                                   .map((String r) => DropdownMenuItem<String>(value: r, child: Text(r)))
@@ -324,7 +324,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
-                              value: _type,
+                              initialValue: _type,
                               items: _typeOptions
                                   .map((String t) => DropdownMenuItem<String>(value: t, child: Text(t == 'future_owner' ? 'Beneficiary' : (t == 'co_sampul' ? 'Co-sampul (Executor)' : 'Guardian'))))
                                   .toList(),
@@ -454,7 +454,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
-                                    value: _country,
+                                    initialValue: _country,
                                     isExpanded: true,
                                     items: _countryOptions
                                         .map((String c) => DropdownMenuItem<String>(value: c, child: Text(c[0].toUpperCase()+c.substring(1))))

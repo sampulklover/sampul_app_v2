@@ -123,6 +123,7 @@ class AuthController {
     String? city,
     String? state,
     String? postcode,
+    bool? isAftercareOnboard,
   }) async {
     final user = currentUser;
     if (user == null) {
@@ -140,6 +141,7 @@ class AuthController {
     if (city != null) data['city'] = city;
     if (state != null) data['state'] = state;
     if (postcode != null) data['postcode'] = postcode;
+    if (isAftercareOnboard != null) data['is_aftercare_onboard'] = isAftercareOnboard;
 
     if (data.isNotEmpty) {
       await _supabaseService.client

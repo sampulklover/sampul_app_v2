@@ -16,6 +16,7 @@ class UserProfile {
   final String? postcode;
   final DateTime createdAt;
   final bool isOnboard;
+  final bool isAftercareOnboard;
 
   UserProfile({
     required this.uuid,
@@ -33,6 +34,7 @@ class UserProfile {
     this.postcode,
     required this.createdAt,
     this.isOnboard = false,
+    this.isAftercareOnboard = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,7 @@ class UserProfile {
       postcode: json['postcode'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       isOnboard: json['isOnboard'] as bool? ?? false,
+      isAftercareOnboard: json['is_aftercare_onboard'] as bool? ?? false,
     );
   }
 
@@ -72,6 +75,7 @@ class UserProfile {
       'postcode': postcode,
       'created_at': createdAt.toIso8601String(),
       'isOnboard': isOnboard,
+      'is_aftercare_onboard': isAftercareOnboard,
     };
   }
 

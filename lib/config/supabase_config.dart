@@ -4,6 +4,7 @@
 /// To update URLs or keys, modify the values below.
 /// 
 /// For production, consider using environment variables or a secure configuration.
+library;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SupabaseConfig {

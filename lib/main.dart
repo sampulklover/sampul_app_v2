@@ -31,10 +31,20 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             brightness: Brightness.light,
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              backgroundColor: Colors.white,
+              selectedItemColor: Colors.deepPurple,
+              unselectedItemColor: Colors.grey,
+            ),
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
             brightness: Brightness.dark,
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              backgroundColor: Colors.black87,
+              selectedItemColor: Colors.deepPurpleAccent,
+              unselectedItemColor: Colors.grey,
+            ),
           ),
           themeMode: mode,
           home: const AuthWrapper(),

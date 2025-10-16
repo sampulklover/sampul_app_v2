@@ -406,7 +406,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _selectedInstructionId,
+          initialValue: _selectedInstructionId,
           items: _instructions
               .map((Map<String, String> c) => DropdownMenuItem<String>(
                     value: c['id'],
@@ -432,7 +432,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         const SizedBox(height: 16),
         if (_selectedInstructionId == 'transfer_as_gift')
           DropdownButtonFormField<int>(
-            value: _selectedBelovedId,
+            initialValue: _selectedBelovedId,
             items: _belovedOptions
                 .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                       value: (b['id'] as num).toInt(),

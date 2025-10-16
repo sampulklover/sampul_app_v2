@@ -666,7 +666,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
-              value: selectedId,
+              initialValue: selectedId,
               decoration: const InputDecoration(
                 labelText: 'Select family member',
                 border: OutlineInputBorder(),

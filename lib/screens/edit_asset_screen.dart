@@ -231,7 +231,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       Text('Details', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _instruction,
+                        initialValue: _instruction,
                         items: _instructions
                             .map((Map<String, String> c) => DropdownMenuItem<String>(
                                   value: c['id'],
@@ -258,7 +258,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       const SizedBox(height: 12),
                       if (_instruction == 'transfer_as_gift')
                         DropdownButtonFormField<int>(
-                          value: _selectedBelovedId,
+                          initialValue: _selectedBelovedId,
                           items: _belovedOptions
                               .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                                     value: (b['id'] as num).toInt(),

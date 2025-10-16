@@ -345,7 +345,7 @@ class _WillPreviewScreenState extends State<WillPreviewScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -386,7 +386,7 @@ class _WillPreviewScreenState extends State<WillPreviewScreen> {
     final assetInfo = _assets.map((asset) {
       final value = (asset['value'] as num).toDouble();
       final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
-      return '${asset['name']} (${asset['type']}) - RM ${value.toStringAsFixed(2)} (${percentage}%)';
+      return '${asset['name']} (${asset['type']}) - RM ${value.toStringAsFixed(2)} ($percentage%)';
     }).toList();
 
     assetInfo.insert(0, 'Total Assets Value: RM ${totalValue.toStringAsFixed(2)}');
