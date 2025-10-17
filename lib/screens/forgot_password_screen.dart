@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../controllers/auth_controller.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -69,7 +70,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const FlutterLogo(size: 72),
+                  SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
                   const SizedBox(height: 24),
                   Text(
                     'Enter your email and we\'ll send you a reset link.',

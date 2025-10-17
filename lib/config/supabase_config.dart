@@ -14,6 +14,7 @@ class SupabaseConfig {
   // For production, read from environment variables loaded via flutter_dotenv
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static String get passwordResetRedirectUrl => dotenv.env['PASSWORD_RESET_REDIRECT_URL'] ?? 'https://sampul.co/change-password';
   
   // ========================================
   // STORAGE CONFIGURATION

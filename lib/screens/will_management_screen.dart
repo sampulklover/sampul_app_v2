@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
@@ -168,11 +169,118 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
     }
   }
 
-  Future<void> _copyWillDocument() async {
-    if (_willDocument.isEmpty) return;
+  Future<void> _publishWill() async {
+    if (_will == null || _will!.id == null) return;
+    
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Publish Will'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to publish this will?\n\n'
+              'Once published, this will will be accessible to anyone with the share link:\n'
+              'https://sampul.co/view-will?id=${_will!.willCode}\n\n'
+              'Make sure you only share this link with trusted family members or executors.',
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'https://sampul.co/view-will?id=${_will!.willCode}',
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () async {
+                    final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
+                    await Clipboard.setData(ClipboardData(text: url));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Share link copied to clipboard'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.copy, size: 16),
+                  label: const Text('Copy'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Publish'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed != true) return;
+    
+    try {
+      final updatedWill = await WillService.instance.updateWill(
+        willId: _will!.id!,
+        isDraft: false,
+      );
+      
+      // Check if the will was actually published
+      if (updatedWill.isDraft == true) {
+        _showErrorSnackBar('Failed to publish will: Still marked as draft');
+        return;
+      }
+      
+      await _loadWillData();
+      _showSuccessSnackBar('Will published successfully');
+    } catch (e) {
+      _showErrorSnackBar('Failed to publish will: $e');
+    }
+  }
 
-    await Clipboard.setData(ClipboardData(text: _willDocument));
-    _showSuccessSnackBar('Will document copied to clipboard');
+  Future<void> _unpublishWill() async {
+    if (_will == null || _will!.id == null) return;
+    try {
+      final updatedWill = await WillService.instance.updateWill(
+        willId: _will!.id!,
+        isDraft: true,
+      );
+      
+      // Check if the will was actually unpublished
+      if (updatedWill.isDraft == false) {
+        _showErrorSnackBar('Failed to unpublish will: Still marked as published');
+        return;
+      }
+      
+      await _loadWillData();
+      _showSuccessSnackBar('Will unpublished successfully');
+    } catch (e) {
+      _showErrorSnackBar('Failed to unpublish will: $e');
+    }
   }
 
   Future<void> _deleteWill() async {
@@ -220,12 +328,12 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
 
 
   Future<void> _shareWillDocument() async {
-    if (_willDocument.isEmpty) return;
-
-    // This would typically use a sharing plugin
-    // For now, we'll just copy to clipboard
-    await _copyWillDocument();
+    if (_will == null) return;
+    final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
+    await Clipboard.setData(ClipboardData(text: url));
+    _showSuccessSnackBar('Share link copied to clipboard');
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +341,7 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
       appBar: AppBar(
         title: const Text('My Will'),
         actions: [
-          if (_will != null)
+          if (_will != null && _will!.isDraft == false)
             IconButton(
               onPressed: _shareWillDocument,
               icon: const Icon(Icons.share_outlined),
@@ -263,14 +371,14 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
             ),
             const SizedBox(height: 24),
             Text(
-              'No Will Found',
+              'Create Your Will',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Create your will to ensure your assets are distributed according to your wishes.',
+              'Get started by creating your will to ensure your assets are distributed according to your wishes.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -419,9 +527,12 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
               ),
               const Spacer(),
               TextButton.icon(
-                onPressed: _copyWillDocument,
-                icon: const Icon(Icons.copy_outlined, size: 16),
-                label: const Text('Copy'),
+                onPressed: _will!.isDraft == true ? _publishWill : _unpublishWill,
+                icon: Icon(
+                  _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
+                  size: 16,
+                ),
+                label: Text(_will!.isDraft == true ? 'Publish' : 'Unpublish'),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   minimumSize: Size.zero,
@@ -479,371 +590,218 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            // Document Header
-            _buildPaperHeader(),
-            
-            const SizedBox(height: 24),
-            
-            // Personal Information
-            _buildPaperSection(
-              'PERSONAL INFORMATION',
-              [
-                'I, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'},',
-                'NRIC: ${_userProfile?.nricNo ?? 'Not provided'}',
-                'Date of Birth: ${_userProfile?.dob != null ? _formatDate(_userProfile!.dob!) : 'Not provided'}',
-                'Address: ${_formatAddress(_userProfile!)}',
-                'Phone: ${_userProfile?.phoneNo ?? 'Not provided'}',
-                'Email: ${_userProfile?.email ?? 'Not provided'}',
-                '',
-                'Being of sound mind and memory, do hereby make, publish and declare this to be my Last Will and Testament, hereby revoking all former wills and codicils made by me.',
-                '',
-                'I declare that I am not under any undue influence, fraud, or coercion in making this will, and that I understand the nature and effect of this document.',
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Executors
-            if (_will!.coSampul1 != null || _will!.coSampul2 != null)
-              _buildPaperSection(
-                'EXECUTORS',
-                [
-                  'I hereby appoint the following person(s) as my executor(s) to carry out the provisions of this will:',
-                  '',
-                  ..._getExecutorsInfo().map((executor) => '• $executor'),
-                  '',
-                  'I grant my executor(s) full power and authority to:',
-                  '• Collect and manage my assets',
-                  '• Pay all debts, taxes, and expenses',
-                  '• Distribute my estate according to this will',
-                  '• Make necessary decisions in the administration of my estate',
-                ],
-              ),
-
-            if (_will!.coSampul1 != null || _will!.coSampul2 != null)
-              const SizedBox(height: 20),
-
-            // Guardians
-            if (_will!.guardian1 != null || _will!.guardian2 != null)
-              _buildPaperSection(
-                'GUARDIANS',
-                [
-                  'I hereby appoint the following person(s) as guardian(s) for my minor children:',
-                  '',
-                  ..._getGuardiansInfo().map((guardian) => '• $guardian'),
-                  '',
-                  'I grant my guardian(s) full authority to:',
-                  '• Provide care, custody, and control of my minor children',
-                  '• Make decisions regarding their education, health, and welfare',
-                  '• Manage any assets left to my minor children until they reach majority',
-                ],
-              ),
-
-            if (_will!.guardian1 != null || _will!.guardian2 != null)
-              const SizedBox(height: 20),
-
-            // Assets
-            if (_assets.isNotEmpty)
-              _buildPaperSection(
-                'ASSETS AND PROPERTY',
-                [
-                  'I hereby bequeath my assets and property as follows:',
-                  '',
-                  ..._getAssetsInfo(),
-                  '',
-                  'All assets not specifically mentioned herein shall be distributed according to the beneficiary percentages specified in the Beneficiaries section below.',
-                ],
-              ),
-
-            if (_assets.isNotEmpty)
-              const SizedBox(height: 20),
-
-            // Beneficiaries
-            if (_familyMembers.any((member) => 
-              member['type'] == 'future_owner' || 
-              ((member['percentage'] as num?)?.toDouble() ?? 0) > 0))
-              _buildPaperSection(
-                'BENEFICIARIES',
-                [
-                  'I hereby bequeath my estate to the following beneficiaries in the proportions specified:',
-                  '',
-                  ..._getBeneficiariesInfo().map((beneficiary) => '• $beneficiary'),
-                  '',
-                  'If any beneficiary predeceases me, their share shall be distributed equally among the surviving beneficiaries.',
-                ],
-              ),
-
-            const SizedBox(height: 20),
-
-            // Debts and Liabilities
-            _buildPaperSection(
-              'DEBTS AND LIABILITIES',
-              [
-                'I direct that all my just debts, funeral expenses, and administration costs be paid out of my estate before any distribution to beneficiaries.',
-                '',
-                'This includes but is not limited to:',
-                '• Outstanding loans and mortgages',
-                '• Credit card debts',
-                '• Medical expenses',
-                '• Funeral and burial expenses',
-                '• Legal and administrative fees',
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Special Instructions
-            _buildPaperSection(
-              'SPECIAL INSTRUCTIONS',
-              [
-                'I hereby provide the following special instructions:',
-                '',
-                '• Funeral Arrangements: I request a simple and dignified funeral service in accordance with my religious beliefs.',
-                '• Organ Donation: I consent to organ donation if medically possible and beneficial.',
-                '• Digital Assets: All my digital accounts and online presence should be managed according to the instructions provided to my executor.',
-                '• Personal Effects: Personal items of sentimental value should be distributed among family members as deemed appropriate by my executor.',
-                '',
-                'My executor shall have the discretion to make reasonable decisions regarding any matters not specifically addressed in this will.',
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Residuary Clause
-            _buildPaperSection(
-              'RESIDUARY CLAUSE',
-              [
-                'I give, devise, and bequeath all the rest, residue, and remainder of my estate, both real and personal, of whatsoever nature and wheresoever situate, to my beneficiaries in the proportions specified above.',
-                '',
-                'This includes any property acquired after the execution of this will that is not specifically mentioned herein.',
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Closing
-            _buildPaperSection(
-              'IN WITNESS WHEREOF',
-              [
-                'IN WITNESS WHEREOF, I have hereunto set my hand this ${DateTime.now().day} day of ${_getMonthName(DateTime.now().month)} ${DateTime.now().year}, in the presence of the witnesses whose signatures appear below.',
-                '',
-                'I declare that this is my Last Will and Testament, that I have read and understand its contents, and that I am executing it voluntarily and of my own free will.',
-                '',
-                'Testator: ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
-                '',
-                'Will Code: ${_will!.willCode}',
-                'Generated on: ${DateTime.now().toIso8601String()}',
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Signature Area
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                children: [
-                  // Testator Signature
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Testator Signature',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Date',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                // Document Header - First Page
+                _buildPaperHeader(),
+                
+                // Page Break
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(vertical: 40),
+                  child: CustomPaint(
+                    painter: DottedLinePainter(),
                   ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Witness Signatures
-                  Text(
-                    'WITNESSES',
+                ),
+                
+                // Page 2 Header
+                Center(
+                  child: Text(
+                    'WASIAT ASET SAYA',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
                       color: Colors.black87,
+                      letterSpacing: 1,
                     ),
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Witness 1 Signature',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Witness 1 Name',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Witness 2 Signature',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Witness 2 Name',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // 1. Mukaddimah
+                _buildPaperSection(
+                  '1. Mukaddimah',
+                  [
+                    'Dengan nama Allah, Yang Maha Pengasih, Lagi Maha Penyayang, saya, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}, memegang NRIC ${_userProfile?.nricNo ?? 'Not provided'}, bermastautin di ${_formatAddress(_userProfile!)}, mengisytiharkan dokumen ini sebagai wasiat terakhir saya, memberi tumpuan kepada pengurusan aset saya.',
+                  ],
+                ),
 
-            const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-            // Legal Notice
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                border: Border.all(color: Colors.amber.shade200, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.warning, color: Colors.amber.shade700, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'LEGAL NOTICE',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.amber.shade700,
-                          fontSize: 12,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
+                // 2. Pengisytiharan
+                _buildPaperSection(
+                  '2. Pengisytiharan',
+                  [
+                    'Mengakui kepercayaan Islam saya, saya berazam untuk mengisytiharkan wasiat terakhir saya untuk aset saya, yang ditulis pada ${_formatDateMalay(DateTime.now())}.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 3. Permintaan
+                _buildPaperSection(
+                  '3. Permintaan',
+                  [
+                    'Saya menyeru keluarga saya untuk menegakkan ketaqwaan kepada Allah S.W.T dan menunaikan perintah-Nya. Apabila saya meninggal dunia, harta saya hendaklah diuruskan dengan teliti mengikut prinsip Islam. Saya memohon harta pusaka saya sebagai keutamaan digunakan untuk mengendalikan perbelanjaan pengebumian dan menyelesaikan hutang kepada Allah S.W.T dan manusia, termasuk Zakat dan kewajipan agama lain.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 4. Pembatalan
+                _buildPaperSection(
+                  '4. Pembatalan',
+                  [
+                    'Dokumen ini menggantikan semua wasiat terdahulu pada aset.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 5. Co-Sampul Utama
+                _buildPaperSection(
+                  '5. Co-Sampul Utama',
+                  [
+                    '${_getCoSampulUtama()}, ${_getCoSampulUtamaNric()} dilantik untuk menyimpan dan menyampaikan wasiat aset saya ini kepada waris saya.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 6. Co-Sampul Ganti
+                _buildPaperSection(
+                  '6. Co-Sampul Ganti',
+                  [
+                    'Jika perlu, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} akan bertindak sebagai Co-Sampul Ganti.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 7. Penyelesaian Hutang dan Tanggungjawab Berkaitan Hutang
+                _buildPaperSection(
+                  '7. Penyelesaian Hutang dan Tanggungjawab Berkaitan Hutang',
+                  [
+                    'Saya berharap waris tersayang saya akan melunaskan hutang-hutang saya yang tidak mempunyai perlindungan Takaful seperti yang disenaraikan dalam Jadual 1 dan juga melunaskan tanggungjawab berkaitan hutang yang lain seperti Nazar/Kaffarah/Fidyah saya yang berbaki yang tidak sempat saya sempurnakan ketika hidup dan diambil daripada harta pusaka saya seperti berikut:',
+                    '',
+                    'Nazar/Kaffarah: -',
+                    'Anggaran Kos: RM 0',
+                    'Fidyah: 0 hari Anggaran',
+                    'Kos: RM 0',
+                    'Derma Organ: Saya dengan ini tidak bersetuju sebagai penderma organ.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 8. Penjelasan Kos Pentadbiran Harta Pusaka dan Agihan Pendahuluan
+                _buildPaperSection(
+                  '8. Penjelasan Kos Pentadbiran Harta Pusaka dan Agihan Pendahuluan',
+                  [
+                    'Saya membenarkan waris saya setelah melantik pentadbir atau pemegang amanah atau Wasi untuk menjelaskan segala perbelanjaan bagi pentadbiran harta pusaka daripada harta pusaka saya. Saya juga membenarkan sekiranya perlu dikeluarkan satu jumlah yang muhasabah sebagai nafkah perbelanjaan bulanan bagi waris di bawah tanggungan saya dan jumlah itu ditolak daripada bahagian harta pusaka yang akan diterima oleh waris saya semasa agihan akhir sekiranya proses tuntutan pusaka mengambil masa yang lama daripada sepatutnya.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 9. Pengagihan Aset
+                _buildPaperSection(
+                  '9. Pengagihan Aset',
+                  [
+                    'Sehingga ⅓: Aset tertentu kepada bukan waris atau disedekahkan atau diwaqafkan kepada pihak tertentu seperti di [Jadual 2].',
+                    '',
+                    'Penerima Hadiah (Hibah): Aset tertentu ditetapkan untuk penerima tertentu secara terus tertakluk kepada persetujuan waris Faraid yang berhak seperti di [Jadual 1]',
+                    '',
+                    'Faraid: Aset tertentu ditetapkan untuk penerima tertentu berdasarkan pembahagian Faraid seperti di [Jadual 1].',
+                    '',
+                    'Baki Harta: Selebihnya aset saya yang tidak dinyatakan secara khusus akan diagihkan sewajarnya sama ada kepada penerima tertentu tertakluk kepada persetujuan waris Faraid atau berdasarkan pembahagian Faraid.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 10. Penjagaan Anak
+                _buildPaperSection(
+                  '10. Penjagaan Anak',
+                  [
+                    'N/A',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 11. Tanda Tangan
+                _buildPaperSection(
+                  '11. Tanda Tangan',
+                  [
+                    'Disediakan oleh',
+                    '',
+                    '',
+                    '____________________',
+                    '${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
+                    '${_userProfile?.nricNo ?? 'Not provided'}',
+                    'pada ${_formatDateMalay(DateTime.now())}',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 12. Notis
+                _buildPaperSection(
+                  '12. Notis',
+                  [
+                    'Walaupun platform kami menyediakan perkhidmatan digital untuk membuat wasiat, kami amat menggalakkan anda mencetak wasiat yang telah dilengkapkan dan menandatanganinya secara fizikal untuk simpanan peribadi anda. Sekiranya timbul sebarang pertikaian pada masa hadapan, salinan wasiat yang ditandatangani secara fizikal akan memberikan kepastian undang-undang. Salinan bercetak dan bertandatangan ini boleh bertindak sebagai sandaran kepada rekod digital anda.',
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // 13. Saksi
+                _buildPaperSection(
+                  '13. Saksi',
+                  [
+                    'Diperakui oleh',
+                    'Muhammad Arham Munir Merican bin Amir Feisal Merican',
+                    '931011875001',
+                    'Pengasas, SAMPUL',
+                    'pada ${_formatDateMalay(DateTime.now())}',
+                    '',
+                    'Diperakui oleh',
+                    'Mohammad Aiman bin Sulaiman',
+                    '871013875003',
+                    'Pengasas Bersama, SAMPUL',
+                    'pada ${_formatDateMalay(DateTime.now())}',
+                    '',
+                    'Diperakui oleh',
+                    '',
+                    '____________________',
+                    'Nama:',
+                    'No IC:',
+                    'Hubungan:',
+                    'Tarikh:',
+                    '',
+                    'Diperakui oleh',
+                    '',
+                    '____________________',
+                    'Nama:',
+                    'No IC:',
+                    'Hubungan:',
+                    'Tarikh:',
+                  ],
+                ),
+
+                // Page Break
+                Container(
+                  width: double.infinity,
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(vertical: 40),
+                  child: CustomPaint(
+                    painter: DottedLinePainter(),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'This document is generated for informational purposes. For legal validity, please consult with a qualified legal professional and ensure proper witnessing and notarization according to local laws.',
-                    style: TextStyle(
-                      color: Colors.amber.shade700,
-                      fontSize: 11,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+                
+                // Assets List
+                _buildAssetsList(),
               ],
             ),
           ),
@@ -853,60 +811,148 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
   }
 
   Widget _buildPaperHeader() {
-    return Column(
-      children: [
-        // Decorative line
-        Container(
-          width: 60,
-          height: 2,
-          color: Colors.grey.shade400,
-        ),
-        const SizedBox(height: 20),
-        
-        // Title
-        Text(
-          'WILL AND TESTAMENT',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: Colors.black87,
+    return Container(
+      height: 600, // Fixed height for first page
+      child: Column(
+        children: [
+          // Top spacing
+          const SizedBox(height: 60),
+          
+          // Sampul Logo
+          Center(
+            child: SvgPicture.network(
+              'https://sampul.co/images/Logo.svg',
+              height: 35,
+              placeholderBuilder: (BuildContext context) => Container(
+                height: 35,
+                child: Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
           ),
-          textAlign: TextAlign.center,
-        ),
-        
-        const SizedBox(height: 20),
-        
-        // Decorative line
-        Container(
-          width: 60,
-          height: 2,
-          color: Colors.grey.shade400,
-        ),
-        
-        const SizedBox(height: 20),
-        
-        // Will Code
-        Text(
-          'Will Code: ${_will!.willCode}',
-          style: TextStyle(
-            fontSize: 12,
-            fontFamily: 'monospace',
-            color: Colors.grey.shade600,
-            letterSpacing: 1,
+          
+          const SizedBox(height: 30),
+          
+          // Title
+          Text(
+            'WASIAT',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 3,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        
-        Text(
-          'Generated: ${_formatDate(DateTime.now())}',
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey.shade600,
+          
+          const SizedBox(height: 30),
+          
+          // Author section
+          Column(
+            children: [
+              Text(
+                'ditulis oleh',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  letterSpacing: 1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 8),
+              
+              Text(
+                _will!.nricName ?? _userProfile?.displayName ?? 'Not provided',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              Text(
+                'Will ID: ${_will!.willCode}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                  color: Colors.grey.shade600,
+                  letterSpacing: 1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+          
+          const SizedBox(height: 30),
+          
+          // Website
+          Text(
+            'Securing Digital Legacies',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          const SizedBox(height: 4),
+          
+          Text(
+            'https://sampul.co',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          const Spacer(),
+          
+          // Information notice
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              border: Border.all(color: Colors.grey.shade200, width: 1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              'Salinan sijil dan perincian penuh wasiat boleh didapati dalam peti simpanan digital Sampul. Sebarang maklumat dan pertanyaan, sila emel kepada hello@sampul.co',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+
+          // Footer - End of first page
+          Text(
+            'Powered by Sampul',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade500,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
@@ -944,58 +990,6 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
   }
 
 
-  String _getMonthName(int month) {
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[month - 1];
-  }
-
-  List<String> _getExecutorsInfo() {
-    final executors = _familyMembers.where((member) => 
-      member['id'] == _will!.coSampul1 || member['id'] == _will!.coSampul2
-    ).toList();
-
-    return executors.map((executor) => 
-      '${executor['name']} (${executor['relationship'] ?? 'Family member'})'
-    ).toList();
-  }
-
-  List<String> _getGuardiansInfo() {
-    final guardians = _familyMembers.where((member) => 
-      member['id'] == _will!.guardian1 || member['id'] == _will!.guardian2
-    ).toList();
-
-    return guardians.map((guardian) => 
-      '${guardian['name']} (${guardian['relationship'] ?? 'Family member'})'
-    ).toList();
-  }
-
-  List<String> _getAssetsInfo() {
-    final totalValue = _assets.fold<double>(0, (sum, asset) => sum + (asset['value'] as num).toDouble());
-    
-    final assetInfo = _assets.map((asset) {
-      final value = (asset['value'] as num).toDouble();
-      final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
-      return '${asset['name']} (${asset['type']}) - RM ${value.toStringAsFixed(2)} ($percentage%)';
-    }).toList();
-
-    assetInfo.insert(0, 'Total Assets Value: RM ${totalValue.toStringAsFixed(2)}');
-    return assetInfo;
-  }
-
-  List<String> _getBeneficiariesInfo() {
-    final beneficiaries = _familyMembers.where((member) => 
-      member['type'] == 'future_owner' || ((member['percentage'] as num?)?.toDouble() ?? 0) > 0
-    ).toList();
-
-    return beneficiaries.map((beneficiary) {
-      final percentage = (beneficiary['percentage'] as num?)?.toDouble() ?? 0.0;
-      return '${beneficiary['name']} (${beneficiary['relationship'] ?? 'Family member'}) - ${percentage.toStringAsFixed(1)}%';
-    }).toList();
-  }
-
   String _formatAddress(UserProfile profile) {
     final parts = <String>[];
     if (profile.address1?.isNotEmpty == true) parts.add(profile.address1!);
@@ -1006,8 +1000,193 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
     return parts.isEmpty ? 'Not provided' : parts.join(', ');
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+  String _formatDateMalay(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Ogs', 'Sep', 'Okt', 'Nov', 'Dis'
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} ${date.hour < 12 ? 'AM' : 'PM'}';
+  }
+
+  String _getCoSampulUtama() {
+    if (_will?.coSampul1 == null) return '[PRIMARY CO-SAMPUL NAME/NICKNAME]';
+    
+    final executor = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.coSampul1,
+      orElse: () => {'name': '[PRIMARY CO-SAMPUL NAME/NICKNAME]'},
+    );
+    
+    return executor['name'] ?? '[PRIMARY CO-SAMPUL NAME/NICKNAME]';
+  }
+
+  String _getCoSampulUtamaNric() {
+    if (_will?.coSampul1 == null) return '[PRIMARY CO-SAMPUL NRIC NO]';
+    
+    final executor = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.coSampul1,
+      orElse: () => {'nric_no': '[PRIMARY CO-SAMPUL NRIC NO]'},
+    );
+    
+    return executor['nric_no'] ?? '[PRIMARY CO-SAMPUL NRIC NO]';
+  }
+
+  String _getCoSampulGanti() {
+    if (_will?.coSampul2 == null) return '[SECONDARY CO-SAMPUL NAME/NICKNAME]';
+    
+    final executor = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.coSampul2,
+      orElse: () => {'name': '[SECONDARY CO-SAMPUL NAME/NICKNAME]'},
+    );
+    
+    return executor['name'] ?? '[SECONDARY CO-SAMPUL NAME/NICKNAME]';
+  }
+
+  String _getCoSampulGantiNric() {
+    if (_will?.coSampul2 == null) return '[SECONDARY CO-SAMPUL NRIC NO]';
+    
+    final executor = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.coSampul2,
+      orElse: () => {'nric_no': '[SECONDARY CO-SAMPUL NRIC NO]'},
+    );
+    
+    return executor['nric_no'] ?? '[SECONDARY CO-SAMPUL NRIC NO]';
+  }
+
+  Widget _buildAssetsList() {
+    if (_assets.isEmpty) {
+      return _buildPaperSection(
+        'SENARAI ASET',
+        [
+          'Tiada aset didaftarkan pada masa ini.',
+          '',
+          'Untuk menambah aset, sila gunakan fungsi "Tambah Aset" dalam aplikasi.',
+        ],
+      );
+    }
+
+    final totalValue = _assets.fold<double>(0, (sum, asset) => sum + (asset['value'] as num).toDouble());
+    
+    final List<String> assetLines = [
+      'JADUAL 1: SENARAI ASET TERPERINCI',
+      '',
+      'Jumlah Nilai Aset: RM ${totalValue.toStringAsFixed(2)}',
+      'Bilangan Aset: ${_assets.length}',
+      '',
+      'ASET FIZIKAL:',
+      '',
+    ];
+
+    // Separate physical and digital assets
+    final physicalAssets = _assets.where((asset) => asset['type'] == 'physical').toList();
+    final digitalAssets = _assets.where((asset) => asset['type'] == 'digital').toList();
+
+    // Display physical assets
+    if (physicalAssets.isNotEmpty) {
+      for (int i = 0; i < physicalAssets.length; i++) {
+        final asset = physicalAssets[i];
+        final value = (asset['value'] as num).toDouble();
+        final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
+        final institution = asset['institution'] ?? 'N/A';
+        final accountType = asset['account_type'] ?? 'N/A';
+        final accountNo = asset['account_no'] ?? 'N/A';
+        final loanCategory = asset['loan_category'] ?? 'N/A';
+        final rate = asset['rate'] ?? 'N/A';
+        final tenureStart = asset['tenure_start_date'] ?? 'N/A';
+        final tenureEnd = asset['tenure_end_date'] ?? 'N/A';
+        final remarks = asset['remarks'] ?? '';
+        final instructions = _formatInstructions(asset['instructions_after_death']);
+        
+        assetLines.addAll([
+          '${i + 1}. ${asset['name']}',
+          '   Jenis: ${asset['type']}',
+          '   Nilai: RM ${value.toStringAsFixed(2)} ($percentage%)',
+          '   Institusi: $institution',
+          '   Jenis Akaun: $accountType',
+          '   Nombor Akaun: $accountNo',
+          '   Kategori Pinjaman: $loanCategory',
+          '   Kadar: $rate',
+          '   Tempoh Mula: $tenureStart',
+          '   Tempoh Tamat: $tenureEnd',
+          if (instructions.isNotEmpty) '   Arahan Selepas Kematian: $instructions',
+          if (remarks.isNotEmpty) '   Catatan: $remarks',
+          '',
+        ]);
+      }
+    } else {
+      assetLines.add('Tiada aset fizikal didaftarkan.');
+      assetLines.add('');
+    }
+
+    assetLines.add('ASET DIGITAL:');
+    assetLines.add('');
+
+    // Display digital assets
+    if (digitalAssets.isNotEmpty) {
+      for (int i = 0; i < digitalAssets.length; i++) {
+        final asset = digitalAssets[i];
+        final value = (asset['value'] as num).toDouble();
+        final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
+        final accountType = asset['account_type'] ?? 'N/A';
+        final url = asset['url'] ?? '';
+        final username = asset['username'] ?? '';
+        final email = asset['email'] ?? '';
+        final frequency = asset['frequency'] ?? 'N/A';
+        final protection = asset['protection'] == true ? 'Ya' : 'Tidak';
+        final remarks = asset['remarks'] ?? '';
+        final instructions = _formatInstructions(asset['instructions_after_death']);
+        
+        assetLines.addAll([
+          '${i + 1}. ${asset['name']}',
+          '   Jenis: ${asset['type']}',
+          '   Nilai: RM ${value.toStringAsFixed(2)} ($percentage%)',
+          '   Jenis Akaun: $accountType',
+          if (url.isNotEmpty) '   URL: $url',
+          if (username.isNotEmpty) '   Nama Pengguna: $username',
+          if (email.isNotEmpty) '   Emel: $email',
+          '   Kekerapan: $frequency',
+          '   Perlindungan: $protection',
+          if (instructions.isNotEmpty) '   Arahan Selepas Kematian: $instructions',
+          if (remarks.isNotEmpty) '   Catatan: $remarks',
+          '',
+        ]);
+      }
+    } else {
+      assetLines.add('Tiada aset digital didaftarkan.');
+      assetLines.add('');
+    }
+
+    assetLines.addAll([
+      'JADUAL 2: PENGAGIHAN ASET MENGIKUT FARAID',
+      '',
+      'Aset akan diagihkan mengikut prinsip Faraid Islam berdasarkan waris yang layak.',
+      '',
+      'JADUAL 3: HADIAH (HIBAH) KHUSUS',
+      '',
+      'Tiada hadiah khusus ditetapkan pada masa ini.',
+      '',
+      'Nota: Senarai aset ini adalah berdasarkan maklumat yang didaftarkan pada ${_formatDateMalay(DateTime.now())}.',
+      'Sila kemas kini senarai aset sekiranya terdapat perubahan.',
+    ]);
+
+    return _buildPaperSection(
+      'SENARAI ASET',
+      assetLines,
+    );
+  }
+
+  String _formatInstructions(String? instruction) {
+    switch ((instruction ?? '').toLowerCase()) {
+      case 'faraid':
+        return 'Faraid';
+      case 'terminate':
+        return 'Terminate Subscriptions';
+      case 'transfer_as_gift':
+        return 'Transfer as Gift';
+      case 'settle':
+        return 'Settle Debts';
+      default:
+        return instruction ?? '';
+    }
   }
 }
 
@@ -1025,6 +1204,31 @@ class PaperTexturePainter extends CustomPainter {
         Offset(size.width, y),
         paint,
       );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DottedLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey.shade400
+      ..strokeWidth = 1;
+
+    const double dashWidth = 5;
+    const double dashSpace = 3;
+    double startX = 0;
+
+    while (startX < size.width) {
+      canvas.drawLine(
+        Offset(startX, 0),
+        Offset(startX + dashWidth, 0),
+        paint,
+      );
+      startX += dashWidth + dashSpace;
     }
   }
 

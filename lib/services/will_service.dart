@@ -114,7 +114,7 @@ class WillService {
     try {
       final response = await _supabase.client
           .from('beloved')
-          .select('id, name, type, relationship, percentage, image_path')
+          .select('id, name, type, relationship, percentage, image_path, nric_no')
           .eq('uuid', uuid)
           .order('created_at', ascending: false);
 
@@ -127,16 +127,16 @@ class WillService {
   /// Get user's assets for will assignment
   Future<List<Map<String, dynamic>>> getUserAssets(String uuid) async {
     try {
-      // Get physical assets
+      // Get physical assets with detailed information
       final physicalAssets = await _supabase.client
           .from('physical_assets')
-          .select('id, asset_name, declared_value_myr, account_type, institution')
+          .select('id, asset_name, declared_value_myr, account_type, institution, account_no, loan_category, rate, tenure_start_date, tenure_end_date, remarks, instructions_after_death, beloved_id')
           .eq('uuid', uuid);
 
-      // Get digital assets
+      // Get digital assets with detailed information
       final digitalAssets = await _supabase.client
           .from('digital_assets')
-          .select('id, new_service_platform_name, declared_value_myr, account_type')
+          .select('id, new_service_platform_name, declared_value_myr, account_type, new_service_platform_url, new_service_platform_logo_url, username, email, frequency, protection, remarks, instructions_after_death, beloved_id')
           .eq('uuid', uuid);
 
       final List<Map<String, dynamic>> allAssets = [];
@@ -150,6 +150,14 @@ class WillService {
           'value': (asset['declared_value_myr'] as num?)?.toDouble() ?? 0.0,
           'account_type': asset['account_type'],
           'institution': asset['institution'],
+          'account_no': asset['account_no'],
+          'loan_category': asset['loan_category'],
+          'rate': asset['rate'],
+          'tenure_start_date': asset['tenure_start_date'],
+          'tenure_end_date': asset['tenure_end_date'],
+          'remarks': asset['remarks'],
+          'instructions_after_death': asset['instructions_after_death'],
+          'beloved_id': asset['beloved_id'],
         });
       }
 
@@ -161,6 +169,15 @@ class WillService {
           'type': 'digital',
           'value': (asset['declared_value_myr'] as num?)?.toDouble() ?? 0.0,
           'account_type': asset['account_type'],
+          'url': asset['new_service_platform_url'],
+          'logo_url': asset['new_service_platform_logo_url'],
+          'username': asset['username'],
+          'email': asset['email'],
+          'frequency': asset['frequency'],
+          'protection': asset['protection'],
+          'remarks': asset['remarks'],
+          'instructions_after_death': asset['instructions_after_death'],
+          'beloved_id': asset['beloved_id'],
         });
       }
 

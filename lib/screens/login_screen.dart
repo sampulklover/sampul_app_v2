@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../controllers/auth_controller.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -130,7 +131,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const FlutterLogo(size: 72),
+                  SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Welcome back',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign in to continue to Sampul',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ),
+                  ),
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: _emailController,
@@ -221,14 +236,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: 48,
                     child: OutlinedButton.icon(
-                      onPressed: _isGoogleSubmitting ? null : _signInWithGoogle,
+                      onPressed: _isGoogleSubmitting
+                          ? null
+                          : () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Coming soon')),
+                              );
+                            },
                       icon: _isGoogleSubmitting
                           ? const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.login),
+                          : SvgPicture.asset(
+                              'assets/google-icon-logo-svgrepo-com.svg',
+                              width: 20,
+                              height: 20,
+                            ),
                       label: const Text('Continue with Google'),
                     ),
                   ),

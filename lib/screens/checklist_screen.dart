@@ -171,7 +171,14 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                       onLongPress: () => _showItemActions(t),
                       leading: ReorderableDragStartListener(
                         index: index,
-                        child: const _DotsHandle(),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {}, // Empty onTap to enable InkWell ripple
+                            child: const _DotsHandle(),
+                          ),
+                        ),
                       ),
                       title: Row(
                         children: <Widget>[
@@ -203,17 +210,49 @@ class _DotsHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.35);
-    Widget dot() => Container(width: 3, height: 3, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Row(mainAxisSize: MainAxisSize.min, children: <Widget>[dot(), const SizedBox(width: 2), dot()]),
-          const SizedBox(height: 2),
-          Row(mainAxisSize: MainAxisSize.min, children: <Widget>[dot(), const SizedBox(width: 2), dot()]),
-        ],
+    final Color color = Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7);
+    final Color backgroundColor = Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3);
+    
+    Widget dot() => Container(
+      width: 4, 
+      height: 4, 
+      decoration: BoxDecoration(
+        color: color, 
+        shape: BoxShape.circle,
+      ),
+    );
+    
+    return Container(
+      // Increase the touchable area
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Row(
+              mainAxisSize: MainAxisSize.min, 
+              children: <Widget>[
+                dot(), 
+                const SizedBox(width: 3), 
+                dot()
+              ]
+            ),
+            const SizedBox(height: 3),
+            Row(
+              mainAxisSize: MainAxisSize.min, 
+              children: <Widget>[
+                dot(), 
+                const SizedBox(width: 3), 
+                dot()
+              ]
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -266,21 +305,99 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Icon(Icons.checklist_outlined, size: 64),
+            Icon(
+              Icons.checklist_outlined,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Create Your Checklist',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 12),
-            const Text('No tasks yet'),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            Text(
+              'Organize your aftercare tasks and keep track of important steps. Start with our recommended checklist or create your own custom tasks.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
               children: <Widget>[
-                FilledButton(onPressed: onCreateDefault, child: const Text('Add default steps')),
-                const SizedBox(width: 12),
-                OutlinedButton(onPressed: onCreateCustom, child: const Text('Add custom step')),
+                ElevatedButton.icon(
+                  onPressed: onCreateDefault,
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Use Default Checklist'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onCreateCustom,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create Custom Task'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                ),
               ],
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('About Checklists'),
+                      ],
+                    ),
+                    content: const Text(
+                      'Default checklist includes essential aftercare steps like:\n\n'
+                      '• Notifying family members\n'
+                      '• Managing bank accounts and assets\n'
+                      '• Handling legal matters and documents\n'
+                      '• Organizing personal belongings\n'
+                      '• Updating beneficiaries and contacts\n\n'
+                      'You can also create custom tasks specific to your needs.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Got it'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: Icon(
+                Icons.info_outline,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              label: Text(
+                'Learn more about checklists',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ),
           ],
         ),
