@@ -13,8 +13,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _biometricsEnabled = false;
   UserProfile? _userProfile;
   bool _isLoadingProfile = true;
 
@@ -585,30 +583,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                   secondary: const Icon(Icons.dark_mode_outlined),
                   title: const Text('Dark mode'),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  value: _notificationsEnabled,
-                  onChanged: (bool value) {
-                    setState(() => _notificationsEnabled = value);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Notifications ${value ? 'enabled' : 'disabled'} (demo)')),
-                    );
-                  },
-                  secondary: const Icon(Icons.notifications_outlined),
-                  title: const Text('Enable notifications'),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  value: _biometricsEnabled,
-                  onChanged: (bool value) {
-                    setState(() => _biometricsEnabled = value);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Biometrics ${value ? 'enabled' : 'disabled'} (demo)')),
-                    );
-                  },
-                  secondary: const Icon(Icons.fingerprint),
-                  title: const Text('Use biometrics'),
                 ),
               ],
             ),

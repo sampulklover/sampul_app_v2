@@ -87,7 +87,7 @@ class ImageUploadService {
       // If existingPath provided, keep the same directory and change only the filename
       final int timestamp = DateTime.now().millisecondsSinceEpoch;
       final String extension = imageFile.path.split('.').last;
-      final String fileName = '${timestamp}-${userId.hashCode}.$extension';
+      final String fileName = '$timestamp-${userId.hashCode}.$extension';
       final String baseDir = (existingPath != null && existingPath.isNotEmpty)
           ? existingPath.substring(0, existingPath.lastIndexOf('/'))
           : '$userId/beloved/$belovedId/avatar';

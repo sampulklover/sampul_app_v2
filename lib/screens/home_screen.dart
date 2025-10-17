@@ -5,13 +5,16 @@ import '../models/user_profile.dart';
 import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
-import 'will_management_screen.dart';
 import '../services/will_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
 import 'trust_management_screen.dart';
 import 'add_family_member_screen.dart';
+import 'executor_management_screen.dart';
+import 'checklist_screen.dart';
+import 'settings_screen.dart';
+import 'will_management_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingProfile = true;
   bool _isLoadingTotal = true;
   double _totalAssets = 0.0;
+  bool _isAssetsHidden = false;
 
   @override
   void initState() {
@@ -80,20 +84,51 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshData() async {
+    await Future.wait([
+      _loadUserProfile(),
+      _loadTotalAssets(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
-      body: CustomScrollView(
-        slivers: <Widget>[
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: CustomScrollView(
+          slivers: <Widget>[
           SliverAppBar(
             automaticallyImplyLeading: false,
             pinned: true,
             expandedHeight: 110,
-            title: const Text('Sampul'),
+            backgroundColor: Colors.deepPurpleAccent,
+            foregroundColor: Colors.white,
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                SvgPicture.asset(
+                  'assets/sampul-icon-all-white.svg',
+                  width: 22,
+                  height: 22,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Sampul',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
             actions: <Widget>[
-              IconButton(onPressed: () {}, icon: const Icon(Icons.calendar_month_outlined)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.settings_outlined)),
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+                  );
+                },
+                icon: const Icon(Icons.settings_outlined),
+              ),
               const SizedBox(width: 8),
             ],
             // Keep the app bar standard (no rounded bottom) for a clean Material look
@@ -105,8 +140,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: <Color>[
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primaryContainer,
+                        Colors.deepPurpleAccent,
+                        Colors.deepPurpleAccent.shade700,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -147,6 +182,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _SummaryCard(
                     isLoading: _isLoadingTotal,
                     totalAmount: _totalAssets,
+                    isHidden: _isAssetsHidden,
+                    onToggleVisibility: () {
+                      setState(() {
+                        _isAssetsHidden = !_isAssetsHidden;
+                      });
+                    },
                     onDetails: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
@@ -178,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const _AssetsList(),
+                _AssetsList(onRefresh: _refreshData),
                 const SizedBox(height: 16),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
@@ -193,12 +234,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _FamilyList(),
+                _FamilyList(onRefresh: _refreshData),
                 const SizedBox(height: 24),
               ],
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -207,18 +249,26 @@ class _HomeScreenState extends State<HomeScreen> {
 class _SummaryCard extends StatelessWidget {
   final bool isLoading;
   final double totalAmount;
+  final bool isHidden;
+  final VoidCallback onToggleVisibility;
   final VoidCallback onDetails;
 
   const _SummaryCard({
     this.isLoading = false,
     this.totalAmount = 0.0,
+    this.isHidden = false,
+    required this.onToggleVisibility,
     required this.onDetails,
   });
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String display = isLoading ? '••••••' : 'RM ${totalAmount.toStringAsFixed(2)}';
+    final String display = isLoading 
+        ? '••••••' 
+        : isHidden 
+            ? '••••••' 
+            : 'RM ${totalAmount.toStringAsFixed(2)}';
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -245,9 +295,29 @@ class _SummaryCard extends StatelessWidget {
                             child: SizedBox(width: 120, height: 12, child: LinearProgressIndicator(minHeight: 6)),
                           ),
                         )
-                      : Text(
-                          display,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                      : Row(
+                          children: <Widget>[
+                            Text(
+                              display,
+                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: onToggleVisibility,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                 child: Icon(
+                                   isHidden ? Icons.lock : Icons.lock_open,
+                                   size: 16,
+                                   color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                                 ),
+                              ),
+                            ),
+                          ],
                         ),
                 ],
               ),
@@ -265,13 +335,13 @@ class _SummaryCard extends StatelessWidget {
 
 class _ActionsGrid extends StatelessWidget {
   final List<_ActionItem> items = const <_ActionItem>[
+    _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
+    _ActionItem(Icons.family_restroom, 'Family'),
+    _ActionItem(Icons.description_outlined, 'Will'),
+    _ActionItem(Icons.checklist_outlined, 'Checklist'),
     _ActionItem(Icons.gavel_outlined, 'Trust'),
     _ActionItem(Icons.task_alt_outlined, 'Execution'),
     _ActionItem(Icons.group_outlined, 'Hibah'),
-    _ActionItem(Icons.favorite_border, 'Khairat'),
-    _ActionItem(Icons.health_and_safety_outlined, 'Health'),
-    _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
-    _ActionItem(Icons.family_restroom, 'Family'),
     _ActionItem(Icons.more_horiz, 'Others'),
   ];
 
@@ -294,10 +364,45 @@ class _ActionsGrid extends StatelessWidget {
         final _ActionItem item = items[index];
         return GestureDetector(
           onTap: () {
+            if (item.label == 'Assets') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const AssetsListScreen(),
+                ),
+              );
+            }
             if (item.label == 'Family') {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (context) => const FamilyListScreen(),
+                ),
+              );
+            }
+            if (item.label == 'Will') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const WillManagementScreen(),
+                ),
+              );
+            }
+            if (item.label == 'Checklist') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const ChecklistScreen(),
+                ),
+              );
+            }
+            if (item.label == 'Trust') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const TrustManagementScreen(),
+                ),
+              );
+            }
+            if (item.label == 'Execution') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const ExecutorManagementScreen(),
                 ),
               );
             }
@@ -365,7 +470,7 @@ class _PrimaryActionsRow extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const WillManagementScreen()),
+                  MaterialPageRoute<void>(builder: (_) => const ExecutorManagementScreen()),
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -406,7 +511,8 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _AssetsList extends StatefulWidget {
-  const _AssetsList();
+  final VoidCallback? onRefresh;
+  const _AssetsList({this.onRefresh});
 
   @override
   State<_AssetsList> createState() => _AssetsListState();
@@ -443,7 +549,7 @@ class _AssetsListState extends State<_AssetsList> {
       case 'settle':
         return Colors.orange.shade50;
       default:
-        return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+        return Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5);
     }
   }
 
@@ -517,6 +623,7 @@ class _AssetsListState extends State<_AssetsList> {
                 );
                 if (result == true) {
                   await _loadAssets();
+                  widget.onRefresh?.call();
                 }
               },
               child: const _AddCircle(label: 'Add'),
@@ -546,6 +653,7 @@ class _AssetsListState extends State<_AssetsList> {
               );
               if (updated == true) {
                 await _loadAssets();
+                widget.onRefresh?.call();
               }
             },
             child: Column(
@@ -596,6 +704,9 @@ class _AssetsListState extends State<_AssetsList> {
 }
 
 class _FamilyList extends StatefulWidget {
+  final VoidCallback? onRefresh;
+  const _FamilyList({this.onRefresh});
+
   @override
   State<_FamilyList> createState() => _FamilyListState();
 }
@@ -627,7 +738,7 @@ class _FamilyListState extends State<_FamilyList> {
       case 'guardian':
         return Colors.orange.shade50;
       default:
-        return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5);
+        return Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5);
     }
   }
 
@@ -697,6 +808,7 @@ class _FamilyListState extends State<_FamilyList> {
                 );
                 if (created == true) {
                   await _loadFamily();
+                  widget.onRefresh?.call();
                 }
               },
               child: const _AddCircle(label: 'Add'),
@@ -723,6 +835,7 @@ class _FamilyListState extends State<_FamilyList> {
               );
               if (updated == true) {
                 await _loadFamily();
+                widget.onRefresh?.call();
               }
             },
             child: Column(

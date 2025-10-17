@@ -4,6 +4,7 @@
 /// To update URLs or keys, modify the values below.
 /// 
 /// For production, consider using environment variables or a secure configuration.
+library;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SupabaseConfig {
@@ -13,6 +14,7 @@ class SupabaseConfig {
   // For production, read from environment variables loaded via flutter_dotenv
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static String get passwordResetRedirectUrl => dotenv.env['PASSWORD_RESET_REDIRECT_URL'] ?? 'https://sampul.co/change-password';
   
   // ========================================
   // STORAGE CONFIGURATION

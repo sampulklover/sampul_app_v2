@@ -274,7 +274,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: _selectedRelationship,
+                      initialValue: _selectedRelationship,
                       isExpanded: true,
                       items: _relationshipOptions
                           .map((String r) => DropdownMenuItem<String>(value: r, child: Text(_prettyRelationship(r))))
@@ -292,7 +292,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: _selectedType,
+                      initialValue: _selectedType,
                       items: _typeOptions
                           .map((String t) => DropdownMenuItem<String>(value: t, child: Text(_prettyType(t))))
                           .toList(),
@@ -430,7 +430,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _selectedCountry,
+                            initialValue: _selectedCountry,
                             isExpanded: true,
                             items: _countryOptions
                                 .map((String c) => DropdownMenuItem<String>(value: c, child: Text(_prettyCountry(c))))

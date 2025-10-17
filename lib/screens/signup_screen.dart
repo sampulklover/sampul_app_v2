@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'login_screen.dart';
 import '../controllers/auth_controller.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -103,7 +105,21 @@ class _SignupScreenState extends State<SignupScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const FlutterLogo(size: 72),
+                  SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Create your account',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign up to get started with Sampul',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        ),
+                  ),
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: _nameController,
@@ -209,6 +225,49 @@ class _SignupScreenState extends State<SignupScreen> {
                             )
                           : const Text('Create account'),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: const <Widget>[
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('OR'),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Coming soon')),
+                        );
+                      },
+                      icon: SvgPicture.asset(
+                        'assets/google-icon-logo-svgrepo-com.svg',
+                        width: 20,
+                        height: 20,
+                      ),
+                      label: const Text('Continue with Google'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      const Text('Already have an account?'),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+                          );
+                        },
+                        child: const Text('Log in'),
+                      ),
+                    ],
                   ),
                 ],
               ),

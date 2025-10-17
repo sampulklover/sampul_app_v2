@@ -25,6 +25,7 @@ CREATE TABLE public.aftercare (
   is_completed boolean DEFAULT false,
   is_pinned boolean DEFAULT false,
   category USER-DEFINED,
+  sort_index integer NOT NULL,
   CONSTRAINT aftercare_pkey PRIMARY KEY (id),
   CONSTRAINT aftercare_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
@@ -443,7 +444,6 @@ CREATE TABLE public.profiles (
   state text,
   system_language USER-DEFINED,
   isOnboard boolean DEFAULT false,
-  is_aftercare_onboard boolean DEFAULT false,
   preferably_communication USER-DEFINED,
   created_by_organization boolean DEFAULT false,
   requires_password_reset boolean DEFAULT false,
@@ -509,6 +509,8 @@ CREATE TABLE public.trust (
   business_state text,
   business_country USER-DEFINED,
   dob date,
+  doc_status text NOT NULL DEFAULT 'draft'::text CHECK (doc_status = ANY (ARRAY['draft'::text, 'submitted'::text, 'approved'::text, 'rejected'::text])),
+  doc_validation_errors jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT trust_pkey PRIMARY KEY (id),
   CONSTRAINT trust_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );

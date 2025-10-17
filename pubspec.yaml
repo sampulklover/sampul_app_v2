@@ -45,6 +45,7 @@ dependencies:
   path_provider: ^2.1.2
   http: ^1.2.2
   flutter_svg: ^2.0.10+1
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,7 @@ flutter:
   assets:
     - lib/config/
     - .env
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

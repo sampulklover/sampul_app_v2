@@ -2,6 +2,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../models/user_profile.dart';
+import '../config/supabase_config.dart';
 
 class AuthController {
   AuthController._();
@@ -79,7 +80,10 @@ class AuthController {
 
   // Reset password
   Future<void> resetPassword(String email) async {
-    await _supabaseService.client.auth.resetPasswordForEmail(email);
+    await _supabaseService.client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: SupabaseConfig.passwordResetRedirectUrl,
+    );
   }
 
   // Change password
@@ -123,6 +127,7 @@ class AuthController {
     String? city,
     String? state,
     String? postcode,
+    bool? isAftercareOnboard,
   }) async {
     final user = currentUser;
     if (user == null) {
@@ -140,6 +145,7 @@ class AuthController {
     if (city != null) data['city'] = city;
     if (state != null) data['state'] = state;
     if (postcode != null) data['postcode'] = postcode;
+    if (isAftercareOnboard != null) data['is_aftercare_onboard'] = isAftercareOnboard;
 
     if (data.isNotEmpty) {
       await _supabaseService.client
