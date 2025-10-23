@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
+import '../models/relationship.dart';
 import 'edit_family_member_screen.dart';
 
 class FamilyListScreen extends StatefulWidget {
@@ -53,6 +54,45 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
       default:
         return Colors.black87;
     }
+  }
+
+  Widget _buildRelationshipDisplay(String relationship) {
+    final Relationship? rel = Relationship.getByValue(relationship);
+    if (rel == null) {
+      return Text(relationship);
+    }
+    
+    // Only show waris tag for important relationships, skip legacy and non-waris tags
+    if (rel.isWaris && !Relationship.isLegacyRelationship(relationship)) {
+      return Row(
+        children: [
+          Text(rel.displayName),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.green.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              'Waris',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+                color: Colors.green[700],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    
+    // For all other relationships, just show the name without tags
+    return Text(rel.displayName);
   }
 
   @override
@@ -121,7 +161,8 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              if (relationship != null && relationship.isNotEmpty) Text(relationship),
+                              if (relationship != null && relationship.isNotEmpty) 
+                                _buildRelationshipDisplay(relationship),
                               if (typeText.isNotEmpty)
                                 Container(
                                   margin: const EdgeInsets.only(top: 4),

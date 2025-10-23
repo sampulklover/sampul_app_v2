@@ -57,31 +57,51 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
       // Load user profile
       final profile = await AuthController.instance.getUserProfile();
       
-      // Load family members
-      final familyMembers = await WillService.instance.getFamilyMembers(user.id);
+      // Load family members and deduplicate by id to avoid duplicate Dropdown values
+      final familyMembersRaw = await WillService.instance.getFamilyMembers(user.id);
+      final Map<int, Map<String, dynamic>> idToMember = {
+        for (final Map<String, dynamic> m in familyMembersRaw)
+          if (m['id'] != null) (m['id'] as int): m,
+      };
+      final List<Map<String, dynamic>> familyMembers = idToMember.values.toList();
+      final Set<int> validMemberIds = familyMembers
+          .map((m) => m['id'])
+          .whereType<int>()
+          .toSet();
       
       // Load assets
       final assets = await WillService.instance.getUserAssets(user.id);
+
+      // Validate any preselected IDs against available family members
+      int? selCo1 = widget.existingWill?.coSampul1;
+      int? selCo2 = widget.existingWill?.coSampul2;
+      int? selG1 = widget.existingWill?.guardian1;
+      int? selG2 = widget.existingWill?.guardian2;
+
+      if (selCo1 != null && !validMemberIds.contains(selCo1)) selCo1 = null;
+      if (selCo2 != null && !validMemberIds.contains(selCo2)) selCo2 = null;
+      if (selG1 != null && !validMemberIds.contains(selG1)) selG1 = null;
+      if (selG2 != null && !validMemberIds.contains(selG2)) selG2 = null;
 
       if (mounted) {
         setState(() {
           _userProfile = profile;
           _familyMembers = familyMembers;
           _assets = assets;
+          
+          if (widget.existingWill != null) {
+            _nameController.text = widget.existingWill!.nricName ?? profile?.displayName ?? '';
+            _selectedCoSampul1 = selCo1;
+            _selectedCoSampul2 = selCo2;
+            _selectedGuardian1 = selG1;
+            _selectedGuardian2 = selG2;
+            _isDraft = widget.existingWill!.isDraft ?? true;
+          } else {
+            _nameController.text = profile?.displayName ?? '';
+          }
+
           _isLoading = false;
         });
-
-        // Initialize form with existing will data
-        if (widget.existingWill != null) {
-          _nameController.text = widget.existingWill!.nricName ?? profile?.displayName ?? '';
-          _selectedCoSampul1 = widget.existingWill!.coSampul1;
-          _selectedCoSampul2 = widget.existingWill!.coSampul2;
-          _selectedGuardian1 = widget.existingWill!.guardian1;
-          _selectedGuardian2 = widget.existingWill!.guardian2;
-          _isDraft = widget.existingWill!.isDraft ?? true;
-        } else {
-          _nameController.text = profile?.displayName ?? '';
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -666,7 +686,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
-              initialValue: selectedId,
+              value: selectedId,
               decoration: const InputDecoration(
                 labelText: 'Select family member',
                 border: OutlineInputBorder(),
