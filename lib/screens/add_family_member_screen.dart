@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../services/supabase_service.dart';
 import '../services/image_upload_service.dart';
+import '../models/relationship.dart';
 import 'dart:io';
 
 class AddFamilyMemberScreen extends StatefulWidget {
@@ -35,19 +36,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   static const List<String> _countryOptions = <String>['malaysia', 'singapore', 'brunei', 'indonesia'];
   String? _selectedCountry;
 
-  // Relationship options: friend, partner, sibling, parent, child, colleague, acquaintance, spouse, relative, others
-  static const List<String> _relationshipOptions = <String>[
-    'friend',
-    'partner',
-    'sibling',
-    'parent',
-    'child',
-    'colleague',
-    'acquaintance',
-    'spouse',
-    'relative',
-    'others',
-  ];
+  // Use the new relationship model with waris/non-waris classification
   String? _selectedRelationship;
 
   @override
@@ -276,8 +265,12 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRelationship,
                       isExpanded: true,
-                      items: _relationshipOptions
-                          .map((String r) => DropdownMenuItem<String>(value: r, child: Text(_prettyRelationship(r))))
+                      menuMaxHeight: 300, // Limit dropdown height
+                      items: Relationship.allRelationships
+                          .map((Relationship r) => DropdownMenuItem<String>(
+                                value: r.value,
+                                child: _buildRelationshipItem(r),
+                              ))
                           .toList(),
                       onChanged: (String? v) => setState(() => _selectedRelationship = v),
                       decoration: const InputDecoration(
@@ -491,10 +484,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -550,31 +543,67 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     }
   }
 
+  Widget _buildRelationshipItem(Relationship relationship) {
+    final bool isLegacy = Relationship.isLegacyRelationship(relationship.value);
+    
+    return Row(
+      children: [
+        Expanded(
+          child: Text(relationship.displayName),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: relationship.isWaris 
+                ? Colors.green.withValues(alpha: 0.1) 
+                : Colors.orange.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: relationship.isWaris 
+                  ? Colors.green.withValues(alpha: 0.3) 
+                  : Colors.orange.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            relationship.isWaris ? 'Waris' : 'Non-Waris',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: relationship.isWaris ? Colors.green[700] : Colors.orange[700],
+            ),
+          ),
+        ),
+        if (isLegacy) ...[
+          const SizedBox(width: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.blue.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              'Legacy',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+                color: Colors.blue[700],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   String _prettyRelationship(String r) {
-    switch (r) {
-      case 'friend':
-        return 'Friend';
-      case 'partner':
-        return 'Partner';
-      case 'sibling':
-        return 'Sibling';
-      case 'parent':
-        return 'Parent';
-      case 'child':
-        return 'Child';
-      case 'colleague':
-        return 'Colleague';
-      case 'acquaintance':
-        return 'Acquaintance';
-      case 'spouse':
-        return 'Spouse';
-      case 'relative':
-        return 'Relative';
-      case 'others':
-        return 'Others';
-      default:
-        return r;
-    }
+    final Relationship? relationship = Relationship.getByValue(r);
+    return relationship?.displayName ?? r;
   }
 
   bool _isValidEmail(String value) {
