@@ -15,6 +15,7 @@ import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
 import 'settings_screen.dart';
 import 'will_management_screen.dart';
+import 'extra_wishes_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -404,6 +405,106 @@ class _ActionsGrid extends StatelessWidget {
                 MaterialPageRoute<void>(
                   builder: (context) => const ExecutorManagementScreen(),
                 ),
+              );
+            }
+            if (item.label == 'Others') {
+              showModalBottomSheet<void>(
+                context: context,
+                useSafeArea: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                builder: (BuildContext context) {
+                  return SafeArea(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewPadding.bottom + 24,
+                      ),
+                      child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                          const SizedBox(height: 8),
+                          Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.outlineVariant,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: <Widget>[
+                                Text(
+                                  'Others',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: 1, // Expand as more features are added
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                childAspectRatio: 0.9,
+                              ),
+                              itemBuilder: (BuildContext context, int index) {
+                                // Only item for now: Extra Wishes
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const ExtraWishesScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primaryContainer,
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: Icon(Icons.favorite_outline, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Flexible(
+                                        child: Text(
+                                          'Extra Wishes',
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               );
             }
             // Add other action handlers here as needed

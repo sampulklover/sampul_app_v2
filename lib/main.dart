@@ -8,6 +8,7 @@ import 'screens/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/main_shell.dart';
 import 'services/supabase_service.dart';
+import 'services/openrouter_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,9 @@ void main() async {
   
   // Initialize Supabase
   await SupabaseService.initialize();
+  
+  // Initialize OpenRouter
+  await OpenRouterService.initialize();
   
   runApp(const MyApp());
 }

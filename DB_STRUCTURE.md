@@ -64,7 +64,7 @@ CREATE TABLE public.beloved (
   postcode text,
   country USER-DEFINED,
   state text,
-  percentage numeric NOT NULL DEFAULT 0.00 CHECK (percentage >= 0.00 AND percentage <= 100.00),
+  percentage numeric DEFAULT 0.00 CHECK (percentage >= 0.00 AND percentage <= 100.00),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT beloved_pkey PRIMARY KEY (id),
   CONSTRAINT public_beloved_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
@@ -109,6 +109,56 @@ CREATE TABLE public.careers (
   uid text UNIQUE,
   CONSTRAINT careers_pkey PRIMARY KEY (id),
   CONSTRAINT careers_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
+);
+CREATE TABLE public.chat_conversations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  last_message text,
+  last_message_time timestamp with time zone,
+  avatar_url text,
+  unread_count integer DEFAULT 0,
+  is_online boolean DEFAULT false,
+  conversation_type text NOT NULL DEFAULT 'ai'::text,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT chat_conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_conversations_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.chat_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL,
+  sender_id uuid,
+  content text NOT NULL,
+  is_from_user boolean NOT NULL,
+  message_type text DEFAULT 'text'::text,
+  timestamp timestamp with time zone NOT NULL,
+  is_typing boolean DEFAULT false,
+  is_streaming boolean DEFAULT false,
+  has_error boolean DEFAULT false,
+  error_message text,
+  is_regenerating boolean DEFAULT false,
+  is_edited boolean DEFAULT false,
+  edited_at timestamp with time zone,
+  reply_to_message_id uuid,
+  user_feedback boolean,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT chat_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.chat_conversations(id),
+  CONSTRAINT chat_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES auth.users(id),
+  CONSTRAINT chat_messages_reply_to_message_id_fkey FOREIGN KEY (reply_to_message_id) REFERENCES public.chat_messages(id)
+);
+CREATE TABLE public.chat_participants (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  joined_at timestamp with time zone DEFAULT now(),
+  last_read_at timestamp with time zone,
+  is_active boolean DEFAULT true,
+  role text DEFAULT 'member'::text,
+  CONSTRAINT chat_participants_pkey PRIMARY KEY (id),
+  CONSTRAINT chat_participants_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.chat_conversations(id),
+  CONSTRAINT chat_participants_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.clients (
   created_at timestamp with time zone NOT NULL DEFAULT now(),

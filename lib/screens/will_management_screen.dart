@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
+import '../models/extra_wishes.dart';
+import '../services/extra_wishes_service.dart';
 import '../controllers/auth_controller.dart';
 import 'will_generation_screen.dart';
 
@@ -23,6 +25,7 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
   String _willDocument = '';
   List<Map<String, dynamic>> _familyMembers = [];
   List<Map<String, dynamic>> _assets = [];
+  ExtraWishes? _extraWishes;
   final ScrollController _scrollController = ScrollController();
   bool _showActionBar = true;
   double _lastScrollOffset = 0.0;
@@ -88,6 +91,9 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
         final familyMembers = await WillService.instance.getFamilyMembers(user.id);
         final assets = await WillService.instance.getUserAssets(user.id);
         
+        // Load extra wishes
+        final wishes = await ExtraWishesService.instance.getForCurrentUser();
+
         // Generate will document
         final willDocument = WillService.instance.generateWillDocument(
           will,
@@ -102,6 +108,7 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
             _userProfile = profile;
             _familyMembers = familyMembers;
             _assets = assets;
+            _extraWishes = wishes;
             _willDocument = willDocument;
             _isLoading = false;
           });
@@ -684,11 +691,11 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
                   [
                     'Saya berharap waris tersayang saya akan melunaskan hutang-hutang saya yang tidak mempunyai perlindungan Takaful seperti yang disenaraikan dalam Jadual 1 dan juga melunaskan tanggungjawab berkaitan hutang yang lain seperti Nazar/Kaffarah/Fidyah saya yang berbaki yang tidak sempat saya sempurnakan ketika hidup dan diambil daripada harta pusaka saya seperti berikut:',
                     '',
-                    'Nazar/Kaffarah: -',
-                    'Anggaran Kos: RM 0',
-                    'Fidyah: 0 hari Anggaran',
-                    'Kos: RM 0',
-                    'Derma Organ: Saya dengan ini tidak bersetuju sebagai penderma organ.',
+                    'Nazar/Kaffarah: ' + ((_extraWishes?.nazarWishes ?? '').trim().isEmpty ? '-' : _extraWishes!.nazarWishes!),
+                    'Anggaran Kos: RM ' + ((_extraWishes?.nazarEstimatedCostMyr ?? 0).toStringAsFixed(2)),
+                    'Fidyah: ' + ((_extraWishes?.fidyahFastLeftDays ?? 0).toString()) + ' hari',
+                    'Kos: RM ' + ((_extraWishes?.fidyahAmountDueMyr ?? 0).toStringAsFixed(2)),
+                    'Derma Organ: ' + ((_extraWishes?.organDonorPledge ?? false) ? 'Saya dengan ini bersetuju sebagai penderma organ.' : 'Saya dengan ini tidak bersetuju sebagai penderma organ.'),
                   ],
                 ),
 

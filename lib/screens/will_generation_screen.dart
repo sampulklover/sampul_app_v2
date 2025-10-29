@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
+import 'assets_list_screen.dart';
+import 'add_asset_screen.dart';
+import 'edit_asset_screen.dart';
+import '../models/extra_wishes.dart';
+import '../services/extra_wishes_service.dart';
+import 'extra_wishes_screen.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_profile_screen.dart';
@@ -27,6 +33,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
   UserProfile? _userProfile;
   List<Map<String, dynamic>> _familyMembers = [];
   List<Map<String, dynamic>> _assets = [];
+  ExtraWishes? _extraWishes;
   
   int? _selectedCoSampul1;
   int? _selectedCoSampul2;
@@ -72,6 +79,9 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
       // Load assets
       final assets = await WillService.instance.getUserAssets(user.id);
 
+      // Load extra wishes
+      final wishes = await ExtraWishesService.instance.getForCurrentUser();
+
       // Validate any preselected IDs against available family members
       int? selCo1 = widget.existingWill?.coSampul1;
       int? selCo2 = widget.existingWill?.coSampul2;
@@ -88,6 +98,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           _userProfile = profile;
           _familyMembers = familyMembers;
           _assets = assets;
+          _extraWishes = wishes;
           
           if (widget.existingWill != null) {
             _nameController.text = widget.existingWill!.nricName ?? profile?.displayName ?? '';
@@ -283,9 +294,21 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         state: _currentStep > 2 ? StepState.complete : StepState.indexed,
       ),
       Step(
+        title: const Text('Assets'),
+        content: _buildAssetsStep(),
+        isActive: _currentStep >= 3,
+        state: _currentStep > 3 ? StepState.complete : StepState.indexed,
+      ),
+      Step(
+        title: const Text('Extra Wishes'),
+        content: _buildExtraWishesStep(),
+        isActive: _currentStep >= 4,
+        state: _currentStep > 4 ? StepState.complete : StepState.indexed,
+      ),
+      Step(
         title: const Text('Review & Save'),
         content: _buildReviewStep(),
-        isActive: _currentStep >= 3,
+        isActive: _currentStep >= 5,
         state: StepState.indexed,
       ),
     ];
@@ -395,6 +418,105 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // Extra Wishes step
+  Widget _buildExtraWishesStep() {
+    final theme = Theme.of(context);
+    final String nazar = (_extraWishes?.nazarWishes ?? '').trim();
+    final double? nazarCost = _extraWishes?.nazarEstimatedCostMyr;
+    final int? fidyahDays = _extraWishes?.fidyahFastLeftDays;
+    final double? fidyahAmount = _extraWishes?.fidyahAmountDueMyr;
+    final bool organ = _extraWishes?.organDonorPledge ?? false;
+    final int waqfCount = _extraWishes?.waqfBodies.length ?? 0;
+    final double waqfTotal = (_extraWishes?.waqfBodies ?? const <Map<String, dynamic>>[])
+        .fold<double>(0, (sum, e) => sum + ((e['amount'] as num?)?.toDouble() ?? 0.0));
+    final int charityCount = _extraWishes?.charityBodies.length ?? 0;
+    final double charityTotal = (_extraWishes?.charityBodies ?? const <Map<String, dynamic>>[])
+        .fold<double>(0, (sum, e) => sum + ((e['amount'] as num?)?.toDouble() ?? 0.0));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Your Extra Wishes', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            TextButton.icon(
+              onPressed: () async {
+                final bool? changed = await Navigator.of(context).push(
+                  MaterialPageRoute<bool>(builder: (_) => const ExtraWishesScreen()),
+                );
+                if (changed == true) {
+                  await _refreshExtraWishes();
+                }
+              },
+              icon: const Icon(Icons.edit, size: 16),
+              label: Text(_extraWishes == null ? 'Add' : 'Edit'),
+              style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_extraWishes == null)
+          Text('No wishes yet. Add your nazar, fidyah, organ donor pledge, and charitable allocations.', style: theme.textTheme.bodyMedium)
+        else
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _previewRow('Nazar wishes', nazar.isEmpty ? '—' : nazar, theme),
+                  if (nazarCost != null) _previewRow('Nazar cost', 'RM ${nazarCost.toStringAsFixed(2)}', theme),
+                  if (fidyahDays != null) _previewRow('Fidyah days', '$fidyahDays', theme),
+                  if (fidyahAmount != null) _previewRow('Fidyah amount', 'RM ${fidyahAmount.toStringAsFixed(2)}', theme),
+                  _previewRow('Organ donor pledge', organ ? 'Yes' : 'No', theme),
+                  if (waqfCount > 0 || charityCount > 0) const SizedBox(height: 8),
+                  if (waqfCount > 0) _chipLine('Waqf: $waqfCount bodies • RM ${waqfTotal.toStringAsFixed(2)}', theme),
+                  if (charityCount > 0) _chipLine('Charity: $charityCount bodies • RM ${charityTotal.toStringAsFixed(2)}', theme),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _refreshExtraWishes() async {
+    try {
+      final wishes = await ExtraWishesService.instance.getForCurrentUser();
+      if (!mounted) return;
+      setState(() {
+        _extraWishes = wishes;
+      });
+    } catch (_) {}
+  }
+
+  Widget _previewRow(String label, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 130, child: Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant))),
+          const SizedBox(width: 8),
+          Expanded(child: Text(value, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+
+  Widget _chipLine(String text, ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(text, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
     );
   }
 
@@ -576,6 +698,43 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                 const SizedBox(height: 12),
                 _buildPreviewInfoRow('Primary Guardian', _getSelectedMemberName(_selectedGuardian1)),
                 _buildPreviewInfoRow('Secondary Guardian', _getSelectedMemberName(_selectedGuardian2)),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Assets Summary
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Assets',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Total assets: RM ' + _assets
+                      .fold<double>(0, (sum, a) => sum + ((a['value'] as num?)?.toDouble() ?? 0.0))
+                      .toStringAsFixed(2),
+                  style: theme.textTheme.bodyMedium,
+                ),
               ],
             ),
           ),
@@ -780,5 +939,214 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
     if (_currentStep > 0) {
       setState(() => _currentStep--);
     }
+  }
+
+  // Assets step
+  Widget _buildAssetsStep() {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Your Assets', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const AddAssetScreen()),
+                    );
+                    await _refreshAssets();
+                  },
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add'),
+                  style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                    );
+                    await _refreshAssets();
+                  },
+                  icon: const Icon(Icons.list_alt, size: 16),
+                  label: const Text('Manage All'),
+                  style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const SizedBox(height: 8),
+        if (_assets.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text('No assets yet. Add at least one to include in your will.', style: theme.textTheme.bodyMedium),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: (_assets.length > 3 ? 3 : _assets.length) + (_assets.length > 3 ? 1 : 0),
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final bool isShowMoreRow = _assets.length > 3 && index == 3;
+              if (isShowMoreRow) {
+                final int remaining = _assets.length - 3;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                        );
+                        await _refreshAssets();
+                      },
+                      child: Text('Show more ($remaining)'),
+                    ),
+                  ),
+                );
+              }
+              final Map<String, dynamic> a = _assets[index];
+              final int id = (a['id'] as num).toInt();
+              final String name = (a['name'] as String?) ?? 'Unknown';
+              final String type = (a['type'] as String?) ?? 'asset';
+              final double value = (a['value'] as num?)?.toDouble() ?? 0.0;
+              final String? logo = a['logo_url'] as String?; // only for digital
+              final String? instruction = a['instructions_after_death'] as String?;
+              return ListTile(
+                onTap: () async {
+                  if (type == 'digital') {
+                    final bool? changed = await Navigator.of(context).push(
+                      MaterialPageRoute<bool>(builder: (_) => EditAssetScreen(assetId: id)),
+                    );
+                    if (changed == true) {
+                      await _refreshAssets();
+                    }
+                  } else {
+                    // For physical assets, navigate to assets list for now
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                    );
+                    await _refreshAssets();
+                  }
+                },
+                leading: _buildAssetAvatar(logo),
+                title: Text(name),
+                subtitle: (instruction ?? '').isNotEmpty
+                    ? Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _buildChip(_prettyInstruction(instruction), _badgeBg(instruction), _badgeFg(instruction)),
+                        ],
+                      )
+                    : null,
+                trailing: Text('RM ${value.toStringAsFixed(2)}'),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  Future<void> _refreshAssets() async {
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user == null) return;
+      final assets = await WillService.instance.getUserAssets(user.id);
+      if (!mounted) return;
+      setState(() {
+        _assets = assets;
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  Widget _buildAssetAvatar(String? logoUrl) {
+    if (logoUrl == null || logoUrl.isEmpty) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: Theme.of(context).colorScheme.surfaceVariant),
+        alignment: Alignment.center,
+        child: const Icon(Icons.apps_outlined),
+      );
+    }
+    return ClipOval(
+      child: Image.network(logoUrl, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
+        return Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: Theme.of(context).colorScheme.surfaceVariant),
+          alignment: Alignment.center,
+          child: const Icon(Icons.image_outlined),
+        );
+      }),
+    );
+  }
+
+  String _prettyInstruction(String? key) {
+    switch ((key ?? '').toLowerCase()) {
+      case 'faraid':
+        return 'Faraid';
+      case 'terminate':
+        return 'Terminate Subscriptions';
+      case 'transfer_as_gift':
+        return 'Transfer as Gift';
+      case 'settle':
+        return 'Settle Debts';
+      default:
+        return 'Unspecified';
+    }
+  }
+
+  Color _badgeBg(String? key) {
+    final String k = (key ?? '').toLowerCase();
+    switch (k) {
+      case 'faraid':
+        return Colors.indigo.shade50;
+      case 'terminate':
+        return Colors.red.shade50;
+      case 'transfer_as_gift':
+        return Colors.teal.shade50;
+      case 'settle':
+        return Colors.orange.shade50;
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  Color _badgeFg(String? key) {
+    final String k = (key ?? '').toLowerCase();
+    switch (k) {
+      case 'faraid':
+        return Colors.indigo.shade700;
+      case 'terminate':
+        return Colors.red.shade700;
+      case 'transfer_as_gift':
+        return Colors.teal.shade800;
+      case 'settle':
+        return Colors.orange.shade800;
+      default:
+        return Colors.black87;
+    }
+  }
+
+  Widget _buildChip(String label, Color bg, Color fg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      child: Text(label, style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600)),
+    );
   }
 }
