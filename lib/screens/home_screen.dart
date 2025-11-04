@@ -6,16 +6,20 @@ import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
 import '../services/will_service.dart';
+import '../services/brandfetch_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
 import 'trust_management_screen.dart';
+import 'hibah_management_screen.dart';
 import 'add_family_member_screen.dart';
 import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
 import 'settings_screen.dart';
 import 'will_management_screen.dart';
 import 'extra_wishes_screen.dart';
+import 'onboarding_flow_screen.dart';
+import 'chat_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,12 +34,55 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingTotal = true;
   double _totalAssets = 0.0;
   bool _isAssetsHidden = false;
+  bool _hasCheckedOnboarding = false;
+  // Keys to control child lists on pull-to-refresh
+  final GlobalKey<_AssetsListState> _assetsListKey = GlobalKey<_AssetsListState>();
+  final GlobalKey<_FamilyListState> _familyListKey = GlobalKey<_FamilyListState>();
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
     _loadTotalAssets();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    if (_hasCheckedOnboarding) return;
+    
+    try {
+      final isOnboarded = await AuthController.instance.isUserOnboarded();
+      if (!isOnboarded && mounted) {
+        // Wait a bit for the UI to render first
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          _showOnboardingModal();
+        }
+      }
+      _hasCheckedOnboarding = true;
+    } catch (e) {
+      // Error checking onboarding, continue normally
+      _hasCheckedOnboarding = true;
+    }
+  }
+
+  Future<void> _showOnboardingModal() async {
+    final bool? result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const OnboardingFlowScreen(),
+        fullscreenDialog: true,
+      ),
+    );
+
+    if (result == true && mounted) {
+      await _loadUserProfile();
+      await _loadTotalAssets();
+      // Ensure child lists also refresh after onboarding completes
+      await Future.wait(<Future<void>>[
+        _assetsListKey.currentState?.reload() ?? Future.value(),
+        _familyListKey.currentState?.reload() ?? Future.value(),
+      ]);
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -90,6 +137,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadUserProfile(),
       _loadTotalAssets(),
     ]);
+    // Ask child lists to reload their data as well
+    await Future.wait(<Future<void>>[
+      _assetsListKey.currentState?.reload() ?? Future.value(),
+      _familyListKey.currentState?.reload() ?? Future.value(),
+    ]);
+    // Re-check onboarding status after refresh
+    await _checkOnboarding();
   }
 
   @override
@@ -220,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _AssetsList(onRefresh: _refreshData),
+                _AssetsList(key: _assetsListKey, onRefresh: _refreshData),
                 const SizedBox(height: 16),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
@@ -235,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _FamilyList(onRefresh: _refreshData),
+                _FamilyList(key: _familyListKey, onRefresh: _refreshData),
                 const SizedBox(height: 24),
               ],
             ),
@@ -336,6 +390,7 @@ class _SummaryCard extends StatelessWidget {
 
 class _ActionsGrid extends StatelessWidget {
   final List<_ActionItem> items = const <_ActionItem>[
+    _ActionItem(Icons.chat_bubble_outline, 'Chat'),
     _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
     _ActionItem(Icons.family_restroom, 'Family'),
     _ActionItem(Icons.description_outlined, 'Will'),
@@ -365,6 +420,13 @@ class _ActionsGrid extends StatelessWidget {
         final _ActionItem item = items[index];
         return GestureDetector(
           onTap: () {
+            if (item.label == 'Chat') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const ChatListScreen(),
+                ),
+              );
+            }
             if (item.label == 'Assets') {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -404,6 +466,13 @@ class _ActionsGrid extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (context) => const ExecutorManagementScreen(),
+                ),
+              );
+            }
+            if (item.label == 'Hibah') {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const HibahManagementScreen(),
                 ),
               );
             }
@@ -613,7 +682,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _AssetsList extends StatefulWidget {
   final VoidCallback? onRefresh;
-  const _AssetsList({this.onRefresh});
+  const _AssetsList({super.key, this.onRefresh});
 
   @override
   State<_AssetsList> createState() => _AssetsListState();
@@ -704,6 +773,9 @@ class _AssetsListState extends State<_AssetsList> {
     }
   }
 
+  // Public method to allow parent to trigger reloads
+  Future<void> reload() => _loadAssets();
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -768,7 +840,7 @@ class _AssetsListState extends State<_AssetsList> {
                   ),
                   alignment: Alignment.center,
                   child: (logoUrl != null && logoUrl.isNotEmpty)
-                      ? ClipOval(child: _Logo(url: logoUrl, size: 56, fit: BoxFit.cover))
+                      ? ClipOval(child: _Logo(url: BrandfetchService.instance.addClientIdToUrl(logoUrl) ?? logoUrl, size: 56, fit: BoxFit.cover))
                       : const Icon(Icons.apps),
                 ),
                 const SizedBox(height: 6),
@@ -806,7 +878,7 @@ class _AssetsListState extends State<_AssetsList> {
 
 class _FamilyList extends StatefulWidget {
   final VoidCallback? onRefresh;
-  const _FamilyList({this.onRefresh});
+  const _FamilyList({super.key, this.onRefresh});
 
   @override
   State<_FamilyList> createState() => _FamilyListState();
@@ -890,6 +962,9 @@ class _FamilyListState extends State<_FamilyList> {
       });
     }
   }
+
+  // Public method to allow parent to trigger reloads
+  Future<void> reload() => _loadFamily();
 
   @override
   Widget build(BuildContext context) {

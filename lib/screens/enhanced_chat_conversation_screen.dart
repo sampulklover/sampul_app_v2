@@ -6,6 +6,8 @@ import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../services/openrouter_service.dart';
 import '../services/chat_service.dart';
+import '../controllers/auth_controller.dart';
+import '../services/will_service.dart';
 
 class EnhancedChatConversationScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -166,8 +168,23 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         _messages.add(streamingMessage);
       });
 
-      // Stream the response
-      await for (final chunk in OpenRouterService.sendMessageStream(messageText)) {
+      // Build user context from assets (concise)
+      String? context;
+      try {
+        final user = AuthController.instance.currentUser;
+        if (user != null) {
+          final assets = await WillService.instance.getUserAssets(user.id);
+          final int count = assets.length;
+          final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
+          final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
+          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+        }
+      } catch (_) {
+        context = null;
+      }
+
+      // Stream the response with context
+      await for (final chunk in OpenRouterService.sendMessageStream(messageText, context: context)) {
         if (mounted) {
           setState(() {
             _streamingContent += chunk;
@@ -306,18 +323,6 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 1,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {
-              // TODO: Add video call functionality
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {
-              // TODO: Add voice call functionality
-            },
-          ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
@@ -359,7 +364,12 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).viewPadding.bottom + 80,
+              ),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
@@ -367,7 +377,8 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
               },
             ),
           ),
-          _buildMessageInput(),
+          SafeArea(top: false, bottom: false, child: _buildQuickSuggestions()),
+          SafeArea(top: false, child: _buildMessageInput()),
         ],
       ),
     );
@@ -644,6 +655,39 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickSuggestions() {
+    final List<String> suggestions = <String>[
+      'Summarize my assets',
+      'How to start my will?',
+      'What is Hibah and how to use it?',
+      'Checklist for estate planning',
+    ];
+
+    return Container(
+      padding: EdgeInsets.zero,
+      alignment: Alignment.centerLeft,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: suggestions
+              .map((s) => Padding(
+                    padding: const EdgeInsets.only(right: 8, bottom: 4),
+                    child: ActionChip(
+                      label: Text(s),
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              _messageController.text = s;
+                              _sendMessage();
+                            },
+                    ),
+                  ))
+              .toList(),
+        ),
       ),
     );
   }

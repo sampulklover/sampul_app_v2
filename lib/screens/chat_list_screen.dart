@@ -124,18 +124,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
           return _buildChatItem(conversation);
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Add new chat functionality
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('New chat feature coming soon!'),
-            ),
-          );
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.chat, color: Colors.white),
-      ),
     );
   }
 

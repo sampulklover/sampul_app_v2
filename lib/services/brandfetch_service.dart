@@ -8,6 +8,41 @@ class BrandfetchService {
 	static final BrandfetchService instance = BrandfetchService._();
 
 	String get _apiKey => dotenv.env['BRANDFETCH_API_KEY'] ?? '';
+	String get _clientId => dotenv.env['BRANDFETCH_CLIENT_ID'] ?? '';
+
+	/// Strips the client ID parameter (c=) from Brandfetch CDN URLs before storing
+	/// This ensures URLs stored in the database don't expire when the client ID changes
+	String? stripClientIdFromUrl(String? url) {
+		if (url == null || url.isEmpty) return url;
+		if (!url.contains('cdn.brandfetch.io')) return url;
+		try {
+			final Uri uri = Uri.parse(url);
+			final Map<String, String> queryParams = Map<String, String>.from(uri.queryParameters);
+			queryParams.remove('c');
+			return uri.replace(queryParameters: queryParams.isEmpty ? null : queryParams).toString();
+		} catch (_) {
+			// If parsing fails, try simple regex removal
+			return url.replaceAll(RegExp(r'[&?]c=[^&]*'), '').replaceAll(RegExp(r'\?$'), '');
+		}
+	}
+
+	/// Adds the current client ID parameter to Brandfetch CDN URLs when displaying
+	/// This ensures logos work even if the client ID has changed since storage
+	String? addClientIdToUrl(String? url) {
+		if (url == null || url.isEmpty) return url;
+		if (_clientId.isEmpty) return url; // If no client ID configured, return as-is
+		if (!url.contains('cdn.brandfetch.io')) return url;
+		try {
+			final Uri uri = Uri.parse(url);
+			final Map<String, String> queryParams = Map<String, String>.from(uri.queryParameters);
+			queryParams['c'] = _clientId;
+			return uri.replace(queryParameters: queryParams).toString();
+		} catch (_) {
+			// If parsing fails, try simple string append
+			final String separator = url.contains('?') ? '&' : '?';
+			return '$url${separator}c=$_clientId';
+		}
+	}
 
 	Future<BrandInfo?> fetchByDomain(String domainOrUrl) async {
 		if (_apiKey.isEmpty) {
@@ -58,7 +93,9 @@ class BrandfetchService {
 		final String name = (data['name'] as String?) ?? '';
 		final String website = (data['domain'] as String?) ?? (data['website'] as String?) ?? '';
 		final String? icon = (data['icon'] as String?);
-		final String? logo = icon?.isNotEmpty == true ? icon : _extractPreferredImageUrl(data['logos']);
+		final String? logoRaw = icon?.isNotEmpty == true ? icon : _extractPreferredImageUrl(data['logos']);
+		// Strip client ID from URL before storing
+		final String? logo = stripClientIdFromUrl(logoRaw);
 		return BrandInfo(name: name.isNotEmpty ? name : website, websiteUrl: website, logoUrl: logo);
 	}
 
@@ -66,7 +103,9 @@ class BrandfetchService {
 		final String? name = data['name'] as String?;
 		final String? domain = (data['domain'] as String?) ?? (data['website'] as String?);
 		final String? icon = (data['icon'] as String?);
-		final String? logo = icon?.isNotEmpty == true ? icon : _extractPreferredImageUrl(data['logos']);
+		final String? logoRaw = icon?.isNotEmpty == true ? icon : _extractPreferredImageUrl(data['logos']);
+		// Strip client ID from URL before storing
+		final String? logo = stripClientIdFromUrl(logoRaw);
 
 		if (name == null && (domain == null || domain.isEmpty)) return null;
 		return BrandInfo(

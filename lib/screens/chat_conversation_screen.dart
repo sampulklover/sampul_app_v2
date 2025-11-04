@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../services/openrouter_service.dart';
+import '../controllers/auth_controller.dart';
+import '../services/will_service.dart';
 
 class ChatConversationScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -68,8 +70,23 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     _scrollToBottom();
 
     try {
-      // Get AI response
-      final aiResponse = await OpenRouterService.sendMessage(messageText);
+      // Build user context from assets (concise)
+      String? context;
+      try {
+        final user = AuthController.instance.currentUser;
+        if (user != null) {
+          final assets = await WillService.instance.getUserAssets(user.id);
+          final int count = assets.length;
+          final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
+          final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
+          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+        }
+      } catch (_) {
+        context = null;
+      }
+
+      // Get AI response with context
+      final aiResponse = await OpenRouterService.sendMessage(messageText, context: context);
       
       // Add AI response
       final aiMessage = ChatMessage(
@@ -166,18 +183,6 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         elevation: 1,
         actions: [
           IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {
-              // TODO: Add video call functionality
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {
-              // TODO: Add voice call functionality
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.more_vert),
             onPressed: () {
               // TODO: Add more options
@@ -190,7 +195,12 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).viewPadding.bottom + 80,
+              ),
               itemCount: _messages.length + (_isLoading ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == _messages.length && _isLoading) {
@@ -200,7 +210,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               },
             ),
           ),
-          _buildMessageInput(),
+          SafeArea(top: false, child: _buildMessageInput()),
         ],
       ),
     );

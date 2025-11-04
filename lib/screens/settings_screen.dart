@@ -3,6 +3,8 @@ import '../controllers/theme_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
+import 'onboarding_flow_screen.dart';
+import '../services/supabase_service.dart';
 import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -583,6 +585,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                   secondary: const Icon(Icons.dark_mode_outlined),
                   title: const Text('Dark mode'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.replay_outlined),
+                  title: const Text('Restart onboarding'),
+                  subtitle: const Text('Run the setup flow again'),
+                  onTap: () async {
+                    try {
+                      final user = AuthController.instance.currentUser;
+                      if (user == null) {
+                        throw Exception('You must be signed in');
+                      }
+
+                      // Update profiles.isOnboard to false
+                      await SupabaseService.instance.client
+                          .from('profiles')
+                          .update(<String, dynamic>{'isOnboard': false})
+                          .eq('uuid', user.id);
+
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Onboarding has been reset')),
+                      );
+
+                      // Launch onboarding flow screen
+                      // Using push to allow user to complete and return
+                      await Navigator.of(context).push(
+                        MaterialPageRoute<bool>(
+                          builder: (_) => const OnboardingFlowScreen(),
+                          fullscreenDialog: true,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to reset onboarding: $e'), backgroundColor: Colors.red),
+                      );
+                    }
+                  },
                 ),
               ],
             ),
