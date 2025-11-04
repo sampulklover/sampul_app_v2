@@ -33,6 +33,16 @@ class ChatService {
       }
 
       await _supabase.from('chat_messages').insert(data);
+
+      // Update conversation metadata
+      await _supabase
+          .from('chat_conversations')
+          .update({
+            'last_message': message.content,
+            'last_message_time': message.timestamp.toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', conversationId);
     } catch (e) {
       print('Error saving message: $e');
     }

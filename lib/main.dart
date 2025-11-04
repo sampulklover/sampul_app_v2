@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       valueListenable: ThemeController.instance.themeModeNotifier,
       builder: (BuildContext context, ThemeMode mode, Widget? _) {
         return MaterialApp(
-          title: 'Sampul App',
+          title: 'Sampul',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
             brightness: Brightness.light,

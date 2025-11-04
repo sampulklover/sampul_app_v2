@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/supabase_service.dart';
+import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 
 class EditAssetScreen extends StatefulWidget {
@@ -177,7 +178,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEAEAEA)),
                       clipBehavior: Clip.antiAlias,
                       child: (_logoUrl != null && _logoUrl!.isNotEmpty)
-                          ? Image.network(_logoUrl!, fit: BoxFit.cover)
+                          ? Image.network(BrandfetchService.instance.addClientIdToUrl(_logoUrl) ?? _logoUrl!, fit: BoxFit.cover)
                           : const Icon(Icons.apps, size: 36),
                     ),
                     const SizedBox(height: 8),

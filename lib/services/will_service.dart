@@ -2,6 +2,7 @@ import 'dart:math';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import 'supabase_service.dart';
+import 'brandfetch_service.dart';
 
 class WillService {
   static WillService? _instance;
@@ -163,6 +164,7 @@ class WillService {
 
       // Add digital assets
       for (final asset in digitalAssets) {
+        final String? logoUrlRaw = asset['new_service_platform_logo_url'] as String?;
         allAssets.add({
           'id': asset['id'],
           'name': asset['new_service_platform_name'] ?? 'Unknown Asset',
@@ -170,7 +172,7 @@ class WillService {
           'value': (asset['declared_value_myr'] as num?)?.toDouble() ?? 0.0,
           'account_type': asset['account_type'],
           'url': asset['new_service_platform_url'],
-          'logo_url': asset['new_service_platform_logo_url'],
+          'logo_url': BrandfetchService.instance.addClientIdToUrl(logoUrlRaw),
           'username': asset['username'],
           'email': asset['email'],
           'frequency': asset['frequency'],

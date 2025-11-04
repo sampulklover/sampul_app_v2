@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/supabase_service.dart';
+import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_asset_screen.dart';
 
@@ -132,7 +133,7 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
                               await _loadAssets();
                             }
                           },
-                          leading: _Logo(url: logo, size: 40),
+                          leading: _Logo(url: BrandfetchService.instance.addClientIdToUrl(logo), size: 40),
                           title: Text(name),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,10 +185,12 @@ class _Logo extends StatelessWidget {
       alignment: Alignment.center,
       child: const Icon(Icons.image_outlined),
     );
+    // Add client ID dynamically if it's a Brandfetch URL
+    final String finalUrl = BrandfetchService.instance.addClientIdToUrl(u) ?? u;
     if (isSvg) {
       return ClipOval(
         child: SvgPicture.network(
-          u,
+          finalUrl,
           width: size,
           height: size,
           fit: BoxFit.cover,
@@ -196,7 +199,7 @@ class _Logo extends StatelessWidget {
     }
     return ClipOval(
       child: Image.network(
-        u,
+        finalUrl,
         width: size,
         height: size,
         fit: BoxFit.cover,

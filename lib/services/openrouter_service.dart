@@ -21,7 +21,7 @@ class OpenRouterService {
     }
   }
 
-  static Future<String> sendMessage(String message, {String? model}) async {
+  static Future<String> sendMessage(String message, {String? model, String? context}) async {
     try {
       if (_apiKey == null || _model == null) {
         await initialize();
@@ -40,15 +40,20 @@ class OpenRouterService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics.'
+              'content': 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics. Keep answers concise (2–4 short sentences). Use bullet points only when listing items. Avoid long paragraphs.'
             },
+            if (context != null && context.isNotEmpty)
+              {
+                'role': 'system',
+                'content': 'User context (private): ' + context,
+              },
             {
               'role': 'user',
               'content': message,
             }
           ],
-          'max_tokens': 1000,
-          'temperature': 0.7,
+          'max_tokens': 220,
+          'temperature': 0.5,
         }),
       );
 
@@ -98,7 +103,7 @@ class OpenRouterService {
     }
   }
 
-  static Stream<String> sendMessageStream(String message, {String? model}) async* {
+  static Stream<String> sendMessageStream(String message, {String? model, String? context}) async* {
     try {
       if (_apiKey == null || _model == null) {
         await initialize();
@@ -117,15 +122,20 @@ class OpenRouterService {
         'messages': [
           {
             'role': 'system',
-            'content': 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics.'
+            'content': 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics. Keep answers concise (2–4 short sentences). Use bullet points only when listing items. Avoid long paragraphs.'
           },
+          if (context != null && context.isNotEmpty)
+            {
+              'role': 'system',
+              'content': 'User context (private): ' + context,
+            },
           {
             'role': 'user',
             'content': message,
           }
         ],
-        'max_tokens': 1000,
-        'temperature': 0.7,
+        'max_tokens': 220,
+        'temperature': 0.5,
         'stream': true,
       });
 
@@ -161,7 +171,7 @@ class OpenRouterService {
       }
     } catch (e) {
       // Fallback to non-streaming if streaming fails
-      final response = await sendMessage(message, model: model);
+      final response = await sendMessage(message, model: model, context: context);
       yield response;
     }
   }

@@ -187,7 +187,8 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           payload['new_service_platform_url'] = _brandInfo!.websiteUrl;
         }
         if ((_brandInfo!.logoUrl ?? '').isNotEmpty) {
-          payload['new_service_platform_logo_url'] = _brandInfo!.logoUrl;
+          // Ensure client ID is stripped before storing
+          payload['new_service_platform_logo_url'] = BrandfetchService.instance.stripClientIdFromUrl(_brandInfo!.logoUrl);
         }
       }
 
@@ -331,7 +332,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               final bool selected = _brandInfo?.websiteUrl == item.websiteUrl && _brandInfo?.name == item.name;
               return ListTile(
                 leading: (item.logoUrl ?? '').isNotEmpty
-                    ? _Logo(url: item.logoUrl!, size: 28)
+                    ? _Logo(url: BrandfetchService.instance.addClientIdToUrl(item.logoUrl)!, size: 28)
                     : const Icon(Icons.apps_outlined),
                 title: Text(item.name),
                 subtitle: item.websiteUrl.isNotEmpty ? Text(item.websiteUrl) : null,
@@ -368,7 +369,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               if ((_brandInfo!.logoUrl ?? '').isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: _Logo(url: _brandInfo!.logoUrl!, size: 56),
+                  child: _Logo(url: BrandfetchService.instance.addClientIdToUrl(_brandInfo!.logoUrl)!, size: 56),
                 ),
               Expanded(child: Text(_brandInfo!.name)),
               const Icon(Icons.check_circle, color: Colors.green),
@@ -534,7 +535,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 if ((_brandInfo?.logoUrl ?? '').isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: _Logo(url: _brandInfo!.logoUrl!, size: 40),
+                    child: _Logo(url: BrandfetchService.instance.addClientIdToUrl(_brandInfo!.logoUrl)!, size: 40),
                   ),
                 Expanded(child: Text(_brandInfo?.name ?? '-')),
               ],

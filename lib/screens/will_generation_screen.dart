@@ -9,6 +9,7 @@ import '../models/extra_wishes.dart';
 import '../services/extra_wishes_service.dart';
 import 'extra_wishes_screen.dart';
 import '../services/supabase_service.dart';
+import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_profile_screen.dart';
 
@@ -1082,8 +1083,10 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         child: const Icon(Icons.apps_outlined),
       );
     }
+    // Add client ID dynamically if it's a Brandfetch URL
+    final String finalUrl = BrandfetchService.instance.addClientIdToUrl(logoUrl) ?? logoUrl;
     return ClipOval(
-      child: Image.network(logoUrl, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
+      child: Image.network(finalUrl, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
         return Container(
           width: 40,
           height: 40,

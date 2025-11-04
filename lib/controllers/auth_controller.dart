@@ -174,6 +174,25 @@ class AuthController {
     }
   }
 
+  // Check if user has completed onboarding
+  Future<bool> isUserOnboarded() async {
+    final profile = await getUserProfile();
+    return profile?.isOnboard ?? false;
+  }
+
+  // Mark user as onboarded
+  Future<void> markUserAsOnboarded() async {
+    final user = currentUser;
+    if (user == null) {
+      throw Exception('No authenticated user');
+    }
+
+    await _supabaseService.client
+        .from('profiles')
+        .update({'isOnboard': true})
+        .eq('uuid', user.id);
+  }
+
   // Create or update user profile in profiles table
   Future<void> upsertUserProfile(UserProfile profile) async {
     await _supabaseService.client
