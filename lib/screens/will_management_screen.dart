@@ -14,10 +14,10 @@ class WillManagementScreen extends StatefulWidget {
   const WillManagementScreen({super.key});
 
   @override
-  State<WillManagementScreen> createState() => _WillManagementScreenState();
+  State<WillManagementScreen> createState() => WillManagementScreenState();
 }
 
-class _WillManagementScreenState extends State<WillManagementScreen> with SingleTickerProviderStateMixin {
+class WillManagementScreenState extends State<WillManagementScreen> with SingleTickerProviderStateMixin {
   Will? _will;
   UserProfile? _userProfile;
   bool _isLoading = true;
@@ -47,6 +47,11 @@ class _WillManagementScreenState extends State<WillManagementScreen> with Single
       parent: _actionBarController,
       curve: Curves.easeInOutCubic,
     );
+  }
+
+  // Expose a public reload method for external triggers (e.g., when tab becomes active)
+  Future<void> reload() async {
+    await _loadWillData();
   }
 
   void _onScroll() {

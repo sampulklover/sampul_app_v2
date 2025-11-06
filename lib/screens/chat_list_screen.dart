@@ -4,6 +4,7 @@ import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import 'enhanced_chat_conversation_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -145,12 +146,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
               radius: 24,
               backgroundColor: conversation.conversationType == ConversationType.ai
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.secondary,
+                  : Theme.of(context).colorScheme.secondaryContainer,
               child: conversation.conversationType == ConversationType.ai
-                  ? const Icon(
-                      Icons.smart_toy,
-                      color: Colors.white,
-                      size: 24,
+                  ? SvgPicture.asset(
+                      'assets/sampul-icon-white.svg',
+                      width: 24,
+                      height: 24,
                     )
                   : Text(
                       conversation.name[0].toUpperCase(),
