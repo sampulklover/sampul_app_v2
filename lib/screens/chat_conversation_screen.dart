@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../services/openrouter_service.dart';
 import '../controllers/auth_controller.dart';
 import '../services/will_service.dart';
+import '../models/user_profile.dart';
 
 class ChatConversationScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -23,11 +25,13 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
+  UserProfile? _userProfile;
 
   @override
   void initState() {
     super.initState();
     _initializeChat();
+    _loadUserProfile();
   }
 
   void _initializeChat() {
@@ -40,6 +44,17 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         timestamp: DateTime.now(),
       ));
     }
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await AuthController.instance.getUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -144,12 +159,12 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               radius: 16,
               backgroundColor: widget.conversation.id == 'sampul_ai'
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.secondary,
+                  : Theme.of(context).colorScheme.secondaryContainer,
               child: widget.conversation.id == 'sampul_ai'
-                  ? const Icon(
-                      Icons.smart_toy,
-                      color: Colors.white,
-                      size: 18,
+                  ? SvgPicture.asset(
+                      'assets/sampul-icon-white.svg',
+                      width: 18,
+                      height: 18,
                     )
                   : Text(
                       widget.conversation.name[0].toUpperCase(),
@@ -230,12 +245,12 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               radius: 16,
               backgroundColor: widget.conversation.id == 'sampul_ai'
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.secondary,
+                  : Theme.of(context).colorScheme.secondaryContainer,
               child: widget.conversation.id == 'sampul_ai'
-                  ? const Icon(
-                      Icons.smart_toy,
-                      color: Colors.white,
-                      size: 18,
+                  ? SvgPicture.asset(
+                      'assets/sampul-icon-white.svg',
+                      width: 18,
+                      height: 18,
                     )
                   : Text(
                       widget.conversation.name[0].toUpperCase(),
@@ -301,12 +316,17 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-              child: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 18,
-              ),
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              backgroundImage: _userProfile?.fullImageUrl != null
+                  ? NetworkImage(_userProfile!.fullImageUrl!)
+                  : null,
+              child: _userProfile?.fullImageUrl == null
+                  ? const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : null,
             ),
           ],
         ],

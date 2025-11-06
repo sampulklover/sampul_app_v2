@@ -13,13 +13,19 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  final GlobalKey<WillManagementScreenState> _willTabKey = GlobalKey<WillManagementScreenState>();
+  late final List<Widget> _tabs;
 
-  final List<Widget> _tabs = const <Widget>[
-    HomeScreen(),
-    ChatListScreen(),
-    WillManagementScreen(),
-    SettingsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _tabs = <Widget>[
+      const HomeScreen(),
+      const ChatListScreen(),
+      WillManagementScreen(key: _willTabKey),
+      const SettingsScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +36,13 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (int index) => setState(() => _currentIndex = index),
+        onTap: (int index) {
+          setState(() => _currentIndex = index);
+          if (index == 2) {
+            // Will tab became active; ensure it refreshes its data
+            _willTabKey.currentState?.reload();
+          }
+        },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
