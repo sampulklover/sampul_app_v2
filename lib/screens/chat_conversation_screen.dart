@@ -7,6 +7,11 @@ import '../services/openrouter_service.dart';
 import '../controllers/auth_controller.dart';
 import '../services/will_service.dart';
 import '../models/user_profile.dart';
+import '../services/chat_service.dart';
+import '../services/file_upload_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class ChatConversationScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -26,6 +31,8 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   UserProfile? _userProfile;
+  bool _isUploading = false;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -131,6 +138,280 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     }
 
     _scrollToBottom();
+  }
+
+  Future<void> _pickAndSendAttachments() async {
+    // Show source chooser: Photos, Camera, Files
+    if (_isUploading) return;
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Photos'),
+              onTap: () => Navigator.pop(context, 'photos'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(context, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.attach_file),
+              title: const Text('Files'),
+              onTap: () => Navigator.pop(context, 'files'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    if (source == 'photos') {
+      await _pickImagesFromGallery();
+      return;
+    } else if (source == 'camera') {
+      await _captureImageFromCamera();
+      return;
+    }
+    // Else fall-through to file picker
+    if (_isUploading) return;
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+      final files = await FileUploadService.pickMultipleFiles();
+      if (files.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No files selected')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You need to be signed in to upload.')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Uploading ' + files.length.toString() + ' file(s)...')),
+        );
+      }
+      // Upload all files sequentially to keep UI simple and predictable
+      for (final f in files) {
+        final path = f.path;
+        if (path == null) {
+          continue;
+        }
+        final file = File(path);
+        final upload = await FileUploadService.uploadAttachment(
+          file: file,
+          userId: user.id,
+          conversationId: widget.conversation.id,
+        );
+        final isImage = upload.mimeType.startsWith('image/');
+        final msg = ChatMessage(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          content: upload.publicUrl,
+          isFromUser: true,
+          timestamp: DateTime.now(),
+          messageType: isImage ? MessageType.image : MessageType.file,
+        );
+        setState(() {
+          _messages.add(msg);
+        });
+        await ChatService.saveMessage(msg, widget.conversation.id);
+        _scrollToBottom();
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Upload complete')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: ' + e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickImagesFromGallery() async {
+    if (_isUploading) return;
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+      final List<XFile> picked = await _imagePicker.pickMultiImage(
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 85,
+      );
+      if (picked.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No images selected')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You need to be signed in to upload.')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Uploading ' + picked.length.toString() + ' image(s)...')),
+        );
+      }
+      for (final x in picked) {
+        final file = File(x.path);
+        final upload = await FileUploadService.uploadAttachment(
+          file: file,
+          userId: user.id,
+          conversationId: widget.conversation.id,
+        );
+        final msg = ChatMessage(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          content: upload.publicUrl,
+          isFromUser: true,
+          timestamp: DateTime.now(),
+          messageType: MessageType.image,
+        );
+        setState(() {
+          _messages.add(msg);
+        });
+        await ChatService.saveMessage(msg, widget.conversation.id);
+        _scrollToBottom();
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Upload complete')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: ' + e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _captureImageFromCamera() async {
+    if (_isUploading) return;
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+      final XFile? shot = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 85,
+      );
+      if (shot == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No image captured')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You need to be signed in to upload.')),
+          );
+          setState(() {
+            _isUploading = false;
+          });
+        }
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Uploading image...')),
+        );
+      }
+      final file = File(shot.path);
+      final upload = await FileUploadService.uploadAttachment(
+        file: file,
+        userId: user.id,
+        conversationId: widget.conversation.id,
+      );
+      final msg = ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        content: upload.publicUrl,
+        isFromUser: true,
+        timestamp: DateTime.now(),
+        messageType: MessageType.image,
+      );
+      setState(() {
+        _messages.add(msg);
+      });
+      await ChatService.saveMessage(msg, widget.conversation.id);
+      _scrollToBottom();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Upload complete')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: ' + e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 
   void _scrollToBottom() {
@@ -289,15 +570,61 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.content,
-                    style: TextStyle(
-                      color: message.isFromUser
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
+                  if (message.messageType == MessageType.text) ...[
+                    Text(
+                      message.content,
+                      style: TextStyle(
+                        color: message.isFromUser
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
+                  ] else if (message.messageType == MessageType.image) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        message.content,
+                        width: 220,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, _, __) => Icon(
+                          Icons.broken_image,
+                          color: message.isFromUser ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ] else if (message.messageType == MessageType.file) ...[
+                    InkWell(
+                      onTap: () async {
+                        final uri = Uri.tryParse(message.content);
+                        if (uri != null) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.insert_drive_file,
+                            color: message.isFromUser ? Colors.white : Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Open file',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                                color: message.isFromUser
+                                    ? Colors.white
+                                    : Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.timestamp),
@@ -423,6 +750,14 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(
+              _isUploading ? Icons.hourglass_top : Icons.attach_file,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            tooltip: 'Attach files',
+            onPressed: _isUploading ? null : _pickAndSendAttachments,
+          ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
