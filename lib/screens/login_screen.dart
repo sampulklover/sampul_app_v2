@@ -236,13 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: 48,
                     child: OutlinedButton.icon(
-                      onPressed: _isGoogleSubmitting
-                          ? null
-                          : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Coming soon')),
-                              );
-                            },
+                      onPressed: _isGoogleSubmitting ? null : _signInWithGoogle,
                       icon: _isGoogleSubmitting
                           ? const SizedBox(
                               width: 20,
@@ -254,7 +248,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 20,
                               height: 20,
                             ),
-                      label: const Text('Continue with Google'),
+                      label: Text(
+                        _isGoogleSubmitting ? 'Signing in…' : 'Continue with Google',
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -121,12 +121,14 @@ class AuthController {
     String? username,
     String? nricName,
     String? phoneNo,
+    String? gender,
     String? imagePath,
     String? address1,
     String? address2,
     String? city,
     String? state,
     String? postcode,
+    String? country,
     bool? isAftercareOnboard,
   }) async {
     final user = currentUser;
@@ -139,12 +141,14 @@ class AuthController {
     if (username != null) data['username'] = username;
     if (nricName != null) data['nric_name'] = nricName;
     if (phoneNo != null) data['phone_no'] = phoneNo;
+    if (gender != null) data['gender'] = gender;
     if (imagePath != null) data['image_path'] = imagePath;
     if (address1 != null) data['address_1'] = address1;
     if (address2 != null) data['address_2'] = address2;
     if (city != null) data['city'] = city;
     if (state != null) data['state'] = state;
     if (postcode != null) data['postcode'] = postcode;
+    if (country != null) data['country'] = country;
     if (isAftercareOnboard != null) data['is_aftercare_onboard'] = isAftercareOnboard;
 
     if (data.isNotEmpty) {
