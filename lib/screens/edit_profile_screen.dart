@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../config/trust_constants.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import '../services/image_upload_service.dart';
@@ -23,6 +24,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _postcodeController = TextEditingController();
+  String? _selectedGender;
+  String? _selectedCountry;
   
   bool _isLoading = false;
   bool _isLoadingProfile = true;
@@ -69,6 +72,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _stateController.text = _userProfile!.state ?? '';
       _postcodeController.text = _userProfile!.postcode ?? '';
       _imagePath = _userProfile!.imagePath;
+      _selectedGender = _userProfile!.gender;
+      _selectedCountry = _userProfile!.country;
     } else {
       // Fallback to auth user data
       final user = AuthController.instance.currentUser;
@@ -191,12 +196,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         username: _usernameController.text.trim().isNotEmpty ? _usernameController.text.trim() : null,
         nricName: _nricNameController.text.trim().isNotEmpty ? _nricNameController.text.trim() : null,
         phoneNo: _phoneNoController.text.trim().isNotEmpty ? _phoneNoController.text.trim() : null,
+        gender: _selectedGender,
         imagePath: _imagePath,
         address1: _address1Controller.text.trim().isNotEmpty ? _address1Controller.text.trim() : null,
         address2: _address2Controller.text.trim().isNotEmpty ? _address2Controller.text.trim() : null,
         city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
         state: _stateController.text.trim().isNotEmpty ? _stateController.text.trim() : null,
         postcode: _postcodeController.text.trim().isNotEmpty ? _postcodeController.text.trim() : null,
+        country: _selectedCountry,
       );
 
       if (!mounted) return;
@@ -404,6 +411,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     const SizedBox(height: 16),
                     
+                    DropdownButtonFormField<String>(
+                      value: _selectedGender,
+                      decoration: const InputDecoration(
+                        labelText: 'Gender',
+                        prefixIcon: Icon(Icons.wc_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: TrustConstants.genders
+                          .map(
+                            (Map<String, String> item) => DropdownMenuItem<String>(
+                              value: item['value'],
+                              child: Text(item['name']!),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (String? value) => setState(() => _selectedGender = value),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -512,6 +539,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    DropdownButtonFormField<String>(
+                      value: _selectedCountry,
+                      decoration: const InputDecoration(
+                        labelText: 'Country',
+                        prefixIcon: Icon(Icons.public_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: TrustConstants.countries
+                          .map(
+                            (Map<String, String> item) => DropdownMenuItem<String>(
+                              value: item['value'],
+                              child: Text(item['name']!),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (String? value) => setState(() => _selectedCountry = value),
                     ),
                   ],
                 ),

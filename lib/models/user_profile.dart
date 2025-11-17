@@ -7,6 +7,7 @@ class UserProfile {
   final String? nricName;
   final String? nricNo;
   final DateTime? dob;
+  final String? gender;
   final String? phoneNo;
   final String? imagePath;
   final String? address1;
@@ -14,6 +15,7 @@ class UserProfile {
   final String? city;
   final String? state;
   final String? postcode;
+  final String? country;
   final DateTime createdAt;
   final bool isOnboard;
   final bool isAftercareOnboard;
@@ -25,6 +27,7 @@ class UserProfile {
     this.nricName,
     this.nricNo,
     this.dob,
+    this.gender,
     this.phoneNo,
     this.imagePath,
     this.address1,
@@ -32,6 +35,7 @@ class UserProfile {
     this.city,
     this.state,
     this.postcode,
+    this.country,
     required this.createdAt,
     this.isOnboard = false,
     this.isAftercareOnboard = false,
@@ -45,6 +49,7 @@ class UserProfile {
       nricName: json['nric_name'] as String?,
       nricNo: json['nric_no'] as String?,
       dob: json['dob'] != null ? DateTime.parse(json['dob'] as String) : null,
+      gender: json['gender'] as String?,
       phoneNo: json['phone_no'] as String?,
       imagePath: json['image_path'] as String?,
       address1: json['address_1'] as String?,
@@ -52,6 +57,7 @@ class UserProfile {
       city: json['city'] as String?,
       state: json['state'] as String?,
       postcode: json['postcode'] as String?,
+      country: json['country'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       isOnboard: json['isOnboard'] as bool? ?? false,
       isAftercareOnboard: json['is_aftercare_onboard'] as bool? ?? false,
@@ -66,6 +72,7 @@ class UserProfile {
       'nric_name': nricName,
       'nric_no': nricNo,
       'dob': dob?.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
+      'gender': gender,
       'phone_no': phoneNo,
       'image_path': imagePath,
       'address_1': address1,
@@ -73,6 +80,7 @@ class UserProfile {
       'city': city,
       'state': state,
       'postcode': postcode,
+      'country': country,
       'created_at': createdAt.toIso8601String(),
       'isOnboard': isOnboard,
       'is_aftercare_onboard': isAftercareOnboard,

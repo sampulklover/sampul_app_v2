@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'login_screen.dart';
+import 'main_shell.dart';
 import '../controllers/auth_controller.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isSubmitting = false;
+  bool _isGoogleSubmitting = false;
 
   @override
   void dispose() {
@@ -85,6 +87,44 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
+      });
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    if (_isGoogleSubmitting) return;
+    setState(() {
+      _isGoogleSubmitting = true;
+    });
+
+    try {
+      final AuthResponse? response = await AuthController.instance.signInWithGoogle();
+
+      if (!mounted) return;
+
+      if (response?.user != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const MainShell()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google sign-in was cancelled or failed')),
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: ${error.message}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isGoogleSubmitting = false;
       });
     }
   }
@@ -241,17 +281,21 @@ class _SignupScreenState extends State<SignupScreen> {
                   SizedBox(
                     height: 48,
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Coming soon')),
-                        );
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/google-icon-logo-svgrepo-com.svg',
-                        width: 20,
-                        height: 20,
+                      onPressed: _isGoogleSubmitting ? null : _signInWithGoogle,
+                      icon: _isGoogleSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : SvgPicture.asset(
+                              'assets/google-icon-logo-svgrepo-com.svg',
+                              width: 20,
+                              height: 20,
+                            ),
+                      label: Text(
+                        _isGoogleSubmitting ? 'Signing in…' : 'Continue with Google',
                       ),
-                      label: const Text('Continue with Google'),
                     ),
                   ),
                   const SizedBox(height: 16),

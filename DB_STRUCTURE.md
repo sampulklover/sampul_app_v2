@@ -500,6 +500,7 @@ CREATE TABLE public.profiles (
   organization_id uuid,
   agent_id uuid,
   updated_at timestamp with time zone DEFAULT now(),
+  gender USER-DEFINED,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_agent_id_fkey FOREIGN KEY (agent_id) REFERENCES public.agents(id),
   CONSTRAINT profiles_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
