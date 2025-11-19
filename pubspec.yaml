@@ -46,6 +46,7 @@ dependencies:
   http: ^1.2.2
   flutter_svg: ^2.0.10+1
   shared_preferences: ^2.3.2
+  mime: ^1.0.5
   
   # Chat enhancements
   flutter_markdown: ^0.7.4
