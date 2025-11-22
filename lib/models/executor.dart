@@ -3,6 +3,7 @@ enum ExecutorStatus { draft, submitted, approved, rejected }
 class Executor {
   final int? id;
   final String? executorCode;
+  final String? name;
   final String? deceasedName;
   final String? deceasedNricNumber;
   final DateTime? deceasedDateOfBirth;
@@ -26,6 +27,7 @@ class Executor {
   Executor({
     this.id,
     this.executorCode,
+    this.name,
     this.deceasedName,
     this.deceasedNricNumber,
     this.deceasedDateOfBirth,
@@ -53,6 +55,7 @@ class Executor {
     return Executor(
       id: (json['id'] as num?)?.toInt(),
       executorCode: json['executor_code'] as String?,
+      name: json['name'] as String?,
       deceasedName: json['deceased_name'] as String?,
       deceasedNricNumber: json['deceased_nric_number'] as String?,
       deceasedDateOfBirth: json['deceased_date_of_birth'] != null
@@ -85,6 +88,7 @@ class Executor {
     return {
       if (id != null) 'id': id,
       'executor_code': executorCode,
+      'name': name,
       'deceased_name': deceasedName,
       'deceased_nric_number': deceasedNricNumber,
       'deceased_date_of_birth': deceasedDateOfBirth?.toIso8601String().split('T').first,

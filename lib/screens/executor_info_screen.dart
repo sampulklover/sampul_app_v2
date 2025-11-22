@@ -7,7 +7,7 @@ class ExecutorInfoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Estate Claims'),
+        title: const Text('About Executors'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -29,7 +29,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                         Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(
-                          'What is an Estate Claim?',
+                          'What is an Executor?',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -38,7 +38,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'An estate claim is a formal request to claim assets or property from a deceased person\'s estate. This process allows you to legally claim what you are entitled to inherit from a loved one who has passed away.',
+                      'An executor is a person appointed to manage and distribute the assets of a deceased person\'s estate according to their will or the law. This role involves handling legal matters, settling debts, and ensuring proper distribution of assets to beneficiaries.',
                     ),
                   ],
                 ),
@@ -65,7 +65,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'To submit an estate claim, you will need:',
+                      'To register as an executor, you will need:',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
@@ -98,10 +98,10 @@ class ExecutorInfoScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildStatusItem('Draft', 'Your claim is being prepared and can be edited', Colors.grey),
-                    _buildStatusItem('Submitted', 'Your claim has been submitted for review', Colors.blue),
-                    _buildStatusItem('Approved', 'Your claim has been approved and is being processed', Colors.green),
-                    _buildStatusItem('Rejected', 'Your claim was rejected. Please review and resubmit', Colors.red),
+                    _buildStatusItem('Draft', 'Your executor registration is being prepared and can be edited', Colors.grey),
+                    _buildStatusItem('Submitted', 'Your executor registration has been submitted for review', Colors.blue),
+                    _buildStatusItem('Approved', 'Your executor registration has been approved and is being processed', Colors.green),
+                    _buildStatusItem('Rejected', 'Your executor registration was rejected. Please review and resubmit', Colors.red),
                   ],
                 ),
               ),
@@ -127,11 +127,11 @@ class ExecutorInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'If you need assistance with your estate claim or have questions about the process, please contact our support team.',
+                      'If you need assistance with your executor registration or have questions about the process, please contact our support team.',
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'We\'re here to help you through this difficult time and ensure your claim is processed as smoothly as possible.',
+                      'We\'re here to help you through this difficult time and ensure your executor registration is processed as smoothly as possible.',
                     ),
                   ],
                 ),
