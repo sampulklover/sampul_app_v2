@@ -128,14 +128,14 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
       await ExecutorService.instance.updateExecutor(widget.initial.id!, updateData);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Estate claim updated successfully'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Executor updated successfully'), backgroundColor: Colors.green),
       );
       await Future<void>.delayed(const Duration(milliseconds: 300));
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update claim: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Failed to update executor: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -145,7 +145,7 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Estate Claim')),
+      appBar: AppBar(title: const Text('Edit Executor')),
       body: SafeArea(
         child: Stepper(
           currentStep: _currentStep,
@@ -173,7 +173,7 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                         },
                   child: _isSubmitting
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text(isLast ? 'Update Claim' : 'Next'),
+                      : Text(isLast ? 'Update Executor' : 'Next'),
                 ),
                 const SizedBox(width: 12),
                 if (_currentStep > 0)

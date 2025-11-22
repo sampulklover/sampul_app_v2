@@ -59,7 +59,7 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Estate Claims'),
+        title: const Text('Executors'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -73,7 +73,7 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
         ),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Estate Claims',
+            tooltip: 'About Executors',
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen()));
@@ -87,7 +87,7 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
               ? Column(
                   children: <Widget>[
                     if (_tabController.index == 0) _ExecutorInfoBanner(),
-                    const Expanded(child: Center(child: Text('No estate claims yet'))),
+                    const Expanded(child: Center(child: Text('No executors yet'))),
                   ],
                 )
               : Column(
@@ -110,7 +110,7 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createExecutor,
         icon: const Icon(Icons.add),
-        label: const Text('New Claim'),
+        label: const Text('New Executor'),
       ),
     );
   }
@@ -176,7 +176,7 @@ class _ExecutorList extends StatelessWidget {
         final Executor e = executors[index];
         return ListTile(
           onTap: () => onTap(e),
-          title: Text(e.deceasedName ?? 'Unnamed Estate'),
+          title: Text(e.name ?? e.deceasedName ?? 'Unnamed Executor'),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -212,8 +212,8 @@ class _ExecutorList extends StatelessWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text('Delete Estate Claim'),
-                    content: const Text('Are you sure you want to delete this estate claim? This action cannot be undone.'),
+                    title: const Text('Delete Executor'),
+                    content: const Text('Are you sure you want to delete this executor? This action cannot be undone.'),
                     actions: <Widget>[
                       TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
                       TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
@@ -225,7 +225,7 @@ class _ExecutorList extends StatelessWidget {
                 await onDelete(e);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Estate claim deleted'), backgroundColor: Colors.green),
+                    const SnackBar(content: Text('Executor deleted'), backgroundColor: Colors.green),
                   );
                 }
               }
@@ -258,7 +258,7 @@ class _ExecutorInfoBanner extends StatelessWidget {
           children: <Widget>[
             Icon(Icons.info_outline, color: scheme.primary, size: 18),
             const SizedBox(width: 8),
-            const Expanded(child: Text('New to estate claims?')),
+            const Expanded(child: Text('New to executors?')),
             Text('Learn more', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
           ],
         ),
