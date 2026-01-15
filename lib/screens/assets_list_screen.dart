@@ -4,6 +4,7 @@ import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_asset_screen.dart';
+import 'add_asset_screen.dart';
 
 class AssetsListScreen extends StatefulWidget {
   const AssetsListScreen({super.key});
@@ -100,6 +101,17 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Assets')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final bool? added = await Navigator.of(context).push(
+            MaterialPageRoute<bool>(builder: (_) => const AddAssetScreen()),
+          );
+          if (added == true) {
+            await _loadAssets();
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

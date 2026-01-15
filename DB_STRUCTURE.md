@@ -11,7 +11,7 @@ CREATE TABLE public.accounts (
   stripe_product text,
   ref_product_key text DEFAULT 'P0001'::text,
   stripe_price_id text,
-  kyc_status USER-DEFINED,
+  kyc_status text,
   chip_customer_id text UNIQUE,
   CONSTRAINT accounts_pkey PRIMARY KEY (id),
   CONSTRAINT public_accounts_ref_product_key_fkey FOREIGN KEY (ref_product_key) REFERENCES public.products(ref_key),
@@ -94,7 +94,21 @@ CREATE TABLE public.bodies (
   icon text,
   active boolean NOT NULL DEFAULT true,
   featured boolean DEFAULT false,
+  icon_url text,
+  icon_path text,
   CONSTRAINT bodies_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.care_team (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  name text NOT NULL,
+  bio text NOT NULL,
+  booking_url text NOT NULL,
+  image_url text,
+  is_active boolean NOT NULL DEFAULT true,
+  sort_order integer DEFAULT 0,
+  CONSTRAINT care_team_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.careers (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -337,6 +351,25 @@ CREATE TABLE public.hibah (
   CONSTRAINT hibah_pkey PRIMARY KEY (id),
   CONSTRAINT hibah_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
+CREATE TABLE public.hibah_coupons (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code character varying NOT NULL UNIQUE,
+  description text,
+  discount_type character varying NOT NULL CHECK (discount_type::text = ANY (ARRAY['percentage'::character varying, 'fixed'::character varying]::text[])),
+  discount_value numeric NOT NULL CHECK (discount_value > 0::numeric),
+  min_amount numeric DEFAULT 0 CHECK (min_amount >= 0::numeric),
+  max_discount numeric DEFAULT NULL::numeric,
+  usage_limit integer,
+  used_count integer DEFAULT 0 CHECK (used_count >= 0),
+  valid_from timestamp with time zone DEFAULT now(),
+  valid_until timestamp with time zone,
+  is_active boolean DEFAULT true,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT hibah_coupons_pkey PRIMARY KEY (id),
+  CONSTRAINT hibah_coupons_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
 CREATE TABLE public.hibah_documents (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   submission_id uuid NOT NULL,
@@ -380,9 +413,14 @@ CREATE TABLE public.hibah_payments (
   chip_client_id text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  coupon_id uuid,
+  coupon_code character varying,
+  discount_amount numeric DEFAULT 0,
+  original_amount numeric,
   CONSTRAINT hibah_payments_pkey PRIMARY KEY (id),
   CONSTRAINT hibah_payments_hibah_id_fkey FOREIGN KEY (hibah_id) REFERENCES public.hibah(id),
-  CONSTRAINT hibah_payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT hibah_payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT hibah_payments_coupon_id_fkey FOREIGN KEY (coupon_id) REFERENCES public.hibah_coupons(id)
 );
 CREATE TABLE public.inform_death (
   uuid uuid NOT NULL UNIQUE,
@@ -521,14 +559,6 @@ CREATE TABLE public.roles (
   CONSTRAINT roles_pkey PRIMARY KEY (id),
   CONSTRAINT public_roles_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
-CREATE TABLE public.testing (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  name text,
-  uuid uuid,
-  CONSTRAINT testing_pkey PRIMARY KEY (id),
-  CONSTRAINT testing_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
-);
 CREATE TABLE public.trust (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -655,6 +685,13 @@ CREATE TABLE public.verification (
   uuid uuid NOT NULL,
   session_id text NOT NULL UNIQUE,
   status text,
+  updated_at timestamp with time zone DEFAULT now(),
+  didit_session_id text,
+  completed_at timestamp with time zone,
+  expires_at timestamp with time zone,
+  verification_url text,
+  error_message text,
+  metadata jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT verification_pkey PRIMARY KEY (id),
   CONSTRAINT verification_sessions_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );

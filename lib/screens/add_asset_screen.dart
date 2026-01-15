@@ -21,8 +21,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   final TextEditingController _brandSearchController = TextEditingController();
 
   BrandInfo? _brandInfo;
+  bool _isCustomAsset = false;
   List<BrandInfo> _searchResults = <BrandInfo>[];
   bool _isSearching = false;
+  bool _showAddCustomOption = false;
   Timer? _searchDebounce;
   String _lastQuery = '';
   final Map<String, List<BrandInfo>> _searchCache = <String, List<BrandInfo>>{};
@@ -49,6 +51,78 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     _brandSearchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  Future<void> _showCustomAssetDialog() async {
+    final TextEditingController nameController = TextEditingController(text: _brandSearchController.text.trim());
+    final TextEditingController urlController = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Add Custom Asset'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                TextFormField(
+                  controller: nameController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Asset Name *',
+                    hintText: 'e.g., My Custom Platform',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: urlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Website URL (optional)',
+                    hintText: 'https://example.com',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.url,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(context).pop(true);
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && nameController.text.trim().isNotEmpty) {
+      setState(() {
+        _brandInfo = BrandInfo(
+          name: nameController.text.trim(),
+          websiteUrl: urlController.text.trim(),
+          logoUrl: null,
+        );
+        _isCustomAsset = true;
+        _assetNameController.text = nameController.text.trim();
+        _searchResults = <BrandInfo>[];
+        _showAddCustomOption = false;
+      });
+    }
   }
 
   Future<void> _loadBelovedOptions() async {
@@ -81,6 +155,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       setState(() {
         _searchResults = <BrandInfo>[];
         _isSearching = false;
+        _showAddCustomOption = false;
       });
       return;
     }
@@ -90,6 +165,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       setState(() {
         _searchResults = <BrandInfo>[];
         _isSearching = false;
+        _showAddCustomOption = false;
       });
       return;
     }
@@ -100,6 +176,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       setState(() {
         _searchResults = cached;
         _isSearching = false;
+        _showAddCustomOption = q.length >= 3;
       });
       return;
     }
@@ -123,11 +200,13 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         setState(() {
           _searchResults = results;
           _isSearching = false;
+          _showAddCustomOption = q.length >= 3;
         });
       } catch (e) {
         if (!mounted) return;
         setState(() {
           _isSearching = false;
+          _showAddCustomOption = q.length >= 3;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Search failed: $e')),
@@ -179,6 +258,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         'declared_value_myr': declaredValue,
         'instructions_after_death': instructions,
         'new_service_platform_name': _brandInfo!.name,
+        'is_custom': _isCustomAsset,
       };
 
       // include brand details if available
@@ -340,8 +420,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 onTap: () async {
                   setState(() {
                     _brandInfo = item;
+                    _isCustomAsset = false;
                     _assetNameController.text = item.name;
                     _searchResults = <BrandInfo>[];
+                    _showAddCustomOption = false;
                   });
                   try {
                     final String domainOrName = item.websiteUrl.isNotEmpty ? item.websiteUrl : item.name;
@@ -362,18 +444,27 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               );
             },
           ),
-        if (_brandInfo != null && _searchResults.isEmpty) ...<Widget>[
+        if (_showAddCustomOption && !_isSearching)
+          ListTile(
+            leading: const Icon(Icons.add_circle_outline, color: Colors.blue),
+            title: const Text('Add your own asset'),
+            subtitle: Text(
+              _searchResults.isEmpty
+                  ? 'Use "${_brandSearchController.text.trim()}" as the asset name'
+                  : 'Can\'t find it? Add "${_brandSearchController.text.trim()}" as custom',
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => _showCustomAssetDialog(),
+          ),
+        if (_brandInfo != null && _searchResults.isEmpty && !_showAddCustomOption) ...<Widget>[
           const SizedBox(height: 8),
-          Row(
-            children: <Widget>[
-              if ((_brandInfo!.logoUrl ?? '').isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: _Logo(url: BrandfetchService.instance.addClientIdToUrl(_brandInfo!.logoUrl)!, size: 56),
-                ),
-              Expanded(child: Text(_brandInfo!.name)),
-              const Icon(Icons.check_circle, color: Colors.green),
-            ],
+          ListTile(
+            leading: (_brandInfo!.logoUrl ?? '').isNotEmpty
+                ? _Logo(url: BrandfetchService.instance.addClientIdToUrl(_brandInfo!.logoUrl)!, size: 40)
+                : const Icon(Icons.apps_outlined),
+            title: Text(_brandInfo!.name),
+            subtitle: _brandInfo!.websiteUrl.isNotEmpty ? Text(_brandInfo!.websiteUrl) : null,
+            trailing: const Icon(Icons.check_circle, color: Colors.green),
           ),
         ],
       ],
@@ -589,5 +680,6 @@ class _Logo extends StatelessWidget {
     );
   }
 }
+
 
 

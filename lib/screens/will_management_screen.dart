@@ -86,7 +86,9 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Future<void> _loadWillData() async {
     try {
       final user = AuthController.instance.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        return;
+      }
 
       final will = await WillService.instance.getUserWill(user.id);
       final profile = await AuthController.instance.getUserProfile();
@@ -1076,7 +1078,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       );
     }
 
-    final totalValue = _assets.fold<double>(0, (sum, asset) => sum + (asset['value'] as num).toDouble());
+    final totalValue = _assets.fold<double>(0, (sum, asset) {
+      final value = _safeParseDouble(asset['value']);
+      return sum + value;
+    });
     
     final List<String> assetLines = [
       'JADUAL 1: SENARAI ASET TERPERINCI',
@@ -1096,7 +1101,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     if (physicalAssets.isNotEmpty) {
       for (int i = 0; i < physicalAssets.length; i++) {
         final asset = physicalAssets[i];
-        final value = (asset['value'] as num).toDouble();
+        final value = _safeParseDouble(asset['value']);
         final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
         final institution = asset['institution'] ?? 'N/A';
         final accountType = asset['account_type'] ?? 'N/A';
@@ -1136,7 +1141,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     if (digitalAssets.isNotEmpty) {
       for (int i = 0; i < digitalAssets.length; i++) {
         final asset = digitalAssets[i];
-        final value = (asset['value'] as num).toDouble();
+        final value = _safeParseDouble(asset['value']);
         final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
         final accountType = asset['account_type'] ?? 'N/A';
         final url = asset['url'] ?? '';
@@ -1199,6 +1204,15 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       default:
         return instruction ?? '';
     }
+  }
+
+  /// Helper function to safely parse any dynamic value to double
+  /// Handles String, num, and null types
+  double _safeParseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 }
 

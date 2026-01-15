@@ -620,9 +620,6 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                 case 'clear':
                   _clearConversation();
                   break;
-                case 'export':
-                  // TODO: Export conversation
-                  break;
               }
             },
             itemBuilder: (context) => [
@@ -633,16 +630,6 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                     Icon(Icons.clear_all),
                     SizedBox(width: 8),
                     Text('Clear Conversation'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    Icon(Icons.download),
-                    SizedBox(width: 8),
-                    Text('Export Chat'),
                   ],
                 ),
               ),

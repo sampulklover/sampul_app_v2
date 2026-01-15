@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'screens/login_screen.dart';
@@ -9,13 +11,40 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/main_shell.dart';
 import 'services/supabase_service.dart';
 import 'services/openrouter_service.dart';
+import 'config/stripe_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Override debugPrint to filter out Supabase INFO messages
+  final originalDebugPrint = debugPrint;
+  debugPrint = (String? message, {int? wrapWidth}) {
+    if (message != null && 
+        (message.contains('supabase.supabase_flutter: INFO') ||
+         message.contains('supabase.auth: INFO') ||
+         message.contains('DEBUG:'))) {
+      return; // Suppress Supabase INFO messages and DEBUG messages
+    }
+    // Use default behavior for other messages
+    originalDebugPrint(message, wrapWidth: wrapWidth);
+  };
+  
   await dotenv.load(fileName: ".env");
   
   // Initialize Supabase
   await SupabaseService.initialize();
+
+  // Initialize Stripe (skip on web and when key is missing)
+  if (StripeConfig.publishableKey.isNotEmpty && !kIsWeb) {
+    Stripe.publishableKey = StripeConfig.publishableKey;
+    Stripe.merchantIdentifier = StripeConfig.merchantDisplayName;
+    Stripe.urlScheme = StripeConfig.returnUrlScheme;
+    try {
+      await Stripe.instance.applySettings();
+    } catch (e) {
+      debugPrint('Stripe applySettings skipped/failed: $e');
+    }
+  }
   
   // Initialize OpenRouter
   await OpenRouterService.initialize();
