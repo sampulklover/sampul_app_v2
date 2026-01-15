@@ -59,6 +59,14 @@
 				<string>YOUR_REVERSED_CLIENT_ID</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.example.sampulAppV2</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sampul</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

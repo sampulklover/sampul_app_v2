@@ -5,7 +5,6 @@ import '../models/user_profile.dart';
 import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
-import '../services/will_service.dart';
 import '../services/brandfetch_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
@@ -20,6 +19,10 @@ import 'will_management_screen.dart';
 import 'extra_wishes_screen.dart';
 import 'onboarding_flow_screen.dart';
 import 'chat_list_screen.dart';
+import 'aftercare_screen.dart';
+import '../models/trust.dart';
+import '../services/trust_service.dart';
+import 'trust_create_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,10 +34,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   UserProfile? _userProfile;
   bool _isLoadingProfile = true;
-  bool _isLoadingTotal = true;
-  double _totalAssets = 0.0;
-  bool _isAssetsHidden = false;
   bool _hasCheckedOnboarding = false;
+  bool _isLoadingTrusts = true;
+  List<Trust> _trusts = <Trust>[];
   // Keys to control child lists on pull-to-refresh
   final GlobalKey<_AssetsListState> _assetsListKey = GlobalKey<_AssetsListState>();
   final GlobalKey<_FamilyListState> _familyListKey = GlobalKey<_FamilyListState>();
@@ -43,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadUserProfile();
-    _loadTotalAssets();
+    _loadTrusts();
     _checkOnboarding();
   }
 
@@ -76,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (result == true && mounted) {
       await _loadUserProfile();
-      await _loadTotalAssets();
+      await _loadTrusts();
       // Ensure child lists also refresh after onboarding completes
       await Future.wait(<Future<void>>[
         _assetsListKey.currentState?.reload() ?? Future.value(),
@@ -103,39 +105,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _loadTotalAssets() async {
+  Future<void> _loadTrusts() async {
     try {
-      final user = AuthController.instance.currentUser;
-      if (user == null) {
-        if (mounted) {
-          setState(() {
-            _isLoadingTotal = false;
-            _totalAssets = 0.0;
-          });
-        }
-        return;
-      }
-      final assets = await WillService.instance.getUserAssets(user.id);
-      final double sum = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
-      if (mounted) {
-        setState(() {
-          _totalAssets = sum;
-          _isLoadingTotal = false;
-        });
-      }
+      final trusts = await TrustService.instance.listUserTrusts();
+      if (!mounted) return;
+      setState(() {
+        _trusts = trusts;
+        _isLoadingTrusts = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingTotal = false;
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _isLoadingTrusts = false;
+      });
     }
   }
 
   Future<void> _refreshData() async {
     await Future.wait([
       _loadUserProfile(),
-      _loadTotalAssets(),
+      _loadTrusts(),
     ]);
     // Ask child lists to reload their data as well
     await Future.wait(<Future<void>>[
@@ -232,33 +221,14 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 const SizedBox(height: 12),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _SummaryCard(
-                    isLoading: _isLoadingTotal,
-                    totalAmount: _totalAssets,
-                    isHidden: _isAssetsHidden,
-                    onToggleVisibility: () {
-                      setState(() {
-                        _isAssetsHidden = !_isAssetsHidden;
-                      });
-                    },
-                    onDetails: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
-                      );
-                    },
-                  ),
+                _TrustCardsCarousel(
+                  isLoading: _isLoadingTrusts,
+                  trusts: _trusts,
+                  onRefresh: _refreshData,
                 ),
-                const SizedBox(height: 12),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _PrimaryActionsRow(),
-                ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _ActionsGrid(),
+                  child: _ActionsGrid(onRefresh: _refreshData),
                 ),
                 const SizedBox(height: 16),
                 Padding(
@@ -266,10 +236,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _SectionHeader(
                     title: 'My Assets',
                     actionText: 'See All →',
-                    onAction: () {
-                      Navigator.of(context).push(
+                    onAction: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
                       );
+                      // Refresh data when returning from assets list
+                      await _refreshData();
                     },
                   ),
                 ),
@@ -281,10 +253,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _SectionHeader(
                     title: 'My Family',
                     actionText: 'See All →',
-                    onAction: () {
-                      Navigator.of(context).push(
+                    onAction: () async {
+                      await Navigator.of(context).push(
                         MaterialPageRoute<void>(builder: (_) => const FamilyListScreen()),
                       );
+                      // Refresh data when returning from family list
+                      await _refreshData();
                     },
                   ),
                 ),
@@ -301,107 +275,568 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
+class _TrustCardsCarousel extends StatefulWidget {
   final bool isLoading;
-  final double totalAmount;
-  final bool isHidden;
-  final VoidCallback onToggleVisibility;
-  final VoidCallback onDetails;
+  final List<Trust> trusts;
+  final VoidCallback? onRefresh;
 
-  const _SummaryCard({
+  const _TrustCardsCarousel({
     this.isLoading = false,
-    this.totalAmount = 0.0,
-    this.isHidden = false,
-    required this.onToggleVisibility,
-    required this.onDetails,
+    required this.trusts,
+    this.onRefresh,
   });
+
+  @override
+  State<_TrustCardsCarousel> createState() => _TrustCardsCarouselState();
+}
+
+class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
+  late ScrollController _scrollController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_updateCurrentPage);
+  }
+
+  void _updateCurrentPage() {
+    if (!_scrollController.hasClients || widget.trusts.isEmpty) return;
+    final double scrollPosition = _scrollController.offset;
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double cardWidth = screenWidth - 32; // Full width minus padding
+    final double spacing = 12; // Separator width
+    final double itemWidth = cardWidth + spacing;
+    final int newPage = (scrollPosition / itemWidth).round();
+    // Clamp to valid trust card indices (exclude the add card at the end)
+    final int clampedPage = newPage.clamp(0, widget.trusts.length - 1);
+    if (clampedPage != _currentPage) {
+      setState(() {
+        _currentPage = clampedPage;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updateCurrentPage);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  String _statusLabel(TrustStatus s) {
+    switch (s) {
+      case TrustStatus.submitted:
+        return 'Submitted';
+      case TrustStatus.approved:
+        return 'Approved';
+      case TrustStatus.rejected:
+        return 'Rejected';
+      case TrustStatus.draft:
+        return 'Draft';
+    }
+  }
+
+  Color _statusColor(TrustStatus s) {
+    switch (s) {
+      case TrustStatus.submitted:
+        return Colors.blue.shade600;
+      case TrustStatus.approved:
+        return Colors.green.shade700;
+      case TrustStatus.rejected:
+        return Colors.red.shade700;
+      case TrustStatus.draft:
+        return Colors.grey.shade600;
+    }
+  }
+
+  String _formatAmount(String? estimatedNetWorth) {
+    if (estimatedNetWorth == null || estimatedNetWorth.isEmpty) {
+      return 'RM0.00';
+    }
+    // Try to parse as number, if it's a range string, just return it
+    try {
+      final num = double.tryParse(estimatedNetWorth);
+      if (num != null) {
+        return 'RM${num.toStringAsFixed(2)}';
+      }
+    } catch (_) {}
+    return estimatedNetWorth;
+  }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final String display = isLoading 
-        ? '••••••' 
-        : isHidden 
-            ? '••••••' 
-            : 'RM ${totalAmount.toStringAsFixed(2)}';
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'My total assets value',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+    
+    if (widget.isLoading) {
+      return SizedBox(
+        height: 180,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: 180,
+          child: ListView.separated(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: widget.trusts.length + 1, // +1 for the add new trust card
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (BuildContext context, int index) {
+              // Show add new trust card at the end
+              if (index == widget.trusts.length) {
+                return SizedBox(
+                  width: MediaQuery.of(context).size.width - 32,
+                  child: Card(
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: InkWell(
+                      onTap: () async {
+                        final bool? created = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute<bool>(builder: (_) => const TrustCreateScreen()),
+                        );
+                        if (created == true && widget.onRefresh != null) {
+                          widget.onRefresh!();
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: <Color>[
+                              Colors.white,
+                              theme.colorScheme.primaryContainer.withOpacity(0.1),
+                            ],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.add_circle_outline,
+                                  color: theme.colorScheme.primary,
+                                  size: 32,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                widget.trusts.isEmpty ? 'Create Your First Trust' : 'Add New Trust',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Tap to get started',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: SizedBox(width: 120, height: 12, child: LinearProgressIndicator(minHeight: 6)),
-                          ),
-                        )
-                      : Row(
-                          children: <Widget>[
-                            Text(
-                              display,
-                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: onToggleVisibility,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                 child: Icon(
-                                   isHidden ? Icons.lock : Icons.lock_open,
-                                   size: 16,
-                                   color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
-                                 ),
-                              ),
-                            ),
+                );
+              }
+              
+              // Show trust card
+              final Trust trust = widget.trusts[index];
+              final String trustCode = trust.trustCode ?? 'N/A';
+              final String amount = _formatAmount(trust.estimatedNetWorth);
+              final TrustStatus status = trust.computedStatus;
+              final bool isActive = status == TrustStatus.approved;
+              
+              return SizedBox(
+                width: MediaQuery.of(context).size.width - 32, // Full width minus padding
+                child: Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (context) => const TrustManagementScreen(),
+                    ),
+                  ).then((_) {
+                    if (widget.onRefresh != null) {
+                      widget.onRefresh!();
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  children: <Widget>[
+                    // Background gradient
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: <Color>[
+                            Colors.white,
+                            theme.colorScheme.primaryContainer.withOpacity(0.1),
                           ],
                         ),
-                ],
+                      ),
+                    ),
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Family Account',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      trustCode,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.arrow_outward,
+                                  size: 20,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (context) => const TrustManagementScreen(),
+                                    ),
+                                  ).then((_) {
+                                    if (widget.onRefresh != null) {
+                                      widget.onRefresh!();
+                                    }
+                                  });
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            amount,
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: <Widget>[
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: isActive ? Colors.green : _statusColor(status),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                isActive ? 'Your plan is active' : _statusLabel(status),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isActive ? Colors.green.shade700 : _statusColor(status),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Decorative element (purple cube-like graphic)
+                    Positioned(
+                      right: -20,
+                      top: -20,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        transform: Matrix4.rotationZ(0.2),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            TextButton(
-              onPressed: onDetails,
-              child: const Text('details'),
-            ),
-          ],
+          );
+            },
+          ),
         ),
-      ),
+        if (widget.trusts.length > 1) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.trusts.length, // Only show dots for trust cards, not the add card
+              (index) => GestureDetector(
+                onTap: () {
+                  final double cardWidth = MediaQuery.of(context).size.width - 32;
+                  final double spacing = 12;
+                  final double targetOffset = index * (cardWidth + spacing);
+                  _scrollController.animateTo(
+                    targetOffset,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentPage == index
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outlineVariant.withOpacity(0.3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
 class _ActionsGrid extends StatelessWidget {
+  // Main menu items: Will, Hibah, Trust, Others
   final List<_ActionItem> items = const <_ActionItem>[
-    _ActionItem(Icons.chat_bubble_outline, 'Chat'),
-    _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
-    _ActionItem(Icons.family_restroom, 'Family'),
     _ActionItem(Icons.description_outlined, 'Will'),
-    _ActionItem(Icons.checklist_outlined, 'Checklist'),
-    _ActionItem(Icons.gavel_outlined, 'Trust'),
-    _ActionItem(Icons.task_alt_outlined, 'Execution'),
     _ActionItem(Icons.group_outlined, 'Hibah'),
+    _ActionItem(Icons.gavel_outlined, 'Trust'),
     _ActionItem(Icons.more_horiz, 'Others'),
   ];
 
-  const _ActionsGrid();
+  // Items that go inside "Others" menu
+  final List<_ActionItem> othersItems = const <_ActionItem>[
+    _ActionItem(Icons.chat_bubble_outline, 'Chat'),
+    _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
+    _ActionItem(Icons.family_restroom, 'Family'),
+    _ActionItem(Icons.checklist_outlined, 'Checklist'),
+    _ActionItem(Icons.task_alt_outlined, 'Execution'),
+    _ActionItem(Icons.medical_services_outlined, 'Aftercare'),
+    _ActionItem(Icons.favorite_outline, 'Extra Wishes'),
+  ];
+
+  final VoidCallback? onRefresh;
+  const _ActionsGrid({this.onRefresh});
+
+  void _handleItemTap(String label, BuildContext context) {
+    if (label == 'Will') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const WillManagementScreen(),
+        ),
+      );
+    } else if (label == 'Hibah') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const HibahManagementScreen(),
+        ),
+      );
+    } else if (label == 'Trust') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const TrustManagementScreen(),
+        ),
+      );
+    } else if (label == 'Others') {
+      _showOthersMenu(context);
+    }
+  }
+
+  void _handleOthersItemTap(String label, BuildContext context) {
+    Navigator.of(context).pop(); // Close the bottom sheet first
+    
+    if (label == 'Chat') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const ChatListScreen(),
+        ),
+      );
+    } else if (label == 'Assets') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const AssetsListScreen(),
+        ),
+      ).then((_) {
+        onRefresh?.call();
+      });
+    } else if (label == 'Family') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const FamilyListScreen(),
+        ),
+      ).then((_) {
+        onRefresh?.call();
+      });
+    } else if (label == 'Checklist') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const ChecklistScreen(),
+        ),
+      );
+    } else if (label == 'Execution') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const ExecutorManagementScreen(),
+        ),
+      );
+    } else if (label == 'Aftercare') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const AftercareScreen(),
+        ),
+      );
+    } else if (label == 'Extra Wishes') {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const ExtraWishesScreen(),
+        ),
+      );
+    }
+  }
+
+  void _showOthersMenu(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        final ThemeData theme = Theme.of(context);
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: <Widget>[
+                        Text(
+                          'Others',
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: othersItems.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 0.9,
+                      ),
+                      itemBuilder: (BuildContext context, int index) {
+                        final _ActionItem item = othersItems[index];
+                        return GestureDetector(
+                          onTap: () => _handleOthersItemTap(item.label, context),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(item.icon, color: theme.colorScheme.onPrimaryContainer),
+                              ),
+                              const SizedBox(height: 8),
+                              Flexible(
+                                child: Text(
+                                  item.label,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -419,165 +854,7 @@ class _ActionsGrid extends StatelessWidget {
       itemBuilder: (BuildContext context, int index) {
         final _ActionItem item = items[index];
         return GestureDetector(
-          onTap: () {
-            if (item.label == 'Chat') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const ChatListScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Assets') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const AssetsListScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Family') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const FamilyListScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Will') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const WillManagementScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Checklist') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const ChecklistScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Trust') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const TrustManagementScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Execution') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const ExecutorManagementScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Hibah') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const HibahManagementScreen(),
-                ),
-              );
-            }
-            if (item.label == 'Others') {
-              showModalBottomSheet<void>(
-                context: context,
-                useSafeArea: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (BuildContext context) {
-                  return SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewPadding.bottom + 24,
-                      ),
-                      child: SingleChildScrollView(
-                        physics: const ClampingScrollPhysics(),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                          const SizedBox(height: 8),
-                          Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.outlineVariant,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
-                              children: <Widget>[
-                                Text(
-                                  'Others',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: 1, // Expand as more features are added
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                childAspectRatio: 0.9,
-                              ),
-                              itemBuilder: (BuildContext context, int index) {
-                                // Only item for now: Extra Wishes
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (_) => const ExtraWishesScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      Container(
-                                        width: 56,
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        child: Icon(Icons.favorite_outline, color: Theme.of(context).colorScheme.onPrimaryContainer),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Flexible(
-                                        child: Text(
-                                          'Extra Wishes',
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                        ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            }
-            // Add other action handlers here as needed
-          },
+          onTap: () => _handleItemTap(item.label, context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -604,60 +881,6 @@ class _ActionItem {
   final IconData icon;
   final String label;
   const _ActionItem(this.icon, this.label);
-}
-
-class _PrimaryActionsRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: SizedBox(
-            height: 44,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const TrustManagementScreen()),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.primary,
-                side: BorderSide(color: theme.colorScheme.outlineVariant),
-                backgroundColor: theme.colorScheme.surface,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              icon: const Icon(Icons.gavel_outlined, size: 18),
-              label: const Text('Trust'),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: SizedBox(
-            height: 44,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const ExecutorManagementScreen()),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.primary,
-                side: BorderSide(color: theme.colorScheme.outlineVariant),
-                backgroundColor: theme.colorScheme.surface,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              icon: const Icon(Icons.task_alt_outlined, size: 18),
-              label: const Text('Execution'),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _SectionHeader extends StatelessWidget {

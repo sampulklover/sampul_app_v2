@@ -125,6 +125,31 @@ class WillService {
     }
   }
 
+  /// Helper function to safely convert declared_value_myr to double
+  /// Handles both String and num types from Supabase
+  double _parseDeclaredValue(dynamic value) {
+    if (value == null) {
+      return 0.0;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  /// Helper function to safely parse any dynamic value to double
+  /// Handles String, num, and null types
+  double _safeParseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
   /// Get user's assets for will assignment
   Future<List<Map<String, dynamic>>> getUserAssets(String uuid) async {
     try {
@@ -148,7 +173,7 @@ class WillService {
           'id': asset['id'],
           'name': asset['asset_name'] ?? 'Unknown Asset',
           'type': 'physical',
-          'value': (asset['declared_value_myr'] as num?)?.toDouble() ?? 0.0,
+          'value': _parseDeclaredValue(asset['declared_value_myr']),
           'account_type': asset['account_type'],
           'institution': asset['institution'],
           'account_no': asset['account_no'],
@@ -169,7 +194,7 @@ class WillService {
           'id': asset['id'],
           'name': asset['new_service_platform_name'] ?? 'Unknown Asset',
           'type': 'digital',
-          'value': (asset['declared_value_myr'] as num?)?.toDouble() ?? 0.0,
+          'value': _parseDeclaredValue(asset['declared_value_myr']),
           'account_type': asset['account_type'],
           'url': asset['new_service_platform_url'],
           'logo_url': BrandfetchService.instance.addClientIdToUrl(logoUrlRaw),
@@ -244,10 +269,13 @@ class WillService {
       buffer.writeln('I hereby bequeath my assets as follows:');
       buffer.writeln();
       
-      final totalValue = assets.fold<double>(0, (sum, asset) => sum + (asset['value'] as num).toDouble());
+      final totalValue = assets.fold<double>(0, (sum, asset) {
+        final value = _safeParseDouble(asset['value']);
+        return sum + value;
+      });
       
       for (final asset in assets) {
-        final value = (asset['value'] as num).toDouble();
+        final value = _safeParseDouble(asset['value']);
         final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
         
         buffer.writeln('- ${asset['name']} (${asset['type']}) - RM ${value.toStringAsFixed(2)} ($percentage%)');
@@ -256,9 +284,10 @@ class WillService {
     }
     
     // Beneficiaries
-    final beneficiaries = familyMembers.where((member) => 
-      member['type'] == 'future_owner' || ((member['percentage'] as num?)?.toDouble() ?? 0) > 0
-    ).toList();
+    final beneficiaries = familyMembers.where((member) {
+      final percentage = _safeParseDouble(member['percentage']);
+      return member['type'] == 'future_owner' || percentage > 0;
+    }).toList();
     
     if (beneficiaries.isNotEmpty) {
       buffer.writeln('BENEFICIARIES:');
@@ -266,7 +295,7 @@ class WillService {
       buffer.writeln();
       
       for (final beneficiary in beneficiaries) {
-        final percentage = (beneficiary['percentage'] as num?)?.toDouble() ?? 0.0;
+        final percentage = _safeParseDouble(beneficiary['percentage']);
         buffer.writeln('- ${beneficiary['name']} (${beneficiary['relationship'] ?? 'Family member'}) - ${percentage.toStringAsFixed(1)}%');
       }
       buffer.writeln();

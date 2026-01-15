@@ -3,6 +3,7 @@ import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
 import '../models/relationship.dart';
 import 'edit_family_member_screen.dart';
+import 'add_family_member_screen.dart';
 
 class FamilyListScreen extends StatefulWidget {
   const FamilyListScreen({super.key});
@@ -130,6 +131,17 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Family')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final bool? added = await Navigator.of(context).push(
+            MaterialPageRoute<bool>(builder: (_) => const AddFamilyMemberScreen()),
+          );
+          if (added == true) {
+            await _load();
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
