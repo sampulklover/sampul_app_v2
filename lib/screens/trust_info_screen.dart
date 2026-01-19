@@ -1,150 +1,307 @@
 import 'package:flutter/material.dart';
+import 'trust_create_screen.dart';
 
 class TrustInfoScreen extends StatelessWidget {
   const TrustInfoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme textTheme = Theme.of(context).textTheme;
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('About Trusts')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          _HeroCard(),
-          const SizedBox(height: 16),
-          _Section(
-            title: 'What is a Trust?',
-            children: <Widget>[
-              Text('A simple way to have a trustee manage your assets for your beneficiaries based on your instructions.', style: textTheme.bodyMedium),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _Section(
-            title: 'Why use it',
-            children: <Widget>[
-              _Bullet(text: 'Clear instructions for your assets'),
-              _Bullet(text: 'Trusted person to manage on your behalf'),
-              _Bullet(text: 'Less confusion for family'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _Section(
-            title: 'Statuses',
-            children: <Widget>[
-              _StatusRow(label: 'Draft', color: scheme.onSurfaceVariant, description: 'Editable'),
-              _StatusRow(label: 'Submitted', color: Colors.blue.shade600, description: 'Under review'),
-              _StatusRow(label: 'Approved', color: Colors.green.shade700, description: 'Active (read‑only)'),
-              _StatusRow(label: 'Rejected', color: Colors.red.shade700, description: 'Fix and resubmit'),
-            ],
-          ),
-        ],
+      appBar: AppBar(
+        title: const Text('About Family Trust Fund'),
+        elevation: 0,
       ),
-    );
-  }
-}
-
-class _HeroCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: <Color>[scheme.primary, scheme.primaryContainer],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Icon(Icons.gavel_outlined, color: Colors.white, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text('Trusts, made simple', style: textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 6),
-                Text('Set instructions for your assets and who manages them.', style: textTheme.bodyMedium?.copyWith(color: Colors.white.withOpacity(0.95))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  const _Section({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme textTheme = Theme.of(context).textTheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(title, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            ...children,
+          children: [
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header Section
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Let's set up your family account",
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Clear wishes, for the people you love.",
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Illustrative Graphic
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: _buildIllustration(context, colorScheme),
+                    ),
+
+                    // Benefits section - simplified language
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Why set up a Family Trust Fund?",
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "A Family Trust Fund lets you decide how your money is used for your family, even when you're not around.",
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _buildFeatureItem(
+                              context,
+                              "Choose how your money is spent (healthcare, school fees, donations)",
+                              colorScheme,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildFeatureItem(
+                              context,
+                              "Change your plans anytime you want",
+                              colorScheme,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildFeatureItem(
+                              context,
+                              "Your family knows exactly what to do — no confusion",
+                              colorScheme,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Footer Section - more compact
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                      child: Column(
+                        children: [
+                          // Partner Logos Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.teal.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance,
+                                      color: Colors.teal.shade700,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          "Rakyat",
+                                          style: TextStyle(
+                                            color: Colors.teal.shade700,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Trustee",
+                                          style: TextStyle(
+                                            color: Colors.teal.shade700,
+                                            fontSize: 8,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.shield,
+                                      color: Colors.blue.shade700,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      "Halogen",
+                                      style: TextStyle(
+                                        color: Colors.blue.shade700,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "We work with trusted partners to manage your fund safely.",
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Fixed button at bottom
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const TrustCreateScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Start setting up",
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: colorScheme.onPrimary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-}
 
-class _Bullet extends StatelessWidget {
-  final String text;
-  const _Bullet({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text('• '),
-          Expanded(child: Text(text)),
-        ],
+  Widget _buildIllustration(BuildContext context, ColorScheme colorScheme) {
+    return Center(
+      child: Image.asset(
+        'assets/3-colour-coins.png',
+        fit: BoxFit.contain,
+        height: 120,
       ),
     );
   }
-}
 
-class _StatusRow extends StatelessWidget {
-  final String label;
-  final Color color;
-  final String description;
-  const _StatusRow({required this.label, required this.color, required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: <Widget>[
-          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(description)),
-        ],
-      ),
+  Widget _buildFeatureItem(
+    BuildContext context,
+    String text,
+    ColorScheme colorScheme,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.check,
+            color: colorScheme.onPrimary,
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }
-
-
