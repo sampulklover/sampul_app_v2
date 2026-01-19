@@ -10,6 +10,7 @@ import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
 import 'trust_management_screen.dart';
+import 'trust_dashboard_screen.dart';
 import 'hibah_management_screen.dart';
 import 'add_family_member_screen.dart';
 import 'executor_management_screen.dart';
@@ -438,7 +439,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                widget.trusts.isEmpty ? 'Create Your First Trust' : 'Add New Trust',
+                                widget.trusts.isEmpty ? 'Create Your First Trust Fund' : 'Add New Trust Fund',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: theme.colorScheme.primary,
@@ -478,7 +479,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (context) => const TrustManagementScreen(),
+                      builder: (context) => TrustDashboardScreen(trust: trust),
                     ),
                   ).then((_) {
                     if (widget.onRefresh != null) {
@@ -542,7 +543,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute<void>(
-                                      builder: (context) => const TrustManagementScreen(),
+                                      builder: (context) => TrustDashboardScreen(trust: trust),
                                     ),
                                   ).then((_) {
                                     if (widget.onRefresh != null) {

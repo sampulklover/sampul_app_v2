@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
-import 'trust_edit_screen.dart';
 import 'trust_create_screen.dart';
 import 'trust_info_screen.dart';
+import 'trust_dashboard_screen.dart';
 
 class TrustManagementScreen extends StatefulWidget {
   const TrustManagementScreen({super.key});
@@ -59,7 +59,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trusts'),
+        title: const Text('Family Trust Fund'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -73,7 +73,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
         ),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Trusts',
+            tooltip: 'About Trust Fund',
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen()));
@@ -87,7 +87,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
               ? Column(
                   children: <Widget>[
                     if (_tabController.index == 0) _TrustInfoBanner(),
-                    const Expanded(child: Center(child: Text('No trusts yet'))),
+                    const Expanded(child: Center(child: Text('No trust funds yet'))),
                   ],
                 )
               : Column(
@@ -97,11 +97,11 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
                       child: TabBarView(
                         controller: _tabController,
                         children: <Widget>[
-                          _TrustList(trusts: _trusts, onDelete: _handleDelete, onTap: _openForEdit),
-                          _TrustList(trusts: drafts, onDelete: _handleDelete, onTap: _openForEdit),
-                          _TrustList(trusts: submitted, onDelete: _handleDelete, onTap: _openForEdit),
-                          _TrustList(trusts: approved, onDelete: _handleDelete, onTap: _openForEdit),
-                          _TrustList(trusts: rejected, onDelete: _handleDelete, onTap: _openForEdit),
+                          _TrustList(trusts: _trusts, onTap: _openForEdit),
+                          _TrustList(trusts: drafts, onTap: _openForEdit),
+                          _TrustList(trusts: submitted, onTap: _openForEdit),
+                          _TrustList(trusts: approved, onTap: _openForEdit),
+                          _TrustList(trusts: rejected, onTap: _openForEdit),
                         ],
                       ),
                     ),
@@ -110,29 +110,20 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createTrust,
         icon: const Icon(Icons.add),
-        label: const Text('New trust'),
+        label: const Text('Create New'),
       ),
     );
-  }
-
-  Future<void> _handleDelete(Trust t) async {
-    if (t.id != null) {
-      await TrustService.instance.deleteTrust(t.id!);
-      await _loadTrusts();
-    }
   }
 
   // No manual status changes; status is computed from payments
 
   Future<void> _openForEdit(Trust t) async {
-    // Only allow editing drafts
-    final bool isDraft = t.computedStatus == TrustStatus.draft;
-    final bool? updated = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => TrustEditScreen(initial: t)),
+    // Navigate to dashboard instead of directly to edit
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => TrustDashboardScreen(trust: t)),
     );
-    if (updated == true && isDraft) {
-      await _loadTrusts();
-    }
+    // Refresh trusts list when returning from dashboard
+    await _loadTrusts();
   }
 }
 
@@ -220,10 +211,9 @@ class _CreateTrustDialogState extends State<_CreateTrustDialog> {
 
 class _TrustList extends StatelessWidget {
   final List<Trust> trusts;
-  final Future<void> Function(Trust) onDelete;
   final Future<void> Function(Trust) onTap;
 
-  const _TrustList({required this.trusts, required this.onDelete, required this.onTap});
+  const _TrustList({required this.trusts, required this.onTap});
 
   String _statusLabel(TrustStatus s) {
     switch (s) {
@@ -251,65 +241,184 @@ class _TrustList extends StatelessWidget {
     }
   }
 
+  String _formatAmount(String? estimatedNetWorth) {
+    if (estimatedNetWorth == null || estimatedNetWorth.isEmpty) {
+      return 'RM0.00';
+    }
+    try {
+      final num = double.tryParse(estimatedNetWorth);
+      if (num != null) {
+        return 'RM${num.toStringAsFixed(2)}';
+      }
+    } catch (_) {}
+    return estimatedNetWorth;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
       itemCount: trusts.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (BuildContext context, int index) {
         final Trust t = trusts[index];
-        return ListTile(
+        return _TrustSummaryCard(
+          trust: t,
+          amountText: _formatAmount(t.estimatedNetWorth),
+          statusText: _statusLabel(t.computedStatus),
+          statusColor: _statusColor(context, t.computedStatus),
           onTap: () => onTap(t),
-          title: Text(t.name ?? 'Unnamed trust'),
-          subtitle: Row(
+        );
+      },
+    );
+  }
+}
+
+class _TrustSummaryCard extends StatelessWidget {
+  final Trust trust;
+  final String amountText;
+  final String statusText;
+  final Color statusColor;
+  final VoidCallback onTap;
+
+  const _TrustSummaryCard({
+    required this.trust,
+    required this.amountText,
+    required this.statusText,
+    required this.statusColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final String title = 'Family Account';
+    final String trustCode = (trust.trustCode ?? '').trim();
+    final bool isActive = trust.computedStatus == TrustStatus.approved;
+
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 160,
+          child: Stack(
             children: <Widget>[
-              if ((t.trustCode ?? '').isNotEmpty) Text(t.trustCode!),
-              const SizedBox(width: 8),
+              // Background gradient (match dashboard trust card)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _statusColor(context, t.computedStatus).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  _statusLabel(t.computedStatus),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _statusColor(context, t.computedStatus),
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[
+                      Colors.white,
+                      scheme.primaryContainer.withOpacity(0.1),
+                    ],
                   ),
+                ),
+              ),
+              // Decorative element
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  transform: Matrix4.rotationZ(0.2),
+                ),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.primary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (trustCode.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  trustCode,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_outward,
+                            size: 20,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          onPressed: onTap,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Open trust',
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      amountText,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: <Widget>[
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isActive ? Colors.green : statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isActive ? 'Your plan is active' : statusText,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isActive ? Colors.green.shade700 : statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final bool? confirm = await showDialog<bool>(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Delete Trust'),
-                    content: const Text('Are you sure you want to delete this trust? This action cannot be undone.'),
-                    actions: <Widget>[
-                      TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-                      TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
-                    ],
-                  );
-                },
-              );
-              if (confirm == true) {
-                await onDelete(t);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Trust deleted'), backgroundColor: Colors.green),
-                  );
-                }
-              }
-            },
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

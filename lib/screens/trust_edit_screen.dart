@@ -1002,7 +1002,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trust updated successfully')),
+        const SnackBar(content: Text('Trust Fund updated successfully')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -1018,7 +1018,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Trust'),
+        title: const Text('Edit Trust Fund'),
       ),
       body: (_isLoadingProfile || _isLoadingData)
           ? const Center(child: CircularProgressIndicator())
@@ -1027,7 +1027,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                 if (_dataError != null)
                   MaterialBanner(
                     backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                    content: Text('Error loading trust data: $_dataError'),
+                    content: Text('Error loading trust fund data: $_dataError'),
                     leading: const Icon(Icons.error_outline),
                     actions: <Widget>[
                       TextButton(

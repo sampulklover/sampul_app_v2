@@ -844,14 +844,14 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trust created successfully'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Trust Fund created successfully'), backgroundColor: Colors.green),
       );
       await Future<void>.delayed(const Duration(milliseconds: 300));
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create trust: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Failed to create trust fund: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -862,13 +862,13 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   Widget build(BuildContext context) {
     if (_isLoadingProfile) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Create Trust')),
+        appBar: AppBar(title: const Text('Create Trust Fund')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Trust')),
+      appBar: AppBar(title: const Text('Create Trust Fund')),
       body: SafeArea(
         child: Column(
           children: <Widget>[
