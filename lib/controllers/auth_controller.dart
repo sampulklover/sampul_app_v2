@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../models/user_profile.dart';
 import '../config/supabase_config.dart';
+import '../services/affiliate_service.dart';
 
 class AuthController {
   AuthController._();
@@ -68,11 +69,18 @@ class AuthController {
   // Sign out
   Future<void> signOut() async {
     try {
+      final String? userId = currentUser?.id;
+
       // Sign out from Supabase
       await _supabaseService.signOut();
       
       // Sign out from Google if previously signed in
       await _googleSignIn.signOut();
+
+      // Clear cached affiliate data tied to the previous user.
+      if (userId != null) {
+        await AffiliateService.instance.clearUserCache(userId);
+      }
     } catch (e) {
       throw Exception('Sign out failed: $e');
     }

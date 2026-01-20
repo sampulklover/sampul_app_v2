@@ -17,6 +17,24 @@ CREATE TABLE public.accounts (
   CONSTRAINT public_accounts_ref_product_key_fkey FOREIGN KEY (ref_product_key) REFERENCES public.products(ref_key),
   CONSTRAINT public_accounts_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
+CREATE TABLE public.affiliate_codes (
+  code text NOT NULL,
+  owner_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT affiliate_codes_pkey PRIMARY KEY (code),
+  CONSTRAINT affiliate_codes_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.affiliate_referrals (
+  id bigint NOT NULL DEFAULT nextval('affiliate_referrals_id_seq'::regclass),
+  code text NOT NULL,
+  referrer_id uuid NOT NULL,
+  referred_id uuid NOT NULL UNIQUE,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT affiliate_referrals_pkey PRIMARY KEY (id),
+  CONSTRAINT affiliate_referrals_code_fkey FOREIGN KEY (code) REFERENCES public.affiliate_codes(code),
+  CONSTRAINT affiliate_referrals_referrer_id_fkey FOREIGN KEY (referrer_id) REFERENCES auth.users(id),
+  CONSTRAINT affiliate_referrals_referred_id_fkey FOREIGN KEY (referred_id) REFERENCES auth.users(id)
+);
 CREATE TABLE public.aftercare (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -222,6 +240,7 @@ CREATE TABLE public.digital_assets (
   protection boolean,
   new_service_platform_logo_url text,
   updated_at timestamp with time zone DEFAULT now(),
+  is_custom boolean DEFAULT false,
   CONSTRAINT digital_assets_pkey PRIMARY KEY (id),
   CONSTRAINT public_digital_assets_beloved_id_fkey FOREIGN KEY (beloved_id) REFERENCES public.beloved(id),
   CONSTRAINT public_digital_assets_bodies_id_fkey FOREIGN KEY (bodies_id) REFERENCES public.bodies(id),
