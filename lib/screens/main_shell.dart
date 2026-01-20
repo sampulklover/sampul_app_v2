@@ -9,6 +9,7 @@ import 'enhanced_chat_conversation_screen.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
+import '../services/affiliate_service.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -91,6 +92,16 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         _animationController.forward();
+      }
+    });
+
+    // If user entered a referral code during onboarding (or earlier), try to claim it now.
+    // Safe to call repeatedly; server enforces constraints.
+    Future<void>(() async {
+      try {
+        await AffiliateService.instance.claimPendingIfAny();
+      } catch (_) {
+        // Silent fail; user can re-enter in onboarding.
       }
     });
   }

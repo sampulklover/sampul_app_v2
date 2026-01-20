@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/theme_controller.dart';
 import '../controllers/auth_controller.dart';
@@ -10,6 +11,7 @@ import '../services/verification_service.dart';
 import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
 import 'billing_screen.dart';
+import 'referral_dashboard_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -694,6 +696,18 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           Card(
             child: Column(
               children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.card_giftcard_outlined),
+                  title: const Text('Referrals'),
+                  subtitle: const Text('Your code and referrals'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
                 SwitchListTile(
                   value: ThemeController.instance.themeMode == ThemeMode.dark,
                   onChanged: (bool value) {

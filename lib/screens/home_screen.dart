@@ -24,6 +24,7 @@ import 'aftercare_screen.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
 import 'trust_create_screen.dart';
+import 'referral_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -166,6 +167,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             actions: <Widget>[
+              IconButton(
+                tooltip: 'Referrals',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+                  );
+                },
+                icon: const Icon(Icons.card_giftcard_outlined),
+              ),
               IconButton(
                 onPressed: () {
                   Navigator.of(context).push(

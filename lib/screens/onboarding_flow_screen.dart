@@ -7,6 +7,7 @@ import '../services/supabase_service.dart';
 import '../services/will_service.dart';
 import 'will_generation_screen.dart';
 import 'package:flutter/services.dart';
+import '../services/affiliate_service.dart';
 
 class OnboardingFlowScreen extends StatefulWidget {
   const OnboardingFlowScreen({super.key});
@@ -22,6 +23,8 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   bool _assetAdded = false;
   bool _willGenerated = false;
   final ScrollController _listController = ScrollController();
+  bool _isReferralSubmitting = false;
+  String? _referralCodePreview;
 
   final List<_OnboardingStep> _steps = const <_OnboardingStep>[
     _OnboardingStep(
@@ -50,6 +53,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   void initState() {
     super.initState();
     _checkCompletionStatus();
+    _loadPendingReferralCode();
   }
 
   @override
@@ -90,6 +94,220 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     } catch (_) {
       // ignore
     }
+  }
+
+  Future<void> _loadPendingReferralCode() async {
+    final pending = await AffiliateService.instance.getPendingReferralCode();
+    if (!mounted) return;
+    setState(() => _referralCodePreview = pending);
+  }
+
+  Future<void> _showReferralCodeDialog() async {
+    final controller = TextEditingController(text: _referralCodePreview ?? '');
+    final formKey = GlobalKey<FormState>();
+    String? inlineError;
+    String? inlineSuccess;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final theme = Theme.of(context);
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Have a referral code?',
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Enter your code below.',
+                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: controller,
+                        textInputAction: TextInputAction.done,
+                        textCapitalization: TextCapitalization.characters,
+                        decoration: const InputDecoration(
+                          labelText: 'Referral code',
+                          hintText: 'Example: ABC123',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.card_giftcard_outlined),
+                        ),
+                        onChanged: (_) {
+                          if (inlineError != null || inlineSuccess != null) {
+                            setModalState(() {
+                              inlineError = null;
+                              inlineSuccess = null;
+                            });
+                          }
+                        },
+                        validator: (value) {
+                          final v = (value ?? '').trim();
+                          if (v.isEmpty) return null; // optional
+                          if (v.length < 4) return 'Code looks too short';
+                          return null;
+                        },
+                      ),
+                      if (inlineError != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.25)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: theme.colorScheme.onErrorContainer, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  inlineError!,
+                                  style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (inlineSuccess != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle_outline, color: theme.colorScheme.onPrimaryContainer, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  inlineSuccess!,
+                                  style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _isReferralSubmitting
+                                  ? null
+                                  : () async {
+                                      await AffiliateService.instance.clearPendingReferralCode();
+                                      if (!mounted) return;
+                                      setState(() => _referralCodePreview = null);
+                                      Navigator.of(context).pop();
+                                    },
+                              child: const Text('Clear'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: _isReferralSubmitting
+                                  ? null
+                                  : () async {
+                                      if (!formKey.currentState!.validate()) return;
+                                      final raw = controller.text;
+                                      final normalized = AffiliateService.instance.normalizeReferralCode(raw);
+                                      if (normalized == null) {
+                                        // empty input: treat as "skip"
+                                        Navigator.of(context).pop();
+                                        return;
+                                      }
+
+                                      setModalState(() => _isReferralSubmitting = true);
+                                      try {
+                                        setModalState(() {
+                                          inlineError = null;
+                                          inlineSuccess = null;
+                                        });
+                                        await AffiliateService.instance.setPendingReferralCode(normalized);
+                                        // Try to claim immediately (user is logged in during onboarding flow).
+                                        await AffiliateService.instance.claimReferralCodeNow(normalized);
+
+                                        if (!mounted) return;
+                                        setState(() => _referralCodePreview = normalized);
+                                        setModalState(() {
+                                          inlineSuccess = 'Referral code applied';
+                                        });
+                                        // Close automatically after a short delay so user sees feedback.
+                                        Future.delayed(const Duration(milliseconds: 900), () {
+                                          if (Navigator.of(context).canPop()) {
+                                            Navigator.of(context).pop();
+                                          }
+                                        });
+                                      } catch (e) {
+                                        if (!mounted) return;
+                                        final msg = AffiliateService.instance.friendlyReferralClaimError(e);
+                                        setModalState(() {
+                                          inlineError = msg;
+                                        });
+                                      } finally {
+                                        setModalState(() => _isReferralSubmitting = false);
+                                      }
+                                    },
+                              child: _isReferralSubmitting
+                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Text('Apply'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _completeOnboarding() async {
@@ -229,20 +447,85 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
                 controller: _listController,
-                itemCount: _steps.length,
+                itemCount: _steps.length + 1,
                 itemBuilder: (BuildContext context, int index) {
-                  final _OnboardingStep step = _steps[index];
-                  final bool isCompleted = index == 0
+                  if (index == 0) {
+                    const subtitle = 'Add a referral code (optional)';
+                    final bool isReferralApplied = _referralCodePreview != null;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: InkWell(
+                        onTap: _showReferralCodeDialog,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: <Widget>[
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isReferralApplied
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.card_giftcard_outlined,
+                                  color: isReferralApplied
+                                      ? theme.colorScheme.onPrimaryContainer
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Referral code',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      subtitle,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              isReferralApplied
+                                  ? const Icon(Icons.check_circle, color: Colors.green, size: 24)
+                                  : Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final stepIndex = index - 1;
+                  // Adjust completion mapping for shifted index (because referral card is index 0 now).
+                  final _OnboardingStep step2 = _steps[stepIndex];
+                  final bool isCompleted2 = stepIndex == 0
                       ? _profileCompleted
-                      : index == 1
+                      : stepIndex == 1
                           ? _familyMemberAdded
-                          : index == 2
+                          : stepIndex == 2
                               ? _assetAdded
                               : _willGenerated;
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: InkWell(
-                      onTap: () => _navigateToStep(index),
+                      onTap: () => _navigateToStep(stepIndex),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -252,14 +535,14 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: isCompleted
+                                color: isCompleted2
                                     ? theme.colorScheme.primaryContainer
                                     : theme.colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                step.icon,
-                                color: isCompleted
+                                step2.icon,
+                                color: isCompleted2
                                     ? theme.colorScheme.onPrimaryContainer
                                     : theme.colorScheme.onSurfaceVariant,
                               ),
@@ -270,18 +553,18 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    step.title,
+                                    step2.title,
                                     style: theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                      decoration: isCompleted2 ? TextDecoration.lineThrough : null,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(step.description, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                                  Text(step2.description, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                 ],
                               ),
                             ),
-                            isCompleted
+                            isCompleted2
                                 ? const Icon(Icons.check_circle, color: Colors.green, size: 24)
                                 : Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
                           ],
