@@ -26,7 +26,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.info_outline, color: const Color.fromRGBO(49, 24, 211, 1)),
                         const SizedBox(width: 8),
                         Text(
                           'What is an Executor?',
@@ -53,7 +53,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        Icon(Icons.checklist, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.checklist, color: const Color.fromRGBO(49, 24, 211, 1)),
                         const SizedBox(width: 8),
                         Text(
                           'Required Information',
@@ -87,7 +87,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        Icon(Icons.timeline, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.timeline, color: const Color.fromRGBO(49, 24, 211, 1)),
                         const SizedBox(width: 8),
                         Text(
                           'Claim Status',
@@ -115,7 +115,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        Icon(Icons.help_outline, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.help_outline, color: const Color.fromRGBO(49, 24, 211, 1)),
                         const SizedBox(width: 8),
                         Text(
                           'Need Help?',

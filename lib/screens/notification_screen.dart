@@ -18,7 +18,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
           'Notifications',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: theme.colorScheme.surface,
         elevation: 1,
         actions: [
           IconButton(

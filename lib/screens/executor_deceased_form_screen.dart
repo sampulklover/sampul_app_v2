@@ -115,11 +115,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
               children: [
                 TextFormField(
                   controller: _deceasedFullNameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Full Name *',                    prefixIcon: Icon(Icons.person_outline),                  ),
                   validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                 ),
                 const SizedBox(height: 12),
@@ -128,10 +125,7 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                     Expanded(
                       child: TextFormField(
                         controller: _deceasedNricNewCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'NRIC (New)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.badge_outlined),
+                        decoration: InputDecoration(labelText: 'NRIC (New)',                          prefixIcon: Icon(Icons.badge_outlined),
                         ),
                       ),
                     ),
@@ -139,10 +133,7 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                     Expanded(
                       child: TextFormField(
                         controller: _deceasedNricOldCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'NRIC (Old)',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(labelText: 'NRIC (Old)',                        ),
                       ),
                     ),
                   ],
@@ -150,20 +141,15 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _deceasedPoliceArmyNricCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Police/Army NRIC',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Police/Army NRIC',                  ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _deceasedDateOfDeathCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Date of Death *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today_outlined),
-                  ),
                   readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'Date of Death *',                    prefixIcon: Icon(Icons.calendar_today_outlined),                  ),
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
@@ -182,11 +168,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedDeathCause,
-                  decoration: const InputDecoration(
-                    labelText: 'Cause of Death',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.info_outline),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Cause of Death',                    prefixIcon: Icon(Icons.info_outline),                  ),
                   items: ExecutorConstants.deathCauses
                       .map((c) => DropdownMenuItem<String>(
                             value: c['value'],
@@ -198,11 +181,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _placeOfDeathCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Place of Death',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.location_on_outlined),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Place of Death',                    prefixIcon: Icon(Icons.location_on_outlined),                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -210,10 +190,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedMaritalStatus,
-                        decoration: const InputDecoration(
-                          labelText: 'Marital Status',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Marital Status',                        ),
                         items: ExecutorConstants.maritalStatus
                             .map((m) => DropdownMenuItem<String>(
                                   value: m['value'],
@@ -227,10 +205,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedCitizenship,
-                        decoration: const InputDecoration(
-                          labelText: 'Citizenship',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Citizenship',                        ),
                         items: ExecutorConstants.citizenship
                             .map((c) => DropdownMenuItem<String>(
                                   value: c['value'],
@@ -248,10 +224,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedReligion,
-                        decoration: const InputDecoration(
-                          labelText: 'Religion',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Religion',                        ),
                         items: ExecutorConstants.religions
                             .map((r) => DropdownMenuItem<String>(
                                   value: r['value'],
@@ -265,10 +239,8 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedRace,
-                        decoration: const InputDecoration(
-                          labelText: 'Race',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Race',                        ),
                         items: ExecutorConstants.races
                             .map((r) => DropdownMenuItem<String>(
                                   value: r['value'],
@@ -298,26 +270,20 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _willRegistrationNoCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Will Registration Number',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Will Registration Number',                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _executorNameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Executor Name',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Executor Name',                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _willCustodianCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Will Custodian',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Will Custodian',                    ),
                   ),
                 ],
                 const SizedBox(height: 24),

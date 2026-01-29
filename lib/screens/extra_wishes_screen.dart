@@ -95,7 +95,7 @@ class _ExtraWishesScreenState extends State<ExtraWishesScreen> {
           content: TextField(
             controller: amountCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Amount (MYR)'),
+            decoration: InputDecoration(labelText: 'Amount (MYR)'),
           ),
           actions: <Widget>[
             TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
@@ -220,20 +220,15 @@ class _ExtraWishesScreenState extends State<ExtraWishesScreen> {
                       controller: _nazarWishesController,
                       minLines: 3,
                       maxLines: 6,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Nazar wishes',
-                        hintText: 'Describe nazar wishes',
-                        border: OutlineInputBorder(),
-                      ),
+                        hintText: 'Describe nazar wishes',                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _nazarCostController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Estimated cost (MYR)',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: 'Estimated cost (MYR)',                      ),
                     ),
                     const SizedBox(height: 16),
                     Text('Fidyah', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
@@ -241,19 +236,14 @@ class _ExtraWishesScreenState extends State<ExtraWishesScreen> {
                     TextFormField(
                       controller: _fidyahDaysController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Fast days left',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Fast days left',                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _fidyahAmountController,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Amount due (MYR)',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: 'Amount due (MYR)',                      ),
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/trust.dart';
 import '../models/trust_beneficiary.dart';
-import '../models/trust_charity.dart';
 import '../services/trust_service.dart';
 import 'trust_edit_screen.dart';
 import 'trust_beneficiary_form_screen.dart';
+import 'fund_support_config_screen.dart';
 
 class TrustDashboardScreen extends StatefulWidget {
   final Trust trust;
@@ -20,13 +20,17 @@ class TrustDashboardScreen extends StatefulWidget {
 class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
   bool _isLoading = true;
   List<TrustBeneficiary> _beneficiaries = [];
-  List<TrustCharity> _charities = [];
   bool _isCopyCooldown = false;
   Timer? _cooldownTimer;
+  /// Local copy of trust so we can refresh after editing fund support config.
+  Trust? _currentTrust;
+
+  Trust get _trust => _currentTrust ?? widget.trust;
 
   @override
   void initState() {
     super.initState();
+    _currentTrust = widget.trust;
     _loadData();
   }
 
@@ -44,12 +48,11 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
 
     try {
       final beneficiaries = await TrustService.instance.getBeneficiariesByTrustId(widget.trust.id!);
-      final charities = await TrustService.instance.getCharitiesByTrustId(widget.trust.id!);
+      // Note: Charities are now stored in fundSupportConfigs['charitable']['charities']
       
       if (mounted) {
         setState(() {
           _beneficiaries = beneficiaries;
-          _charities = charities;
           _isLoading = false;
         });
       }
@@ -112,62 +115,60 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
     }
   }
 
-  double _calculateHealthcare() {
-    // Sum of medical expenses from beneficiaries
-    // For now, we'll use a placeholder calculation
-    // In a real scenario, you might have specific medical expense amounts
-    double total = 0.0;
-    for (var beneficiary in _beneficiaries) {
-      if (beneficiary.medicalExpenses == true) {
-        // If there's a specific amount field, use it; otherwise use a default
-        // This is a placeholder - adjust based on your data model
-        total += 0.0; // Placeholder
+  // Get category configuration from fund support configs
+  Map<String, dynamic>? _getCategoryConfig(String categoryId) {
+    return _trust.fundSupportConfigs?[categoryId] as Map<String, dynamic>?;
+  }
+
+  // Calculate amount for a category based on its configuration
+  double _calculateCategoryAmount(String categoryId) {
+    final config = _getCategoryConfig(categoryId);
+    if (config == null) return 0.0;
+
+    // For regular payments, use paymentAmount
+    final isRegularPayments = config['isRegularPayments'] as bool?;
+    if (isRegularPayments == true) {
+      final paymentAmount = (config['paymentAmount'] as num?)?.toDouble() ?? 0.0;
+      return paymentAmount;
+    }
+
+    // For charitable category, sum up charity amounts
+    if (categoryId == 'charitable') {
+      final charitiesData = config['charities'] as List?;
+      if (charitiesData != null) {
+        double total = 0.0;
+        for (var charityData in charitiesData) {
+          final charityMap = charityData as Map<String, dynamic>;
+          // TrustCharity.toJson() uses snake_case donation_amount
+          final amount = (charityMap['donation_amount'] as num?)?.toDouble() ??
+              (charityMap['donationAmount'] as num?)?.toDouble() ?? 0.0;
+          total += amount;
+        }
+        return total;
       }
     }
-    return total;
+
+    return 0.0;
+  }
+
+  double _calculateHealthcare() {
+    return _calculateCategoryAmount('healthcare');
   }
 
   double _calculateEducation() {
-    // Sum of education expenses from beneficiaries
-    double total = 0.0;
-    for (var beneficiary in _beneficiaries) {
-      if (beneficiary.educationExpenses == true) {
-        // Use monthly distribution education if available
-        total += (beneficiary.monthlyDistributionEducation ?? 0).toDouble();
-      }
-    }
-    return total;
+    return _calculateCategoryAmount('education');
   }
 
   double _calculateExpenses() {
-    // Sum of monthly distribution living from beneficiaries
-    double total = 0.0;
-    for (var beneficiary in _beneficiaries) {
-      total += (beneficiary.monthlyDistributionLiving ?? 0).toDouble();
-    }
-    return total;
+    return _calculateCategoryAmount('living');
   }
 
   double _calculateCharitable() {
-    // Sum of donation amounts from charities
-    double total = 0.0;
-    for (var charity in _charities) {
-      total += charity.donationAmount ?? 0.0;
-    }
-    return total;
+    return _calculateCategoryAmount('charitable');
   }
 
   double _calculateDebt() {
-    // Sum of settle outstanding amounts
-    // For now, this is a placeholder
-    double total = 0.0;
-    for (var beneficiary in _beneficiaries) {
-      if (beneficiary.settleOutstanding == true) {
-        // Placeholder - adjust based on your data model
-        total += 0.0;
-      }
-    }
-    return total;
+    return _calculateCategoryAmount('debt');
   }
 
   double _calculateTotalDistribution() {
@@ -195,7 +196,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
       return;
     }
 
-    final trustCode = widget.trust.trustCode;
+    final trustCode = _trust.trustCode;
     if (trustCode == null || trustCode.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -251,7 +252,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
               if (value == 'edit') {
                 final bool? updated = await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
-                    builder: (_) => TrustEditScreen(initial: widget.trust),
+                    builder: (_) => TrustEditScreen(initial: _trust),
                   ),
                 );
                 if (updated == true && mounted) {
@@ -401,10 +402,10 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                                   color: colorScheme.primary,
                                                 ),
                                               ),
-                                              if (widget.trust.trustCode != null) ...[
+                                              if (_trust.trustCode != null) ...[
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  widget.trust.trustCode!,
+                                                  _trust.trustCode!,
                                                   style: theme.textTheme.bodySmall?.copyWith(
                                                     color: colorScheme.onSurfaceVariant,
                                                   ),
@@ -418,7 +419,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                     ),
                                     const Spacer(),
                                     Text(
-                                      _formatEstimatedNetWorth(widget.trust.estimatedNetWorth),
+                                      _formatEstimatedNetWorth(_trust.estimatedNetWorth),
                                       style: theme.textTheme.headlineMedium?.copyWith(
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -430,15 +431,15 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                           width: 8,
                                           height: 8,
                                           decoration: BoxDecoration(
-                                            color: _getStatusColor(widget.trust.computedStatus, context),
+                                            color: _getStatusColor(_trust.computedStatus, context),
                                             shape: BoxShape.circle,
                                           ),
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          _getStatusLabel(widget.trust.computedStatus),
+                                          _getStatusLabel(_trust.computedStatus),
                                           style: theme.textTheme.bodySmall?.copyWith(
-                                            color: _getStatusColor(widget.trust.computedStatus, context),
+                                            color: _getStatusColor(_trust.computedStatus, context),
                                           ),
                                         ),
                                       ],
@@ -597,95 +598,133 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Category cards grid
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.1,
-                      children: [
-                        // Add Instruction card
-                        _CategoryCard(
-                          title: 'Add',
-                          subtitle: 'Instruction',
-                          icon: Icons.add,
-                          onTap: () {
-                            // TODO: Navigate to add instruction screen
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Add Instruction feature coming soon')),
-                            );
+                    // Category cards grid - only show selected categories
+                    Builder(
+                      builder: (context) {
+                        final fundSupportCategories = [
+                          {
+                            'id': 'education',
+                            'title': 'Education',
+                            'icon': Icons.school_outlined,
+                            'calculateAmount': () => _calculateEducation(),
                           },
-                          isAddCard: true,
-                        ),
-                        // Healthcare card
-                        _CategoryCard(
-                          title: 'Healthcare',
-                          subtitle: _formatAmount(_calculateHealthcare()),
-                          icon: Icons.medical_services_outlined,
-                          iconColor: colorScheme.primary,
-                          onTap: () {
-                            // TODO: Navigate to healthcare details
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Healthcare details coming soon')),
-                            );
+                          {
+                            'id': 'living',
+                            'title': 'Living Expenses',
+                            'icon': Icons.home_outlined,
+                            'calculateAmount': () => _calculateExpenses(),
                           },
-                        ),
-                        // Expenses card
-                        _CategoryCard(
-                          title: 'Expenses',
-                          subtitle: _formatAmount(_calculateExpenses()),
-                          icon: Icons.people_outline,
-                          iconColor: colorScheme.primary,
-                          onTap: () {
-                            // TODO: Navigate to expenses details
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Expenses details coming soon')),
-                            );
+                          {
+                            'id': 'healthcare',
+                            'title': 'Healthcare',
+                            'icon': Icons.medical_services_outlined,
+                            'calculateAmount': () => _calculateHealthcare(),
                           },
-                        ),
-                        // Charitable card
-                        _CategoryCard(
-                          title: 'Charitable',
-                          subtitle: _formatAmount(_calculateCharitable()),
-                          icon: Icons.favorite_outline,
-                          iconColor: colorScheme.primary,
-                          onTap: () {
-                            // TODO: Navigate to charitable details
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Charitable details coming soon')),
-                            );
+                          {
+                            'id': 'charitable',
+                            'title': 'Charitable',
+                            'icon': Icons.volunteer_activism_outlined,
+                            'calculateAmount': () => _calculateCharitable(),
                           },
-                        ),
-                        // Education card
-                        _CategoryCard(
-                          title: 'Education',
-                          subtitle: _formatAmount(_calculateEducation()),
-                          icon: Icons.school_outlined,
-                          iconColor: colorScheme.primary,
-                          onTap: () {
-                            // TODO: Navigate to education details
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Education details coming soon')),
-                            );
+                          {
+                            'id': 'debt',
+                            'title': 'Debt',
+                            'icon': Icons.receipt_long_outlined,
+                            'calculateAmount': () => _calculateDebt(),
                           },
-                        ),
-                        // Debt card
-                        _CategoryCard(
-                          title: 'Debt',
-                          subtitle: _formatAmount(_calculateDebt()),
-                          icon: Icons.receipt_long_outlined,
-                          iconColor: colorScheme.primary,
-                          onTap: () {
-                            // TODO: Navigate to debt details
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Debt details coming soon')),
+                        ];
+
+                        // Show all categories; unselected use muted style but stay tappable
+                        return GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1.1,
+                          children: fundSupportCategories.map((category) {
+                            final categoryId = category['id'] as String? ?? '';
+                            final title = category['title'] as String? ?? 'Unknown';
+                            final icon = category['icon'] as IconData? ?? Icons.category_outlined;
+                            final calculateAmount = category['calculateAmount'] as double Function()? ?? () => 0.0;
+                            
+                            final isSelected = _trust.fundSupportCategories?.contains(categoryId) ?? false;
+                            
+                            return _CategoryCard(
+                              title: title,
+                              subtitle: isSelected ? _formatAmount(calculateAmount()) : 'Tap to set up',
+                              icon: icon,
+                              iconColor: isSelected 
+                                  ? const Color.fromRGBO(49, 24, 211, 1)
+                                  : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                              isUnselected: !isSelected,
+                              onTap: () async {
+                                // Navigate to view/edit configuration (any category can be opened)
+                                final config = _getCategoryConfig(categoryId) ?? {};
+                                final categoryInfo = {
+                                  'id': categoryId,
+                                  'title': title,
+                                  'icon': icon,
+                                };
+                                
+                                final updatedConfig = await Navigator.of(context).push<Map<String, dynamic>>(
+                                  MaterialPageRoute<Map<String, dynamic>>(
+                                    builder: (_) => FundSupportConfigScreen(
+                                      categoryId: categoryId,
+                                      category: categoryInfo,
+                                      initialConfig: config,
+                                    ),
+                                  ),
+                                );
+                                
+                                // Persist updated config and refresh UI
+                                if (updatedConfig != null && widget.trust.id != null) {
+                                  try {
+                                    final merged = Map<String, dynamic>.from(_trust.fundSupportConfigs ?? {});
+                                    merged[categoryId] = updatedConfig;
+                                    final mergedCategories = List<String>.from(_trust.fundSupportCategories ?? []);
+                                    if (!mergedCategories.contains(categoryId)) {
+                                      mergedCategories.add(categoryId);
+                                    }
+                                    await TrustService.instance.updateTrust(
+                                      widget.trust.id!,
+                                      {
+                                        'fund_support_configs': merged,
+                                        'fund_support_categories': mergedCategories,
+                                      },
+                                    );
+                                    final updatedTrust = await TrustService.instance.getTrustById(widget.trust.id!);
+                                    if (mounted && updatedTrust != null) {
+                                      setState(() => _currentTrust = updatedTrust);
+                                      await _loadData();
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Settings saved'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Failed to save: ${e.toString()}'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                }
+                              },
                             );
-                          },
-                        ),
-                      ],
+                          }).toList(),
+                        );
+                      },
                     ),
+                    const SizedBox(height: 48),
+                    
+                    // Partnership section
+                    _PartnershipSection(),
                   ],
                 ),
               ),
@@ -698,17 +737,18 @@ class _CategoryCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final VoidCallback onTap;
-  final bool isAddCard;
+  final VoidCallback? onTap;
   final Color? iconColor;
+  /// Muted style for unselected; card stays tappable.
+  final bool isUnselected;
 
   const _CategoryCard({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.onTap,
-    this.isAddCard = false,
+    this.onTap,
     this.iconColor,
+    this.isUnselected = false,
   });
 
   @override
@@ -727,12 +767,12 @@ class _CategoryCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-          child: Container(
+        child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: isAddCard
-                ? colorScheme.surfaceContainerHighest.withOpacity(0.3)
+            color: isUnselected
+                ? colorScheme.surfaceContainerHighest.withOpacity(0.4)
                 : colorScheme.primaryContainer.withOpacity(0.4),
           ),
           child: Column(
@@ -741,16 +781,14 @@ class _CategoryCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 48,
-                color: isAddCard
-                    ? colorScheme.onSurfaceVariant
-                    : iconColor ?? colorScheme.primary,
+                color: iconColor ?? const Color.fromRGBO(49, 24, 211, 1),
               ),
               const SizedBox(height: 12),
               Text(
                 title,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isAddCard
+                  color: isUnselected
                       ? colorScheme.onSurfaceVariant
                       : colorScheme.onPrimaryContainer,
                 ),
@@ -760,8 +798,8 @@ class _CategoryCard extends StatelessWidget {
               Text(
                 subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: isAddCard
-                      ? colorScheme.onSurfaceVariant.withOpacity(0.7)
+                  color: isUnselected
+                      ? colorScheme.onSurfaceVariant.withOpacity(0.8)
                       : colorScheme.onPrimaryContainer.withOpacity(0.8),
                 ),
                 textAlign: TextAlign.center,
@@ -916,5 +954,119 @@ class _BeneficiaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _PartnershipSection extends StatelessWidget {
+  const _PartnershipSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          // Logos row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Rakyat Trustee logo
+              _PartnerLogo(
+                imagePath: 'assets/rakyat-trustee.png',
+                iconColor: const Color.fromRGBO(49, 24, 211, 1),
+              ),
+              const SizedBox(width: 32),
+              // Halogen Capital logo
+              _PartnerLogo(
+                imagePath: 'assets/halogen-capital.png',
+                iconColor: const Color.fromRGBO(49, 24, 211, 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Text content
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                children: [
+                  const TextSpan(
+                    text: 'Sampul partner with Rakyat Trustee and Halogen Capital ',
+                  ),
+                  const TextSpan(
+                    text: 'to process your fund. ',
+                  ),
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () {
+                        // TODO: Navigate to learn more page or open URL
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Learn more about our partners'),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Learn more',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PartnerLogo extends StatelessWidget {
+  final String? imagePath;
+  final IconData? icon;
+  final Color iconColor;
+
+  const _PartnerLogo({
+    this.imagePath,
+    this.icon,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return imagePath != null
+        ? Image.asset(
+            imagePath!,
+            width: 120,
+            height: 60,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback to icon if image fails to load
+              debugPrint('Error loading image: $imagePath - $error');
+              return Icon(
+                icon ?? Icons.business,
+                color: iconColor,
+                size: 28,
+              );
+            },
+          )
+        : Icon(
+            icon ?? Icons.business,
+            color: iconColor,
+            size: 28,
+          );
   }
 }

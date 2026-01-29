@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
+import '../services/ai_chat_settings_service.dart';
 import 'enhanced_chat_conversation_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -34,11 +35,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
       final hasAIChat = conversations.any((conv) => conv.conversationType == ConversationType.ai);
       if (!hasAIChat) {
         // Create AI conversation with database-generated UUID
+        // Get dynamic welcome message from settings
+        final settings = await AiChatSettingsService.instance.getActiveSettings();
         final response = await Supabase.instance.client
             .from('chat_conversations')
             .insert({
               'name': 'Sampul AI',
-              'last_message': 'Hello! I\'m your estate planning assistant. How can I help you today?',
+              'last_message': settings.welcomeMessage,
               'last_message_time': DateTime.now().toIso8601String(),
               'avatar_url': '',
               'unread_count': 0,
@@ -54,7 +57,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         // Add welcome message to the conversation
         final welcomeMessage = ChatMessage(
           id: '', // Let database generate UUID
-          content: "Hello! I'm Sampul AI, your estate planning assistant. How can I help you today?",
+          content: settings.welcomeMessage,
           isFromUser: false,
           timestamp: DateTime.now(),
         );

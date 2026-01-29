@@ -761,7 +761,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.sync_alt, size: 16, color: theme.colorScheme.primary),
+              Icon(Icons.sync_alt, size: 16, color: const Color.fromRGBO(49, 24, 211, 1)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -851,10 +851,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               value: selectedId,
-              decoration: const InputDecoration(
-                labelText: 'Select family member',
-                border: OutlineInputBorder(),
-              ),
+              decoration: InputDecoration(
+                labelText: 'Select family member',              ),
               items: [
                 const DropdownMenuItem<int?>(
                   value: null,

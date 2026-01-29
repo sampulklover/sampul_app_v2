@@ -195,10 +195,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                   children: <Widget>[
                     TextFormField(
                       controller: _deceasedNameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Deceased Name *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Deceased Name *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         if (v.trim().length < 2) return 'Please enter a valid name';
@@ -208,18 +206,13 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _deceasedNricCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Deceased IC/NRIC Number',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Deceased IC/NRIC Number',                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _deceasedDobCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Date of Birth (YYYY-MM-DD)',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: 'Date of Birth (YYYY-MM-DD)',                      ),
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
                           context: context,
@@ -235,10 +228,7 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _deceasedDodCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Date of Death (YYYY-MM-DD) *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: 'Date of Death (YYYY-MM-DD) *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         final DateTime? date = DateTime.tryParse(v);
@@ -260,10 +250,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _relationshipCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Your Relationship to Deceased *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Your Relationship to Deceased *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         return null;
@@ -283,10 +271,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                   children: <Widget>[
                     TextFormField(
                       controller: _claimantNameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Your Full Name *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Your Full Name *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         if (v.trim().length < 2) return 'Please enter a valid name';
@@ -296,18 +282,13 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _claimantNricCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Your IC/NRIC Number',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Your IC/NRIC Number',                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _claimantDobCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Your Date of Birth (YYYY-MM-DD)',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: 'Your Date of Birth (YYYY-MM-DD)',                      ),
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
                           context: context,
@@ -324,10 +305,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     TextFormField(
                       controller: _claimantPhoneCtrl,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         return null;
@@ -337,10 +316,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     TextFormField(
                       controller: _claimantEmailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',                      ),
                       validator: (String? v) {
                         final String value = (v ?? '').trim();
                         if (value.isEmpty) return null; // optional
@@ -352,10 +329,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _claimantAddress1Ctrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Address Line 1 *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Address Line 1 *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         return null;
@@ -364,10 +339,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _claimantAddress2Ctrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Address Line 2',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Address Line 2',                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -375,10 +348,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _claimantCityCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'City *',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'City *',                            ),
                             validator: (String? v) {
                               if (v == null || v.trim().isEmpty) return 'Required';
                               return null;
@@ -390,10 +361,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                           child: TextFormField(
                             controller: _claimantPostcodeCtrl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Postcode *',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Postcode *',                            ),
                             validator: (String? v) {
                               if (v == null || v.trim().isEmpty) return 'Required';
                               return null;
@@ -405,10 +374,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _claimantStateCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'State *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'State *',                      ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
                         return null;
@@ -429,21 +396,15 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                     TextFormField(
                       controller: _supportingDocsCtrl,
                       maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Supporting Documents (List the documents you have)',
-                        border: OutlineInputBorder(),
-                        hintText: 'e.g., Death certificate, Will, Identity documents, etc.',
+                      decoration: InputDecoration(labelText: 'Supporting Documents (List the documents you have)',                        hintText: 'e.g., Death certificate, Will, Identity documents, etc.',
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _additionalNotesCtrl,
                       maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: 'Additional Notes',
-                        border: OutlineInputBorder(),
-                        hintText: 'Any additional information that might help with your claim...',
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Additional Notes',                        hintText: 'Any additional information that might help with your claim...',                      ),
                     ),
                   ],
                 ),

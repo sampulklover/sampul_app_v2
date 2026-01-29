@@ -257,12 +257,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                       const SizedBox(height: 12),
                       DropdownButtonFormField<int>(
                         value: _selectedFamilyMemberId,
-                        decoration: const InputDecoration(
-                          labelText: 'Select Family Member',
-                          border: OutlineInputBorder(),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Select Family Member',                        ),
                         items: [
                           const DropdownMenuItem<int>(
                             value: -1,
@@ -341,33 +337,21 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _nameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name *',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Full Name *',                      ),
                       validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _nricCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'NRIC/Passport Number',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'NRIC/Passport Number',                      ),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _selectedRelationship,
-                      decoration: const InputDecoration(
-                        labelText: 'Relationship *',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Relationship *',                      ),
                       items: TrustConstants.relationships
                           .map((item) => DropdownMenuItem(
                                 value: item['value'],
@@ -418,8 +402,6 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                             decoration: const InputDecoration(
                               labelText: 'Living (RM)',
                               border: OutlineInputBorder(),
-                              filled: true,
-                              fillColor: Colors.white,
                             ),
                           ),
                         ),
@@ -431,8 +413,6 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                             decoration: const InputDecoration(
                               labelText: 'Education (RM)',
                               border: OutlineInputBorder(),
-                              filled: true,
-                              fillColor: Colors.white,
                             ),
                           ),
                         ),
@@ -616,10 +596,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                               }
                             },
                             child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Date of Birth',
-                                border: OutlineInputBorder(),
-                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Date of Birth',                              ),
                               child: Text(
                                 _dateOfBirth != null
                                     ? DateFormat('dd/MM/yyyy').format(_dateOfBirth!)
@@ -630,10 +608,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedGender,
-                            decoration: const InputDecoration(
-                              labelText: 'Gender',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Gender',                            ),
                             items: TrustConstants.genders
                                 .map((item) => DropdownMenuItem(
                                       value: item['value'],
@@ -645,10 +621,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedResidentStatus,
-                            decoration: const InputDecoration(
-                              labelText: 'Resident Status',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Resident Status',                            ),
                             items: TrustConstants.residentStatus
                                 .map((item) => DropdownMenuItem(
                                       value: item['value'],
@@ -660,10 +634,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedNationality,
-                            decoration: const InputDecoration(
-                              labelText: 'Nationality',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Nationality',                            ),
                             items: TrustConstants.countries
                                 .map((item) => DropdownMenuItem(
                                       value: item['value'],
@@ -682,18 +654,14 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _phoneCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone Number',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Phone Number',                            ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _emailCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Email',                            ),
                           ),
                           const SizedBox(height: 24),
                           Text(
@@ -705,18 +673,14 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _address1Ctrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Address Line 1',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Address Line 1',                            ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _address2Ctrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Address Line 2',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Address Line 2',                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -724,20 +688,16 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                               Expanded(
                                 child: TextFormField(
                                   controller: _cityCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'City',
-                                    border: OutlineInputBorder(),
-                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'City',                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: TextFormField(
                                   controller: _postcodeCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Postcode',
-                                    border: OutlineInputBorder(),
-                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Postcode',                                  ),
                                 ),
                               ),
                             ],
@@ -745,18 +705,14 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _stateCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'State',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'State',                            ),
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedCountry,
-                            decoration: const InputDecoration(
-                              labelText: 'Country',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Country',                            ),
                             items: TrustConstants.countries
                                 .map((item) => DropdownMenuItem(
                                       value: item['value'],

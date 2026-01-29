@@ -331,7 +331,7 @@ class _HibahInfoBanner extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            Icon(Icons.info_outline, color: scheme.primary, size: 18),
+            Icon(Icons.info_outline, color: const Color.fromRGBO(83, 61, 233, 1), size: 18),
             const SizedBox(width: 8),
             const Expanded(child: Text('New to hibah?')),
             Text(

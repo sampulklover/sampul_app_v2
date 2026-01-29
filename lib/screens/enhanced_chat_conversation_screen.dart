@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../services/openrouter_service.dart';
@@ -11,6 +12,20 @@ import '../controllers/auth_controller.dart';
 import '../services/will_service.dart';
 import '../models/user_profile.dart';
 import '../services/file_upload_service.dart';
+import '../services/ai_chat_settings_service.dart';
+import '../services/ai_action_detector.dart';
+import '../services/supabase_service.dart';
+import 'trust_create_screen.dart';
+import 'trust_management_screen.dart';
+import 'hibah_management_screen.dart';
+import 'will_management_screen.dart';
+import 'add_asset_screen.dart';
+import 'assets_list_screen.dart';
+import 'add_family_member_screen.dart';
+import 'family_list_screen.dart';
+import 'executor_management_screen.dart';
+import 'checklist_screen.dart';
+import 'extra_wishes_screen.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -41,6 +56,11 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   late AnimationController _messageAnimationController;
   late Animation<double> _typingAnimation;
   late Animation<double> _messageAnimation;
+  
+  RealtimeChannel? _messagesChannel;
+  bool _hasMoreMessages = true;
+  bool _isLoadingMore = false;
+  DateTime? _oldestMessageTime;
 
   @override
   void initState() {
@@ -340,8 +360,105 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   }
 
   void _initializeChat() async {
+    // Set up scroll listener for pagination
+    _scrollController.addListener(_onScroll);
     // Load existing messages from Supabase first
     await _loadMessages();
+    // Set up real-time subscription
+    _setupRealtimeSubscription();
+  }
+  
+  void _onScroll() {
+    // Load more messages when scrolling near the top
+    if (_scrollController.position.pixels < 200 && 
+        _hasMoreMessages && 
+        !_isLoadingMore) {
+      _loadOlderMessages();
+    }
+  }
+  
+  void _setupRealtimeSubscription() {
+    try {
+      _messagesChannel = SupabaseService.instance.client
+          .channel('chat_messages_${widget.conversation.id}')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.insert,
+            schema: 'public',
+            table: 'chat_messages',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'conversation_id',
+              value: widget.conversation.id,
+            ),
+            callback: (payload) {
+              // Only add message if it's not already in the list
+              final newMessage = ChatMessage.fromJson(payload.newRecord);
+              if (!_messages.any((msg) => msg.id == newMessage.id)) {
+                setState(() {
+                  // Insert message in correct position (sorted by timestamp)
+                  int insertIndex = _messages.length;
+                  for (int i = 0; i < _messages.length; i++) {
+                    if (_messages[i].timestamp.isAfter(newMessage.timestamp)) {
+                      insertIndex = i;
+                      break;
+                    }
+                  }
+                  _messages.insert(insertIndex, newMessage);
+                  
+                  // Update oldest message time for pagination if needed
+                  if (_oldestMessageTime == null || 
+                      newMessage.timestamp.isBefore(_oldestMessageTime!)) {
+                    _oldestMessageTime = newMessage.timestamp;
+                  }
+                });
+                
+                // Only auto-scroll if it's a new message (not an old one being loaded)
+                if (newMessage.timestamp.isAfter(DateTime.now().subtract(const Duration(seconds: 5)))) {
+                  _scrollToBottom();
+                }
+              }
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.update,
+            schema: 'public',
+            table: 'chat_messages',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'conversation_id',
+              value: widget.conversation.id,
+            ),
+            callback: (payload) {
+              // Update existing message
+              final updatedMessage = ChatMessage.fromJson(payload.newRecord);
+              setState(() {
+                final index = _messages.indexWhere((msg) => msg.id == updatedMessage.id);
+                if (index != -1) {
+                  _messages[index] = updatedMessage;
+                }
+              });
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.delete,
+            schema: 'public',
+            table: 'chat_messages',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'conversation_id',
+              value: widget.conversation.id,
+            ),
+            callback: (payload) {
+              // Remove deleted message
+              setState(() {
+                _messages.removeWhere((msg) => msg.id == payload.oldRecord['id']);
+              });
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('Error setting up real-time subscription: $e');
+    }
   }
   
   Future<void> _loadUserProfile() async {
@@ -355,41 +472,110 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     } catch (_) {}
   }
   
-  Future<void> _loadMessages() async {
+  Future<void> _loadMessages({bool loadMore = false}) async {
     try {
+      if (_isLoadingMore && loadMore) return;
       
-      final messages = await ChatService.getMessages(widget.conversation.id);
-      
-      if (messages.isNotEmpty) {
-        // Load messages from database
+      if (loadMore) {
         setState(() {
-          _messages.clear();
-          _messages.addAll(messages);
+          _isLoadingMore = true;
         });
-      } else if (widget.conversation.conversationType == ConversationType.ai) {
+      }
+      
+      final messages = await ChatService.getMessages(
+        widget.conversation.id,
+        before: loadMore ? _oldestMessageTime : null,
+        limit: 50,
+      );
+      
+      if (messages.isEmpty && !loadMore && widget.conversation.conversationType == ConversationType.ai) {
         // If no messages in database for AI conversation, add welcome message
+        final settings = await AiChatSettingsService.instance.getActiveSettings();
         final welcomeMessage = ChatMessage(
           id: '', // Let database generate UUID
-          content: "Hello! I'm Sampul AI, your estate planning assistant. How can I help you today?",
+          content: settings.welcomeMessage,
           isFromUser: false,
           timestamp: DateTime.now(),
         );
         
         setState(() {
+          _messages.clear();
           _messages.add(welcomeMessage);
+          _oldestMessageTime = welcomeMessage.timestamp;
         });
         
         // Save to database
         await ChatService.saveMessage(welcomeMessage, widget.conversation.id);
+        return;
       }
       
+      if (messages.isEmpty) {
+        setState(() {
+          _hasMoreMessages = false;
+          _isLoadingMore = false;
+        });
+        return;
+      }
+      
+      if (loadMore) {
+        // Insert older messages at the beginning
+        setState(() {
+          _messages.insertAll(0, messages);
+          _oldestMessageTime = messages.first.timestamp;
+          _hasMoreMessages = messages.length >= 50;
+        });
+      } else {
+        // Initial load
+        setState(() {
+          _messages.clear();
+          _messages.addAll(messages);
+          if (messages.isNotEmpty) {
+            _oldestMessageTime = messages.first.timestamp;
+            _hasMoreMessages = messages.length >= 50;
+          }
+        });
+      }
+      
+      setState(() {
+        _isLoadingMore = false;
+      });
+      
     } catch (e) {
-      print('Error loading messages: $e');
+      debugPrint('Error loading messages: $e');
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
+  
+  Future<void> _loadOlderMessages() async {
+    if (!_hasMoreMessages || _isLoadingMore) return;
+    
+    // Save current scroll position
+    final currentScrollPosition = _scrollController.hasClients 
+        ? _scrollController.position.pixels 
+        : 0;
+    final currentItemCount = _messages.length;
+    
+    await _loadMessages(loadMore: true);
+    
+    // Restore scroll position after loading
+    if (_scrollController.hasClients && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final newItemCount = _messages.length;
+          final itemHeight = 100.0; // Approximate height per message
+          final newScrollPosition = currentScrollPosition + 
+              ((newItemCount - currentItemCount) * itemHeight);
+          _scrollController.jumpTo(newScrollPosition);
+        }
+      });
     }
   }
 
   @override
   void dispose() {
+    _messagesChannel?.unsubscribe();
     _messageController.dispose();
     _scrollController.dispose();
     _typingAnimationController.dispose();
@@ -497,17 +683,38 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       });
 
       await ChatService.saveMessage(_messages[_messages.length - 1], widget.conversation.id);
+      
+      // Haptic feedback when AI finishes replying
+      HapticFeedback.mediumImpact();
 
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Log the actual error for debugging
+      debugPrint('AI Chat Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
       // Remove typing indicator
       setState(() {
         _messages.removeWhere((msg) => msg.id == typingMessage.id);
       });
 
-      // Add error message
+      // Add error message with more details
+      String errorContent = "Sorry, I'm having trouble connecting right now. Please try again later.";
+      
+      // Provide more specific error messages for common issues
+      final errorString = e.toString();
+      if (errorString.contains('OPENROUTER_API_KEY') || errorString.contains('OPENROUTER_MODEL')) {
+        errorContent = "AI chat is not configured. Please check your environment variables.";
+      } else if (errorString.contains('HTTP 401') || errorString.contains('HTTP 403')) {
+        errorContent = "Authentication failed. Please check your API key configuration.";
+      } else if (errorString.contains('HTTP 429')) {
+        errorContent = "Rate limit exceeded. Please try again in a moment.";
+      } else if (errorString.contains('HTTP 500') || errorString.contains('HTTP 502') || errorString.contains('HTTP 503')) {
+        errorContent = "The AI service is temporarily unavailable. Please try again later.";
+      }
+      
       final errorMessage = ChatMessage(
         id: '', // Let database generate UUID
-        content: "Sorry, I'm having trouble connecting right now. Please try again later.",
+        content: errorContent,
         isFromUser: false,
         timestamp: DateTime.now(),
         hasError: true,
@@ -553,17 +760,132 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     ChatService.deleteMessage(message.id);
   }
 
-  void _toggleMessageFeedback(ChatMessage message) async {
-    final newFeedback = message.userFeedback == true ? null : true;
+  Future<void> _regenerateResponse(ChatMessage message) async {
+    // Find the user message that prompted this response
+    final messageIndex = _messages.indexWhere((msg) => msg.id == message.id);
+    if (messageIndex == -1 || messageIndex == 0) return;
     
-    setState(() {
-      final index = _messages.indexWhere((msg) => msg.id == message.id);
-      if (index != -1) {
-        _messages[index] = message.copyWith(userFeedback: newFeedback);
+    // Find the previous user message
+    ChatMessage? userMessage;
+    for (int i = messageIndex - 1; i >= 0; i--) {
+      if (_messages[i].isFromUser) {
+        userMessage = _messages[i];
+        break;
       }
+    }
+    
+    if (userMessage == null) return;
+    
+    // Mark message as regenerating
+    setState(() {
+      _messages[messageIndex] = message.copyWith(isRegenerating: true);
     });
     
-    await ChatService.updateMessageFeedback(message.id, newFeedback ?? false);
+    try {
+      // Remove the old response
+      setState(() {
+        _messages.removeAt(messageIndex);
+      });
+      
+      // Add typing indicator
+      final typingMessage = ChatMessage(
+        id: 'typing_${DateTime.now().millisecondsSinceEpoch}',
+        content: '',
+        isFromUser: false,
+        timestamp: DateTime.now(),
+        isTyping: true,
+      );
+      
+      setState(() {
+        _messages.add(typingMessage);
+      });
+      
+      _typingAnimationController.repeat(reverse: true);
+      _scrollToBottom();
+      
+      // Add delay for human-like response
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Remove typing indicator
+      setState(() {
+        _messages.removeWhere((msg) => msg.id == typingMessage.id);
+        _streamingContent = '';
+      });
+      
+      // Create streaming message
+      final streamingMessage = ChatMessage(
+        id: '', // Let database generate UUID
+        content: '',
+        isFromUser: false,
+        timestamp: DateTime.now(),
+        isStreaming: true,
+      );
+      
+      setState(() {
+        _messages.add(streamingMessage);
+      });
+      
+      // Build user context from assets
+      String? context;
+      try {
+        final user = AuthController.instance.currentUser;
+        if (user != null) {
+          final assets = await WillService.instance.getUserAssets(user.id);
+          final int count = assets.length;
+          final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
+          final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
+          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+        }
+      } catch (_) {
+        context = null;
+      }
+      
+      // Stream the new response
+      await for (final chunk in OpenRouterService.sendMessageStream(userMessage.content, context: context)) {
+        if (mounted) {
+          setState(() {
+            _streamingContent += chunk;
+            _messages[_messages.length - 1] = streamingMessage.copyWith(
+              content: _streamingContent,
+            );
+          });
+          _scrollToBottom();
+        }
+      }
+      
+      // Finalize the message
+      setState(() {
+        _messages[_messages.length - 1] = streamingMessage.copyWith(
+          content: _streamingContent,
+          isStreaming: false,
+        );
+      });
+      
+      await ChatService.saveMessage(_messages[_messages.length - 1], widget.conversation.id);
+      
+      // Haptic feedback when AI finishes regenerating
+      HapticFeedback.mediumImpact();
+      
+    } catch (e, stackTrace) {
+      debugPrint('Regenerate error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      // Restore original message if regeneration fails
+      setState(() {
+        if (messageIndex < _messages.length) {
+          _messages.insert(messageIndex, message.copyWith(isRegenerating: false));
+        } else {
+          _messages.add(message.copyWith(isRegenerating: false));
+        }
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to regenerate response. Please try again.')),
+      );
+    }
+    
+    _typingAnimationController.stop();
+    _scrollToBottom();
   }
 
   @override
@@ -644,14 +966,48 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
               controller: _scrollController,
               padding: EdgeInsets.fromLTRB(
                 16,
-                16,
+                (_hasMoreMessages && _isLoadingMore) ? 60 : 16,
                 16,
                 16 + MediaQuery.of(context).viewPadding.bottom + 80,
               ),
-              itemCount: _messages.length,
+              itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
               itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message, _messageAnimation);
+                // Show loading indicator at the top if loading more
+                if (index == 0 && _hasMoreMessages) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
+                      child: _isLoadingMore
+                          ? const SizedBox(
+                              height: 40,
+                              child: CircularProgressIndicator(),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  );
+                }
+                
+                final messageIndex = _hasMoreMessages ? index - 1 : index;
+                final message = _messages[messageIndex];
+                final showDateSeparator = messageIndex == 0 || 
+                    _shouldShowDateSeparator(_messages[messageIndex - 1].timestamp, message.timestamp);
+                
+                return Column(
+                  children: [
+                    if (showDateSeparator)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          _formatDate(message.timestamp),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                    _buildMessageBubble(message, _messageAnimation),
+                  ],
+                );
               },
             ),
           ),
@@ -720,10 +1076,28 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                       children: [
                         if (message.isTyping)
                           _buildTypingIndicator()
+                        else if (message.isRegenerating)
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildMessageContent(message)),
+                            ],
+                          )
                         else if (message.hasError)
                           _buildErrorMessage(message)
                         else
                           _buildMessageContent(message),
+                        // Show action buttons for AI messages
+                        if (!message.isFromUser && 
+                            !message.isTyping && 
+                            !message.hasError &&
+                            !message.isRegenerating)
+                          _buildActionButtons(message),
                         const SizedBox(height: 4),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -737,7 +1111,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                                 fontSize: 12,
                               ),
                             ),
-                            if (!message.isFromUser && !message.isTyping)
+                            if (!message.isFromUser && !message.isTyping && !message.isRegenerating)
                               _buildMessageActions(message),
                           ],
                         ),
@@ -818,8 +1192,15 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         ),
       );
     }
+    // Remove action markers from display (they're only for button generation)
+    String displayContent = message.content;
+    displayContent = displayContent.replaceAll(
+      RegExp(r'\[ACTION:[^\]]+\]', caseSensitive: false),
+      '',
+    ).trim();
+
     return MarkdownBody(
-      data: message.content,
+      data: displayContent,
       styleSheet: MarkdownStyleSheet(
         p: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
@@ -840,6 +1221,159 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         }
       },
     );
+  }
+
+  Widget _buildActionButtons(ChatMessage message) {
+    final actions = AiActionDetector.detectActions(message.content);
+    if (actions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: actions.map((action) {
+          return _buildActionButton(action);
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(AiAction action) {
+    final theme = Theme.of(context);
+    return ElevatedButton.icon(
+      onPressed: () => _handleAction(action),
+      icon: Icon(
+        _getActionIcon(action.actionType, action.parameters?['route']),
+        size: 16,
+      ),
+      label: Text(action.label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.primaryContainer,
+        foregroundColor: theme.colorScheme.onPrimaryContainer,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        minimumSize: const Size(0, 36),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 0,
+      ),
+    );
+  }
+
+  IconData _getActionIcon(String actionType, String? route) {
+    switch (route) {
+      case 'trust_create':
+      case 'trust_management':
+        return Icons.gavel_outlined;
+      case 'hibah_management':
+        return Icons.group_outlined;
+      case 'will_management':
+        return Icons.description_outlined;
+      case 'add_asset':
+      case 'assets_list':
+        return Icons.account_balance_wallet_outlined;
+      case 'add_family':
+      case 'family_list':
+        return Icons.family_restroom;
+      case 'executor_management':
+        return Icons.person_outline;
+      case 'checklist':
+        return Icons.checklist_outlined;
+      case 'extra_wishes':
+        return Icons.favorite_outline;
+      default:
+        return Icons.arrow_forward;
+    }
+  }
+
+  void _handleAction(AiAction action) {
+    if (action.actionType == 'navigate') {
+      final route = action.parameters?['route'] as String?;
+      if (route == null) return;
+
+      switch (route) {
+        case 'trust_create':
+          Navigator.of(context).push(
+            MaterialPageRoute<bool>(
+              builder: (_) => const TrustCreateScreen(),
+            ),
+          );
+          break;
+        case 'trust_management':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const TrustManagementScreen(),
+            ),
+          );
+          break;
+        case 'hibah_management':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const HibahManagementScreen(),
+            ),
+          );
+          break;
+        case 'will_management':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const WillManagementScreen(),
+            ),
+          );
+          break;
+        case 'add_asset':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const AddAssetScreen(),
+            ),
+          );
+          break;
+        case 'assets_list':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const AssetsListScreen(),
+            ),
+          );
+          break;
+        case 'add_family':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const AddFamilyMemberScreen(),
+            ),
+          );
+          break;
+        case 'family_list':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const FamilyListScreen(),
+            ),
+          );
+          break;
+        case 'executor_management':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ExecutorManagementScreen(),
+            ),
+          );
+          break;
+        case 'checklist':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ChecklistScreen(),
+            ),
+          );
+          break;
+        case 'extra_wishes':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ExtraWishesScreen(),
+            ),
+          );
+          break;
+      }
+    }
   }
 
   Widget _buildTypingIndicator() {
@@ -884,8 +1418,173 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
             fontSize: 16,
           ),
         ),
+        const SizedBox(height: 8),
+        ElevatedButton.icon(
+          onPressed: () => _retryFailedMessage(message),
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('Retry'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _retryFailedMessage(ChatMessage message) async {
+    // Find the user message that caused this error
+    final errorIndex = _messages.indexWhere((msg) => msg.id == message.id);
+    if (errorIndex == -1 || errorIndex == 0) return;
+    
+    // Find the previous user message
+    ChatMessage? userMessage;
+    for (int i = errorIndex - 1; i >= 0; i--) {
+      if (_messages[i].isFromUser) {
+        userMessage = _messages[i];
+        break;
+      }
+    }
+    
+    if (userMessage == null) return;
+    
+    // Remove the error message
+    setState(() {
+      _messages.removeAt(errorIndex);
+      _isLoading = true;
+    });
+    
+    // Retry sending the message
+    await _sendMessageWithText(userMessage.content);
+  }
+
+  Future<void> _sendMessageWithText(String messageText) async {
+    if (messageText.isEmpty || _isLoading) return;
+
+    // Add typing indicator
+    final typingMessage = ChatMessage(
+      id: 'typing_${DateTime.now().millisecondsSinceEpoch}',
+      content: '',
+      isFromUser: false,
+      timestamp: DateTime.now(),
+      isTyping: true,
+    );
+
+    setState(() {
+      _messages.add(typingMessage);
+    });
+
+    _typingAnimationController.repeat(reverse: true);
+    _scrollToBottom();
+
+    try {
+      // Add delay for human-like response
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Remove typing indicator
+      setState(() {
+        _messages.removeWhere((msg) => msg.id == typingMessage.id);
+        _streamingContent = '';
+      });
+
+      // Create streaming message
+      final streamingMessage = ChatMessage(
+        id: '', // Let database generate UUID
+        content: '',
+        isFromUser: false,
+        timestamp: DateTime.now(),
+        isStreaming: true,
+      );
+
+      setState(() {
+        _messages.add(streamingMessage);
+      });
+
+      // Build user context from assets (concise)
+      String? context;
+      try {
+        final user = AuthController.instance.currentUser;
+        if (user != null) {
+          final assets = await WillService.instance.getUserAssets(user.id);
+          final int count = assets.length;
+          final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
+          final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
+          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+        }
+      } catch (_) {
+        context = null;
+      }
+
+      // Stream the response with context
+      await for (final chunk in OpenRouterService.sendMessageStream(messageText, context: context)) {
+        if (mounted) {
+          setState(() {
+            _streamingContent += chunk;
+            _messages[_messages.length - 1] = streamingMessage.copyWith(
+              content: _streamingContent,
+            );
+          });
+          _scrollToBottom();
+        }
+      }
+
+      // Finalize the message
+      setState(() {
+        _messages[_messages.length - 1] = streamingMessage.copyWith(
+          content: _streamingContent,
+          isStreaming: false,
+        );
+        _isLoading = false;
+      });
+
+      await ChatService.saveMessage(_messages[_messages.length - 1], widget.conversation.id);
+      
+      // Haptic feedback when AI finishes replying (retry)
+      HapticFeedback.mediumImpact();
+
+    } catch (e, stackTrace) {
+      debugPrint('Retry error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      // Remove typing indicator
+      setState(() {
+        _messages.removeWhere((msg) => msg.id == typingMessage.id);
+      });
+
+      // Add error message with more details
+      String errorContent = "Sorry, I'm having trouble connecting right now. Please try again later.";
+      
+      final errorString = e.toString();
+      if (errorString.contains('OPENROUTER_API_KEY') || errorString.contains('OPENROUTER_MODEL')) {
+        errorContent = "AI chat is not configured. Please check your environment variables.";
+      } else if (errorString.contains('HTTP 401') || errorString.contains('HTTP 403')) {
+        errorContent = "Authentication failed. Please check your API key configuration.";
+      } else if (errorString.contains('HTTP 429')) {
+        errorContent = "Rate limit exceeded. Please try again in a moment.";
+      } else if (errorString.contains('HTTP 500') || errorString.contains('HTTP 502') || errorString.contains('HTTP 503')) {
+        errorContent = "The AI service is temporarily unavailable. Please try again later.";
+      }
+      
+      final errorMessage = ChatMessage(
+        id: '', // Let database generate UUID
+        content: errorContent,
+        isFromUser: false,
+        timestamp: DateTime.now(),
+        hasError: true,
+        errorMessage: e.toString(),
+      );
+
+      setState(() {
+        _messages.add(errorMessage);
+        _isLoading = false;
+      });
+
+      await ChatService.saveMessage(errorMessage, widget.conversation.id);
+    }
+
+    _typingAnimationController.stop();
+    _scrollToBottom();
   }
 
   Widget _buildMessageActions(ChatMessage message) {
@@ -899,94 +1598,98 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),
-        IconButton(
-          icon: Icon(
-            message.userFeedback == true ? Icons.thumb_up : Icons.thumb_up_outlined,
-            size: 16,
-            color: message.userFeedback == true 
-                ? Theme.of(context).colorScheme.primary 
-                : null,
+        if (!message.isFromUser && !message.hasError)
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 16),
+            onPressed: () => _regenerateResponse(message),
+            tooltip: 'Regenerate response',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
-          onPressed: () => _toggleMessageFeedback(message),
-          tooltip: message.userFeedback == true ? 'Remove like' : 'Like response',
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-        ),
       ],
     );
   }
 
   Widget _buildMessageInput() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: theme.colorScheme.outline.withOpacity(0.2),
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            icon: Icon(
-              _isUploading ? Icons.hourglass_top : Icons.attach_file,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            tooltip: 'Attach files',
-            onPressed: _isUploading ? null : _pickAndSendAttachments,
-          ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                ),
-              ),
-              child: TextField(
-                controller: _messageController,
-                enabled: !_isLoading,
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
-                decoration: const InputDecoration(
-                  hintText: 'Type a message...',
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withOpacity(0.3),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    enabled: !_isLoading,
+                    maxLines: null,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
+                    decoration: InputDecoration(hintText: 'Type a message...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.mic),
-            onPressed: () {
-              // TODO: Implement voice input
-            },
-            tooltip: 'Voice input',
-          ),
-          GestureDetector(
-            onTap: _isLoading ? null : _sendMessage,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _isLoading 
-                    ? Theme.of(context).colorScheme.outline.withOpacity(0.3)
-                    : Theme.of(context).colorScheme.primary,
-                shape: BoxShape.circle,
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _isLoading ? null : _sendMessage,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _isLoading 
+                        ? theme.colorScheme.outline.withOpacity(0.3)
+                        : theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.send,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
               ),
-              child: Icon(
-                Icons.send,
-                color: Colors.white,
-                size: 20,
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 12,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
-            ),
+              const SizedBox(width: 4),
+              Text(
+                'Sampul AI can make mistakes. Check important info.',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -994,6 +1697,12 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   }
 
   Widget _buildQuickSuggestions() {
+    // Only show suggestions if there are no user messages yet
+    final hasUserMessages = _messages.any((msg) => msg.isFromUser);
+    if (hasUserMessages || _isLoading) {
+      return const SizedBox.shrink();
+    }
+    
     final List<String> suggestions = <String>[
       'Summarize my assets',
       'How to start my will?',
@@ -1092,6 +1801,29 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else {
       return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+    }
+  }
+
+  bool _shouldShowDateSeparator(DateTime previous, DateTime current) {
+    final prevDate = DateTime(previous.year, previous.month, previous.day);
+    final currDate = DateTime(current.year, current.month, current.day);
+    return prevDate != currDate;
+  }
+
+  String _formatDate(DateTime timestamp) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    
+    if (messageDate == today) {
+      return 'Today';
+    } else if (messageDate == yesterday) {
+      return 'Yesterday';
+    } else {
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return '${months[timestamp.month - 1]} ${timestamp.day}, ${timestamp.year}';
     }
   }
 }

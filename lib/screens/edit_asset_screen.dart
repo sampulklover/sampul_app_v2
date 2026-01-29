@@ -250,10 +250,8 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                             await _loadBelovedOptions();
                           }
                         },
-                        decoration: const InputDecoration(
-                          labelText: 'Instructions After Death',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Instructions After Death',                        ),
                         validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
                       ),
                       const SizedBox(height: 12),
@@ -283,10 +281,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         controller: _declaredValueController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                        decoration: const InputDecoration(
-                          labelText: 'Declared Value (MYR)',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(labelText: 'Declared Value (MYR)',                        ),
                         validator: (String? v) {
                           final String value = (v ?? '').trim();
                           if (value.isEmpty) return 'Required';
@@ -301,10 +296,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       TextFormField(
                         controller: _remarksController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Remarks (optional)',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(labelText: 'Remarks (optional)',                        ),
                       ),
                     ],
                   ),

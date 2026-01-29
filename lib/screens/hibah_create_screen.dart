@@ -869,8 +869,6 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
     return InputDecoration(
       labelText: label,
       border: const OutlineInputBorder(),
-      filled: true,
-      fillColor: Theme.of(context).colorScheme.surface,
     );
   }
 
@@ -882,7 +880,7 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
   }) {
     return Card(
       elevation: 0,
-      color: color.withValues(alpha: 0.06),
+      color: const Color.fromRGBO(255, 255, 255, 1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -919,7 +917,7 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Icon(Icons.group, color: scheme.primary),
+                Icon(Icons.group, color: const Color.fromRGBO(83, 61, 233, 1)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1241,8 +1239,7 @@ class _BeneficiaryFormState extends State<_BeneficiaryForm> {
               if (widget.belovedOptions.isNotEmpty)
                 DropdownButtonFormField<int>(
                   initialValue: _selectedBelovedId,
-                  decoration: const InputDecoration(
-                    labelText: 'Select from family',
+                  decoration: InputDecoration(labelText: 'Select from family',
                   ),
                   isExpanded: true,
                   items: widget.belovedOptions
@@ -1258,25 +1255,25 @@ class _BeneficiaryFormState extends State<_BeneficiaryForm> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Full name'),
+                decoration: InputDecoration(labelText: 'Full name'),
                 validator: (String? v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _relationshipCtrl,
-                decoration: const InputDecoration(labelText: 'Relationship'),
+                decoration: InputDecoration(labelText: 'Relationship'),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _shareCtrl,
-                decoration: const InputDecoration(labelText: 'Share (%)'),
+                decoration: InputDecoration(labelText: 'Share (%)'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _notesCtrl,
-                decoration: const InputDecoration(labelText: 'Notes'),
+                decoration: InputDecoration(labelText: 'Notes'),
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
@@ -1389,7 +1386,7 @@ class _HibahDocumentFormScreenState extends State<_HibahDocumentFormScreen> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        Icon(Icons.file_present, color: scheme.primary),
+                        Icon(Icons.file_present, color: const Color.fromRGBO(49, 24, 211, 1)),
                         const SizedBox(width: 8),
                         Text(
                           'Document details',
@@ -1493,8 +1490,6 @@ class _HibahDocumentFormScreenState extends State<_HibahDocumentFormScreen> {
     return InputDecoration(
       labelText: label,
       border: const OutlineInputBorder(),
-      filled: true,
-      fillColor: Theme.of(context).colorScheme.surface,
     );
   }
 

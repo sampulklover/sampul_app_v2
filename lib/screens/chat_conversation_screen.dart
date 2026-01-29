@@ -769,8 +769,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               ),
               child: TextField(
                 controller: _messageController,
-                decoration: const InputDecoration(
-                  hintText: 'Type a message...',
+                decoration: InputDecoration(hintText: 'Type a message...',
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 16,

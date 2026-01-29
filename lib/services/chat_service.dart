@@ -49,13 +49,25 @@ class ChatService {
   }
 
   // Get messages for a conversation
-  static Future<List<ChatMessage>> getMessages(String conversationId) async {
+  static Future<List<ChatMessage>> getMessages(
+    String conversationId, {
+    DateTime? before,
+    int limit = 50,
+  }) async {
     try {
-      final response = await _supabase
+      var query = _supabase
           .from('chat_messages')
           .select()
-          .eq('conversation_id', conversationId)
-          .order('timestamp', ascending: true);
+          .eq('conversation_id', conversationId);
+      
+      // If loading older messages, filter by timestamp
+      if (before != null) {
+        query = query.lt('timestamp', before.toIso8601String());
+      }
+      
+      final response = await query
+          .order('timestamp', ascending: true)
+          .limit(limit);
 
       return (response as List)
           .map((json) => ChatMessage.fromJson(json))
