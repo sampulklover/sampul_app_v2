@@ -12,6 +12,8 @@ import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
 import 'billing_screen.dart';
 import 'referral_dashboard_screen.dart';
+import 'admin_ai_settings_screen.dart';
+import '../utils/admin_utils.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,6 +28,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   bool _isVerified = false;
   String? _verificationStatus;
   bool _isLoadingVerification = true;
+  bool _isAdmin = false;
+  bool _isLoadingAdmin = true;
 
   @override
   void initState() {
@@ -33,6 +37,26 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
     _loadVerificationStatus();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final isAdmin = await AdminUtils.isAdmin();
+      if (mounted) {
+        setState(() {
+          _isAdmin = isAdmin;
+          _isLoadingAdmin = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAdmin = false;
+          _isLoadingAdmin = false;
+        });
+      }
+    }
   }
 
   @override
@@ -207,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                               decoration: InputDecoration(
                                 labelText: 'Current Password',
                                 labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.onSurfaceVariant),
+                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     obscureCurrentPassword
@@ -256,7 +280,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                               decoration: InputDecoration(
                                 labelText: 'New Password',
                                 labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.onSurfaceVariant),
+                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     obscureNewPassword
@@ -308,7 +332,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                               decoration: InputDecoration(
                                 labelText: 'Confirm New Password',
                                 labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.onSurfaceVariant),
+                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     obscureConfirmPassword
@@ -562,6 +586,14 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         children: <Widget>[
           _buildSectionHeader('Account'),
           Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -673,6 +705,14 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           const SizedBox(height: 16),
           _buildSectionHeader('Billing'),
           Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -694,6 +734,14 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           const SizedBox(height: 16),
           _buildSectionHeader('Preferences'),
           Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -708,6 +756,23 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   },
                 ),
                 const Divider(height: 1),
+                // Admin AI Settings (only visible to admins)
+                if (!_isLoadingAdmin && _isAdmin) ...[
+                  ListTile(
+                    leading: const Icon(Icons.smart_toy_outlined),
+                    title: const Text('AI Chat Settings'),
+                    subtitle: const Text('Manage Sampul AI responses'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AdminAiSettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                ],
                 SwitchListTile(
                   value: ThemeController.instance.themeMode == ThemeMode.dark,
                   onChanged: (bool value) {
@@ -763,6 +828,14 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           const SizedBox(height: 16),
           _buildSectionHeader('About'),
           Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -963,6 +1036,14 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       barrierDismissible: false,
       builder: (context) => Center(
         child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(

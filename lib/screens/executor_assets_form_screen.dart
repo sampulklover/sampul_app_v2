@@ -67,28 +67,22 @@ class _ExecutorAssetsFormScreenState extends State<ExecutorAssetsFormScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name/Description',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                  labelText: 'Name/Description',                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: valueController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Value (RM)',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                  labelText: 'Value (RM)',                ),
               ),
               if (type == 'Beneficiary') ...[
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Additional Details',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Additional Details',                  ),
                   maxLines: 2,
                 ),
               ],
@@ -132,7 +126,7 @@ class _ExecutorAssetsFormScreenState extends State<ExecutorAssetsFormScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                Icon(icon, color: const Color.fromRGBO(49, 24, 211, 1)),
                 const SizedBox(width: 8),
                 Text(
                   title,

@@ -64,7 +64,7 @@ class ProfileDetailsCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Icon(item.icon, size: 20, color: theme.colorScheme.primary),
+                      Icon(item.icon, size: 20, color: const Color.fromRGBO(49, 24, 211, 1)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(

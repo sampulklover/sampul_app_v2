@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'screens/login_screen.dart';
@@ -47,7 +48,12 @@ void main() async {
   }
   
   // Initialize OpenRouter
-  await OpenRouterService.initialize();
+  try {
+    await OpenRouterService.initialize();
+  } catch (e) {
+    debugPrint('Warning: OpenRouter initialization failed: $e');
+    debugPrint('AI chat may not work until OPENROUTER_API_KEY and OPENROUTER_MODEL are configured.');
+  }
   
   runApp(const MyApp());
 }
@@ -64,20 +70,52 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Sampul',
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(83, 61, 233, 1)),
             brightness: Brightness.light,
+            scaffoldBackgroundColor: const Color.fromRGBO(250, 250, 250, 1),
+            textTheme: GoogleFonts.interTextTheme(),
+            iconTheme: const IconThemeData(
+              color: Color.fromRGBO(83, 61, 233, 1),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color.fromRGBO(255, 255, 255, 1),
+              elevation: 1,
+              iconTheme: IconThemeData(
+                color: Color.fromRGBO(83, 61, 233, 1),
+              ),
+            ),
+            cardTheme: const CardThemeData(
+              color: Color.fromRGBO(255, 255, 255, 1),
+            ),
             bottomNavigationBarTheme: const BottomNavigationBarThemeData(
               backgroundColor: Colors.white,
-              selectedItemColor: Colors.deepPurpleAccent,
+              selectedItemColor: Color.fromRGBO(83, 61, 233, 1),
               unselectedItemColor: Colors.grey,
             ),
           ),
           darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent, brightness: Brightness.dark),
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(83, 61, 233, 1), brightness: Brightness.dark),
             brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color.fromRGBO(18, 18, 18, 1),
+            textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+            iconTheme: const IconThemeData(
+              color: Color.fromRGBO(83, 61, 233, 1),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color.fromRGBO(30, 30, 30, 1),
+              elevation: 1,
+              iconTheme: IconThemeData(
+                color: Color.fromRGBO(83, 61, 233, 1),
+              ),
+            ),
+            cardTheme: const CardThemeData(
+              color: Color.fromRGBO(30, 30, 30, 1),
+            ),
             bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-              backgroundColor: Colors.black87,
-              selectedItemColor: Colors.deepPurpleAccent,
+              backgroundColor: Color.fromRGBO(30, 30, 30, 1),
+              selectedItemColor: Color.fromRGBO(83, 61, 233, 1),
               unselectedItemColor: Colors.grey,
             ),
           ),

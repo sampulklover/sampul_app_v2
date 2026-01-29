@@ -28,6 +28,10 @@ class Trust {
   final String? businessPostcode;
   final String? businessState;
   final String? businessCountry;
+  final List<String>? fundSupportCategories;
+  final Map<String, dynamic>? fundSupportConfigs; // Per-category configuration: Map<categoryId, config>
+  final String? executorType; // 'someone_i_know' or 'sampul_professional'
+  final List<int>? executorIds; // IDs of selected family members when executorType is 'someone_i_know'
   final TrustStatus computedStatus;
 
   Trust({
@@ -58,6 +62,10 @@ class Trust {
     this.businessPostcode,
     this.businessState,
     this.businessCountry,
+    this.fundSupportCategories,
+    this.fundSupportConfigs,
+    this.executorType,
+    this.executorIds,
     this.computedStatus = TrustStatus.draft,
   });
 
@@ -96,6 +104,18 @@ class Trust {
       businessPostcode: json['business_postcode'] as String?,
       businessState: json['business_state'] as String?,
       businessCountry: json['business_country'] as String?,
+      fundSupportCategories: json['fund_support_categories'] != null
+          ? (json['fund_support_categories'] as List).isNotEmpty
+              ? List<String>.from(json['fund_support_categories'] as List)
+              : null
+          : null,
+      fundSupportConfigs: json['fund_support_configs'] != null
+          ? Map<String, dynamic>.from(json['fund_support_configs'] as Map)
+          : null,
+      // Note: executorType and executorIds are stored in trust_executor table, not in trust table
+      // These will be loaded separately if needed
+      executorType: null,
+      executorIds: null,
       computedStatus: mapped,
     );
   }
@@ -129,6 +149,11 @@ class Trust {
       'business_postcode': businessPostcode,
       'business_state': businessState,
       'business_country': businessCountry,
+      if (fundSupportCategories != null && fundSupportCategories!.isNotEmpty)
+        'fund_support_categories': fundSupportCategories,
+      if (fundSupportConfigs != null && fundSupportConfigs!.isNotEmpty)
+        'fund_support_configs': fundSupportConfigs,
+      // Note: executorType and executorIds are stored in trust_executor table, not here
     };
   }
 }

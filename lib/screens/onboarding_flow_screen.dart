@@ -162,12 +162,9 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                         controller: controller,
                         textInputAction: TextInputAction.done,
                         textCapitalization: TextCapitalization.characters,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Referral code',
-                          hintText: 'Example: ABC123',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.card_giftcard_outlined),
-                        ),
+                          hintText: 'Example: ABC123',                          prefixIcon: Icon(Icons.card_giftcard_outlined),                        ),
                         onChanged: (_) {
                           if (inlineError != null || inlineSuccess != null) {
                             setModalState(() {
@@ -217,7 +214,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.check_circle_outline, color: theme.colorScheme.onPrimaryContainer, size: 18),
+                              Icon(Icons.check_circle_outline, color: const Color.fromRGBO(83, 61, 233, 1), size: 18),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -566,7 +563,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                             ),
                             isCompleted2
                                 ? const Icon(Icons.check_circle, color: Colors.green, size: 24)
-                                : Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                                : Icon(Icons.arrow_forward_ios, size: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
                           ],
                         ),
                       ),

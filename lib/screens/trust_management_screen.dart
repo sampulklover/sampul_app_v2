@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
-import 'trust_create_screen.dart';
 import 'trust_info_screen.dart';
 import 'trust_dashboard_screen.dart';
 
@@ -45,7 +44,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
 
   Future<void> _createTrust() async {
     final bool? created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => const TrustCreateScreen()),
+      MaterialPageRoute<bool>(builder: (_) => const TrustInfoScreen()),
     );
     if (created == true) await _loadTrusts();
   }
@@ -158,12 +157,12 @@ class _CreateTrustDialogState extends State<_CreateTrustDialog> {
           children: <Widget>[
             TextFormField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: 'Name'),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             TextFormField(
               controller: _codeCtrl,
-              decoration: const InputDecoration(labelText: 'Trust code (unique)'),
+              decoration: InputDecoration(labelText: 'Trust code (unique)'),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 12),
@@ -442,7 +441,7 @@ class _TrustInfoBanner extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            Icon(Icons.info_outline, color: scheme.primary, size: 18),
+            Icon(Icons.info_outline, color: const Color.fromRGBO(83, 61, 233, 1), size: 18),
             const SizedBox(width: 8),
             const Expanded(child: Text('New to trusts?')),
             Text('Learn more', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),

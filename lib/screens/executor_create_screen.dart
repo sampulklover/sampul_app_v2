@@ -368,11 +368,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedRelationship,
-              decoration: const InputDecoration(
-                labelText: 'Relationship with Deceased *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.people_outline),
-              ),
+              decoration: InputDecoration(
+                labelText: 'Relationship with Deceased *',                prefixIcon: Icon(Icons.people_outline),              ),
               items: ExecutorConstants.executorRelationships
                   .map((r) => DropdownMenuItem<String>(
                         value: r['value'],
@@ -399,10 +396,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _otherRelationshipCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Other Relationship *',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                  labelText: 'Other Relationship *',                ),
                 validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
               ),
             ],
@@ -413,11 +408,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   child: TextFormField(
                     controller: _applicantHomePhoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Home Phone',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.home_outlined),
-                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Home Phone',                      prefixIcon: Icon(Icons.home_outlined),                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -425,11 +417,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   child: TextFormField(
                     controller: _applicantOfficePhoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Office Phone',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.business_outlined),
-                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Office Phone',                      prefixIcon: Icon(Icons.business_outlined),                    ),
                   ),
                 ),
               ],
@@ -464,19 +453,15 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _correspondenceAddress1Ctrl,
-                decoration: const InputDecoration(
-                  labelText: 'Address Line 1 *',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                  labelText: 'Address Line 1 *',                ),
                 validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _correspondenceAddress2Ctrl,
-                decoration: const InputDecoration(
-                  labelText: 'Address Line 2',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: InputDecoration(
+                  labelText: 'Address Line 2',                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -485,10 +470,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _correspondenceCityCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'City *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'City *',                      ),
                       validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                     ),
                   ),
@@ -497,10 +480,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                     child: TextFormField(
                       controller: _correspondencePostcodeCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Postcode *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Postcode *',                      ),
                       validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                     ),
                   ),
@@ -512,10 +493,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _correspondenceStateCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'State *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'State *',                      ),
                       validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                     ),
                   ),
@@ -523,10 +502,8 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       value: _selectedCorrespondenceCountry,
-                      decoration: const InputDecoration(
-                        labelText: 'Country *',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Country *',                      ),
                       items: ExecutorConstants.countries
                           .map((c) => DropdownMenuItem<String>(
                                 value: c['value'],
@@ -732,25 +709,31 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
             TextFormField(
               controller: _supportingDocumentsCtrl,
               maxLines: 5,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Supporting Documents',
                 hintText: 'List the documents you have (e.g., Death certificate, Will, Identity documents, etc.)',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 prefixIcon: Icon(Icons.description_outlined),
-                alignLabelWithHint: true,
+                alignLabelWithHint: true,                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _additionalNotesCtrl,
               maxLines: 5,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Additional Notes',
-                hintText: 'Any additional information that might help with your executor registration...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.note_outlined),
-                alignLabelWithHint: true,
-              ),
+                hintText: 'Any additional information that might help with your executor registration...',                prefixIcon: Icon(Icons.note_outlined),
+                alignLabelWithHint: true,              ),
             ),
           ],
         ),
@@ -774,7 +757,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.person, color: const Color.fromRGBO(49, 24, 211, 1)),
                       const SizedBox(width: 8),
                       Text(
                         'Applicant Information',
@@ -810,7 +793,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   children: [
                     Row(
                     children: [
-                      Icon(Icons.account_circle, color: Theme.of(context).colorScheme.secondary),
+                      Icon(Icons.account_circle, color: const Color.fromRGBO(49, 24, 211, 1)),
                       const SizedBox(width: 8),
                       Text(
                         'Deceased Information',
@@ -846,7 +829,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.account_balance, color: Theme.of(context).colorScheme.tertiary),
+                      Icon(Icons.account_balance, color: const Color.fromRGBO(49, 24, 211, 1)),
                       const SizedBox(width: 8),
                       Text(
                         'Assets Summary',
@@ -877,7 +860,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.family_restroom, color: Theme.of(context).colorScheme.primary),
+                        Icon(Icons.family_restroom, color: const Color.fromRGBO(49, 24, 211, 1)),
                         const SizedBox(width: 8),
                         Text(
                           'Guardian Information',

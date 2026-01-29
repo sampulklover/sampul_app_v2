@@ -23,7 +23,7 @@ import 'chat_list_screen.dart';
 import 'aftercare_screen.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
-import 'trust_create_screen.dart';
+import 'trust_info_screen.dart';
 import 'referral_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
             automaticallyImplyLeading: false,
             pinned: true,
             expandedHeight: 110,
-            backgroundColor: Colors.deepPurpleAccent,
+            backgroundColor: const Color.fromRGBO(83, 61, 233, 1),
             foregroundColor: Colors.white,
             title: Row(
               mainAxisSize: MainAxisSize.min,
@@ -174,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
                   );
                 },
-                icon: const Icon(Icons.card_giftcard_outlined),
+                icon: const Icon(Icons.card_giftcard_outlined, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
                   );
                 },
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.settings_outlined, color: Colors.white),
               ),
               const SizedBox(width: 8),
             ],
@@ -195,8 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: <Color>[
-                        Colors.deepPurpleAccent,
-                        Colors.deepPurpleAccent.shade700,
+                        const Color.fromRGBO(83, 61, 233, 1),
+                        const Color.fromRGBO(60, 45, 170, 1),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -410,7 +410,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                     child: InkWell(
                       onTap: () async {
                         final bool? created = await Navigator.of(context).push<bool>(
-                          MaterialPageRoute<bool>(builder: (_) => const TrustCreateScreen()),
+                          MaterialPageRoute<bool>(builder: (_) => const TrustInfoScreen()),
                         );
                         if (created == true && widget.onRefresh != null) {
                           widget.onRefresh!();
@@ -819,9 +819,9 @@ class _ActionsGrid extends StatelessWidget {
                                 height: 56,
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(16),
+                                  shape: BoxShape.circle,
                                 ),
-                                child: Icon(item.icon, color: theme.colorScheme.onPrimaryContainer),
+                                child: Icon(item.icon, color: const Color.fromRGBO(83, 61, 233, 1)),
                               ),
                               const SizedBox(height: 8),
                               Flexible(
@@ -874,9 +874,9 @@ class _ActionsGrid extends StatelessWidget {
                 height: 56,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(16),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(item.icon, color: theme.colorScheme.onPrimaryContainer),
+                child: Icon(item.icon, color: const Color.fromRGBO(83, 61, 233, 1)),
               ),
               const SizedBox(height: 8),
               Text(item.label, style: const TextStyle(fontSize: 12)),
@@ -1316,7 +1316,7 @@ class _AddCircle extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: Colors.purple, style: BorderStyle.solid, width: 2),
           ),
-          child: const Icon(Icons.add, color: Colors.purple),
+          child: const Icon(Icons.add, color: Color.fromRGBO(83, 61, 233, 1)),
         ),
         const SizedBox(height: 6),
         SizedBox(

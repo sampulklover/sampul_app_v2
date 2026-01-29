@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'ai_chat_settings_service.dart';
 
 class OpenRouterService {
   static const String _baseUrl = 'https://openrouter.ai/api/v1';
@@ -27,6 +29,23 @@ class OpenRouterService {
         await initialize();
       }
 
+      // Get dynamic settings from database
+      final settings = await AiChatSettingsService.instance.getActiveSettings();
+      final systemPrompt = settings.systemPrompt;
+      final maxTokens = settings.maxTokens;
+      final temperature = settings.temperature;
+      final settingsModel = settings.model;
+      
+      // Debug logging to verify settings are being used
+      debugPrint('🔧 OpenRouter Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}');
+
+      // Build enhanced system prompt with resources context
+      String enhancedPrompt = systemPrompt;
+      final resourcesContext = settings.getResourcesContext();
+      if (resourcesContext.isNotEmpty) {
+        enhancedPrompt += '\n\n' + resourcesContext;
+      }
+
       final response = await http.post(
         Uri.parse('$_baseUrl/chat/completions'),
         headers: {
@@ -36,11 +55,11 @@ class OpenRouterService {
           'X-Title': 'Sampul AI Chat', // Optional: for tracking
         },
         body: jsonEncode({
-          'model': model ?? _model,
+          'model': model ?? settingsModel ?? _model,
           'messages': [
             {
               'role': 'system',
-              'content': 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics. Keep answers concise (2–4 short sentences). Use bullet points only when listing items. Avoid long paragraphs.'
+              'content': enhancedPrompt
             },
             if (context != null && context.isNotEmpty)
               {
@@ -52,8 +71,8 @@ class OpenRouterService {
               'content': message,
             }
           ],
-          'max_tokens': 220,
-          'temperature': 0.5,
+          'max_tokens': maxTokens,
+          'temperature': temperature,
         }),
       );
 
@@ -62,12 +81,16 @@ class OpenRouterService {
         if (data['choices'] != null && data['choices'].isNotEmpty) {
           return data['choices'][0]['message']['content'];
         } else {
+          debugPrint('OpenRouter: No choices in response: ${response.body}');
           throw Exception('No choices in response: ${response.body}');
         }
       } else {
+        debugPrint('OpenRouter: HTTP ${response.statusCode}: ${response.body}');
         throw Exception('HTTP ${response.statusCode}: ${response.body}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('OpenRouter sendMessage error: $e');
+      debugPrint('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -109,6 +132,23 @@ class OpenRouterService {
         await initialize();
       }
 
+      // Get dynamic settings from database
+      final settings = await AiChatSettingsService.instance.getActiveSettings();
+      final systemPrompt = settings.systemPrompt;
+      final maxTokens = settings.maxTokens;
+      final temperature = settings.temperature;
+      final settingsModel = settings.model;
+      
+      // Debug logging to verify settings are being used
+      debugPrint('🔧 OpenRouter Streaming Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}');
+
+      // Build enhanced system prompt with resources context
+      String enhancedPrompt = systemPrompt;
+      final resourcesContext = settings.getResourcesContext();
+      if (resourcesContext.isNotEmpty) {
+        enhancedPrompt += '\n\n' + resourcesContext;
+      }
+
       final request = http.Request('POST', Uri.parse('$_baseUrl/chat/completions'));
       request.headers.addAll({
         'Authorization': 'Bearer $_apiKey',
@@ -118,11 +158,11 @@ class OpenRouterService {
       });
 
       request.body = jsonEncode({
-        'model': model ?? _model,
+        'model': model ?? settingsModel ?? _model,
         'messages': [
           {
             'role': 'system',
-            'content': 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics. Keep answers concise (2–4 short sentences). Use bullet points only when listing items. Avoid long paragraphs.'
+            'content': enhancedPrompt
           },
           if (context != null && context.isNotEmpty)
             {
@@ -134,8 +174,8 @@ class OpenRouterService {
             'content': message,
           }
         ],
-        'max_tokens': 220,
-        'temperature': 0.5,
+        'max_tokens': maxTokens,
+        'temperature': temperature,
         'stream': true,
       });
 
@@ -167,12 +207,22 @@ class OpenRouterService {
           }
         }
       } else {
-        throw Exception('HTTP ${streamedResponse.statusCode}');
+        final errorBody = await streamedResponse.stream.bytesToString();
+        debugPrint('OpenRouter streaming error: HTTP ${streamedResponse.statusCode}: $errorBody');
+        throw Exception('HTTP ${streamedResponse.statusCode}: $errorBody');
       }
     } catch (e) {
-      // Fallback to non-streaming if streaming fails
-      final response = await sendMessage(message, model: model, context: context);
-      yield response;
+      // Log the error before fallback
+      debugPrint('Streaming failed, attempting fallback: $e');
+      try {
+        // Fallback to non-streaming if streaming fails
+        final response = await sendMessage(message, model: model, context: context);
+        yield response;
+      } catch (fallbackError) {
+        // If fallback also fails, rethrow with more context
+        debugPrint('Fallback also failed: $fallbackError');
+        rethrow;
+      }
     }
   }
 }

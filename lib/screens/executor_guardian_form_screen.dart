@@ -226,11 +226,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<int>(
                             value: _selectedGuardianFamilyMemberId,
-                            decoration: const InputDecoration(
-                              labelText: 'Select Family Member',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.person_search),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Select Family Member',                              prefixIcon: Icon(Icons.person_search),                            ),
                             items: [
                               const DropdownMenuItem<int>(
                                 value: -1,
@@ -294,11 +291,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 ],
                 TextFormField(
                   controller: _guardianFullNameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Full Name *',                    prefixIcon: Icon(Icons.person_outline),                  ),
                   validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                 ),
                 const SizedBox(height: 12),
@@ -307,21 +301,16 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                     Expanded(
                       child: TextFormField(
                         controller: _guardianNricNewCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'NRIC (New)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.badge_outlined),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'NRIC (New)',                          prefixIcon: Icon(Icons.badge_outlined),                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextFormField(
                         controller: _guardianNricOldCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'NRIC (Old)',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'NRIC (Old)',                        ),
                       ),
                     ),
                   ],
@@ -329,10 +318,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _guardianPoliceArmyNricCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Police/Army NRIC',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Police/Army NRIC',                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -340,11 +327,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                     Expanded(
                       child: TextFormField(
                         controller: _guardianDateOfBirthCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Date of Birth',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today_outlined),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth',                          prefixIcon: Icon(Icons.calendar_today_outlined),                        ),
                         readOnly: true,
                         onTap: () async {
                           final date = await showDatePicker(
@@ -366,10 +350,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                       child: TextFormField(
                         controller: _guardianAgeCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Age',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Age',                        ),
                       ),
                     ),
                   ],
@@ -377,11 +359,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedGuardianRelationship,
-                  decoration: const InputDecoration(
-                    labelText: 'Relationship with Deceased',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.people_outline),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Relationship with Deceased',                    prefixIcon: Icon(Icons.people_outline),                  ),
                   items: ExecutorConstants.executorRelationships
                       .map((r) => DropdownMenuItem<String>(
                             value: r['value'],
@@ -399,19 +378,14 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _guardianAddress1Ctrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Address Line 1',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.location_on_outlined),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Address Line 1',                    prefixIcon: Icon(Icons.location_on_outlined),                  ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _guardianAddress2Ctrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Address Line 2',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Address Line 2',                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -420,10 +394,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                       flex: 2,
                       child: TextFormField(
                         controller: _guardianCityCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'City',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'City',                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -431,10 +403,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                       child: TextFormField(
                         controller: _guardianPostcodeCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Postcode',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Postcode',                        ),
                       ),
                     ),
                   ],
@@ -445,20 +415,16 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                     Expanded(
                       child: TextFormField(
                         controller: _guardianStateCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'State',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'State',                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedGuardianCountry,
-                        decoration: const InputDecoration(
-                          labelText: 'Country',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Country',                        ),
                         items: ExecutorConstants.countries
                             .map((c) => DropdownMenuItem<String>(
                                   value: c['value'],
@@ -474,11 +440,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 TextFormField(
                   controller: _guardianPhoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number',                    prefixIcon: Icon(Icons.phone_outlined),                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -487,10 +450,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                       child: TextFormField(
                         controller: _guardianHomePhoneCtrl,
                         keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Home Phone',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Home Phone',                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -498,10 +459,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                       child: TextFormField(
                         controller: _guardianOfficePhoneCtrl,
                         keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Office Phone',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Office Phone',                        ),
                       ),
                     ),
                   ],
@@ -510,11 +469,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 TextFormField(
                   controller: _guardianEmailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email Address',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Email Address',                    prefixIcon: Icon(Icons.email_outlined),                  ),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(

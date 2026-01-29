@@ -56,6 +56,11 @@ class TrustService {
           await _createCharities(createdTrust.id!, charities, user.id);
         }
 
+        // Create executors if provided (stored in trust_executor table)
+        if (trust.executorType != null) {
+          await _createExecutors(createdTrust.id!, trust.executorType!, trust.executorIds);
+        }
+
         return createdTrust;
       } catch (e) {
         // Retry on unique violation by generating a new code
@@ -92,6 +97,32 @@ class TrustService {
     }).toList();
 
     await _client.from('trust_charity').insert(charityPayloads);
+  }
+
+  Future<void> _createExecutors(int trustId, String executorType, List<int>? executorIds) async {
+    final List<Map<String, dynamic>> executorPayloads = [];
+
+    if (executorType == 'someone_i_know' && executorIds != null && executorIds.isNotEmpty) {
+      // Create one record per beloved_id
+      for (final belovedId in executorIds) {
+        executorPayloads.add({
+          'trust_id': trustId,
+          'executor_type': executorType,
+          'beloved_id': belovedId,
+        });
+      }
+    } else if (executorType == 'sampul_professional') {
+      // Create one record for sampul professional (no beloved_id)
+      executorPayloads.add({
+        'trust_id': trustId,
+        'executor_type': executorType,
+        'beloved_id': null,
+      });
+    }
+
+    if (executorPayloads.isNotEmpty) {
+      await _client.from('trust_executor').insert(executorPayloads);
+    }
   }
 
   Future<List<TrustBeneficiary>> getBeneficiariesByTrustId(int trustId) async {

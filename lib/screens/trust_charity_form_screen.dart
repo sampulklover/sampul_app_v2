@@ -126,7 +126,7 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
             // Essential Information Card
             Card(
               elevation: 0,
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              color: const Color.fromRGBO(255, 255, 255, 1),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -150,22 +150,14 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _organizationNameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Organization Name *',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
+                      decoration: InputDecoration(labelText: 'Organization Name *',
                       ),
                       validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _selectedCategory,
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
+                      decoration: InputDecoration(labelText: 'Category',
                       ),
                       items: TrustConstants.donationCategories
                           .map((item) => DropdownMenuItem(
@@ -185,7 +177,7 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
             // Bank & Donation Details Card
             Card(
               elevation: 0,
-              color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
+              color: const Color.fromRGBO(255, 255, 255, 1),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -210,11 +202,7 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                     DropdownButtonFormField<String>(
                       value: _selectedBank,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Bank *',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
+                      decoration: InputDecoration(labelText: 'Bank *',
                       ),
                       items: TrustConstants.banks
                           .map((item) => DropdownMenuItem(
@@ -232,11 +220,7 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                     TextFormField(
                       controller: _accountNumberCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Account Number *',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
+                      decoration: InputDecoration(labelText: 'Account Number *',
                       ),
                       validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
                     ),
@@ -247,12 +231,8 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                           child: TextFormField(
                             controller: _donationAmountCtrl,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: const InputDecoration(
-                              labelText: 'Amount (RM) *',
-                              border: OutlineInputBorder(),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Amount (RM) *',                            ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Required';
                               final amount = double.tryParse(v.trim());
@@ -267,11 +247,7 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             value: _selectedDonationDuration,
-                            decoration: const InputDecoration(
-                              labelText: 'Frequency *',
-                              border: OutlineInputBorder(),
-                              filled: true,
-                              fillColor: Colors.white,
+                            decoration: InputDecoration(labelText: 'Frequency *',
                             ),
                             items: TrustConstants.donationDurations
                                 .map((item) => DropdownMenuItem(
@@ -322,19 +298,15 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                           TextFormField(
                             controller: _emailCtrl,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Email',                            ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _phoneCtrl,
                             keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone Number',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Phone Number',                            ),
                           ),
                           const SizedBox(height: 24),
                           Text(
@@ -346,18 +318,14 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _address1Ctrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Address Line 1',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Address Line 1',                            ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _address2Ctrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Address Line 2',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Address Line 2',                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -365,20 +333,16 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                               Expanded(
                                 child: TextFormField(
                                   controller: _cityCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'City',
-                                    border: OutlineInputBorder(),
-                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'City',                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: TextFormField(
                                   controller: _postcodeCtrl,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Postcode',
-                                    border: OutlineInputBorder(),
-                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Postcode',                                  ),
                                 ),
                               ),
                             ],
@@ -386,18 +350,14 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _stateCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'State',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'State',                            ),
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedCountry,
-                            decoration: const InputDecoration(
-                              labelText: 'Country',
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Country',                            ),
                             items: TrustConstants.countries
                                 .map((item) => DropdownMenuItem(
                                       value: item['value'],

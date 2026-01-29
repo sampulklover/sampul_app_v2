@@ -299,7 +299,7 @@ class _HibahDetailScreenState extends State<HibahDetailScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Icon(Icons.insert_drive_file, color: Theme.of(context).colorScheme.primary),
+        leading: Icon(Icons.insert_drive_file, color: const Color.fromRGBO(49, 24, 211, 1)),
         title: Text(
           docTypeLabel,
           style: const TextStyle(fontWeight: FontWeight.w600),

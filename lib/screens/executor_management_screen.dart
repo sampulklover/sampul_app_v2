@@ -256,7 +256,7 @@ class _ExecutorInfoBanner extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            Icon(Icons.info_outline, color: scheme.primary, size: 18),
+            Icon(Icons.info_outline, color: const Color.fromRGBO(49, 24, 211, 1), size: 18),
             const SizedBox(width: 8),
             const Expanded(child: Text('New to executors?')),
             Text('Learn more', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),

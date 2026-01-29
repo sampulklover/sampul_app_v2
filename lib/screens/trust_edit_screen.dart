@@ -669,7 +669,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.person, color: const Color.fromRGBO(49, 24, 211, 1)),
                     const SizedBox(width: 8),
                     Text(
                       'Personal Information',
@@ -703,7 +703,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.account_balance_wallet, color: Theme.of(context).colorScheme.secondary),
+                    Icon(Icons.account_balance_wallet, color: const Color.fromRGBO(49, 24, 211, 1)),
                     const SizedBox(width: 8),
                     Text(
                       'Financial Information',
@@ -751,7 +751,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.business, color: Theme.of(context).colorScheme.tertiary),
+                      Icon(Icons.business, color: const Color.fromRGBO(49, 24, 211, 1)),
                       const SizedBox(width: 8),
                       Text(
                         'Business Information',
@@ -784,7 +784,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.people, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.people, color: const Color.fromRGBO(49, 24, 211, 1)),
                     const SizedBox(width: 8),
                     Text(
                       'Beneficiaries (${_beneficiaries.length})',
@@ -855,7 +855,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.volunteer_activism, color: Theme.of(context).colorScheme.secondary),
+                    Icon(Icons.volunteer_activism, color: const Color.fromRGBO(49, 24, 211, 1)),
                     const SizedBox(width: 8),
                     Text(
                       'Charities/Donations (${_charities.length})',
@@ -1112,10 +1112,8 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                             children: <Widget>[
                               DropdownButtonFormField<String>(
                                 value: _selectedEstimatedNetWorth,
-                                decoration: const InputDecoration(
-                                  labelText: 'Estimated Net Worth',
-                                  border: OutlineInputBorder(),
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Estimated Net Worth',                                ),
                                 items: TrustConstants.estimatedNetWorths
                                     .map((Map<String, String> item) => DropdownMenuItem<String>(
                                           value: item['value'],
@@ -1127,10 +1125,8 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                               const SizedBox(height: 12),
                               DropdownButtonFormField<String>(
                                 value: _selectedSourceOfFund,
-                                decoration: const InputDecoration(
-                                  labelText: 'Source of Fund',
-                                  border: OutlineInputBorder(),
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Source of Fund',                                ),
                                 items: TrustConstants.sourceOfWealth
                                     .map((Map<String, String> item) => DropdownMenuItem<String>(
                                           value: item['value'],
@@ -1143,11 +1139,9 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                               TextFormField(
                                 controller: _purposeOfTransactionCtrl,
                                 maxLines: 3,
-                                decoration: const InputDecoration(
-                                  labelText: 'Purpose of Transaction',
-                                  border: OutlineInputBorder(),
-                                  alignLabelWithHint: true,
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Purpose of Transaction',                                  alignLabelWithHint: true,
+                                  prefixIcon: Icon(Icons.description_outlined),                                ),
                               ),
                             ],
                           ),
@@ -1163,38 +1157,26 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                             children: <Widget>[
                               TextFormField(
                                 controller: _employerNameCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Employer Name',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.business_outlined),
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Employer Name',                                  prefixIcon: Icon(Icons.business_outlined),                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _businessNatureCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Business Nature',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.work_outline),
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Business Nature',                                  prefixIcon: Icon(Icons.work_outline),                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _businessAddress1Ctrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Business Address Line 1',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.location_on_outlined),
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Business Address Line 1',                                  prefixIcon: Icon(Icons.location_on_outlined),                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _businessAddress2Ctrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Business Address Line 2',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.location_on_outlined),
-                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Business Address Line 2',                                  prefixIcon: Icon(Icons.location_on_outlined),                                ),
                               ),
                               const SizedBox(height: 12),
                               Row(
@@ -1203,20 +1185,16 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                                     flex: 2,
                                     child: TextFormField(
                                       controller: _businessCityCtrl,
-                                      decoration: const InputDecoration(
-                                        labelText: 'City',
-                                        border: OutlineInputBorder(),
-                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'City',                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: TextFormField(
                                       controller: _businessPostcodeCtrl,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Postcode',
-                                        border: OutlineInputBorder(),
-                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'Postcode',                                      ),
                                     ),
                                   ),
                                 ],
@@ -1227,20 +1205,16 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                                   Expanded(
                                     child: TextFormField(
                                       controller: _businessStateCtrl,
-                                      decoration: const InputDecoration(
-                                        labelText: 'State',
-                                        border: OutlineInputBorder(),
-                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'State',                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
                                       value: _selectedBusinessCountry,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Country',
-                                        border: OutlineInputBorder(),
-                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'Country',                                      ),
                                       items: TrustConstants.countries
                                           .map((Map<String, String> item) => DropdownMenuItem<String>(
                                                 value: item['value'],

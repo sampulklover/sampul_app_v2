@@ -45,7 +45,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              TextField(controller: controller, decoration: const InputDecoration(labelText: 'Task')),
+              TextField(controller: controller, decoration: InputDecoration(labelText: 'Task')),
             ],
           ),
           actions: <Widget>[
@@ -185,7 +185,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                           if (t.isPinned)
                             Padding(
                               padding: const EdgeInsets.only(right: 6),
-                              child: Icon(Icons.push_pin, size: 16, color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
+                              child: Icon(Icons.push_pin, size: 16, color: const Color.fromRGBO(49, 24, 211, 1).withOpacity(0.7)),
                             ),
                           Expanded(
                             child: Text(

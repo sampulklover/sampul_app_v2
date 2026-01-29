@@ -300,7 +300,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Icon(Icons.info_outline, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        Icon(Icons.info_outline, size: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(

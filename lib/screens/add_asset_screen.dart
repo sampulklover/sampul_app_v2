@@ -72,22 +72,26 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 TextFormField(
                   controller: nameController,
                   autofocus: true,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Asset Name *',
                     hintText: 'e.g., My Custom Platform',
+                    prefixIcon: Icon(Icons.apps_outlined),
                     border: OutlineInputBorder(),
                   ),
                   validator: (String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: urlController,
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.done,
                   decoration: const InputDecoration(
                     labelText: 'Website URL (optional)',
                     hintText: 'https://example.com',
+                    prefixIcon: Icon(Icons.link_outlined),
                     border: OutlineInputBorder(),
                   ),
-                  keyboardType: TextInputType.url,
                 ),
               ],
             ),
@@ -446,7 +450,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           ),
         if (_showAddCustomOption && !_isSearching)
           ListTile(
-            leading: const Icon(Icons.add_circle_outline, color: Colors.blue),
+            leading: const Icon(Icons.add_circle_outline, color: Color.fromRGBO(83, 61, 233, 1)),
             title: const Text('Add your own asset'),
             subtitle: Text(
               _searchResults.isEmpty
@@ -477,6 +481,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         TextFormField(
           controller: _declaredValueController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.next,
           inputFormatters: <TextInputFormatter>[
             FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
           ],
@@ -496,7 +501,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _selectedInstructionId,
           items: _instructions
@@ -521,7 +526,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           ),
           validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         if (_selectedInstructionId == 'transfer_as_gift')
           DropdownButtonFormField<int>(
             initialValue: _selectedBelovedId,
@@ -544,10 +549,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               return null;
             },
           ),
-        const SizedBox(height: 16),
+        if (_selectedInstructionId == 'transfer_as_gift') const SizedBox(height: 12),
         TextFormField(
           controller: _remarksController,
           maxLines: 3,
+          textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
             labelText: 'Remarks (optional)',
             hintText: 'Any additional instructions or notes',

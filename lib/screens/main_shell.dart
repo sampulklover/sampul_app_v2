@@ -10,6 +10,7 @@ import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../services/affiliate_service.dart';
+import '../services/ai_chat_settings_service.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -131,7 +132,7 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
             .from('chat_conversations')
             .insert({
               'name': 'Sampul AI',
-              'last_message': 'Hello! I\'m your estate planning assistant. How can I help you today?',
+              'last_message': (await AiChatSettingsService.instance.getActiveSettings()).welcomeMessage,
               'last_message_time': DateTime.now().toIso8601String(),
               'avatar_url': '',
               'unread_count': 0,
@@ -144,10 +145,11 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
 
         aiConversation = ChatConversation.fromJson(response);
         
-        // Add welcome message to the conversation
+        // Add welcome message to the conversation (get from settings)
+        final settings = await AiChatSettingsService.instance.getActiveSettings();
         final welcomeMessage = ChatMessage(
           id: '',
-          content: "Hello! I'm Sampul AI, your estate planning assistant. How can I help you today?",
+          content: settings.welcomeMessage,
           isFromUser: false,
           timestamp: DateTime.now(),
         );
@@ -209,7 +211,6 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-        backgroundColor: Theme.of(context).colorScheme.surface,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), label: 'Notifications'),

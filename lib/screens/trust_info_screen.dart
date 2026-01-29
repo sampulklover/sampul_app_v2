@@ -114,82 +114,77 @@ class TrustInfoScreen extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.teal.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.account_balance,
-                                      color: Colors.teal.shade700,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          "Rakyat",
-                                          style: TextStyle(
-                                            color: Colors.teal.shade700,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                        Text(
-                                          "Trustee",
-                                          style: TextStyle(
-                                            color: Colors.teal.shade700,
-                                            fontSize: 8,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                              // Rakyat Trustee logo
+                              Image.asset(
+                                'assets/rakyat-trustee.png',
+                                width: 100,
+                                height: 50,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.account_balance,
+                                    color: Colors.teal.shade700,
+                                    size: 24,
+                                  );
+                                },
                               ),
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.shield,
-                                      color: Colors.blue.shade700,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      "Halogen",
-                                      style: TextStyle(
-                                        color: Colors.blue.shade700,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              const SizedBox(width: 24),
+                              // Halogen Capital logo
+                              Image.asset(
+                                'assets/halogen-capital.png',
+                                width: 100,
+                                height: 50,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.shield,
+                                    color: Colors.blue.shade700,
+                                    size: 24,
+                                  );
+                                },
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "We work with trusted partners to manage your fund safely.",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                          const SizedBox(height: 24),
+                          // Standardized partner information text
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                children: [
+                                  const TextSpan(
+                                    text: 'Sampul partner with Rakyat Trustee and Halogen Capital ',
+                                  ),
+                                  const TextSpan(
+                                    text: 'to process your fund. ',
+                                  ),
+                                  WidgetSpan(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // TODO: Navigate to learn more page or open URL
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Learn more about our partners'),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Learn more',
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: colorScheme.primary,
+                                          decoration: TextDecoration.underline,
+                                          decorationColor: colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
@@ -218,12 +213,15 @@ class TrustInfoScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
+                    onPressed: () async {
+                      final bool? created = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute<bool>(
                           builder: (context) => const TrustCreateScreen(),
                         ),
                       );
+                      if (created == true) {
+                        Navigator.of(context).pop(true);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
