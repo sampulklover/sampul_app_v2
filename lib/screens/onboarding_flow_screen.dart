@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_profile_screen.dart';
-import 'add_family_member_screen.dart';
-import 'add_asset_screen.dart';
+import 'family_info_screen.dart';
+import 'asset_info_screen.dart';
 import '../services/supabase_service.dart';
 import '../services/will_service.dart';
-import 'will_generation_screen.dart';
+import 'will_info_screen.dart';
+import '../services/trust_service.dart';
+import 'trust_info_screen.dart';
 import 'package:flutter/services.dart';
 import '../services/affiliate_service.dart';
 
@@ -22,6 +24,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   bool _familyMemberAdded = false;
   bool _assetAdded = false;
   bool _willGenerated = false;
+  bool _trustCreated = false; // Optional step
   final ScrollController _listController = ScrollController();
   bool _isReferralSubmitting = false;
   String? _referralCodePreview;
@@ -88,6 +91,15 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           // Check will
           final will = await WillService.instance.getUserWill(user.id);
           _willGenerated = will != null;
+
+          // Optional: Check if user has at least one trust / family account
+          try {
+            final trusts = await TrustService.instance.listUserTrusts();
+            _trustCreated = trusts.isNotEmpty;
+          } catch (_) {
+            // If this fails, we simply treat the optional step as not completed
+            _trustCreated = false;
+          }
         }
         if (mounted) setState(() {});
       }
@@ -338,24 +350,34 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         break;
       case 1:
         result = await Navigator.of(context).push(
-          MaterialPageRoute<bool>(builder: (_) => const AddFamilyMemberScreen()),
+          MaterialPageRoute<bool>(builder: (_) => const FamilyInfoScreen()),
         );
         break;
       case 2:
         result = await Navigator.of(context).push(
-          MaterialPageRoute<bool>(builder: (_) => const AddAssetScreen()),
+          MaterialPageRoute<bool>(builder: (_) => const AssetInfoScreen()),
         );
         break;
       case 3:
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const WillGenerationScreen()),
+        result = await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(builder: (_) => const WillInfoScreen()),
         );
-        await _checkCompletionStatus();
-        return;
+        break;
     }
     if (result == true) {
       await _checkCompletionStatus();
     }
+  }
+
+  Future<void> _navigateToTrustSetup() async {
+    // Family trust setup is optional; we don't depend on the result here.
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const TrustInfoScreen(),
+      ),
+    );
+    // If the user returns here after creating a trust, refresh optional state.
+    await _checkCompletionStatus();
   }
 
   Future<void> _handleCompleteTap(int completed) async {
@@ -444,7 +466,8 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
                 controller: _listController,
-                itemCount: _steps.length + 1,
+                // +1 for referral card, +1 for optional trust step
+                itemCount: _steps.length + 2,
                 itemBuilder: (BuildContext context, int index) {
                   if (index == 0) {
                     const subtitle = 'Add a referral code (optional)';
@@ -459,8 +482,8 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                           child: Row(
                             children: <Widget>[
                               Container(
-                                width: 48,
-                                height: 48,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
                                   color: isReferralApplied
                                       ? theme.colorScheme.primaryContainer
@@ -496,6 +519,73 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                 ),
                               ),
                               isReferralApplied
+                                  ? const Icon(Icons.check_circle, color: Colors.green, size: 24)
+                                  : Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Last item: optional Family Trust setup step
+                  if (index == _steps.length + 1) {
+                    final theme = Theme.of(context);
+                    final isCompleted = _trustCreated;
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: InkWell(
+                        onTap: _navigateToTrustSetup,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: <Widget>[
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? theme.colorScheme.primaryContainer
+                                      : theme.colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.family_restroom,
+                                  size: 24,
+                                  color: isCompleted
+                                      ? theme.colorScheme.onPrimaryContainer
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Set up your Family Trust account',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Create a family account to manage long-term support (optional).',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              isCompleted
                                   ? const Icon(Icons.check_circle, color: Colors.green, size: 24)
                                   : Icon(
                                       Icons.arrow_forward_ios,
@@ -574,25 +664,55 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
             ),
             Padding(
               padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
+                left: 24,
+                right: 24,
                 top: 20,
-                bottom: MediaQuery.of(context).viewPadding.bottom + 20,
+                bottom: MediaQuery.of(context).viewPadding.bottom + 24,
               ),
               child: SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : () => _handleCompleteTap(completed),
+                  onPressed: _isLoading || completed < 4 ? null : () => _handleCompleteTap(completed),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: completed == 4 ? Colors.green : Theme.of(context).colorScheme.surfaceContainerHighest,
-                    foregroundColor: completed == 4 ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    backgroundColor: completed == 4
+                        ? Colors.green
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    foregroundColor: completed == 4
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
                   ),
                   child: _isLoading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text(
-                          'Complete Setup',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Complete setup',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: completed == 4
+                                        ? Colors.white
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: completed == 4
+                                  ? Colors.white
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
                         ),
                 ),
               ),

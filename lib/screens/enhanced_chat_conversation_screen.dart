@@ -19,9 +19,9 @@ import 'trust_create_screen.dart';
 import 'trust_management_screen.dart';
 import 'hibah_management_screen.dart';
 import 'will_management_screen.dart';
-import 'add_asset_screen.dart';
+import 'asset_info_screen.dart';
 import 'assets_list_screen.dart';
-import 'add_family_member_screen.dart';
+import 'family_info_screen.dart';
 import 'family_list_screen.dart';
 import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
@@ -1326,7 +1326,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         case 'add_asset':
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const AddAssetScreen(),
+              builder: (_) => const AssetInfoScreen(),
             ),
           );
           break;
@@ -1340,7 +1340,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         case 'add_family':
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const AddFamilyMemberScreen(),
+              builder: (_) => const FamilyInfoScreen(),
             ),
           );
           break;

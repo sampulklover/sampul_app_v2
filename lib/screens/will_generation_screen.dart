@@ -3,7 +3,7 @@ import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
 import 'assets_list_screen.dart';
-import 'add_asset_screen.dart';
+import 'asset_info_screen.dart';
 import 'edit_asset_screen.dart';
 import '../models/extra_wishes.dart';
 import '../services/extra_wishes_service.dart';
@@ -12,6 +12,7 @@ import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_profile_screen.dart';
+import '../widgets/stepper_footer_controls.dart';
 
 class WillGenerationScreen extends StatefulWidget {
   final Will? existingWill;
@@ -222,54 +223,40 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           : Form(
               key: _formKey,
               child: Stepper(
-                      currentStep: _currentStep,
-                      onStepTapped: (step) {
-                        if (step < _getSteps().length) {
-                          setState(() => _currentStep = step);
-                        }
-                      },
-                      onStepContinue: _nextStep,
-                      onStepCancel: _previousStep,
-                      controlsBuilder: (context, details) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: Row(
-                            children: [
-                              if (details.stepIndex > 0)
-                                OutlinedButton(
-                                  onPressed: details.onStepCancel,
-                                  child: const Text('Back'),
-                                ),
-                              const SizedBox(width: 8),
-                              if (details.stepIndex < _getSteps().length - 1)
-                                ElevatedButton(
-                                  onPressed: details.onStepContinue,
-                                  child: const Text('Next'),
-                                )
-                              else
-                                ElevatedButton(
-                                  onPressed: _isSaving ? null : _saveWill,
-                                  child: _isSaving
-                                      ? const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(strokeWidth: 2),
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text('Saving...'),
-                                          ],
-                                        )
-                                      : Text(widget.existingWill != null ? 'Update Will' : 'Create Will'),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                      steps: _getSteps(),
-                    ),
+                currentStep: _currentStep,
+                onStepTapped: (step) {
+                  if (step < _getSteps().length) {
+                    setState(() => _currentStep = step);
+                  }
+                },
+                controlsBuilder: (context, details) {
+                  // Use standardized fixed-footer controls instead.
+                  return const SizedBox.shrink();
+                },
+                steps: _getSteps(),
+              ),
+            ),
+      bottomNavigationBar: _isLoading
+          ? null
+          : StepperFooterControls(
+              currentStep: _currentStep,
+              lastStep: _getSteps().length - 1,
+              isBusy: _isSaving,
+              onPrimaryPressed: () async {
+                if (_currentStep < _getSteps().length - 1) {
+                  _nextStep();
+                } else {
+                  await _saveWill();
+                }
+              },
+              onBackPressed: _currentStep > 0
+                  ? () {
+                      _previousStep();
+                    }
+                  : null,
+              primaryLabel: _currentStep == _getSteps().length - 1
+                  ? (widget.existingWill != null ? 'Update Will' : 'Create Will')
+                  : null,
             ),
     );
   }
@@ -960,7 +947,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                 TextButton.icon(
                   onPressed: () async {
                     await Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const AddAssetScreen()),
+                      MaterialPageRoute<bool>(builder: (_) => const AssetInfoScreen()),
                     );
                     await _refreshAssets();
                   },

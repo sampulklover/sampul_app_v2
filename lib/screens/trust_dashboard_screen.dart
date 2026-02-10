@@ -10,8 +10,16 @@ import 'fund_support_config_screen.dart';
 
 class TrustDashboardScreen extends StatefulWidget {
   final Trust trust;
+  /// When true, shows a one-time "trust created" welcome dialog
+  /// the first time the user lands on this screen (e.g. right
+  /// after finishing the creation flow).
+  final bool showWelcome;
 
-  const TrustDashboardScreen({super.key, required this.trust});
+  const TrustDashboardScreen({
+    super.key,
+    required this.trust,
+    this.showWelcome = false,
+  });
 
   @override
   State<TrustDashboardScreen> createState() => _TrustDashboardScreenState();
@@ -32,6 +40,16 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
     super.initState();
     _currentTrust = widget.trust;
     _loadData();
+    if (widget.showWelcome) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // Small delay so the user can first see the dashboard content
+        // before the welcome dialog appears.
+        await Future<void>.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          await _showWelcomeDialog();
+        }
+      });
+    }
   }
 
   @override
@@ -235,6 +253,182 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
         });
       }
     });
+  }
+
+  Future<void> _showWelcomeDialog() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.outline.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: colorScheme.onPrimaryContainer,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Family account created',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Your family now has clear guidance, even if you’re not around to explain.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'What happens now',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'This family account is saved and will be followed according to the rules you’ve set.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Next steps',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('• '),
+                        Expanded(
+                          child: Text(
+                            'You may receive a confirmation email for your records (if enabled).',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('• '),
+                        Expanded(
+                          child: Text(
+                            'You can always return here to update beneficiaries, categories or amounts.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(
+                      'View instructions',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -776,34 +970,42 @@ class _CategoryCard extends StatelessWidget {
                 : colorScheme.primaryContainer.withOpacity(0.4),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Icon(
                 icon,
-                size: 48,
+                size: 40,
                 color: iconColor ?? const Color.fromRGBO(49, 24, 211, 1),
               ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isUnselected
-                      ? colorScheme.onSurfaceVariant
-                      : colorScheme.onPrimaryContainer,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isUnselected
-                      ? colorScheme.onSurfaceVariant.withOpacity(0.8)
-                      : colorScheme.onPrimaryContainer.withOpacity(0.8),
-                ),
-                textAlign: TextAlign.center,
-              ),
+              const SizedBox(height: 8),
+              // Bottom-aligned text block
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isUnselected
+                          ? colorScheme.onSurface
+                          : colorScheme.onPrimaryContainer,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isUnselected
+                          ? colorScheme.onSurfaceVariant.withOpacity(0.9)
+                          : colorScheme.onPrimaryContainer.withOpacity(0.85),
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ],
+              )
             ],
           ),
         ),
@@ -1035,12 +1237,10 @@ class _PartnershipSection extends StatelessWidget {
 
 class _PartnerLogo extends StatelessWidget {
   final String? imagePath;
-  final IconData? icon;
   final Color iconColor;
 
   const _PartnerLogo({
     this.imagePath,
-    this.icon,
     required this.iconColor,
   });
 
@@ -1054,17 +1254,17 @@ class _PartnerLogo extends StatelessWidget {
             fit: BoxFit.contain,
             filterQuality: FilterQuality.high,
             errorBuilder: (context, error, stackTrace) {
-              // Fallback to icon if image fails to load
+              // Fallback to generic business icon if image fails to load
               debugPrint('Error loading image: $imagePath - $error');
               return Icon(
-                icon ?? Icons.business,
+                Icons.business,
                 color: iconColor,
                 size: 28,
               );
             },
           )
         : Icon(
-            icon ?? Icons.business,
+            Icons.business,
             color: iconColor,
             size: 28,
           );

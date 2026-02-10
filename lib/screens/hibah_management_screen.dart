@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/hibah.dart';
 import '../services/hibah_service.dart';
-import 'hibah_create_screen.dart';
 import 'hibah_detail_screen.dart';
 import 'hibah_info_screen.dart';
 
@@ -54,10 +53,16 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
   }
 
   Future<void> _createHibah() async {
+    // Mirror the trust flow: go through the info/intro screen first.
+    // That screen will handle launching the creation form, and will
+    // return `true` when a new hibah is successfully created so we can
+    // refresh the list here.
     final bool? created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => const HibahCreateScreen()),
+      MaterialPageRoute<bool>(builder: (_) => const HibahInfoScreen()),
     );
-    if (created == true) await _loadHibahs();
+    if (created == true) {
+      await _loadHibahs();
+    }
   }
 
   @override

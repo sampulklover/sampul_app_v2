@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_profile_screen.dart';
-import 'add_family_member_screen.dart';
-import 'add_asset_screen.dart';
+import 'family_info_screen.dart';
+import 'asset_info_screen.dart';
 import '../services/supabase_service.dart';
 
 class OnboardingModal extends StatefulWidget {
@@ -139,7 +139,7 @@ class _OnboardingModalState extends State<OnboardingModal> {
         // Add family member
         result = await Navigator.of(context).push(
           MaterialPageRoute<bool>(
-            builder: (_) => const AddFamilyMemberScreen(),
+            builder: (_) => const FamilyInfoScreen(),
           ),
         );
         if (result == true) {
@@ -150,7 +150,7 @@ class _OnboardingModalState extends State<OnboardingModal> {
         // Add asset
         result = await Navigator.of(context).push(
           MaterialPageRoute<bool>(
-            builder: (_) => const AddAssetScreen(),
+            builder: (_) => const AssetInfoScreen(),
           ),
         );
         if (result == true) {

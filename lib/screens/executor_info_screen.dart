@@ -1,139 +1,164 @@
 import 'package:flutter/material.dart';
+import 'executor_create_screen.dart';
 
 class ExecutorInfoScreen extends StatelessWidget {
   const ExecutorInfoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('About Executors'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.info_outline, color: const Color.fromRGBO(49, 24, 211, 1)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'What is an Executor?',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            "Let's register as an executor",
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                              height: 1.2,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            "Register to manage and distribute a deceased person's estate according to their will or the law.",
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'An executor is a person appointed to manage and distribute the assets of a deceased person\'s estate according to their will or the law. This role involves handling legal matters, settling debts, and ensuring proper distribution of assets to beneficiaries.',
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Center(
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 80,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              "What is an executor?",
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "An executor is appointed to manage and distribute the assets of a deceased person's estate. This involves handling legal matters, settling debts, and ensuring proper distribution to beneficiaries.",
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _ExecutorFeatureItem(
+                              text: "Manage the deceased person's estate and assets.",
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(height: 16),
+                            _ExecutorFeatureItem(
+                              text: "Settle debts and handle legal matters.",
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(height: 16),
+                            _ExecutorFeatureItem(
+                              text: "Distribute assets to beneficiaries according to the will or law.",
+                              colorScheme: colorScheme,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.checklist, color: const Color.fromRGBO(49, 24, 211, 1)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Required Information',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'To register as an executor, you will need:',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('• Deceased person\'s personal information'),
-                    const Text('• Your relationship to the deceased'),
-                    const Text('• Your personal contact information'),
-                    const Text('• Supporting documents (death certificate, will, etc.)'),
-                    const Text('• Any additional relevant information'),
-                  ],
-                ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
+              child: SafeArea(
+                top: false,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final bool? created = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute<bool>(
+                          builder: (_) => const ExecutorCreateScreen(),
+                        ),
+                      );
+                      if (created == true) {
+                        Navigator.of(context).pop(true);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Icon(Icons.timeline, color: const Color.fromRGBO(49, 24, 211, 1)),
-                        const SizedBox(width: 8),
                         Text(
-                          'Claim Status',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          "Register as executor",
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: colorScheme.onPrimary,
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: colorScheme.onPrimary,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildStatusItem('Draft', 'Your executor registration is being prepared and can be edited', Colors.grey),
-                    _buildStatusItem('Submitted', 'Your executor registration has been submitted for review', Colors.blue),
-                    _buildStatusItem('Approved', 'Your executor registration has been approved and is being processed', Colors.green),
-                    _buildStatusItem('Rejected', 'Your executor registration was rejected. Please review and resubmit', Colors.red),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.help_outline, color: const Color.fromRGBO(49, 24, 211, 1)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Need Help?',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'If you need assistance with your executor registration or have questions about the process, please contact our support team.',
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'We\'re here to help you through this difficult time and ensure your executor registration is processed as smoothly as possible.',
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -142,43 +167,46 @@ class ExecutorInfoScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildStatusItem(String status, String description, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 12,
-            height: 12,
-            margin: const EdgeInsets.only(top: 6, right: 8),
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+class _ExecutorFeatureItem extends StatelessWidget {
+  final String text;
+  final ColorScheme colorScheme;
+
+  const _ExecutorFeatureItem({
+    required this.text,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+            shape: BoxShape.circle,
           ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  status,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
+          child: Icon(
+            Icons.check,
+            color: colorScheme.onPrimary,
+            size: 16,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }
-

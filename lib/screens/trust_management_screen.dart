@@ -43,10 +43,15 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
   }
 
   Future<void> _createTrust() async {
-    final bool? created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => const TrustInfoScreen()),
+    // Navigate to the info + creation flow. That flow will handle
+    // pushing the dashboard screen directly after creation, so the
+    // user never briefly sees this list in between.
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen()),
     );
-    if (created == true) await _loadTrusts();
+    // When the user returns here (after closing the dashboard),
+    // refresh the list to include any newly created/updated trusts.
+    await _loadTrusts();
   }
 
   @override

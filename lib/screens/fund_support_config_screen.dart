@@ -1,7 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../controllers/auth_controller.dart';
 import '../models/trust_charity.dart';
 import '../config/trust_constants.dart';
+import '../services/supabase_service.dart';
+import 'family_info_screen.dart';
 import 'trust_charity_form_screen.dart';
+import 'trust_charity_browse_screen.dart';
 
 class FundSupportConfigScreen extends StatefulWidget {
   final String categoryId;
@@ -22,12 +27,18 @@ class FundSupportConfigScreen extends StatefulWidget {
 class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   late Map<String, dynamic> _config;
   late List<TrustCharity> _charities;
+  late String _initialConfigJson;
+  // Family members for "Who's this account for?" selection
+  List<Map<String, dynamic>> _familyMembers = <Map<String, dynamic>>[];
+  bool _isLoadingFamilyMembers = false;
+  int? _selectedFamilyMemberId;
 
   @override
   void initState() {
     super.initState();
     // Deep copy the initial config to avoid modifying the original
     _config = Map<String, dynamic>.from(widget.initialConfig);
+    _initialConfigJson = jsonEncode(_config);
     
     // Initialize charities list from config (for charitable category)
     if (widget.categoryId == 'charitable') {
@@ -38,6 +49,240 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     } else {
       _charities = [];
     }
+    // Pre-select previously chosen family member if exists
+    final Object? rawId = _config['beneficiaryId'];
+    if (rawId is num) {
+      _selectedFamilyMemberId = rawId.toInt();
+    } else if (rawId is String) {
+      _selectedFamilyMemberId = int.tryParse(rawId);
+    }
+
+    _fetchFamilyMembers();
+  }
+
+  bool get _hasUnsavedChanges => jsonEncode(_config) != _initialConfigJson;
+
+  /// Builds the "Who's this family trust account for?" selector per category.
+  Widget _buildWhoIsThisForSection(ThemeData theme, ColorScheme colorScheme) {
+    final TextStyle? titleStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final TextStyle? helperStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colorScheme.onSurfaceVariant,
+    );
+
+    // Helper to render a single family card (radio style)
+    Widget buildFamilyCard(Map<String, dynamic> member) {
+      final int? id = (member['id'] as num?)?.toInt();
+      final bool isSelected = id != null && id == _selectedFamilyMemberId;
+      final String name = (member['name'] as String?) ?? 'Unknown';
+      final String? relationship = member['relationship'] as String?;
+      final String? type = member['type'] as String?;
+      final String? imagePath = member['image_path'] as String?;
+
+      // Build @handle style suffix from type (co_sampul, guardian, etc.)
+      String? handle;
+      if (type == 'guardian') {
+        handle = '@Guardian';
+      } else if (type == 'co_sampul') {
+        handle = '@Co-Sampul';
+      } else if (type == 'future_owner') {
+        handle = '@Future Owner';
+      }
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: id == null
+              ? null
+              : () {
+                  setState(() {
+                    _selectedFamilyMemberId = id;
+                    _config['beneficiaryId'] = id;
+                  });
+                },
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? colorScheme.primaryContainer.withOpacity(0.3)
+                  : colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.outline.withOpacity(0.2),
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                // Avatar
+                CircleAvatar(
+                  radius: 22,
+                  backgroundImage: imagePath != null && imagePath.isNotEmpty
+                      ? NetworkImage(
+                          SupabaseService.instance.getFullImageUrl(imagePath) ??
+                              '',
+                        )
+                      : null,
+                  child: (imagePath == null || imagePath.isEmpty)
+                      ? Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                // Name + relationship/handle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (handle != null) ...[
+                            Text(
+                              handle,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (relationship != null &&
+                                relationship.trim().isNotEmpty)
+                              const SizedBox(width: 4),
+                          ],
+                          if (relationship != null &&
+                              relationship.trim().isNotEmpty)
+                            Flexible(
+                              child: Text(
+                                relationship,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Radio indicator
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        isSelected ? colorScheme.primary : Colors.transparent,
+                    border: Border.all(
+                      color:
+                          isSelected ? colorScheme.primary : colorScheme.outline,
+                      width: 2,
+                    ),
+                  ),
+                  child: isSelected
+                      ? Icon(
+                          Icons.check,
+                          size: 16,
+                          color: colorScheme.onPrimary,
+                        )
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Who's this family trust account for?",
+          style: titleStyle,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Pick one main person for this category. You can still support others in other categories.',
+          style: helperStyle,
+        ),
+        const SizedBox(height: 12),
+        if (_isLoadingFamilyMembers)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_familyMembers.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'No family members yet.\nTap “Add New” below to add the first person for this account.',
+              style: helperStyle,
+            ),
+          )
+        else
+          ..._familyMembers.map(buildFamilyCard).toList(),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () async {
+            final bool? added = await Navigator.of(context).push<bool>(
+              MaterialPageRoute<bool>(
+                builder: (context) => const FamilyInfoScreen(),
+              ),
+            );
+            if (added == true) {
+              await _fetchFamilyMembers();
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Add New'),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 0),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _fetchFamilyMembers() async {
+    setState(() => _isLoadingFamilyMembers = true);
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        setState(() => _isLoadingFamilyMembers = false);
+        return;
+      }
+
+      final List<dynamic> rows = await SupabaseService.instance.client
+          .from('beloved')
+          .select('id, name, image_path, relationship, type')
+          .eq('uuid', user.id)
+          .order('created_at', ascending: false);
+
+      if (!mounted) return;
+      setState(() {
+        _familyMembers = rows.cast<Map<String, dynamic>>();
+        _isLoadingFamilyMembers = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingFamilyMembers = false);
+    }
   }
 
   @override
@@ -45,26 +290,72 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.category['title'] as String? ?? 'Fund Support'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Save charities to config if charitable category
-              if (widget.categoryId == 'charitable') {
-                _config['charities'] = _charities.map((c) => c.toJson()).toList();
-              }
-              Navigator.of(context).pop(_config);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+    return WillPopScope(
+      onWillPop: _handleWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.category['title'] as String? ?? 'Fund Support'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Save charities to config if charitable category
+                if (widget.categoryId == 'charitable') {
+                  _config['charities'] = _charities.map((c) => c.toJson()).toList();
+                }
+                Navigator.of(context).pop(_config);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+        body: widget.categoryId == 'charitable'
+            ? _buildCharitableContent(theme, colorScheme)
+            : _buildRegularContent(theme, colorScheme),
       ),
-      body: widget.categoryId == 'charitable'
-          ? _buildCharitableContent(theme, colorScheme)
-          : _buildRegularContent(theme, colorScheme),
     );
+  }
+
+  Future<bool> _handleWillPop() async {
+    if (!_hasUnsavedChanges) {
+      return true;
+    }
+
+    final String? action = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Save your changes?'),
+          content: const Text(
+            'You have unsaved changes on this page. Would you like to save this setup before you go back?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop('discard'),
+              child: const Text('Discard changes'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop('save'),
+              child: const Text('Save & exit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (action == 'discard') {
+      // Pop this screen without returning a config, so caller treats it as "no changes"
+      Navigator.of(context).pop<Map<String, dynamic>?>(null);
+      return false; // we've handled the pop manually
+    } else if (action == 'save') {
+      // Reuse the same save behaviour as the app bar "Save" button
+      if (widget.categoryId == 'charitable') {
+        _config['charities'] = _charities.map((c) => c.toJson()).toList();
+      }
+      Navigator.of(context).pop<Map<String, dynamic>>(_config);
+      return false;
+    }
+
+    return false;
   }
 
   Widget _buildCharitableContent(ThemeData theme, ColorScheme colorScheme) {
@@ -290,6 +581,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          // Who is this family trust account for?
+          _buildWhoIsThisForSection(theme, colorScheme),
           const SizedBox(height: 24),
           // Support Duration Section
           Text(
@@ -809,10 +1103,11 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   }
 
   Future<void> _addCharity() async {
-    final result = await Navigator.push<TrustCharity>(
+    // New flow: browse from predefined charitable bodies and configure instruction.
+    final TrustCharity? result = await Navigator.push<TrustCharity>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const TrustCharityFormScreen(),
+      MaterialPageRoute<TrustCharity>(
+        builder: (BuildContext context) => const TrustCharityBrowseScreen(),
       ),
     );
     

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_asset_screen.dart';
+import 'asset_info_screen.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import '../services/supabase_service.dart';
@@ -9,10 +9,11 @@ import '../services/brandfetch_service.dart';
 import 'edit_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
+import 'family_info_screen.dart';
 import 'trust_management_screen.dart';
 import 'trust_dashboard_screen.dart';
 import 'hibah_management_screen.dart';
-import 'add_family_member_screen.dart';
+// import 'add_family_member_screen.dart';
 import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
 import 'settings_screen.dart';
@@ -366,14 +367,19 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
     if (estimatedNetWorth == null || estimatedNetWorth.isEmpty) {
       return 'RM0.00';
     }
-    // Try to parse as number, if it's a range string, just return it
+    // Match the formatting used on the Trust Details page
+    // (see _formatEstimatedNetWorth in trust_dashboard_screen.dart)
     try {
-      final num = double.tryParse(estimatedNetWorth);
-      if (num != null) {
-        return 'RM${num.toStringAsFixed(2)}';
+      final double? numValue = double.tryParse(estimatedNetWorth);
+      if (numValue != null) {
+        return 'RM${numValue.toStringAsFixed(2)}';
       }
     } catch (_) {}
-    return estimatedNetWorth;
+    // If it's a string like "below_rm_50k", format it nicely
+    return estimatedNetWorth.replaceAll('_', ' ').replaceAllMapped(
+      RegExp(r'\brm\b', caseSensitive: false),
+      (Match match) => 'RM',
+    );
   }
 
   @override
@@ -1025,7 +1031,7 @@ class _AssetsListState extends State<_AssetsList> {
               onTap: () async {
                 final bool? result = await Navigator.of(context).push(
                   MaterialPageRoute<bool>(
-                    builder: (_) => const AddAssetScreen(),
+                    builder: (_) => const AssetInfoScreen(),
                   ),
                 );
                 if (result == true) {
@@ -1214,7 +1220,7 @@ class _FamilyListState extends State<_FamilyList> {
             return GestureDetector(
               onTap: () async {
                 final bool? created = await Navigator.of(context).push(
-                  MaterialPageRoute<bool>(builder: (_) => const AddFamilyMemberScreen()),
+                  MaterialPageRoute<bool>(builder: (_) => const FamilyInfoScreen()),
                 );
                 if (created == true) {
                   await _loadFamily();

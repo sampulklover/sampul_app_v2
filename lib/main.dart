@@ -17,18 +17,20 @@ import 'config/stripe_config.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Override debugPrint to filter out Supabase INFO messages
-  final originalDebugPrint = debugPrint;
-  debugPrint = (String? message, {int? wrapWidth}) {
-    if (message != null && 
-        (message.contains('supabase.supabase_flutter: INFO') ||
-         message.contains('supabase.auth: INFO') ||
-         message.contains('DEBUG:'))) {
-      return; // Suppress Supabase INFO messages and DEBUG messages
-    }
-    // Use default behavior for other messages
-    originalDebugPrint(message, wrapWidth: wrapWidth);
-  };
+  // Override debugPrint in debug mode to filter out noisy Supabase INFO logs
+  if (kDebugMode) {
+    final DebugPrintCallback originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null &&
+          (message.contains('supabase.supabase_flutter: INFO') ||
+           message.contains('supabase.auth: INFO') ||
+           message.contains('DEBUG:'))) {
+        return; // Suppress Supabase INFO and DEBUG messages in debug builds
+      }
+      // Use default behavior for other messages
+      originalDebugPrint(message, wrapWidth: wrapWidth);
+    };
+  }
   
   await dotenv.load(fileName: ".env");
   
