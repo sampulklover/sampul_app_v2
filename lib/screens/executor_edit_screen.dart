@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/executor_service.dart';
 import '../models/executor.dart';
+import '../widgets/stepper_footer_controls.dart';
 
 class ExecutorEditScreen extends StatefulWidget {
   final Executor initial;
@@ -151,38 +152,8 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
           currentStep: _currentStep,
           onStepTapped: (int i) => setState(() => _currentStep = i),
           controlsBuilder: (BuildContext context, ControlsDetails details) {
-            final bool isLast = _currentStep == 3;
-            return Row(
-              children: <Widget>[
-                ElevatedButton(
-                  onPressed: _isSubmitting
-                      ? null
-                      : () async {
-                          if (_currentStep == 0) {
-                            if (!(_deceasedFormKey.currentState?.validate() ?? false)) return;
-                            setState(() => _currentStep = 1);
-                          } else if (_currentStep == 1) {
-                            if (!(_claimantFormKey.currentState?.validate() ?? false)) return;
-                            setState(() => _currentStep = 2);
-                          } else if (_currentStep == 2) {
-                            if (!(_documentsFormKey.currentState?.validate() ?? true)) return;
-                            setState(() => _currentStep = 3);
-                          } else {
-                            await _submit();
-                          }
-                        },
-                  child: _isSubmitting
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text(isLast ? 'Update Executor' : 'Next'),
-                ),
-                const SizedBox(width: 12),
-                if (_currentStep > 0)
-                  TextButton(
-                    onPressed: _isSubmitting ? null : () => setState(() => _currentStep = _currentStep - 1),
-                    child: const Text('Back'),
-                  ),
-              ],
-            );
+            // Use standardized fixed-footer controls instead.
+            return const SizedBox.shrink();
           },
           steps: <Step>[
             Step(
@@ -418,6 +389,31 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: StepperFooterControls(
+        currentStep: _currentStep,
+        lastStep: 3,
+        isBusy: _isSubmitting,
+        primaryLabel: _currentStep == 3 ? 'Update Executor' : null,
+        onPrimaryPressed: () async {
+          if (_currentStep == 0) {
+            if (!(_deceasedFormKey.currentState?.validate() ?? false)) return;
+            setState(() => _currentStep = 1);
+          } else if (_currentStep == 1) {
+            if (!(_claimantFormKey.currentState?.validate() ?? false)) return;
+            setState(() => _currentStep = 2);
+          } else if (_currentStep == 2) {
+            if (!(_documentsFormKey.currentState?.validate() ?? true)) return;
+            setState(() => _currentStep = 3);
+          } else {
+            await _submit();
+          }
+        },
+        onBackPressed: _currentStep > 0
+            ? () {
+                setState(() => _currentStep = _currentStep - 1);
+              }
+            : null,
       ),
     );
   }

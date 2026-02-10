@@ -9,6 +9,7 @@ import '../config/trust_constants.dart';
 import 'edit_profile_screen.dart';
 import 'trust_beneficiary_form_screen.dart';
 import 'trust_charity_form_screen.dart';
+import '../widgets/stepper_footer_controls.dart';
 
 class TrustEditScreen extends StatefulWidget {
   final Trust initial;
@@ -1053,47 +1054,8 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                     currentStep: _currentStep,
                     onStepTapped: (int i) => setState(() => _currentStep = i),
                     controlsBuilder: (BuildContext context, ControlsDetails details) {
-                      final bool isLast = _currentStep == 5;
-                      return Row(
-                        children: <Widget>[
-                          ElevatedButton(
-                            onPressed: _isSubmitting
-                                ? null
-                                : () async {
-                                    if (_currentStep == 0) {
-                                      setState(() => _currentStep = 1);
-                                    } else if (_currentStep == 1) {
-                                      if (!(_financialFormKey.currentState?.validate() ?? true)) return;
-                                      setState(() => _currentStep = 2);
-                                    } else if (_currentStep == 2) {
-                                      if (!(_businessFormKey.currentState?.validate() ?? true)) return;
-                                      setState(() => _currentStep = 3);
-                                    } else if (_currentStep == 3) {
-                                      if (_beneficiaries.isEmpty) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Please add at least one beneficiary'), backgroundColor: Colors.orange),
-                                        );
-                                        return;
-                                      }
-                                      setState(() => _currentStep = 4);
-                                    } else if (_currentStep == 4) {
-                                      setState(() => _currentStep = 5);
-                                    } else {
-                                      await _submit();
-                                    }
-                                  },
-                            child: _isSubmitting
-                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                : Text(isLast ? 'Save Changes' : 'Next'),
-                          ),
-                          const SizedBox(width: 12),
-                          if (_currentStep > 0)
-                            TextButton(
-                              onPressed: _isSubmitting ? null : () => setState(() => _currentStep = _currentStep - 1),
-                              child: const Text('Back'),
-                            ),
-                        ],
-                      );
+                      // Use standardized fixed-footer controls instead.
+                      return const SizedBox.shrink();
                     },
                     steps: <Step>[
                       Step(
@@ -1112,8 +1074,9 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                             children: <Widget>[
                               DropdownButtonFormField<String>(
                                 value: _selectedEstimatedNetWorth,
-                                decoration: InputDecoration(
-                                  labelText: 'Estimated Net Worth',                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Estimated Net Worth',
+                                ),
                                 items: TrustConstants.estimatedNetWorths
                                     .map((Map<String, String> item) => DropdownMenuItem<String>(
                                           value: item['value'],
@@ -1125,8 +1088,9 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                               const SizedBox(height: 12),
                               DropdownButtonFormField<String>(
                                 value: _selectedSourceOfFund,
-                                decoration: InputDecoration(
-                                  labelText: 'Source of Fund',                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Source of Fund',
+                                ),
                                 items: TrustConstants.sourceOfWealth
                                     .map((Map<String, String> item) => DropdownMenuItem<String>(
                                           value: item['value'],
@@ -1139,9 +1103,11 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                               TextFormField(
                                 controller: _purposeOfTransactionCtrl,
                                 maxLines: 3,
-                                decoration: InputDecoration(
-                                  labelText: 'Purpose of Transaction',                                  alignLabelWithHint: true,
-                                  prefixIcon: Icon(Icons.description_outlined),                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Purpose of Transaction',
+                                  alignLabelWithHint: true,
+                                  prefixIcon: Icon(Icons.description_outlined),
+                                ),
                               ),
                             ],
                           ),
@@ -1157,26 +1123,34 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                             children: <Widget>[
                               TextFormField(
                                 controller: _employerNameCtrl,
-                                decoration: InputDecoration(
-                                  labelText: 'Employer Name',                                  prefixIcon: Icon(Icons.business_outlined),                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Employer Name',
+                                  prefixIcon: Icon(Icons.business_outlined),
+                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _businessNatureCtrl,
-                                decoration: InputDecoration(
-                                  labelText: 'Business Nature',                                  prefixIcon: Icon(Icons.work_outline),                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Business Nature',
+                                  prefixIcon: Icon(Icons.work_outline),
+                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _businessAddress1Ctrl,
-                                decoration: InputDecoration(
-                                  labelText: 'Business Address Line 1',                                  prefixIcon: Icon(Icons.location_on_outlined),                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Business Address Line 1',
+                                  prefixIcon: Icon(Icons.location_on_outlined),
+                                ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: _businessAddress2Ctrl,
-                                decoration: InputDecoration(
-                                  labelText: 'Business Address Line 2',                                  prefixIcon: Icon(Icons.location_on_outlined),                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Business Address Line 2',
+                                  prefixIcon: Icon(Icons.location_on_outlined),
+                                ),
                               ),
                               const SizedBox(height: 12),
                               Row(
@@ -1185,16 +1159,18 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                                     flex: 2,
                                     child: TextFormField(
                                       controller: _businessCityCtrl,
-                                      decoration: InputDecoration(
-                                        labelText: 'City',                                      ),
+                                      decoration: const InputDecoration(
+                                        labelText: 'City',
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: TextFormField(
                                       controller: _businessPostcodeCtrl,
-                                      decoration: InputDecoration(
-                                        labelText: 'Postcode',                                      ),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Postcode',
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1205,16 +1181,18 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                                   Expanded(
                                     child: TextFormField(
                                       controller: _businessStateCtrl,
-                                      decoration: InputDecoration(
-                                        labelText: 'State',                                      ),
+                                      decoration: const InputDecoration(
+                                        labelText: 'State',
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
                                       value: _selectedBusinessCountry,
-                                      decoration: InputDecoration(
-                                        labelText: 'Country',                                      ),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Country',
+                                      ),
                                       items: TrustConstants.countries
                                           .map((Map<String, String> item) => DropdownMenuItem<String>(
                                                 value: item['value'],
@@ -1252,6 +1230,45 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                   ),
                 ),
               ],
+            ),
+      bottomNavigationBar: (_isLoadingProfile || _isLoadingData)
+          ? null
+          : StepperFooterControls(
+              currentStep: _currentStep,
+              lastStep: 5,
+              isBusy: _isSubmitting,
+              primaryLabel: _currentStep == 5 ? 'Save Changes' : null,
+              onPrimaryPressed: () async {
+                if (_currentStep == 0) {
+                  setState(() => _currentStep = 1);
+                } else if (_currentStep == 1) {
+                  if (!(_financialFormKey.currentState?.validate() ?? true)) return;
+                  setState(() => _currentStep = 2);
+                } else if (_currentStep == 2) {
+                  if (!(_businessFormKey.currentState?.validate() ?? true)) return;
+                  setState(() => _currentStep = 3);
+                } else if (_currentStep == 3) {
+                  if (_beneficiaries.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please add at least one beneficiary'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() => _currentStep = 4);
+                } else if (_currentStep == 4) {
+                  setState(() => _currentStep = 5);
+                } else {
+                  await _submit();
+                }
+              },
+              onBackPressed: _currentStep > 0
+                  ? () {
+                      setState(() => _currentStep = _currentStep - 1);
+                    }
+                  : null,
             ),
     );
   }

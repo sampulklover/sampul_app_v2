@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'hibah_create_screen.dart';
+import 'add_family_member_screen.dart';
 
-class HibahInfoScreen extends StatelessWidget {
-  const HibahInfoScreen({super.key});
+class FamilyInfoScreen extends StatelessWidget {
+  const FamilyInfoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -11,26 +11,24 @@ class HibahInfoScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Hibah'),
+        title: const Text('About Family Members'),
         elevation: 0,
       ),
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            // Scrollable content
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    // Header Section (mirrors trust style)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's plan your Hibah gifts",
+                            "Let's add your family",
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -39,7 +37,7 @@ class HibahInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Decide clearly who should receive your assets as a lifetime gift.",
+                            "Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.",
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -48,14 +46,16 @@ class HibahInfoScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                    // Optional illustration (reuse same visual language as trust)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      child: _buildIllustration(context, colorScheme),
+                      child: Center(
+                        child: Icon(
+                          Icons.family_restroom,
+                          size: 80,
+                          color: colorScheme.primary,
+                        ),
+                      ),
                     ),
-
-                    // Simple explanation + benefits (similar to trust)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                       child: Container(
@@ -68,7 +68,7 @@ class HibahInfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "What is Hibah?",
+                              "Why add family members?",
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -76,25 +76,25 @@ class HibahInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Hibah is a Shariah-compliant gift — you transfer ownership of your assets to someone you choose while you are still alive.",
+                              "Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.",
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
                               ),
                             ),
                             const SizedBox(height: 20),
-                            _FeatureItem(
-                              text: "Choose specific people to receive certain assets (e.g. a home, savings, or investments).",
+                            _FamilyFeatureItem(
+                              text: "Assign executors (Co-Sampul) who will carry out your will.",
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
-                            _FeatureItem(
-                              text: "Reduce future disputes by documenting your intention clearly.",
+                            _FamilyFeatureItem(
+                              text: "List beneficiaries who will receive your assets.",
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
-                            _FeatureItem(
-                              text: "Complement your will and faraid planning with lifetime gifts.",
+                            _FamilyFeatureItem(
+                              text: "Designate guardians for minor children if needed.",
                               colorScheme: colorScheme,
                             ),
                           ],
@@ -105,8 +105,6 @@ class HibahInfoScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Fixed call-to-action button at bottom (same pattern as trust)
             Container(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               decoration: BoxDecoration(
@@ -126,12 +124,12 @@ class HibahInfoScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () async {
-                      final bool? created = await Navigator.of(context).push<bool>(
+                      final bool? added = await Navigator.of(context).push<bool>(
                         MaterialPageRoute<bool>(
-                          builder: (_) => const HibahCreateScreen(),
+                          builder: (_) => const AddFamilyMemberScreen(),
                         ),
                       );
-                      if (created == true) {
+                      if (added == true) {
                         Navigator.of(context).pop(true);
                       }
                     },
@@ -147,7 +145,7 @@ class HibahInfoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Start Hibah",
+                          "Add family member",
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,
@@ -169,23 +167,13 @@ class HibahInfoScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildIllustration(BuildContext context, ColorScheme colorScheme) {
-    return Center(
-      child: Icon(
-        Icons.card_giftcard_outlined,
-        size: 80,
-        color: colorScheme.primary,
-      ),
-    );
-  }
 }
 
-class _FeatureItem extends StatelessWidget {
+class _FamilyFeatureItem extends StatelessWidget {
   final String text;
   final ColorScheme colorScheme;
 
-  const _FeatureItem({
+  const _FamilyFeatureItem({
     required this.text,
     required this.colorScheme,
   });
@@ -222,4 +210,3 @@ class _FeatureItem extends StatelessWidget {
     );
   }
 }
-

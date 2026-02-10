@@ -7,6 +7,7 @@ import 'edit_profile_screen.dart';
 import 'executor_deceased_form_screen.dart';
 import 'executor_guardian_form_screen.dart';
 import 'executor_assets_form_screen.dart';
+import '../widgets/stepper_footer_controls.dart';
 
 class ExecutorCreateScreen extends StatefulWidget {
   const ExecutorCreateScreen({super.key});
@@ -49,7 +50,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
   final TextEditingController _supportingDocumentsCtrl = TextEditingController();
   final TextEditingController _additionalNotesCtrl = TextEditingController();
 
-  int _currentStep = 0;
+  int _currentStep = 0; // Now starts at Personal Information (was step 1)
   bool _isSubmitting = false;
 
   @override
@@ -123,102 +124,6 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
           child: Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGetStartedStep() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Executor Registration',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'We help you manage and distribute your loved one\'s estate, ensuring everything is handled properly and legally.',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'What you get:',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSellingPoint(
-                      'Professional Management',
-                      'We handle the legal and administrative work—so you don\'t have to navigate it alone.',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSellingPoint(
-                      'Find what\'s left behind',
-                      'We help identify key assets—so nothing essential is left behind.',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSellingPoint(
-                      'Support that goes beyond paperwork',
-                      'From document prep to grief care, we guide you with empathy through a difficult time.',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSellingPoint(String title, String description) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(
-          Icons.check_circle_outline,
-          size: 20,
-          color: Theme.of(context).colorScheme.secondary,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[700],
-                    ),
-              ),
-            ],
           ),
         ),
       ],
@@ -925,7 +830,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
       return;
     }
     if (!(_applicantFormKey.currentState?.validate() ?? false)) {
-      setState(() => _currentStep = 1);
+      setState(() => _currentStep = 0);
       return;
     }
     // Validate deceased info is provided
@@ -934,7 +839,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please provide deceased information'), backgroundColor: Colors.orange),
       );
-      setState(() => _currentStep = 2);
+      setState(() => _currentStep = 1);
       return;
     }
 
@@ -1090,99 +995,44 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                 currentStep: _currentStep,
                 onStepTapped: (int i) => setState(() => _currentStep = i),
                 controlsBuilder: (BuildContext context, ControlsDetails details) {
-                  final bool isLast = _currentStep == 6;
-                  final bool isFirst = _currentStep == 0;
-                  String getButtonText() {
-                    if (isLast) return 'Submit Executor';
-                    if (isFirst) return 'Start my application';
-                    return 'Next';
-                  }
-                  return Row(
-                    children: <Widget>[
-                      ElevatedButton(
-                        onPressed: _isSubmitting
-                            ? null
-                            : () async {
-                                if (_currentStep == 0) {
-                                  setState(() => _currentStep = 1);
-                                } else if (_currentStep == 1) {
-                                  if (!(_applicantFormKey.currentState?.validate() ?? false)) return;
-                                  setState(() => _currentStep = 2);
-                                } else if (_currentStep == 2) {
-                                  // Validate deceased info is provided
-                                  if (_deceasedData == null) {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please provide deceased information'), backgroundColor: Colors.orange),
-                                    );
-                                    return;
-                                  }
-                                  setState(() => _currentStep = 3);
-                                } else if (_currentStep == 3) {
-                                  setState(() => _currentStep = 4);
-                                } else if (_currentStep == 4) {
-                                  // Guardian is optional, so just proceed
-                                  setState(() => _currentStep = 5);
-                                } else if (_currentStep == 5) {
-                                  setState(() => _currentStep = 6);
-                                } else {
-                                  await _submit();
-                                }
-                              },
-                        child: _isSubmitting
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                            : Text(getButtonText()),
-                      ),
-                      const SizedBox(width: 12),
-                      if (_currentStep > 0)
-                        TextButton(
-                          onPressed: _isSubmitting ? null : () => setState(() => _currentStep = _currentStep - 1),
-                          child: const Text('Back'),
-                        ),
-                    ],
-                  );
+                  // Use standardized fixed-footer controls instead.
+                  return const SizedBox.shrink();
                 },
                 steps: <Step>[
                   Step(
-                    title: const Text('Get Started'),
+                    title: const Text('Personal Information'),
                     state: _currentStep > 0 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 0,
-                    content: _buildGetStartedStep(),
-                  ),
-                  Step(
-                    title: const Text('Personal Information'),
-                    state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 1,
                     content: _buildApplicantInfoStep(),
                   ),
                   Step(
                     title: const Text('Deceased Info'),
-                    state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 2,
+                    state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+                    isActive: _currentStep >= 1,
                     content: _buildDeceasedInfoStep(),
                   ),
                   Step(
                     title: const Text('Assets Info'),
-                    state: _currentStep > 3 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 3,
+                    state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+                    isActive: _currentStep >= 2,
                     content: _buildAssetsInfoStep(),
                   ),
                   Step(
                     title: const Text('Guardian Info'),
-                    state: _currentStep > 4 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 4,
+                    state: _currentStep > 3 ? StepState.complete : StepState.indexed,
+                    isActive: _currentStep >= 3,
                     content: _buildGuardianInfoStep(),
                   ),
                   Step(
                     title: const Text('Documents'),
-                    state: _currentStep > 5 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 5,
+                    state: _currentStep > 4 ? StepState.complete : StepState.indexed,
+                    isActive: _currentStep >= 4,
                     content: _buildDocumentsStep(),
                   ),
                   Step(
                     title: const Text('Review'),
                     state: StepState.indexed,
-                    isActive: _currentStep >= 6,
+                    isActive: _currentStep >= 5,
                     content: _buildReviewStep(),
                   ),
                 ],
@@ -1190,6 +1040,47 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: StepperFooterControls(
+        currentStep: _currentStep,
+        lastStep: 5,
+        isBusy: _isSubmitting,
+        primaryLabel: _currentStep == 5
+            ? 'Submit Executor'
+            : null,
+        onPrimaryPressed: () async {
+          if (_currentStep == 0) {
+            if (!(_applicantFormKey.currentState?.validate() ?? false)) return;
+            setState(() => _currentStep = 1);
+          } else if (_currentStep == 1) {
+            // Validate deceased info is provided
+            if (_deceasedData == null) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please provide deceased information'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+            setState(() => _currentStep = 2);
+          } else if (_currentStep == 2) {
+            setState(() => _currentStep = 3);
+          } else if (_currentStep == 3) {
+            // Guardian is optional, so just proceed
+            setState(() => _currentStep = 4);
+          } else if (_currentStep == 4) {
+            setState(() => _currentStep = 5);
+          } else {
+            await _submit();
+          }
+        },
+        onBackPressed: _currentStep > 0
+            ? () {
+                setState(() => _currentStep = _currentStep - 1);
+              }
+            : null,
       ),
     );
   }

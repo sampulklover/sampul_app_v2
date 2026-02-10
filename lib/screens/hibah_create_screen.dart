@@ -10,6 +10,7 @@ import '../controllers/auth_controller.dart';
 import '../models/hibah.dart';
 import '../services/hibah_service.dart';
 import '../services/supabase_service.dart';
+import '../widgets/stepper_footer_controls.dart';
 
 /// Document type option with short key for database storage and full label for UI display.
 /// Keys are stored in the database for easier filtering/querying.
@@ -332,47 +333,8 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
           currentStep: _currentStep,
           onStepTapped: (int i) => setState(() => _currentStep = i),
           controlsBuilder: (BuildContext context, ControlsDetails details) {
-            final bool isLast = _currentStep == 2;
-            return Row(
-              children: <Widget>[
-                ElevatedButton(
-                  onPressed: _isSubmitting
-                      ? null
-                      : () async {
-                          if (_currentStep == 0) {
-                            if (_assetGroups.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Add at least one asset'),
-                                ),
-                              );
-                              return;
-                            }
-                            setState(() => _currentStep = 1);
-                          } else if (_currentStep == 1) {
-                            setState(() => _currentStep = 2);
-                          } else {
-                            await _submit();
-                          }
-                        },
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(isLast ? 'Submit' : 'Next'),
-                ),
-                const SizedBox(width: 12),
-                if (_currentStep > 0)
-                  TextButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => setState(() => _currentStep = _currentStep - 1),
-                    child: const Text('Back'),
-                  ),
-              ],
-            );
+            // Use standardized fixed-footer controls instead.
+            return const SizedBox.shrink();
           },
           steps: <Step>[
             Step(
@@ -395,6 +357,33 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: StepperFooterControls(
+        currentStep: _currentStep,
+        lastStep: 2,
+        isBusy: _isSubmitting,
+        onPrimaryPressed: () async {
+          if (_currentStep == 0) {
+            if (_assetGroups.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Add at least one asset'),
+                ),
+              );
+              return;
+            }
+            setState(() => _currentStep = 1);
+          } else if (_currentStep == 1) {
+            setState(() => _currentStep = 2);
+          } else {
+            await _submit();
+          }
+        },
+        onBackPressed: _currentStep > 0
+            ? () {
+                setState(() => _currentStep = _currentStep - 1);
+              }
+            : null,
       ),
     );
   }
@@ -907,7 +896,6 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
   }
 
   Widget _buildBeneficiariesCard() {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       child: Padding(
@@ -1364,7 +1352,6 @@ class _HibahDocumentFormScreenState extends State<_HibahDocumentFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add document'),

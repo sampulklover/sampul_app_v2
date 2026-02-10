@@ -22,7 +22,6 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _isDeleting = false;
-  String _willDocument = '';
   List<Map<String, dynamic>> _familyMembers = [];
   List<Map<String, dynamic>> _assets = [];
   ExtraWishes? _extraWishes;
@@ -101,14 +100,6 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         // Load extra wishes
         final wishes = await ExtraWishesService.instance.getForCurrentUser();
 
-        // Generate will document
-        final willDocument = WillService.instance.generateWillDocument(
-          will,
-          profile,
-          familyMembers,
-          assets,
-        );
-
         if (mounted) {
           setState(() {
             _will = will;
@@ -116,7 +107,6 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             _familyMembers = familyMembers;
             _assets = assets;
             _extraWishes = wishes;
-            _willDocument = willDocument;
             _isLoading = false;
           });
         }
@@ -158,7 +148,9 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Future<void> _createNewWill() async {
-    final result = await Navigator.of(context).push(
+    // For the main Will tab, go straight into the editor to avoid
+    // duplicating the intro copy that is already shown on this page.
+    final bool? result = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (context) => const WillGenerationScreen(),
       ),
@@ -372,44 +364,194 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Widget _buildNoWillState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.description_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Create Your Will',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    return SafeArea(
+      child: Column(
+        children: <Widget>[
+          // Scrollable intro content (standardized with trust / hibah / assets)
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          "Let's create your will",
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Bring your profile, family, assets, and wishes together in one clear document.",
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Illustration
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: Center(
+                      child: Icon(
+                        Icons.description_outlined,
+                        size: 80,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+
+                  // Why section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            "Why create your will in Sampul?",
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildWillBullet(
+                            "Keep all key information (profile, family, assets) in one place.",
+                            theme,
+                            colorScheme,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildWillBullet(
+                            "Generate a structured will document you can read, export, and share.",
+                            theme,
+                            colorScheme,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildWillBullet(
+                            "Update your will later whenever your life or assets change.",
+                            theme,
+                            colorScheme,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Get started by creating your will to ensure your assets are distributed according to your wishes.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+
+          // Fixed CTA button at bottom
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _createNewWill,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 2,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      "Start my will",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward,
+                      color: colorScheme.onPrimary,
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _createNewWill,
-              icon: const Icon(Icons.add),
-              label: const Text('Create My Will'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildWillBullet(
+    String text,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.check,
+            color: colorScheme.onPrimary,
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+          ),
+        ),
+      ],
     );
   }
 

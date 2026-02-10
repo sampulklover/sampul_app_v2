@@ -8,8 +8,8 @@ import '../services/trust_service.dart';
 import '../services/supabase_service.dart';
 import '../config/trust_constants.dart';
 import 'edit_profile_screen.dart';
-import 'trust_beneficiary_form_screen.dart';
 import 'fund_support_config_screen.dart';
+import '../widgets/stepper_footer_controls.dart';
 
 class TrustCreateScreen extends StatefulWidget {
   const TrustCreateScreen({super.key});
@@ -179,74 +179,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     );
   }
 
-  Widget _buildBeneficiariesStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_beneficiaries.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.people_outline,
-                    size: 48,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No beneficiaries added yet',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add beneficiaries who will receive benefits from this trust',
-                    style: Theme.of(context).textTheme.bodySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          ..._beneficiaries.asMap().entries.map((entry) {
-            final index = entry.key;
-            final beneficiary = entry.value;
-            
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                title: Text(beneficiary.name ?? 'Unnamed'),
-                subtitle: Text(beneficiary.relationship ?? 'No relationship'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _editBeneficiary(index),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _deleteBeneficiary(index),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _addBeneficiary,
-            icon: const Icon(Icons.add),
-            label: const Text('Add Beneficiary'),
-          ),
-        ),
-      ],
-    );
-  }
+  // Legacy beneficiary UI has been removed from the flow; beneficiaries are now
+  // linked per fund-support category. The underlying list is kept only so we
+  // can still pass any existing data through to the service if present.
 
   Widget _buildFundSupportStep() {
     final theme = Theme.of(context);
@@ -440,7 +375,11 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   }
 
   bool _hasConfiguration(Map<String, dynamic> config) {
-    return config['durationType'] != null || 
+    final Object? charities = config['charities'];
+    final bool hasCharities = charities is List && charities.isNotEmpty;
+    return hasCharities ||
+           config['beneficiaryId'] != null ||
+           config['durationType'] != null || 
            config['isRegularPayments'] != null || 
            config['releaseCondition'] != null;
   }
@@ -455,6 +394,28 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     final colorScheme = theme.colorScheme;
     final hasConfig = _hasConfiguration(config);
     
+    final Object? rawBeneficiaryId = config['beneficiaryId'];
+    int? beneficiaryId;
+    if (rawBeneficiaryId is num) {
+      beneficiaryId = rawBeneficiaryId.toInt();
+    } else if (rawBeneficiaryId is String) {
+      beneficiaryId = int.tryParse(rawBeneficiaryId);
+    }
+
+    // Resolve beneficiary details from loaded family members
+    String? beneficiaryLine;
+    if (beneficiaryId != null) {
+      final Map<String, dynamic> member = _familyMembers.firstWhere(
+        (m) => (m['id'] as num?)?.toInt() == beneficiaryId,
+        orElse: () => <String, dynamic>{},
+      );
+      if (member.isNotEmpty) {
+        // For preview, keep it short: just the name
+        final String name = (member['name'] as String?) ?? 'Unknown';
+        beneficiaryLine = name;
+      }
+    }
+
     final durationType = config['durationType'] as String?;
     final endAge = (config['endAge'] as num?)?.toDouble() ?? 24.0;
     final isRegularPayments = config['isRegularPayments'] as bool?;
@@ -463,6 +424,27 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     final releaseCondition = config['releaseCondition'] as String?;
 
     final List<String> previewItems = [];
+
+    // Beneficiary preview (who this is for)
+    if (beneficiaryLine != null) {
+      previewItems.add('For $beneficiaryLine');
+    }
+
+    // Special preview for charitable category: show selected charities
+    if (categoryId == 'charitable') {
+      final List<dynamic>? charitiesData = config['charities'] as List<dynamic>?;
+      if (charitiesData != null && charitiesData.isNotEmpty) {
+        final List<TrustCharity> charities = charitiesData
+            .map((dynamic c) => TrustCharity.fromJson(c as Map<String, dynamic>))
+            .toList();
+        if (charities.length == 1) {
+          final String name = charities.first.organizationName ?? '1 charity selected';
+          previewItems.add(name);
+        } else {
+          previewItems.add('${charities.length} charities selected');
+        }
+      }
+    }
 
     // Duration preview
     if (durationType == 'age') {
@@ -945,44 +927,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     );
   }
 
-  Future<void> _addBeneficiary() async {
-    final result = await Navigator.push<TrustBeneficiary>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const TrustBeneficiaryFormScreen(),
-      ),
-    );
-    
-    if (result != null) {
-      setState(() {
-        _beneficiaries.add(result);
-      });
-    }
-  }
-
-  Future<void> _editBeneficiary(int index) async {
-    final result = await Navigator.push<TrustBeneficiary>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TrustBeneficiaryFormScreen(
-          beneficiary: _beneficiaries[index],
-          index: index,
-        ),
-      ),
-    );
-    
-    if (result != null) {
-      setState(() {
-        _beneficiaries[index] = result;
-      });
-    }
-  }
-
-  void _deleteBeneficiary(int index) {
-    setState(() {
-      _beneficiaries.removeAt(index);
-    });
-  }
+  // Legacy beneficiary add/edit/delete methods removed from UI flow.
 
 
   Widget _buildReviewStep() {
@@ -1036,6 +981,26 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
             final config = _fundSupportConfigs[categoryId];
             if (config == null) return const SizedBox.shrink();
             
+            // Resolve beneficiary from per-category config
+            final Object? rawBeneficiaryId = config['beneficiaryId'];
+            int? beneficiaryId;
+            if (rawBeneficiaryId is num) {
+              beneficiaryId = rawBeneficiaryId.toInt();
+            } else if (rawBeneficiaryId is String) {
+              beneficiaryId = int.tryParse(rawBeneficiaryId);
+            }
+
+            String? beneficiaryName;
+            if (beneficiaryId != null) {
+              final Map<String, dynamic> member = _familyMembers.firstWhere(
+                (m) => (m['id'] as num?)?.toInt() == beneficiaryId,
+                orElse: () => <String, dynamic>{},
+              );
+              if (member.isNotEmpty) {
+                beneficiaryName = (member['name'] as String?) ?? 'Unknown';
+              }
+            }
+
             final durationType = config['durationType'] as String?;
             final endAge = config['endAge'] as double?;
             final isRegularPayments = config['isRegularPayments'] as bool?;
@@ -1048,7 +1013,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                              isRegularPayments != null || 
                              releaseCondition != null;
             
-            if (!hasConfig) return const SizedBox.shrink();
+            if (!hasConfig && beneficiaryName == null) return const SizedBox.shrink();
             
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -1073,6 +1038,8 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         ],
                       ),
                       const Divider(height: 24),
+                      if (beneficiaryName != null)
+                        _buildReviewRow('Account for', beneficiaryName),
                       // Support Duration
                       if (durationType != null) ...[
                         _buildReviewRow(
@@ -1265,77 +1232,6 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         if (_employerNameCtrl.text.trim().isNotEmpty ||
             _businessNatureCtrl.text.trim().isNotEmpty)
           const SizedBox(height: 16),
-        
-        // Beneficiaries Section
-        Card(
-          elevation: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.people, color: const Color.fromRGBO(83, 61, 233, 1)),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Beneficiaries (${_beneficiaries.length})',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(height: 24),
-                if (_beneficiaries.isEmpty)
-                  const Text('No beneficiaries added', style: TextStyle(fontStyle: FontStyle.italic))
-                else
-                  ..._beneficiaries.map((b) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          border: Border.all(color: Theme.of(context).dividerColor),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              b.name ?? 'Unnamed',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            if (b.relationship != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                TrustConstants.relationships
-                                    .firstWhere((r) => r['value'] == b.relationship,
-                                        orElse: () => {'name': b.relationship!})['name']!,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                            if (b.monthlyDistributionLiving != null || b.monthlyDistributionEducation != null) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Monthly Distribution: Living RM${b.monthlyDistributionLiving ?? 0} • Education RM${b.monthlyDistributionEducation ?? 0}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.secondary,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-              ],
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 16),
         
         // Charities Section (from charitable fund support config)
         Builder(
@@ -1572,6 +1468,28 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     );
   }
 
+  /// Handles the "Continue/Submit" tap for the fixed footer controls.
+  Future<void> _handleNext() async {
+    if (_currentStep == 0) {
+      // Just move to next step, profile validation happens at submit
+      setState(() => _currentStep = 1);
+    } else if (_currentStep == 1) {
+      // Fund Support - optional, just proceed to next step
+      setState(() => _currentStep = 2);
+    } else if (_currentStep == 2) {
+      // Executor Selection - optional, just proceed to next step
+      setState(() => _currentStep = 3);
+    } else if (_currentStep == 3) {
+      if (!(_financialFormKey.currentState?.validate() ?? true)) return;
+      setState(() => _currentStep = 4);
+    } else if (_currentStep == 4) {
+      if (!(_businessFormKey.currentState?.validate() ?? true)) return;
+      setState(() => _currentStep = 5);
+    } else {
+      await _submit();
+    }
+  }
+
   Future<void> _submit() async {
     // Validate profile exists
     if (_userProfile == null) {
@@ -1590,19 +1508,11 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       setState(() => _currentStep = 4);
       return;
     }
-    if (_beneficiaries.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one beneficiary'), backgroundColor: Colors.orange),
-      );
-      setState(() => _currentStep = 5);
-      return;
-    }
-    // Note: Charities are optional, so no validation needed
+    // Note: Beneficiaries and charities are optional; beneficiaries are now linked per category.
 
     setState(() => _isSubmitting = true);
     try {
-      await TrustService.instance.createTrust(
+      final createdTrust = await TrustService.instance.createTrust(
         Trust(
           // Personal info from profile
           name: _userProfile!.nricName ?? _userProfile!.username,
@@ -1642,7 +1552,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
               ? _selectedExecutorIds.toList()
               : null,
         ),
-        beneficiaries: _beneficiaries,
+        beneficiaries: _beneficiaries.isNotEmpty ? _beneficiaries : null,
         charities: () {
           // Get charities from charitable fund support config
           final charitableConfig = _fundSupportConfigs['charitable'];
@@ -1656,7 +1566,8 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         const SnackBar(content: Text('Trust Fund created successfully'), backgroundColor: Colors.green),
       );
       await Future<void>.delayed(const Duration(milliseconds: 300));
-      Navigator.of(context).pop(true);
+      // Return the created trust so callers can navigate to its detail page.
+      Navigator.of(context).pop(createdTrust);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1703,53 +1614,8 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 currentStep: _currentStep,
                 onStepTapped: (int i) => setState(() => _currentStep = i),
                 controlsBuilder: (BuildContext context, ControlsDetails details) {
-                  final bool isLast = _currentStep == 6;
-                  return Row(
-                    children: <Widget>[
-                      ElevatedButton(
-                        onPressed: _isSubmitting
-                            ? null
-                            : () async {
-                                if (_currentStep == 0) {
-                                  // Just move to next step, profile validation happens at submit
-                                  setState(() => _currentStep = 1);
-                                } else if (_currentStep == 1) {
-                                  // Fund Support - optional, just proceed to next step
-                                  setState(() => _currentStep = 2);
-                                } else if (_currentStep == 2) {
-                                  // Executor Selection - optional, just proceed to next step
-                                  setState(() => _currentStep = 3);
-                                } else if (_currentStep == 3) {
-                                  if (!(_financialFormKey.currentState?.validate() ?? true)) return;
-                                  setState(() => _currentStep = 4);
-                                } else if (_currentStep == 4) {
-                                  if (!(_businessFormKey.currentState?.validate() ?? true)) return;
-                                  setState(() => _currentStep = 5);
-                                } else if (_currentStep == 5) {
-                                  // Beneficiaries - validate at least one exists
-                                  if (_beneficiaries.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please add at least one beneficiary'), backgroundColor: Colors.orange),
-                                    );
-                                    return;
-                                  }
-                                  setState(() => _currentStep = 6);
-                                } else {
-                                  await _submit();
-                                }
-                              },
-                        child: _isSubmitting
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                            : Text(isLast ? 'Submit' : 'Continue'),
-                      ),
-                      const SizedBox(width: 12),
-                      if (_currentStep > 0)
-                        TextButton(
-                          onPressed: _isSubmitting ? null : () => setState(() => _currentStep = _currentStep - 1),
-                          child: const Text('Back'),
-                        ),
-                    ],
-                  );
+                  // Hide the built-in controls; we use a fixed footer instead.
+                  return const SizedBox.shrink();
                 },
                 steps: <Step>[
                   Step(
@@ -1780,7 +1646,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         children: <Widget>[
                           DropdownButtonFormField<String>(
                             value: _selectedEstimatedNetWorth,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Estimated Net Worth',
                               prefixIcon: Icon(Icons.account_balance_wallet_outlined),
                             ),
@@ -1795,7 +1661,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedSourceOfFund,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Source of Fund',
                               prefixIcon: Icon(Icons.payments_outlined),
                             ),
@@ -1811,7 +1677,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           TextFormField(
                             controller: _purposeOfTransactionCtrl,
                             maxLines: 3,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Purpose of Transaction',
                               prefixIcon: Icon(Icons.description_outlined),
                               alignLabelWithHint: true,
@@ -1831,7 +1697,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         children: <Widget>[
                           TextFormField(
                             controller: _employerNameCtrl,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Employer Name',
                               prefixIcon: Icon(Icons.business_outlined),
                             ),
@@ -1839,7 +1705,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _businessNatureCtrl,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Business Nature',
                               prefixIcon: Icon(Icons.work_outline),
                             ),
@@ -1847,7 +1713,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _businessAddress1Ctrl,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Business Address Line 1',
                               prefixIcon: Icon(Icons.location_on_outlined),
                             ),
@@ -1855,7 +1721,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _businessAddress2Ctrl,
-                            decoration: InputDecoration(
+                            decoration: const InputDecoration(
                               labelText: 'Business Address Line 2',
                               prefixIcon: Icon(Icons.location_on_outlined),
                             ),
@@ -1867,7 +1733,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                 flex: 2,
                                 child: TextFormField(
                                   controller: _businessCityCtrl,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     labelText: 'City',
                                   ),
                                 ),
@@ -1877,7 +1743,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                 child: TextFormField(
                                   controller: _businessPostcodeCtrl,
                                   keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     labelText: 'Postcode',
                                   ),
                                 ),
@@ -1890,7 +1756,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                               Expanded(
                                 child: TextFormField(
                                   controller: _businessStateCtrl,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     labelText: 'State',
                                   ),
                                 ),
@@ -1899,7 +1765,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                               Expanded(
                                 child: DropdownButtonFormField<String>(
                                   value: _selectedBusinessCountry,
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     labelText: 'Country',
                                   ),
                                   items: TrustConstants.countries
@@ -1918,15 +1784,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     ),
                   ),
                   Step(
-                    title: const Text('Beneficiaries'),
-                    state: _currentStep > 5 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 5,
-                    content: _buildBeneficiariesStep(),
-                  ),
-                  Step(
                     title: const Text('Review & Submit'),
                     state: StepState.indexed,
-                    isActive: _currentStep >= 6,
+                    isActive: _currentStep >= 5,
                     content: _buildReviewStep(),
                   ),
                 ],
@@ -1934,6 +1794,21 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: StepperFooterControls(
+        currentStep: _currentStep,
+        lastStep: 5,
+        isBusy: _isSubmitting,
+        onPrimaryPressed: () {
+          _handleNext();
+        },
+        onBackPressed: _currentStep > 0
+            ? () {
+                setState(() {
+                  _currentStep = _currentStep - 1;
+                });
+              }
+            : null,
       ),
     );
   }

@@ -131,10 +131,12 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addOrEdit(),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _tasks.isNotEmpty
+          ? FloatingActionButton(
+              onPressed: () => _addOrEdit(),
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _tasks.isEmpty
@@ -303,105 +305,236 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              Icons.checklist_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Create Your Checklist',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const SizedBox(height: 32),
+                  Center(
+                    child: Icon(
+                      Icons.checklist_outlined,
+                      size: 80,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Create your checklist',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Organise your aftercare tasks and keep track of important steps.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Why use a checklist?',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'A structured checklist helps you and your family stay on top of important after‑death tasks, one step at a time.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _ChecklistBenefitItem(
+                          text: 'Start quickly with a recommended set of essential aftercare tasks.',
+                          colorScheme: colorScheme,
+                        ),
+                        const SizedBox(height: 16),
+                        _ChecklistBenefitItem(
+                          text: 'Add your own custom tasks that fit your situation and culture.',
+                          colorScheme: colorScheme,
+                        ),
+                        const SizedBox(height: 16),
+                        _ChecklistBenefitItem(
+                          text: 'Track progress so nothing important is forgotten during a difficult time.',
+                          colorScheme: colorScheme,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Row(
+                              children: [
+                                Icon(
+                                  Icons.lightbulb_outline,
+                                  color: colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('About checklists'),
+                              ],
+                            ),
+                            content: const Text(
+                              'The default checklist includes essential aftercare steps like:\n\n'
+                              '• Notifying family members\n'
+                              '• Managing bank accounts and assets\n'
+                              '• Handling legal matters and documents\n'
+                              '• Organising personal belongings\n'
+                              '• Updating beneficiaries and contacts\n\n'
+                              'You can also create custom tasks specific to your needs.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Got it'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: colorScheme.primary,
+                      ),
+                      label: Text(
+                        'Learn more about checklists',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Organize your aftercare tasks and keep track of important steps. Start with our recommended checklist or create your own custom tasks.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
               ),
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                ElevatedButton.icon(
-                  onPressed: onCreateDefault,
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Use Default Checklist'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: onCreateDefault,
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Use default checklist'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: onCreateCustom,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Custom Task'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: onCreateCustom,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create custom task'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Row(
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('About Checklists'),
-                      ],
-                    ),
-                    content: const Text(
-                      'Default checklist includes essential aftercare steps like:\n\n'
-                      '• Notifying family members\n'
-                      '• Managing bank accounts and assets\n'
-                      '• Handling legal matters and documents\n'
-                      '• Organizing personal belongings\n'
-                      '• Updating beneficiaries and contacts\n\n'
-                      'You can also create custom tasks specific to your needs.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Got it'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: Icon(
-                Icons.info_outline,
-                size: 18,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              label: Text(
-                'Learn more about checklists',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
+    );
+  }
+}
+
+class _ChecklistBenefitItem extends StatelessWidget {
+  final String text;
+  final ColorScheme colorScheme;
+
+  const _ChecklistBenefitItem({
+    required this.text,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.check,
+            color: colorScheme.onPrimary,
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }

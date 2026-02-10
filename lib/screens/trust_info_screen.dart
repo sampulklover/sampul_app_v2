@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/trust.dart';
 import 'trust_create_screen.dart';
+import 'trust_dashboard_screen.dart';
 
 class TrustInfoScreen extends StatelessWidget {
   const TrustInfoScreen({super.key});
@@ -214,13 +216,22 @@ class TrustInfoScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () async {
-                      final bool? created = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute<bool>(
+                      final Trust? createdTrust = await Navigator.of(context).push<Trust>(
+                        MaterialPageRoute<Trust>(
                           builder: (context) => const TrustCreateScreen(),
                         ),
                       );
-                      if (created == true) {
-                        Navigator.of(context).pop(true);
+                      if (createdTrust != null) {
+                        // Replace this info screen with the dashboard so the user
+                        // doesn't briefly see the trust list in between.
+                        await Navigator.of(context).pushReplacement(
+                          MaterialPageRoute<void>(
+                            builder: (context) => TrustDashboardScreen(
+                              trust: createdTrust,
+                              showWelcome: true,
+                            ),
+                          ),
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(
