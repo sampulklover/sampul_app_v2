@@ -5,6 +5,7 @@ import '../services/image_upload_service.dart';
 import '../models/relationship.dart';
 import '../widgets/stepper_footer_controls.dart';
 import 'dart:io';
+import 'family_info_screen.dart';
 
 class AddFamilyMemberScreen extends StatefulWidget {
   const AddFamilyMemberScreen({super.key});
@@ -140,6 +141,17 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Family Member'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'About Family Members',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const FamilyInfoScreen(fromHelpIcon: true)),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Stepper(

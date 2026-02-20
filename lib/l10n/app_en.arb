@@ -1,0 +1,78 @@
+{
+  "@@locale": "en",
+  "appTitle": "Sampul",
+  "@appTitle": {
+    "description": "The application title"
+  },
+  
+  "login": "Login",
+  "welcomeBack": "Welcome back",
+  "signInToContinue": "Sign in to continue to Sampul",
+  "email": "Email",
+  "emailHint": "you@example.com",
+  "password": "Password",
+  "forgotPassword": "Forgot password?",
+  "signInFailed": "Sign in failed. Please try again.",
+  "signInFailedWithError": "Sign in failed: {error}",
+  "@signInFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unexpectedError": "An unexpected error occurred: {error}",
+  "@unexpectedError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInCancelled": "Google sign-in was cancelled or failed",
+  "googleSignInFailed": "Google sign-in failed: {error}",
+  "@googleSignInFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "signingIn": "Signing in…",
+  "continueWithGoogle": "Continue with Google",
+  "dontHaveAccount": "Don't have an account?",
+  "signUp": "Sign up",
+  "or": "OR",
+  
+  "emailRequired": "Email is required",
+  "emailInvalid": "Enter a valid email",
+  "passwordRequired": "Password is required",
+  "passwordMinLength": "Password must be at least 6 characters",
+  
+  "aboutYourWill": "About Your Will",
+  "letsCreateYourWill": "Let's create your will",
+  "willDescription": "Bring your profile, family, assets, and wishes together in one clear document.",
+  
+  "letsListYourDigitalAssets": "Let's list your digital assets",
+  "assetsDescription": "Keep important online accounts and platforms in one place so your will stays clear and up to date.",
+  
+  "letsSetUpYourFamilyAccount": "Let's set up your family account",
+  "trustDescription": "Clear wishes, for the people you love.",
+  
+  "letsPlanYourHibahGifts": "Let's plan your Hibah gifts",
+  "hibahDescription": "Decide clearly who should receive your assets as a lifetime gift.",
+  
+  "onboardingTitle1": "Put your wealth in\nwriting",
+  "onboardingSubtitle1": "Without a Wasiat, your wealth could end up in the wrong hands. Get it sorted today—fast, legal, and dispute-free.",
+  "onboardingTitle2": "Do more with Sampul\nTrust",
+  "onboardingSubtitle2": "Lock in your assets, invest for the future, and ensure your loved ones get what's rightfully theirs.",
+  "onboardingTitle3": "Don't let emotions\ndecide.",
+  "onboardingSubtitle3": "A professional executor ensures your will is followed—no family drama, no legal mess, just a smooth handover.",
+  
+  "settings": "Settings",
+  "language": "Language",
+  "selectLanguage": "Select Language",
+  "english": "English",
+  "malay": "Malay",
+  "languageChanged": "Language changed"
+}

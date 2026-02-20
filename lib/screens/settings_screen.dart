@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/theme_controller.dart';
+import '../controllers/locale_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
@@ -655,12 +657,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.lock_outline),
-                  title: const Text('Change password'),
-                  onTap: _showChangePasswordDialog,
-                ),
-                const Divider(height: 1),
-                ListTile(
                   leading: Icon(
                     _isVerified ? Icons.verified_user : Icons.verified_user_outlined,
                     color: _isVerified 
@@ -698,6 +694,29 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       ? null 
                       : _handleVerification,
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('Change password'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: _showChangePasswordDialog,
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Log out'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () async {
+                    // Capture context before async operation
+                    final navigator = Navigator.of(context);
+                    await AuthController.instance.signOut();
+                    if (!mounted) return;
+                    navigator.pushAndRemoveUntil(
+                      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+                      (Route<dynamic> route) => false,
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -719,6 +738,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   leading: const Icon(Icons.credit_card_outlined),
                   title: const Text('Plans & subscription'),
                   subtitle: const Text('Manage your Sampul plan'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -784,9 +804,18 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.language_outlined),
+                  title: Text(AppLocalizations.of(context)!.language),
+                  subtitle: Text(_getLanguageName(context)),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () => _showLanguageSelector(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.replay_outlined),
                   title: const Text('Restart onboarding'),
                   subtitle: const Text('Run the setup flow again'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () async {
                     try {
                       final user = AuthController.instance.currentUser;
@@ -847,6 +876,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('Terms of Service'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Terms tapped (demo)')),
@@ -857,6 +887,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: const Text('Privacy Policy'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Privacy tapped (demo)')),
@@ -870,18 +901,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           const SizedBox(height: 16),
           Center(
             child: TextButton.icon(
-              onPressed: () async {
-                // Capture context before async operation
-                final navigator = Navigator.of(context);
-                await AuthController.instance.signOut();
-                if (!mounted) return;
-                navigator.pushAndRemoveUntil(
-                  MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-                  (Route<dynamic> route) => false,
-                );
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Log out'),
+              onPressed: _showDeleteAccountDialog,
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              label: const Text(
+                'Delete Account',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ),
         ],
@@ -1155,6 +1180,150 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         ),
       ),
     );
+  }
+
+  void _showDeleteAccountDialog() {
+    final TextEditingController confirmController = TextEditingController();
+    const String confirmText = 'DELETE';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final bool isConfirmed = confirmController.text.trim() == confirmText;
+
+            return AlertDialog(
+              title: const Text('Delete Account'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Are you sure you want to delete your account? This action cannot be undone.',
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'To confirm, please type "DELETE" in the box below:',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: confirmController,
+                    onChanged: (value) {
+                      setState(() {});
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Type DELETE to confirm',
+                      border: OutlineInputBorder(),
+                    ),
+                    autofocus: true,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    confirmController.dispose();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: isConfirmed
+                      ? () {
+                          confirmController.dispose();
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Delete account feature coming soon'),
+                            ),
+                          );
+                        }
+                      : null,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                  ),
+                  child: const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _getLanguageName(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = LocaleController.instance.locale;
+    if (currentLocale.languageCode == 'ms') {
+      return l10n.malay;
+    }
+    return l10n.english;
+  }
+
+  Future<void> _showLanguageSelector(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = LocaleController.instance.locale;
+    
+    final selectedLanguage = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.selectLanguage,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              RadioListTile<String>(
+                title: Text(l10n.english),
+                value: 'en',
+                groupValue: currentLocale.languageCode,
+                onChanged: (String? value) {
+                  if (value != null) {
+                    Navigator.of(context).pop(value);
+                  }
+                },
+              ),
+              const Divider(height: 1),
+              RadioListTile<String>(
+                title: Text(l10n.malay),
+                value: 'ms',
+                groupValue: currentLocale.languageCode,
+                onChanged: (String? value) {
+                  if (value != null) {
+                    Navigator.of(context).pop(value);
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedLanguage != null && selectedLanguage != currentLocale.languageCode) {
+      await LocaleController.instance.setLocale(Locale(selectedLanguage));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.languageChanged)),
+        );
+      }
+      setState(() {}); // Refresh the UI to show updated language
+    }
   }
 }
 

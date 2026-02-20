@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/trust.dart';
 import 'trust_create_screen.dart';
 import 'trust_dashboard_screen.dart';
 
 class TrustInfoScreen extends StatelessWidget {
-  const TrustInfoScreen({super.key});
+  final bool fromHelpIcon;
+  const TrustInfoScreen({super.key, this.fromHelpIcon = false});
 
   @override
   Widget build(BuildContext context) {
@@ -214,8 +216,18 @@ class TrustInfoScreen extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
+                    child: ElevatedButton(
                     onPressed: () async {
+                      // Mark that user has seen the about page
+                      final SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('trust_about_seen', true);
+                      
+                      // If user came from help icon, just pop back to the previous screen
+                      if (fromHelpIcon) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
+                      
                       final Trust? createdTrust = await Navigator.of(context).push<Trust>(
                         MaterialPageRoute<Trust>(
                           builder: (context) => const TrustCreateScreen(),

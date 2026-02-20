@@ -17,12 +17,16 @@ import '../services/ai_action_detector.dart';
 import '../services/supabase_service.dart';
 import 'trust_create_screen.dart';
 import 'trust_management_screen.dart';
+import 'trust_info_screen.dart';
 import 'hibah_management_screen.dart';
 import 'will_management_screen.dart';
 import 'asset_info_screen.dart';
 import 'assets_list_screen.dart';
+import 'add_asset_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'family_info_screen.dart';
 import 'family_list_screen.dart';
+import 'add_family_member_screen.dart';
 import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
 import 'extra_wishes_screen.dart';
@@ -1289,16 +1293,22 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     }
   }
 
-  void _handleAction(AiAction action) {
+  Future<void> _handleAction(AiAction action) async {
     if (action.actionType == 'navigate') {
       final route = action.parameters?['route'] as String?;
       if (route == null) return;
 
       switch (route) {
         case 'trust_create':
+          // Check if user has seen the about page before
+          final SharedPreferences prefs3 = await SharedPreferences.getInstance();
+          final bool hasSeenTrustAbout = prefs3.getBool('trust_about_seen') ?? false;
+          
           Navigator.of(context).push(
             MaterialPageRoute<bool>(
-              builder: (_) => const TrustCreateScreen(),
+              builder: (_) => hasSeenTrustAbout 
+                  ? const TrustCreateScreen() 
+                  : const TrustInfoScreen(),
             ),
           );
           break;
@@ -1324,9 +1334,15 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           );
           break;
         case 'add_asset':
+          // Check if user has seen the about page before
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          final bool hasSeenAbout = prefs.getBool('assets_about_seen') ?? false;
+          
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const AssetInfoScreen(),
+              builder: (_) => hasSeenAbout 
+                  ? const AddAssetScreen() 
+                  : const AssetInfoScreen(),
             ),
           );
           break;
@@ -1338,9 +1354,15 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           );
           break;
         case 'add_family':
+          // Check if user has seen the about page before
+          final SharedPreferences prefs2 = await SharedPreferences.getInstance();
+          final bool hasSeenFamilyAbout = prefs2.getBool('family_about_seen') ?? false;
+          
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const FamilyInfoScreen(),
+              builder: (_) => hasSeenFamilyAbout 
+                  ? const AddFamilyMemberScreen() 
+                  : const FamilyInfoScreen(),
             ),
           );
           break;

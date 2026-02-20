@@ -254,16 +254,34 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
-                    height: 48,
+                    width: double.infinity,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
                       child: _isSubmitting
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : const Text('Create account'),
+                          : Text(
+                              'Create account',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -279,9 +297,18 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 48,
+                    width: double.infinity,
+                    height: 56,
                     child: OutlinedButton.icon(
                       onPressed: _isGoogleSubmitting ? null : _signInWithGoogle,
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
                       icon: _isGoogleSubmitting
                           ? const SizedBox(
                               width: 20,
@@ -295,6 +322,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                       label: Text(
                         _isGoogleSubmitting ? 'Signing in…' : 'Continue with Google',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ),
                   ),

@@ -5,6 +5,8 @@ import '../services/will_service.dart';
 import 'assets_list_screen.dart';
 import 'asset_info_screen.dart';
 import 'edit_asset_screen.dart';
+import 'add_asset_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/extra_wishes.dart';
 import '../services/extra_wishes_service.dart';
 import 'extra_wishes_screen.dart';
@@ -946,10 +948,22 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
               children: [
                 TextButton.icon(
                   onPressed: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute<bool>(builder: (_) => const AssetInfoScreen()),
+                    // Check if user has seen the about page before
+                    final SharedPreferences prefs = await SharedPreferences.getInstance();
+                    final bool hasSeenAbout = prefs.getBool('assets_about_seen') ?? false;
+                    
+                    // If user hasn't seen about page, show it first
+                    // Otherwise, go directly to add asset page
+                    final bool? result = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute<bool>(
+                        builder: (_) => hasSeenAbout 
+                            ? const AddAssetScreen() 
+                            : const AssetInfoScreen(),
+                      ),
                     );
-                    await _refreshAssets();
+                    if (result == true) {
+                      await _refreshAssets();
+                    }
                   },
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Add'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/ai_chat_settings.dart';
 import '../services/ai_chat_settings_service.dart';
 import '../utils/admin_utils.dart';
@@ -572,6 +573,20 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () => _openOpenRouterModels(),
+                          icon: const Icon(Icons.open_in_new, size: 16),
+                          label: const Text('View available models'),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 32),
 
                       // Resource Management Section
@@ -857,6 +872,21 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
 
   void _editResource(int index) {
     _showResourceDialog(resource: _resources[index], index: index);
+  }
+
+  Future<void> _openOpenRouterModels() async {
+    final uri = Uri.parse('https://openrouter.ai/models');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open Open Router models page'),
+          ),
+        );
+      }
+    }
   }
 
   void _showResourceDialog({AiResource? resource, int? index}) {

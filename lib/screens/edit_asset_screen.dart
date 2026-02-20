@@ -250,8 +250,11 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                             await _loadBelovedOptions();
                           }
                         },
-                        decoration: InputDecoration(
-                          labelText: 'Instructions After Death',                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Instructions After Death',
+                          prefixIcon: Icon(Icons.assignment_outlined),
+                          border: OutlineInputBorder(),
+                        ),
                         validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
                       ),
                       const SizedBox(height: 12),
@@ -267,6 +270,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                           onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
                           decoration: InputDecoration(
                             labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
+                            prefixIcon: const Icon(Icons.card_giftcard_outlined),
                             border: const OutlineInputBorder(),
                           ),
                           validator: (int? v) {
@@ -281,7 +285,11 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         controller: _declaredValueController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                        decoration: InputDecoration(labelText: 'Declared Value (MYR)',                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Declared Value (MYR)',
+                          prefixIcon: Icon(Icons.payments_outlined),
+                          border: OutlineInputBorder(),
+                        ),
                         validator: (String? v) {
                           final String value = (v ?? '').trim();
                           if (value.isEmpty) return 'Required';
@@ -296,7 +304,11 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       TextFormField(
                         controller: _remarksController,
                         maxLines: 3,
-                        decoration: InputDecoration(labelText: 'Remarks (optional)',                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Remarks (optional)',
+                          prefixIcon: Icon(Icons.notes_outlined),
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ],
                   ),
