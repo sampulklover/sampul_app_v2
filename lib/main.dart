@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'controllers/theme_controller.dart';
+import 'controllers/locale_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -33,6 +36,9 @@ void main() async {
   }
   
   await dotenv.load(fileName: ".env");
+  
+  // Initialize Locale Controller
+  await LocaleController.instance.initialize();
   
   // Initialize Supabase
   await SupabaseService.initialize();
@@ -69,8 +75,19 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeController.instance.themeModeNotifier,
       builder: (BuildContext context, ThemeMode mode, Widget? _) {
-        return MaterialApp(
-          title: 'Sampul',
+        return ValueListenableBuilder<Locale>(
+          valueListenable: LocaleController.instance.localeNotifier,
+          builder: (BuildContext context, Locale locale, Widget? _) {
+            return MaterialApp(
+              title: 'Sampul',
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: LocaleController.instance.supportedLocales,
+              locale: locale,
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(83, 61, 233, 1)),
@@ -121,8 +138,10 @@ class MyApp extends StatelessWidget {
               unselectedItemColor: Colors.grey,
             ),
           ),
-          themeMode: mode,
-          home: const AuthWrapper(),
+              themeMode: mode,
+              home: const AuthWrapper(),
+            );
+          },
         );
       },
     );

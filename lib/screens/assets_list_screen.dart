@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_asset_screen.dart';
 import 'asset_info_screen.dart';
+import 'add_asset_screen.dart';
 
 class AssetsListScreen extends StatefulWidget {
   const AssetsListScreen({super.key});
@@ -103,8 +105,18 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
       appBar: AppBar(title: const Text('My Assets')),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final bool? added = await Navigator.of(context).push(
-            MaterialPageRoute<bool>(builder: (_) => const AssetInfoScreen()),
+          // Check if user has seen the about page before
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          final bool hasSeenAbout = prefs.getBool('assets_about_seen') ?? false;
+          
+          // If user hasn't seen about page, show it first
+          // Otherwise, go directly to add asset page
+          final bool? added = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => hasSeenAbout 
+                  ? const AddAssetScreen() 
+                  : const AssetInfoScreen(),
+            ),
           );
           if (added == true) {
             await _loadAssets();

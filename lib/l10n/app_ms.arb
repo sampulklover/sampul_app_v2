@@ -1,0 +1,75 @@
+{
+  "@@locale": "ms",
+  "appTitle": "Sampul",
+  
+  "login": "Log Masuk",
+  "welcomeBack": "Selamat kembali",
+  "signInToContinue": "Log masuk untuk terus ke Sampul",
+  "email": "E-mel",
+  "emailHint": "anda@contoh.com",
+  "password": "Kata laluan",
+  "forgotPassword": "Lupa kata laluan?",
+  "signInFailed": "Log masuk gagal. Sila cuba lagi.",
+  "signInFailedWithError": "Log masuk gagal: {error}",
+  "@signInFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "unexpectedError": "Ralat tidak dijangka berlaku: {error}",
+  "@unexpectedError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "googleSignInCancelled": "Log masuk Google dibatalkan atau gagal",
+  "googleSignInFailed": "Log masuk Google gagal: {error}",
+  "@googleSignInFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "signingIn": "Sedang log masuk…",
+  "continueWithGoogle": "Teruskan dengan Google",
+  "dontHaveAccount": "Tiada akaun?",
+  "signUp": "Daftar",
+  "or": "ATAU",
+  
+  "emailRequired": "E-mel diperlukan",
+  "emailInvalid": "Masukkan e-mel yang sah",
+  "passwordRequired": "Kata laluan diperlukan",
+  "passwordMinLength": "Kata laluan mestilah sekurang-kurangnya 6 aksara",
+  
+  "aboutYourWill": "Mengenai Wasiat Anda",
+  "letsCreateYourWill": "Mari kita buat wasiat anda",
+  "willDescription": "Satukan profil, keluarga, aset, dan hasrat anda dalam satu dokumen yang jelas.",
+  
+  "letsListYourDigitalAssets": "Mari kita senaraikan aset digital anda",
+  "assetsDescription": "Simpan akaun dan platform dalam talian yang penting di satu tempat supaya wasiat anda kekal jelas dan terkini.",
+  
+  "letsSetUpYourFamilyAccount": "Mari kita sediakan akaun keluarga anda",
+  "trustDescription": "Hasrat yang jelas, untuk orang yang anda sayangi.",
+  
+  "letsPlanYourHibahGifts": "Mari kita rancangkan hadiah Hibah anda",
+  "hibahDescription": "Tentukan dengan jelas siapa yang harus menerima aset anda sebagai hadiah seumur hidup.",
+  
+  "onboardingTitle1": "Letakkan kekayaan anda\ndalam tulisan",
+  "onboardingSubtitle1": "Tanpa Wasiat, kekayaan anda mungkin jatuh ke tangan yang salah. Selesaikannya hari ini—pantas, sah, dan bebas pertikaian.",
+  "onboardingTitle2": "Lakukan lebih banyak dengan\nSampul Trust",
+  "onboardingSubtitle2": "Kunci aset anda, labur untuk masa depan, dan pastikan orang tersayang mendapat apa yang menjadi hak mereka.",
+  "onboardingTitle3": "Jangan biarkan emosi\nmenentukan.",
+  "onboardingSubtitle3": "Pelaksana profesional memastikan wasiat anda diikuti—tiada drama keluarga, tiada kekacauan undang-undang, hanya penyerahan yang lancar.",
+  
+  "settings": "Tetapan",
+  "language": "Bahasa",
+  "selectLanguage": "Pilih Bahasa",
+  "english": "Bahasa Inggeris",
+  "malay": "Bahasa Melayu",
+  "languageChanged": "Bahasa telah ditukar"
+}

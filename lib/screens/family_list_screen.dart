@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
 import '../models/relationship.dart';
 import 'edit_family_member_screen.dart';
 import 'family_info_screen.dart';
+import 'add_family_member_screen.dart';
 
 class FamilyListScreen extends StatefulWidget {
   const FamilyListScreen({super.key});
@@ -133,8 +135,18 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
       appBar: AppBar(title: const Text('My Family')),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final bool? added = await Navigator.of(context).push(
-            MaterialPageRoute<bool>(builder: (_) => const FamilyInfoScreen()),
+          // Check if user has seen the about page before
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          final bool hasSeenAbout = prefs.getBool('family_about_seen') ?? false;
+          
+          // If user hasn't seen about page, show it first
+          // Otherwise, go directly to add family member page
+          final bool? added = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => hasSeenAbout 
+                  ? const AddFamilyMemberScreen() 
+                  : const FamilyInfoScreen(),
+            ),
           );
           if (added == true) {
             await _load();

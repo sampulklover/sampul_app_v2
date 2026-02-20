@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'hibah_create_screen.dart';
 
 class HibahInfoScreen extends StatelessWidget {
-  const HibahInfoScreen({super.key});
+  final bool fromHelpIcon;
+  const HibahInfoScreen({super.key, this.fromHelpIcon = false});
 
   @override
   Widget build(BuildContext context) {
@@ -124,8 +126,18 @@ class HibahInfoScreen extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
+                    child: ElevatedButton(
                     onPressed: () async {
+                      // Mark that user has seen the about page
+                      final SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('hibah_about_seen', true);
+                      
+                      // If user came from help icon, just pop back to the previous screen
+                      if (fromHelpIcon) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
+                      
                       final bool? created = await Navigator.of(context).push<bool>(
                         MaterialPageRoute<bool>(
                           builder: (_) => const HibahCreateScreen(),

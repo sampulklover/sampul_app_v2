@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/hibah.dart';
 import '../services/hibah_service.dart';
 import 'hibah_detail_screen.dart';
 import 'hibah_info_screen.dart';
+import 'hibah_create_screen.dart';
 
 class HibahManagementScreen extends StatefulWidget {
   const HibahManagementScreen({super.key});
@@ -53,12 +55,18 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
   }
 
   Future<void> _createHibah() async {
-    // Mirror the trust flow: go through the info/intro screen first.
-    // That screen will handle launching the creation form, and will
-    // return `true` when a new hibah is successfully created so we can
-    // refresh the list here.
+    // Check if user has seen the about page before
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool hasSeenAbout = prefs.getBool('hibah_about_seen') ?? false;
+    
+    // If user hasn't seen about page, show it first
+    // Otherwise, go directly to create hibah page
     final bool? created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => const HibahInfoScreen()),
+      MaterialPageRoute<bool>(
+        builder: (_) => hasSeenAbout 
+            ? const HibahCreateScreen() 
+            : const HibahInfoScreen(),
+      ),
     );
     if (created == true) {
       await _loadHibahs();
@@ -105,7 +113,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const HibahInfoScreen(),
+                  builder: (_) => const HibahInfoScreen(fromHelpIcon: true),
                 ),
               );
             },
@@ -322,7 +330,7 @@ class _HibahInfoBanner extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const HibahInfoScreen()),
+          MaterialPageRoute<void>(builder: (_) => const HibahInfoScreen(fromHelpIcon: true)),
         );
       },
       child: Container(

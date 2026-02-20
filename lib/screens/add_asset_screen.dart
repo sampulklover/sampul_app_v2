@@ -6,6 +6,7 @@ import '../services/brandfetch_service.dart';
 import '../widgets/stepper_footer_controls.dart';
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'asset_info_screen.dart';
 
 class AddAssetScreen extends StatefulWidget {
   const AddAssetScreen({super.key});
@@ -318,6 +319,17 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Asset'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'About Assets',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const AssetInfoScreen(fromHelpIcon: true)),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Stepper(
@@ -517,7 +529,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           },
           decoration: const InputDecoration(
             labelText: 'Instructions After Death',
-            prefixIcon: Icon(Icons.list_alt_outlined),
+            prefixIcon: Icon(Icons.assignment_outlined),
             border: OutlineInputBorder(),
           ),
           validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,

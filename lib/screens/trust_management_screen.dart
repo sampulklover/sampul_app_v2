@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
 import 'trust_dashboard_screen.dart';
+import 'trust_create_screen.dart';
 
 class TrustManagementScreen extends StatefulWidget {
   const TrustManagementScreen({super.key});
@@ -43,11 +45,18 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
   }
 
   Future<void> _createTrust() async {
-    // Navigate to the info + creation flow. That flow will handle
-    // pushing the dashboard screen directly after creation, so the
-    // user never briefly sees this list in between.
+    // Check if user has seen the about page before
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool hasSeenAbout = prefs.getBool('trust_about_seen') ?? false;
+    
+    // If user hasn't seen about page, show it first
+    // Otherwise, go directly to create trust page
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => hasSeenAbout 
+            ? const TrustCreateScreen() 
+            : const TrustInfoScreen(),
+      ),
     );
     // When the user returns here (after closing the dashboard),
     // refresh the list to include any newly created/updated trusts.
@@ -80,7 +89,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
             tooltip: 'About Trust Fund',
             icon: const Icon(Icons.help_outline),
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen()));
+              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen(fromHelpIcon: true)));
             },
           ),
         ],
@@ -249,13 +258,19 @@ class _TrustList extends StatelessWidget {
     if (estimatedNetWorth == null || estimatedNetWorth.isEmpty) {
       return 'RM0.00';
     }
+    // Match the formatting used on the Homepage
+    // (see _formatAmount in home_screen.dart)
     try {
-      final num = double.tryParse(estimatedNetWorth);
-      if (num != null) {
-        return 'RM${num.toStringAsFixed(2)}';
+      final double? numValue = double.tryParse(estimatedNetWorth);
+      if (numValue != null) {
+        return 'RM${numValue.toStringAsFixed(2)}';
       }
     } catch (_) {}
-    return estimatedNetWorth;
+    // If it's a string like "below_rm_50k" or "rm_50k_to_100k", format it nicely
+    return estimatedNetWorth.replaceAll('_', ' ').replaceAllMapped(
+      RegExp(r'\brm\b', caseSensitive: false),
+      (Match match) => 'RM',
+    );
   }
 
   @override
@@ -433,7 +448,7 @@ class _TrustInfoBanner extends StatelessWidget {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen()));
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen(fromHelpIcon: true)));
       },
       child: Container(
         width: double.infinity,

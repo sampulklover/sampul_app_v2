@@ -7,6 +7,7 @@ import 'edit_profile_screen.dart';
 import 'executor_deceased_form_screen.dart';
 import 'executor_guardian_form_screen.dart';
 import 'executor_assets_form_screen.dart';
+import 'executor_info_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
 
 class ExecutorCreateScreen extends StatefulWidget {
@@ -986,7 +987,20 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Submit Executor')),
+      appBar: AppBar(
+        title: const Text('Submit Executor'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'About Executors',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen(fromHelpIcon: true)),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: <Widget>[

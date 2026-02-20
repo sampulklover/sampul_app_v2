@@ -11,6 +11,7 @@ import '../models/hibah.dart';
 import '../services/hibah_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/stepper_footer_controls.dart';
+import 'hibah_info_screen.dart';
 
 /// Document type option with short key for database storage and full label for UI display.
 /// Keys are stored in the database for easier filtering/querying.
@@ -327,7 +328,20 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Hibah')),
+      appBar: AppBar(
+        title: const Text('Create Hibah'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'About Hibah',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const HibahInfoScreen(fromHelpIcon: true)),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Stepper(
           currentStep: _currentStep,

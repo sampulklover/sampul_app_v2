@@ -32,6 +32,25 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   List<Map<String, dynamic>> _familyMembers = <Map<String, dynamic>>[];
   bool _isLoadingFamilyMembers = false;
   int? _selectedFamilyMemberId;
+  bool _isEditMode = false;
+  Map<String, dynamic>? _savedConfig; // Track saved config to return when navigating back
+
+  // Check if config is already set up (has meaningful data)
+  bool get _isConfigSetUp {
+    if (widget.initialConfig.isEmpty) return false;
+    
+    // For charitable category, check if charities exist
+    if (widget.categoryId == 'charitable') {
+      final charitiesData = widget.initialConfig['charities'] as List?;
+      return charitiesData != null && charitiesData.isNotEmpty;
+    }
+    
+    // For other categories, check if beneficiaryId or durationType exists
+    return widget.initialConfig.containsKey('beneficiaryId') || 
+           widget.initialConfig.containsKey('durationType') ||
+           widget.initialConfig.containsKey('isRegularPayments') ||
+           widget.initialConfig.containsKey('releaseCondition');
+  }
 
   @override
   void initState() {
@@ -39,6 +58,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     // Deep copy the initial config to avoid modifying the original
     _config = Map<String, dynamic>.from(widget.initialConfig);
     _initialConfigJson = jsonEncode(_config);
+    
+    // Start in preview mode if config is already set up, otherwise start in edit mode
+    _isEditMode = !_isConfigSetUp;
     
     // Initialize charities list from config (for charitable category)
     if (widget.categoryId == 'charitable') {
@@ -295,29 +317,81 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.category['title'] as String? ?? 'Fund Support'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Save charities to config if charitable category
-                if (widget.categoryId == 'charitable') {
-                  _config['charities'] = _charities.map((c) => c.toJson()).toList();
-                }
-                Navigator.of(context).pop(_config);
-              },
-              child: const Text('Save'),
-            ),
-          ],
+          actions: _isEditMode
+              ? [
+                  TextButton(
+                    onPressed: () {
+                      // Save charities to config if charitable category
+                      if (widget.categoryId == 'charitable') {
+                        _config['charities'] = _charities.map((c) => c.toJson()).toList();
+                      }
+                      // Save the config and switch back to preview mode
+                      setState(() {
+                        _savedConfig = Map<String, dynamic>.from(_config);
+                        _initialConfigJson = jsonEncode(_config); // Update initial to reflect saved state
+                        _isEditMode = false;
+                        // Ensure charities list is synced with config for preview
+                        if (widget.categoryId == 'charitable') {
+                          final charitiesData = _config['charities'] as List?;
+                          _charities = charitiesData != null
+                              ? charitiesData.map((c) => TrustCharity.fromJson(c as Map<String, dynamic>)).toList()
+                              : [];
+                        }
+                      });
+                    },
+                    child: const Text('Save'),
+                  ),
+                ]
+              : [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {
+                      setState(() {
+                        _isEditMode = true;
+                      });
+                    },
+                    tooltip: 'Edit',
+                  ),
+                ],
         ),
-        body: widget.categoryId == 'charitable'
-            ? _buildCharitableContent(theme, colorScheme)
-            : _buildRegularContent(theme, colorScheme),
+        body: _isEditMode
+            ? (widget.categoryId == 'charitable'
+                ? _buildCharitableContent(theme, colorScheme)
+                : _buildRegularContent(theme, colorScheme))
+            : Column(
+                children: [
+                  Expanded(
+                    child: widget.categoryId == 'charitable'
+                        ? _buildCharitablePreview(theme, colorScheme)
+                        : _buildRegularPreview(theme, colorScheme),
+                  ),
+                  _buildActionButtonsFooter(theme, colorScheme),
+                ],
+              ),
       ),
     );
   }
 
   Future<bool> _handleWillPop() async {
+    // In preview mode, return saved config if available, otherwise return null
+    if (!_isEditMode) {
+      if (_savedConfig != null) {
+        // Return saved config when navigating back from preview
+        Navigator.of(context).pop<Map<String, dynamic>>(_savedConfig);
+        return false; // we've handled the pop manually
+      }
+      // No changes made, return null to indicate no updates
+      Navigator.of(context).pop<Map<String, dynamic>?>(null);
+      return false; // we've handled the pop manually
+    }
+
+    // In edit mode, check for unsaved changes
     if (!_hasUnsavedChanges) {
-      return true;
+      // No unsaved changes, just go back to preview mode
+      setState(() {
+        _isEditMode = false;
+      });
+      return false; // Don't pop, just switch to preview
     }
 
     final String? action = await showDialog<String>(
@@ -343,22 +417,78 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     );
 
     if (action == 'discard') {
-      // Pop this screen without returning a config, so caller treats it as "no changes"
-      Navigator.of(context).pop<Map<String, dynamic>?>(null);
-      return false; // we've handled the pop manually
+      // Discard changes and go back to preview mode
+      setState(() {
+        // Reset config to saved state or initial state
+        if (_savedConfig != null) {
+          _config = Map<String, dynamic>.from(_savedConfig!);
+        } else {
+          _config = Map<String, dynamic>.from(widget.initialConfig);
+        }
+        _initialConfigJson = jsonEncode(_config);
+        // Reset charities if charitable category
+        if (widget.categoryId == 'charitable') {
+          final charitiesData = _config['charities'] as List?;
+          _charities = charitiesData != null
+              ? charitiesData.map((c) => TrustCharity.fromJson(c as Map<String, dynamic>)).toList()
+              : [];
+        }
+        _isEditMode = false;
+      });
+      return false; // Don't pop, just switch to preview
     } else if (action == 'save') {
-      // Reuse the same save behaviour as the app bar "Save" button
+      // Save and go back to preview mode
       if (widget.categoryId == 'charitable') {
         _config['charities'] = _charities.map((c) => c.toJson()).toList();
       }
-      Navigator.of(context).pop<Map<String, dynamic>>(_config);
-      return false;
+      setState(() {
+        _savedConfig = Map<String, dynamic>.from(_config);
+        _initialConfigJson = jsonEncode(_config);
+        _isEditMode = false;
+      });
+      return false; // Don't pop, just switch to preview
     }
 
-    return false;
+    return false; // Don't pop if dialog was cancelled
   }
 
-  Widget _buildCharitableContent(ThemeData theme, ColorScheme colorScheme) {
+  String _formatAmount(double? amount) {
+    if (amount == null) return 'RM 0.00';
+    return 'RM ${amount.toStringAsFixed(2).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    )}';
+  }
+
+  String _getCategoryDescription(String categoryId) {
+    switch (categoryId) {
+      case 'education':
+        return 'Support for tuition fees, books, and educational expenses';
+      case 'living':
+        return 'Cover daily living expenses and basic needs';
+      case 'healthcare':
+        return 'Medical expenses, treatments, and healthcare services';
+      case 'charitable':
+        return 'Donations and contributions to charitable organizations';
+      case 'debt':
+        return 'Payments for outstanding debts and financial obligations';
+      default:
+        return 'Fund support configuration for your trust';
+    }
+  }
+
+  Widget _buildCharitablePreview(ThemeData theme, ColorScheme colorScheme) {
+    // Calculate total donations
+    double totalAmount = 0.0;
+    for (var charity in _charities) {
+      if (charity.donationAmount != null) {
+        totalAmount += charity.donationAmount!;
+      }
+    }
+    
+    final isPaused = _config['isPaused'] as bool? ?? false;
+    final hasPendingRequest = _config['hasPendingRequest'] as bool? ?? false;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -375,6 +505,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 48,
@@ -399,6 +530,1057 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _getCategoryDescription(widget.categoryId),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if ((widget.category['subtitle'] as String?)?.isNotEmpty == true) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.category['subtitle'] as String? ?? '',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (hasPendingRequest || isPaused) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (hasPendingRequest)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.pending_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Request Pending',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: Colors.blue.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (isPaused)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.orange,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.pause_circle_outline,
+                                      size: 14,
+                                      color: Colors.orange.shade700,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Paused',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: Colors.orange.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (_charities.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Donations',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatAmount(totalAmount),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_charities.length} ${_charities.length == 1 ? 'Charity' : 'Charities'}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (_charities.isEmpty)
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: colorScheme.outline.withOpacity(0.2),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.volunteer_activism_outlined,
+                      size: 64,
+                      color: colorScheme.primary.withOpacity(0.4),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No charities/donations added yet',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add charitable organizations to start making a difference',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ..._charities.map((charity) {
+              // Build subtitle text
+              String categoryText = '';
+              if (charity.category != null) {
+                final categoryName = TrustConstants.donationCategories
+                    .firstWhere((c) => c['value'] == charity.category,
+                        orElse: () => {'name': charity.category!})['name']!;
+                categoryText = categoryName;
+              }
+              
+              String durationText = '';
+              if (charity.donationDuration != null) {
+                durationText = TrustConstants.donationDurations
+                    .firstWhere((d) => d['value'] == charity.donationDuration,
+                        orElse: () => {'name': charity.donationDuration!})['name']!;
+              }
+              
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: colorScheme.outline.withOpacity(0.1),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  charity.organizationName ?? 'Unnamed Organization',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (categoryText.isNotEmpty || durationText.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: [
+                                      if (categoryText.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: colorScheme.primaryContainer.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            categoryText,
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: colorScheme.onPrimaryContainer,
+                                            ),
+                                          ),
+                                        ),
+                                      if (durationText.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: colorScheme.secondaryContainer.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            durationText,
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: colorScheme.onSecondaryContainer,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (charity.donationAmount != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Donation Amount',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              Text(
+                                _formatAmount(charity.donationAmount),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegularPreview(ThemeData theme, ColorScheme colorScheme) {
+    final durationType = _config['durationType'] as String?;
+    final endAge = (_config['endAge'] as num?)?.toDouble();
+    final isRegularPayments = _config['isRegularPayments'] as bool?;
+    final paymentAmount = (_config['paymentAmount'] as num?)?.toDouble();
+    final paymentFrequency = _config['paymentFrequency'] as String?;
+    final releaseCondition = _config['releaseCondition'] as String?;
+    final beneficiaryId = _config['beneficiaryId'] as int?;
+    final isPaused = _config['isPaused'] as bool? ?? false;
+    final hasPendingRequest = _config['hasPendingRequest'] as bool? ?? false;
+
+    // Get beneficiary info
+    Map<String, dynamic>? beneficiaryData;
+    if (beneficiaryId != null) {
+      beneficiaryData = _familyMembers.firstWhere(
+        (member) => (member['id'] as num?)?.toInt() == beneficiaryId,
+        orElse: () => <String, dynamic>{},
+      );
+    }
+
+    // Calculate years from now and end year
+    final currentYear = DateTime.now().year;
+    final yearsFromNow = endAge != null ? (endAge - 18).round() : null;
+    final endYear = yearsFromNow != null ? currentYear + yearsFromNow : null;
+
+    final paymentFrequencies = {
+      'monthly': 'Monthly',
+      'quarterly': 'Quarterly',
+      'yearly': 'Yearly',
+      'when_conditions': 'When conditions',
+    };
+
+    // Calculate payment summaries
+    String? annualTotal;
+    String? monthlyTotal;
+    if (isRegularPayments == true && paymentAmount != null && paymentFrequency != null) {
+      switch (paymentFrequency) {
+        case 'monthly':
+          annualTotal = _formatAmount(paymentAmount * 12);
+          monthlyTotal = _formatAmount(paymentAmount);
+          break;
+        case 'quarterly':
+          annualTotal = _formatAmount(paymentAmount * 4);
+          monthlyTotal = _formatAmount(paymentAmount / 3);
+          break;
+        case 'yearly':
+          annualTotal = _formatAmount(paymentAmount);
+          monthlyTotal = _formatAmount(paymentAmount / 12);
+          break;
+      }
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    widget.category['icon'] as IconData? ?? Icons.category_outlined,
+                    color: colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.category['title'] as String? ?? 'Fund Support',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _getCategoryDescription(widget.categoryId),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if ((widget.category['subtitle'] as String?)?.isNotEmpty == true) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.category['subtitle'] as String? ?? '',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (hasPendingRequest || isPaused) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (hasPendingRequest)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.pending_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Request Pending',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: Colors.blue.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (isPaused)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.orange,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.pause_circle_outline,
+                                      size: 14,
+                                      color: Colors.orange.shade700,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Paused',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: Colors.orange.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (annualTotal != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Annual Total',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          annualTotal,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: colorScheme.outline.withOpacity(0.2),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Monthly Average',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          monthlyTotal ?? 'N/A',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          // Beneficiary section with avatar
+          if (beneficiaryData != null && beneficiaryData.isNotEmpty) ...[
+            _buildBeneficiaryPreviewCard(theme, colorScheme, beneficiaryData),
+            const SizedBox(height: 16),
+          ],
+          // Duration section
+          if (durationType != null) ...[
+            _buildEnhancedPreviewSection(
+              theme,
+              colorScheme,
+              'Support Duration',
+              durationType == 'age'
+                  ? 'Until age ${endAge?.round() ?? 'N/A'}'
+                  : 'Their entire lifetime',
+              durationType == 'age' && endYear != null
+                  ? 'Ends in Year $endYear (${yearsFromNow} years from now)'
+                  : 'Continuous support throughout their lifetime',
+              Icons.calendar_today_outlined,
+              colorScheme.primaryContainer,
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Payment configuration section
+          if (isRegularPayments == true && paymentAmount != null) ...[
+            _buildEnhancedPreviewSection(
+              theme,
+              colorScheme,
+              'Payment Method',
+              'Regular Payments',
+              '${_formatAmount(paymentAmount)} ${paymentFrequency != null ? paymentFrequencies[paymentFrequency] : ''}',
+              Icons.payment_outlined,
+              colorScheme.secondaryContainer,
+            ),
+          ] else if (releaseCondition == 'as_needed') ...[
+            _buildEnhancedPreviewSection(
+              theme,
+              colorScheme,
+              'Payment Method',
+              'As Needed',
+              'Trustee decides when to release funds based on approved purposes',
+              Icons.payment_outlined,
+              colorScheme.tertiaryContainer,
+            ),
+          ] else if (releaseCondition == 'lump_sum') ...[
+            _buildEnhancedPreviewSection(
+              theme,
+              colorScheme,
+              'Payment Method',
+              'Lump Sum',
+              'All funds released when the trust period ends',
+              Icons.payment_outlined,
+              colorScheme.tertiaryContainer,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtonsFooter(ThemeData theme, ColorScheme colorScheme) {
+    final isPaused = _config['isPaused'] as bool? ?? false;
+    final hasPendingRequest = _config['hasPendingRequest'] as bool? ?? false;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            // Pause/Resume Instruction button (icon only)
+            OutlinedButton(
+              onPressed: () => _handlePauseResume(theme, colorScheme, isPaused),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(color: colorScheme.outline),
+              ),
+              child: Icon(
+                isPaused ? Icons.play_circle_outline : Icons.pause_circle_outline,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Request Fund / Cancel Request button
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                onPressed: hasPendingRequest
+                    ? () => _handleCancelRequest(theme, colorScheme)
+                    : () => _handleRequestFund(theme, colorScheme),
+                icon: Icon(
+                  hasPendingRequest ? Icons.cancel_outlined : Icons.request_quote_outlined,
+                  size: 20,
+                  color: colorScheme.onPrimary,
+                ),
+                label: Text(
+                  hasPendingRequest ? 'Cancel Request' : 'Request Fund',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: hasPendingRequest
+                      ? Colors.red
+                      : colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleRequestFund(ThemeData theme, ColorScheme colorScheme) async {
+    // Show confirmation dialog
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Request Fund'),
+          content: const Text('Are you sure you want to request funds? This will notify your trustee to process the fund request.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Request Fund'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      // Update the config with pending request status
+      setState(() {
+        _config['hasPendingRequest'] = true;
+        _savedConfig = Map<String, dynamic>.from(_config);
+        _initialConfigJson = jsonEncode(_config);
+      });
+
+      // TODO: Implement actual fund request logic
+      // This would typically involve:
+      // 1. Creating a fund request record in the database
+      // 2. Notifying the trustee
+      // 3. Updating the UI state
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Fund request submitted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleCancelRequest(ThemeData theme, ColorScheme colorScheme) async {
+    // Show confirmation dialog
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Cancel Request'),
+          content: const Text('Are you sure you want to cancel this fund request?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('No, Keep It'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Cancel Request'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      // Update the config to remove pending request status
+      setState(() {
+        _config['hasPendingRequest'] = false;
+        _savedConfig = Map<String, dynamic>.from(_config);
+        _initialConfigJson = jsonEncode(_config);
+      });
+
+      // TODO: Implement actual cancel request logic
+      // This would typically involve:
+      // 1. Updating the fund request status in the database
+      // 2. Notifying the trustee
+      // 3. Updating the UI state
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Fund request cancelled successfully'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handlePauseResume(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    bool isPaused,
+  ) async {
+    final categoryTitle = widget.category['title'] as String? ?? 'Fund';
+    
+    // Show confirmation dialog
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(isPaused ? 'Resume Instruction' : 'Pause Instruction'),
+          content: Text(
+            isPaused
+                ? 'Are you sure you want to resume the $categoryTitle instruction? Payments will continue according to the schedule.'
+                : 'Are you sure you want to pause the $categoryTitle instruction? This will temporarily stop all payments until you resume it.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(isPaused ? 'Resume' : 'Pause'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      // Update the config with pause status
+      setState(() {
+        _config['isPaused'] = !isPaused;
+        _savedConfig = Map<String, dynamic>.from(_config);
+        _initialConfigJson = jsonEncode(_config);
+      });
+
+      // TODO: Implement actual pause/resume logic
+      // This would typically involve:
+      // 1. Updating the instruction status in the database
+      // 2. Notifying the trustee
+      // 3. Updating any scheduled payments
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isPaused
+                ? '$categoryTitle instruction resumed successfully'
+                : '$categoryTitle instruction paused successfully',
+          ),
+          backgroundColor: isPaused ? Colors.green : Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Widget _buildBeneficiaryPreviewCard(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    Map<String, dynamic> beneficiary,
+  ) {
+    final String name = (beneficiary['name'] as String?) ?? 'Unknown';
+    final String? relationship = beneficiary['relationship'] as String?;
+    final String? type = beneficiary['type'] as String?;
+    final String? imagePath = beneficiary['image_path'] as String?;
+
+    // Build @handle style suffix from type
+    String? handle;
+    if (type == 'guardian') {
+      handle = '@Guardian';
+    } else if (type == 'co_sampul') {
+      handle = '@Co-Sampul';
+    } else if (type == 'future_owner') {
+      handle = '@Future Owner';
+    }
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outline.withOpacity(0.1),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundImage: imagePath != null && imagePath.isNotEmpty
+                  ? NetworkImage(
+                      SupabaseService.instance.getFullImageUrl(imagePath) ?? '',
+                    )
+                  : null,
+              backgroundColor: colorScheme.primaryContainer,
+              child: (imagePath == null || imagePath.isEmpty)
+                  ? Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Beneficiary',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (handle != null || relationship != null) ...[
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      children: [
+                        if (handle != null)
+                          Text(
+                            handle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (relationship != null && relationship.trim().isNotEmpty)
+                          Text(
+                            relationship,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnhancedPreviewSection(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    String title,
+    String mainValue,
+    String? subtitle,
+    IconData icon,
+    Color containerColor,
+  ) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outline.withOpacity(0.1),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: containerColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    mainValue,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (subtitle != null && subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCharitableContent(ThemeData theme, ColorScheme colorScheme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    widget.category['icon'] as IconData? ?? Icons.category_outlined,
+                    color: colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.category['title'] as String? ?? 'Fund Support',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _getCategoryDescription(widget.categoryId),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       if ((widget.category['subtitle'] as String?)?.isNotEmpty == true) ...[
@@ -540,6 +1722,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 48,
@@ -564,6 +1747,13 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _getCategoryDescription(widget.categoryId),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       if ((widget.category['subtitle'] as String?)?.isNotEmpty == true) ...[

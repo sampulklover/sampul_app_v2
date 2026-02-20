@@ -7,6 +7,7 @@ import '../models/user_profile.dart';
 import '../services/trust_service.dart';
 import '../services/supabase_service.dart';
 import '../config/trust_constants.dart';
+import 'trust_info_screen.dart';
 import 'edit_profile_screen.dart';
 import 'fund_support_config_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
@@ -382,6 +383,33 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
            config['durationType'] != null || 
            config['isRegularPayments'] != null || 
            config['releaseCondition'] != null;
+  }
+
+  /// Validates that at least one fund support category is selected and configured
+  bool _validateFundSupport() {
+    if (_selectedFundSupports.isEmpty) {
+      return false;
+    }
+    // Check if at least one selected category has configuration
+    for (final categoryId in _selectedFundSupports) {
+      final config = _fundSupportConfigs[categoryId];
+      if (config != null && _hasConfiguration(config)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Validates that executor selection is complete
+  bool _validateExecutorSelection() {
+    if (_executorType == null) {
+      return false;
+    }
+    // If executor type is 'someone_i_know', must have at least one executor selected
+    if (_executorType == 'someone_i_know' && _selectedExecutorIds.isEmpty) {
+      return false;
+    }
+    return true;
   }
 
   Widget _buildConfigPreviewCard({
@@ -1474,10 +1502,30 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       // Just move to next step, profile validation happens at submit
       setState(() => _currentStep = 1);
     } else if (_currentStep == 1) {
-      // Fund Support - optional, just proceed to next step
+      // Fund Support - validate at least one selected and configured
+      if (!_validateFundSupport()) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select at least one fund support category and set up its details'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
       setState(() => _currentStep = 2);
     } else if (_currentStep == 2) {
-      // Executor Selection - optional, just proceed to next step
+      // Executor Selection - validate executor is selected
+      if (!_validateExecutorSelection()) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select at least one executor'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
       setState(() => _currentStep = 3);
     } else if (_currentStep == 3) {
       if (!(_financialFormKey.currentState?.validate() ?? true)) return;
@@ -1500,6 +1548,31 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       setState(() => _currentStep = 0);
       return;
     }
+    // Validate fund support - at least one selected and configured
+    if (!_validateFundSupport()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one fund support category and set up its details'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      setState(() => _currentStep = 1);
+      return;
+    }
+    // Validate executor selection - at least one executor selected
+    if (!_validateExecutorSelection()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one executor'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      setState(() => _currentStep = 2);
+      return;
+    }
+    // Validate financial information - required
     if (!(_financialFormKey.currentState?.validate() ?? true)) {
       setState(() => _currentStep = 3);
       return;
@@ -1588,7 +1661,20 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Trust Fund')),
+      appBar: AppBar(
+        title: const Text('Create Trust Fund'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'About Trust Fund',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen(fromHelpIcon: true)),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: <Widget>[

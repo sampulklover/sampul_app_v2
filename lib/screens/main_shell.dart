@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
 import 'will_management_screen.dart';
-import 'notification_screen.dart';
 import 'enhanced_chat_conversation_screen.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
@@ -32,7 +31,6 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
     super.initState();
     _tabs = <Widget>[
       const HomeScreen(),
-      const NotificationScreen(),
       WillManagementScreen(key: _willTabKey),
       const SettingsScreen(),
     ];
@@ -203,7 +201,7 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         currentIndex: _currentIndex,
         onTap: (int index) {
           setState(() => _currentIndex = index);
-          if (index == 2) {
+          if (index == 1) {
             // Will tab became active; ensure it refreshes its data
             _willTabKey.currentState?.reload();
           }
@@ -213,7 +211,6 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), label: 'Notifications'),
           BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: 'Will'),
           BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
         ],

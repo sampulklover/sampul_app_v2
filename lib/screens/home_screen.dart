@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'asset_info_screen.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
@@ -7,25 +8,25 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
 import '../services/brandfetch_service.dart';
 import 'edit_asset_screen.dart';
+import 'add_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
 import 'family_info_screen.dart';
+import 'add_family_member_screen.dart';
 import 'trust_management_screen.dart';
 import 'trust_dashboard_screen.dart';
+import 'trust_create_screen.dart';
 import 'hibah_management_screen.dart';
-// import 'add_family_member_screen.dart';
 import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
-import 'settings_screen.dart';
 import 'will_management_screen.dart';
-import 'extra_wishes_screen.dart';
 import 'onboarding_flow_screen.dart';
-import 'chat_list_screen.dart';
 import 'aftercare_screen.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
 import 'referral_dashboard_screen.dart';
+import 'notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -180,10 +181,10 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+                    MaterialPageRoute<void>(builder: (_) => const NotificationScreen()),
                   );
                 },
-                icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                icon: const Icon(Icons.notifications_outlined, color: Colors.white),
               ),
               const SizedBox(width: 8),
             ],
@@ -415,8 +416,16 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: InkWell(
                       onTap: () async {
+                        // Check if user has seen the about page before
+                        final SharedPreferences prefs = await SharedPreferences.getInstance();
+                        final bool hasSeenAbout = prefs.getBool('trust_about_seen') ?? false;
+                        
                         final bool? created = await Navigator.of(context).push<bool>(
-                          MaterialPageRoute<bool>(builder: (_) => const TrustInfoScreen()),
+                          MaterialPageRoute<bool>(
+                            builder: (_) => hasSeenAbout 
+                                ? const TrustCreateScreen() 
+                                : const TrustInfoScreen(),
+                          ),
                         );
                         if (created == true && widget.onRefresh != null) {
                           widget.onRefresh!();
@@ -672,13 +681,11 @@ class _ActionsGrid extends StatelessWidget {
 
   // Items that go inside "Others" menu
   final List<_ActionItem> othersItems = const <_ActionItem>[
-    _ActionItem(Icons.chat_bubble_outline, 'Chat'),
     _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
     _ActionItem(Icons.family_restroom, 'Family'),
     _ActionItem(Icons.checklist_outlined, 'Checklist'),
     _ActionItem(Icons.task_alt_outlined, 'Execution'),
     _ActionItem(Icons.medical_services_outlined, 'Aftercare'),
-    _ActionItem(Icons.favorite_outline, 'Extra Wishes'),
   ];
 
   final VoidCallback? onRefresh;
@@ -711,13 +718,7 @@ class _ActionsGrid extends StatelessWidget {
   void _handleOthersItemTap(String label, BuildContext context) {
     Navigator.of(context).pop(); // Close the bottom sheet first
     
-    if (label == 'Chat') {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (context) => const ChatListScreen(),
-        ),
-      );
-    } else if (label == 'Assets') {
+    if (label == 'Assets') {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const AssetsListScreen(),
@@ -749,12 +750,6 @@ class _ActionsGrid extends StatelessWidget {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const AftercareScreen(),
-        ),
-      );
-    } else if (label == 'Extra Wishes') {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const ExtraWishesScreen(),
         ),
       );
     }
@@ -1029,9 +1024,17 @@ class _AssetsListState extends State<_AssetsList> {
           if (index == 0) {
             return GestureDetector(
               onTap: () async {
-                final bool? result = await Navigator.of(context).push(
+                // Check if user has seen the about page before
+                final SharedPreferences prefs = await SharedPreferences.getInstance();
+                final bool hasSeenAbout = prefs.getBool('assets_about_seen') ?? false;
+                
+                // If user hasn't seen about page, show it first
+                // Otherwise, go directly to add asset page
+                final bool? result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
-                    builder: (_) => const AssetInfoScreen(),
+                    builder: (_) => hasSeenAbout 
+                        ? const AddAssetScreen() 
+                        : const AssetInfoScreen(),
                   ),
                 );
                 if (result == true) {
@@ -1219,8 +1222,18 @@ class _FamilyListState extends State<_FamilyList> {
           if (index == 0) {
             return GestureDetector(
               onTap: () async {
-                final bool? created = await Navigator.of(context).push(
-                  MaterialPageRoute<bool>(builder: (_) => const FamilyInfoScreen()),
+                // Check if user has seen the about page before
+                final SharedPreferences prefs = await SharedPreferences.getInstance();
+                final bool hasSeenAbout = prefs.getBool('family_about_seen') ?? false;
+                
+                // If user hasn't seen about page, show it first
+                // Otherwise, go directly to add family member page
+                final bool? created = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(
+                    builder: (_) => hasSeenAbout 
+                        ? const AddFamilyMemberScreen() 
+                        : const FamilyInfoScreen(),
+                  ),
                 );
                 if (created == true) {
                   await _loadFamily();

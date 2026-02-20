@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -54,18 +55,18 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         // Handle case where user is null
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign in failed. Please try again.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.signInFailed)),
         );
       }
     } on AuthException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign in failed: ${error.message}')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.signInFailedWithError(error.message))),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $error')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.unexpectedError(error.toString()))),
       );
     } finally {
       if (!mounted) return;
@@ -94,18 +95,18 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         // User cancelled the sign-in flow or it failed
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google sign-in was cancelled or failed')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.googleSignInCancelled)),
         );
       }
     } on AuthException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google sign-in failed: ${error.message}')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.googleSignInFailed(error.message))),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google sign-in failed: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.googleSignInFailed(e.toString()))),
       );
     } finally {
       if (!mounted) return;
@@ -117,9 +118,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: Text(l10n.login),
       ),
       body: SafeArea(
         child: Center(
@@ -134,13 +136,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
                   const SizedBox(height: 24),
                   Text(
-                    'Welcome back',
+                    l10n.welcomeBack,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue to Sampul',
+                    l10n.signInToContinue,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
@@ -151,17 +153,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'you@example.com',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.email,
+                      hintText: l10n.emailHint,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: const OutlineInputBorder(),
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
-                      if (v.isEmpty) return 'Email is required';
+                      if (v.isEmpty) return l10n.emailRequired;
                       final RegExp emailRegex = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
-                      if (!emailRegex.hasMatch(v)) return 'Enter a valid email';
+                      if (!emailRegex.hasMatch(v)) return l10n.emailInvalid;
                       return null;
                     },
                   ),
@@ -172,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: l10n.password,
                       prefixIcon: const Icon(Icons.lock_outline),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
@@ -188,8 +190,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
-                      if (v.isEmpty) return 'Password is required';
-                      if (v.length < 6) return 'Password must be at least 6 characters';
+                      if (v.isEmpty) return l10n.passwordRequired;
+                      if (v.length < 6) return l10n.passwordMinLength;
                       return null;
                     },
                   ),
@@ -204,39 +206,66 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: const Text('Forgot password?'),
+                      child: Text(l10n.forgotPassword),
                     ),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
-                    height: 48,
+                    width: double.infinity,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
                       child: _isSubmitting
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : const Text('Login'),
+                          : Text(
+                              l10n.login,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Row(
-                    children: const <Widget>[
-                      Expanded(child: Divider()),
+                    children: <Widget>[
+                      const Expanded(child: Divider()),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('OR'),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(l10n.or),
                       ),
-                      Expanded(child: Divider()),
+                      const Expanded(child: Divider()),
                     ],
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 48,
+                    width: double.infinity,
+                    height: 56,
                     child: OutlinedButton.icon(
                       onPressed: _isGoogleSubmitting ? null : _signInWithGoogle,
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
                       icon: _isGoogleSubmitting
                           ? const SizedBox(
                               width: 20,
@@ -249,7 +278,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 20,
                             ),
                       label: Text(
-                        _isGoogleSubmitting ? 'Signing in…' : 'Continue with Google',
+                        _isGoogleSubmitting ? l10n.signingIn : l10n.continueWithGoogle,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ),
                   ),
@@ -257,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      const Text("Don't have an account?"),
+                      Text(l10n.dontHaveAccount),
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).push(
@@ -266,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text('Sign up'),
+                        child: Text(l10n.signUp),
                       ),
                     ],
                   ),

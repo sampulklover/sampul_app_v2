@@ -128,188 +128,332 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final theme = Theme.of(context);
+            final mediaQuery = MediaQuery.of(context);
+            
             return Container(
+              constraints: BoxConstraints(
+                maxHeight: mediaQuery.size.height * 0.85,
+              ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: 24,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                ),
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Have a referral code?',
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Enter your code below.',
-                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: controller,
-                        textInputAction: TextInputAction.done,
-                        textCapitalization: TextCapitalization.characters,
-                        decoration: InputDecoration(
-                          labelText: 'Referral code',
-                          hintText: 'Example: ABC123',                          prefixIcon: Icon(Icons.card_giftcard_outlined),                        ),
-                        onChanged: (_) {
-                          if (inlineError != null || inlineSuccess != null) {
-                            setModalState(() {
-                              inlineError = null;
-                              inlineSuccess = null;
-                            });
-                          }
-                        },
-                        validator: (value) {
-                          final v = (value ?? '').trim();
-                          if (v.isEmpty) return null; // optional
-                          if (v.length < 4) return 'Code looks too short';
-                          return null;
-                        },
-                      ),
-                      if (inlineError != null) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.25)),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.error_outline, color: theme.colorScheme.onErrorContainer, size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  inlineError!,
-                                  style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      if (inlineSuccess != null) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.check_circle_outline, color: const Color.fromRGBO(83, 61, 233, 1), size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  inlineSuccess!,
-                                  style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _isReferralSubmitting
-                                  ? null
-                                  : () async {
-                                      await AffiliateService.instance.clearPendingReferralCode();
-                                      if (!mounted) return;
-                                      setState(() => _referralCodePreview = null);
-                                      Navigator.of(context).pop();
-                                    },
-                              child: const Text('Clear'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: ElevatedButton(
-                              onPressed: _isReferralSubmitting
-                                  ? null
-                                  : () async {
-                                      if (!formKey.currentState!.validate()) return;
-                                      final raw = controller.text;
-                                      final normalized = AffiliateService.instance.normalizeReferralCode(raw);
-                                      if (normalized == null) {
-                                        // empty input: treat as "skip"
-                                        Navigator.of(context).pop();
-                                        return;
-                                      }
-
-                                      setModalState(() => _isReferralSubmitting = true);
-                                      try {
-                                        setModalState(() {
-                                          inlineError = null;
-                                          inlineSuccess = null;
-                                        });
-                                        await AffiliateService.instance.setPendingReferralCode(normalized);
-                                        // Try to claim immediately (user is logged in during onboarding flow).
-                                        await AffiliateService.instance.claimReferralCodeNow(normalized);
-
-                                        if (!mounted) return;
-                                        setState(() => _referralCodePreview = normalized);
-                                        setModalState(() {
-                                          inlineSuccess = 'Referral code applied';
-                                        });
-                                        // Close automatically after a short delay so user sees feedback.
-                                        Future.delayed(const Duration(milliseconds: 900), () {
-                                          if (Navigator.of(context).canPop()) {
-                                            Navigator.of(context).pop();
-                                          }
-                                        });
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        final msg = AffiliateService.instance.friendlyReferralClaimError(e);
-                                        setModalState(() {
-                                          inlineError = msg;
-                                        });
-                                      } finally {
-                                        setModalState(() => _isReferralSubmitting = false);
-                                      }
-                                    },
-                              child: _isReferralSubmitting
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Text('Apply'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
                   ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    
+                    // Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                          left: 24,
+                          right: 24,
+                          top: 8,
+                          bottom: 8,
+                        ),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Icon
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.card_giftcard_outlined,
+                                  size: 64,
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // Title
+                              Text(
+                                'Have a referral code?',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Enter your referral code below to unlock benefits',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // Text Field
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: TextFormField(
+                                  controller: controller,
+                                  textInputAction: TextInputAction.done,
+                                  textCapitalization: TextCapitalization.characters,
+                                  decoration: InputDecoration(
+                                    labelText: 'Referral code',
+                                    prefixIcon: Icon(
+                                      Icons.card_giftcard_outlined,
+                                      color: const Color.fromRGBO(83, 61, 233, 1),
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                  onChanged: (_) {
+                                    if (inlineError != null || inlineSuccess != null) {
+                                      setModalState(() {
+                                        inlineError = null;
+                                        inlineSuccess = null;
+                                      });
+                                    }
+                                  },
+                                  validator: (value) {
+                                    final v = (value ?? '').trim();
+                                    if (v.isEmpty) return null; // optional
+                                    if (v.length < 4) return 'Code looks too short';
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              
+                              // Error message
+                              if (inlineError != null) ...[
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: theme.colorScheme.error.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: theme.colorScheme.onErrorContainer,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          inlineError!,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onErrorContainer,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              
+                              // Success message
+                              if (inlineSuccess != null) ...[
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_outline,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          inlineSuccess!,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.onPrimaryContainer,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // Buttons
+                    Container(
+                      padding: EdgeInsets.only(
+                        left: 24,
+                        right: 24,
+                        top: 16,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        border: Border(
+                          top: BorderSide(
+                            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _isReferralSubmitting
+                                    ? null
+                                    : () async {
+                                        await AffiliateService.instance.clearPendingReferralCode();
+                                        if (!mounted) return;
+                                        setState(() => _referralCodePreview = null);
+                                        Navigator.of(context).pop();
+                                      },
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  side: BorderSide(color: theme.colorScheme.outline),
+                                ),
+                                child: Text(
+                                  'Clear',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: ElevatedButton(
+                                onPressed: _isReferralSubmitting
+                                    ? null
+                                    : () async {
+                                        if (!formKey.currentState!.validate()) return;
+                                        final raw = controller.text;
+                                        final normalized = AffiliateService.instance.normalizeReferralCode(raw);
+                                        if (normalized == null) {
+                                          // empty input: treat as "skip"
+                                          Navigator.of(context).pop();
+                                          return;
+                                        }
+
+                                        setModalState(() => _isReferralSubmitting = true);
+                                        try {
+                                          setModalState(() {
+                                            inlineError = null;
+                                            inlineSuccess = null;
+                                          });
+                                          await AffiliateService.instance.setPendingReferralCode(normalized);
+                                          // Try to claim immediately (user is logged in during onboarding flow).
+                                          await AffiliateService.instance.claimReferralCodeNow(normalized);
+
+                                          if (!mounted) return;
+                                          setState(() => _referralCodePreview = normalized);
+                                          setModalState(() {
+                                            inlineSuccess = 'Referral code applied';
+                                          });
+                                          // Close automatically after a short delay so user sees feedback.
+                                          Future.delayed(const Duration(milliseconds: 900), () {
+                                            if (Navigator.of(context).canPop()) {
+                                              Navigator.of(context).pop();
+                                            }
+                                          });
+                                        } catch (e) {
+                                          if (!mounted) return;
+                                          final msg = AffiliateService.instance.friendlyReferralClaimError(e);
+                                          setModalState(() {
+                                            inlineError = msg;
+                                          });
+                                        } finally {
+                                          setModalState(() => _isReferralSubmitting = false);
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: theme.colorScheme.onPrimary,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: _isReferralSubmitting
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Apply',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

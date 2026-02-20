@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/executor.dart';
 import '../services/executor_service.dart';
 import 'executor_edit_screen.dart';
 import 'executor_info_screen.dart';
+import 'executor_create_screen.dart';
 
 class ExecutorManagementScreen extends StatefulWidget {
   const ExecutorManagementScreen({super.key});
@@ -43,9 +45,18 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
   }
 
   Future<void> _createExecutor() async {
-    // Standardized flow: route through info screen first (like trust/hibah/assets/will/family)
+    // Check if user has seen the about page before
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool hasSeenAbout = prefs.getBool('executor_about_seen') ?? false;
+    
+    // If user hasn't seen about page, show it first
+    // Otherwise, go directly to create executor page
     final bool? created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => const ExecutorInfoScreen()),
+      MaterialPageRoute<bool>(
+        builder: (_) => hasSeenAbout 
+            ? const ExecutorCreateScreen() 
+            : const ExecutorInfoScreen(),
+      ),
     );
     if (created == true) await _loadExecutors();
   }
@@ -76,7 +87,7 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
             tooltip: 'About Executors',
             icon: const Icon(Icons.help_outline),
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen()));
+              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen(fromHelpIcon: true)));
             },
           ),
         ],
@@ -436,7 +447,7 @@ class _ExecutorInfoBanner extends StatelessWidget {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen()));
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen(fromHelpIcon: true)));
       },
       child: Container(
         width: double.infinity,
