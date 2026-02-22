@@ -4,6 +4,7 @@ import '../services/supabase_service.dart';
 import '../services/image_upload_service.dart';
 import '../models/relationship.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../utils/form_decoration_helper.dart';
 import 'dart:io';
 import 'family_info_screen.dart';
 
@@ -217,10 +218,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     TextFormField(
                       controller: _nameController,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.person_outline,
                       ),
                       validator: (String? v) {
                         if (v == null || v.trim().isEmpty) return 'Name is required';
@@ -233,10 +234,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Email',
-                        prefixIcon: Icon(Icons.mail_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.mail_outline,
                       ),
                       validator: (String? v) {
                         final String value = (v ?? '').trim();
@@ -249,6 +250,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRelationship,
                       isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       menuMaxHeight: 300, // Limit dropdown height
                       items: Relationship.allRelationships
                           .map((Relationship r) => DropdownMenuItem<String>(
@@ -257,10 +259,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                               ))
                           .toList(),
                       onChanged: (String? v) => setState(() => _selectedRelationship = v),
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Relationship',
-                        prefixIcon: Icon(Icons.diversity_3_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.diversity_3_outlined,
                       ),
                       validator: (String? v) {
                         if ((v ?? '').isEmpty) return 'Relationship is required';
@@ -270,14 +272,16 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedType,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       items: _typeOptions
                           .map((String t) => DropdownMenuItem<String>(value: t, child: Text(_prettyType(t))))
                           .toList(),
                       onChanged: (String? v) => setState(() => _selectedType = v ?? 'co_sampul'),
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Category',
-                        prefixIcon: Icon(Icons.category_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.category_outlined,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -302,10 +306,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       TextFormField(
                         controller: _percentageController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
+                        decoration: FormDecorationHelper.roundedInputDecoration(
+                          context: context,
                           labelText: 'Percentage (0 - 100)',
-                          prefixIcon: Icon(Icons.percent),
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icons.percent,
                         ),
                       ),
                   ],
@@ -323,10 +327,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     TextFormField(
                       controller: _nricController,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'IC/NRIC Number',
-                        prefixIcon: Icon(Icons.badge_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.badge_outlined,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -335,30 +339,30 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Phone',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.phone_outlined,
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _address1Controller,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Address Line 1',
-                        prefixIcon: Icon(Icons.home_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.home_outlined,
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _address2Controller,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Address Line 2',
-                        prefixIcon: Icon(Icons.home_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.home_outlined,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -368,10 +372,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                           child: TextFormField(
                             controller: _cityController,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'City',
-                              prefixIcon: Icon(Icons.location_city_outlined),
-                              border: OutlineInputBorder(),
+                              prefixIcon: Icons.location_city_outlined,
                             ),
                           ),
                         ),
@@ -381,10 +385,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                             controller: _postcodeController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Postcode',
-                              prefixIcon: Icon(Icons.local_post_office_outlined),
-                              border: OutlineInputBorder(),
+                              prefixIcon: Icons.local_post_office_outlined,
                             ),
                           ),
                         ),
@@ -397,10 +401,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                           child: TextFormField(
                             controller: _stateController,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'State',
-                              prefixIcon: Icon(Icons.map_outlined),
-                              border: OutlineInputBorder(),
+                              prefixIcon: Icons.map_outlined,
                             ),
                           ),
                         ),
@@ -409,14 +413,15 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedCountry,
                             isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             items: _countryOptions
                                 .map((String c) => DropdownMenuItem<String>(value: c, child: Text(_prettyCountry(c))))
                                 .toList(),
                             onChanged: (String? v) => setState(() => _selectedCountry = v),
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Country',
-                              prefixIcon: Icon(Icons.public_outlined),
-                              border: OutlineInputBorder(),
+                              prefixIcon: Icons.public_outlined,
                             ),
                           ),
                         ),

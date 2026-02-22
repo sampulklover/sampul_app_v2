@@ -7,6 +7,7 @@ import '../models/user_profile.dart';
 import '../services/trust_service.dart';
 import '../services/supabase_service.dart';
 import '../config/trust_constants.dart';
+import '../utils/form_decoration_helper.dart';
 import 'trust_info_screen.dart';
 import 'edit_profile_screen.dart';
 import 'fund_support_config_screen.dart';
@@ -1732,9 +1733,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         children: <Widget>[
                           DropdownButtonFormField<String>(
                             value: _selectedEstimatedNetWorth,
-                            decoration: const InputDecoration(
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Estimated Net Worth',
-                              prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                              prefixIcon: Icons.account_balance_wallet_outlined,
                             ),
                             items: TrustConstants.estimatedNetWorths
                                 .map((Map<String, String> item) => DropdownMenuItem<String>(
@@ -1747,9 +1751,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedSourceOfFund,
-                            decoration: const InputDecoration(
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Source of Fund',
-                              prefixIcon: Icon(Icons.payments_outlined),
+                              prefixIcon: Icons.payments_outlined,
                             ),
                             items: TrustConstants.sourceOfWealth
                                 .map((Map<String, String> item) => DropdownMenuItem<String>(
@@ -1763,9 +1770,11 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                           TextFormField(
                             controller: _purposeOfTransactionCtrl,
                             maxLines: 3,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Purpose of Transaction',
-                              prefixIcon: Icon(Icons.description_outlined),
+                              prefixIcon: Icons.description_outlined,
+                            ).copyWith(
                               alignLabelWithHint: true,
                             ),
                           ),
@@ -1783,33 +1792,37 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         children: <Widget>[
                           TextFormField(
                             controller: _employerNameCtrl,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Employer Name',
-                              prefixIcon: Icon(Icons.business_outlined),
+                              prefixIcon: Icons.business_outlined,
                             ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _businessNatureCtrl,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Business Nature',
-                              prefixIcon: Icon(Icons.work_outline),
+                              prefixIcon: Icons.work_outline,
                             ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _businessAddress1Ctrl,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Business Address Line 1',
-                              prefixIcon: Icon(Icons.location_on_outlined),
+                              prefixIcon: Icons.location_on_outlined,
                             ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _businessAddress2Ctrl,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'Business Address Line 2',
-                              prefixIcon: Icon(Icons.location_on_outlined),
+                              prefixIcon: Icons.location_on_outlined,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -1819,8 +1832,10 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                 flex: 2,
                                 child: TextFormField(
                                   controller: _businessCityCtrl,
-                                  decoration: const InputDecoration(
+                                  decoration: FormDecorationHelper.roundedInputDecoration(
+                                    context: context,
                                     labelText: 'City',
+                                    prefixIcon: Icons.location_city_outlined,
                                   ),
                                 ),
                               ),
@@ -1829,8 +1844,10 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                 child: TextFormField(
                                   controller: _businessPostcodeCtrl,
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
+                                  decoration: FormDecorationHelper.roundedInputDecoration(
+                                    context: context,
                                     labelText: 'Postcode',
+                                    prefixIcon: Icons.local_post_office_outlined,
                                   ),
                                 ),
                               ),
@@ -1842,8 +1859,10 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                               Expanded(
                                 child: TextFormField(
                                   controller: _businessStateCtrl,
-                                  decoration: const InputDecoration(
+                                  decoration: FormDecorationHelper.roundedInputDecoration(
+                                    context: context,
                                     labelText: 'State',
+                                    prefixIcon: Icons.map_outlined,
                                   ),
                                 ),
                               ),
@@ -1851,8 +1870,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                               Expanded(
                                 child: DropdownButtonFormField<String>(
                                   value: _selectedBusinessCountry,
-                                  decoration: const InputDecoration(
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                                  decoration: FormDecorationHelper.roundedInputDecoration(
+                                    context: context,
                                     labelText: 'Country',
+                                    prefixIcon: Icons.public_outlined,
                                   ),
                                   items: TrustConstants.countries
                                       .map((Map<String, String> item) => DropdownMenuItem<String>(

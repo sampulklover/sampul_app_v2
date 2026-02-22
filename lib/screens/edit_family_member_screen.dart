@@ -4,6 +4,7 @@ import '../controllers/auth_controller.dart';
 import '../services/image_upload_service.dart';
 import '../services/will_service.dart';
 import '../models/relationship.dart';
+import '../utils/form_decoration_helper.dart';
 import 'dart:io';
 
 class EditFamilyMemberScreen extends StatefulWidget {
@@ -280,10 +281,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _nameController,
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Full Name',
-                                prefixIcon: Icon(Icons.person_outline),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.person_outline,
                               ),
                               validator: (String? v) {
                                 if (v == null || v.trim().isEmpty) return 'Name is required';
@@ -295,10 +296,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Email',
-                                prefixIcon: Icon(Icons.mail_outline),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.mail_outline,
                               ),
                               validator: (String? v) {
                                 final String value = (v ?? '').trim();
@@ -312,6 +313,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             DropdownButtonFormField<String>(
                               initialValue: _relationship,
                               isExpanded: true,
+                              icon: const Icon(Icons.keyboard_arrow_down_outlined),
                               menuMaxHeight: 300, // Limit dropdown height
                               items: Relationship.allRelationships
                                   .map((Relationship r) => DropdownMenuItem<String>(
@@ -320,24 +322,26 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                       ))
                                   .toList(),
                               onChanged: (String? v) => setState(() => _relationship = v),
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Relationship',
-                                prefixIcon: Icon(Icons.diversity_3_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.diversity_3_outlined,
                               ),
                               validator: (String? v) => ((v ?? '').isEmpty) ? 'Relationship is required' : null,
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               initialValue: _type,
+                              isExpanded: true,
+                              icon: const Icon(Icons.keyboard_arrow_down_outlined),
                               items: _typeOptions
                                   .map((String t) => DropdownMenuItem<String>(value: t, child: Text(t == 'future_owner' ? 'Beneficiary' : (t == 'co_sampul' ? 'Co-sampul (Executor)' : 'Guardian'))))
                                   .toList(),
                               onChanged: (String? v) => setState(() => _type = v ?? 'co_sampul'),
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Category',
-                                prefixIcon: Icon(Icons.category_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.category_outlined,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -345,10 +349,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                               TextFormField(
                                 controller: _percentageController,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(
+                                decoration: FormDecorationHelper.roundedInputDecoration(
+                                  context: context,
                                   labelText: 'Percentage (0 - 100)',
-                                  prefixIcon: Icon(Icons.percent),
-                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icons.percent,
                                 ),
                               ),
                           ],
@@ -368,20 +372,20 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _nricController,
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'IC/NRIC Number',
-                                prefixIcon: Icon(Icons.badge_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.badge_outlined,
                               ),
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Phone',
-                                prefixIcon: Icon(Icons.phone_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.phone_outlined,
                               ),
                             ),
                           ],
@@ -401,19 +405,19 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _address1Controller,
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Address Line 1',
-                                prefixIcon: Icon(Icons.home_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.home_outlined,
                               ),
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _address2Controller,
-                              decoration: const InputDecoration(
+                              decoration: FormDecorationHelper.roundedInputDecoration(
+                                context: context,
                                 labelText: 'Address Line 2',
-                                prefixIcon: Icon(Icons.home_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: Icons.home_outlined,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -422,10 +426,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 Expanded(
                                   child: TextFormField(
                                     controller: _cityController,
-                                    decoration: const InputDecoration(
+                                    decoration: FormDecorationHelper.roundedInputDecoration(
+                                      context: context,
                                       labelText: 'City',
-                                      prefixIcon: Icon(Icons.location_city_outlined),
-                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icons.location_city_outlined,
                                     ),
                                   ),
                                 ),
@@ -434,10 +438,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                   child: TextFormField(
                                     controller: _postcodeController,
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
+                                    decoration: FormDecorationHelper.roundedInputDecoration(
+                                      context: context,
                                       labelText: 'Postcode',
-                                      prefixIcon: Icon(Icons.local_post_office_outlined),
-                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icons.local_post_office_outlined,
                                     ),
                                   ),
                                 ),
@@ -449,10 +453,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 Expanded(
                                   child: TextFormField(
                                     controller: _stateController,
-                                    decoration: const InputDecoration(
+                                    decoration: FormDecorationHelper.roundedInputDecoration(
+                                      context: context,
                                       labelText: 'State',
-                                      prefixIcon: Icon(Icons.map_outlined),
-                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icons.map_outlined,
                                     ),
                                   ),
                                 ),
@@ -461,14 +465,15 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                   child: DropdownButtonFormField<String>(
                                     initialValue: _country,
                                     isExpanded: true,
+                                    icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                     items: _countryOptions
                                         .map((String c) => DropdownMenuItem<String>(value: c, child: Text(c[0].toUpperCase()+c.substring(1))))
                                         .toList(),
                                     onChanged: (String? v) => setState(() => _country = v),
-                                    decoration: const InputDecoration(
+                                    decoration: FormDecorationHelper.roundedInputDecoration(
+                                      context: context,
                                       labelText: 'Country',
-                                      prefixIcon: Icon(Icons.public_outlined),
-                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icons.public_outlined,
                                     ),
                                   ),
                                 ),

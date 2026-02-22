@@ -437,6 +437,7 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                                 DropdownButtonFormField<int>(
                                   value: _selectedMaxTokens,
                                   isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -502,6 +503,7 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                                 DropdownButtonFormField<double>(
                                   value: _selectedTemperature,
                                   isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),

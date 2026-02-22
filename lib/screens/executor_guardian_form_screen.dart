@@ -226,6 +226,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<int>(
                             value: _selectedGuardianFamilyMemberId,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(
                               labelText: 'Select Family Member',                              prefixIcon: Icon(Icons.person_search),                            ),
                             items: [
@@ -359,6 +361,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedGuardianRelationship,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
                   decoration: InputDecoration(
                     labelText: 'Relationship with Deceased',                    prefixIcon: Icon(Icons.people_outline),                  ),
                   items: ExecutorConstants.executorRelationships
@@ -423,6 +427,8 @@ class _ExecutorGuardianFormScreenState extends State<ExecutorGuardianFormScreen>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: _selectedGuardianCountry,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_outlined),
                         decoration: InputDecoration(
                           labelText: 'Country',                        ),
                         items: ExecutorConstants.countries

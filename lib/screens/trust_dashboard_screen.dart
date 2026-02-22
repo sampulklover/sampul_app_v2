@@ -593,7 +593,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                                 'Family Account',
                                                 style: theme.textTheme.titleMedium?.copyWith(
                                                   fontWeight: FontWeight.w700,
-                                                  color: colorScheme.primary,
+                                                  color: const Color.fromRGBO(83, 61, 233, 1),
                                                 ),
                                               ),
                                               if (_trust.trustCode != null) ...[

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/form_decoration_helper.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -82,11 +83,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
-                    decoration: const InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: 'Email',
                       hintText: 'you@example.com',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icons.email_outlined,
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
