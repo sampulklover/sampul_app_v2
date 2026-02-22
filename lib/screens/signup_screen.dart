@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'login_screen.dart';
 import 'main_shell.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/form_decoration_helper.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -164,10 +165,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: _nameController,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: 'Full name',
-                      prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icons.person_outline,
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
@@ -181,11 +182,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: 'Email',
                       hintText: 'you@example.com',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icons.email_outlined,
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
@@ -200,10 +201,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: Icons.lock_outline,
+                    ).copyWith(
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
@@ -228,10 +230,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: !_isConfirmPasswordVisible,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: 'Confirm password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: Icons.lock_outline,
+                    ).copyWith(
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {

@@ -71,5 +71,47 @@
   "selectLanguage": "Pilih Bahasa",
   "english": "Bahasa Inggeris",
   "malay": "Bahasa Melayu",
-  "languageChanged": "Bahasa telah ditukar"
+  "languageChanged": "Bahasa telah ditukar",
+  
+  "assalamualaikum": "Assalamualaikum...",
+  "assalamualaikumWithName": "Assalamualaikum, {name}",
+  "@assalamualaikumWithName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "referrals": "Rujukan",
+  "myAssets": "Aset Saya",
+  "seeAll": "Lihat Semua →",
+  "myFamily": "Keluarga Saya",
+  "submitted": "Dihantar",
+  "approved": "Diluluskan",
+  "rejected": "Ditolak",
+  "draft": "Draf",
+  "yourPlanIsActive": "Pelan anda aktif",
+  "familyAccount": "Akaun Keluarga",
+  "createYourFirstTrustFund": "Cipta Amanah Keluarga Pertama Anda",
+  "addNewTrustFund": "Tambah Amanah Keluarga Baru",
+  "tapToGetStarted": "Ketik untuk mula",
+  "will": "Wasiat",
+  "hibah": "Hibah",
+  "trust": "Amanah",
+  "others": "Lain-lain",
+  "assets": "Aset",
+  "family": "Keluarga",
+  "checklist": "Senarai Semak",
+  "execution": "Pelaksanaan",
+  "aftercare": "Penjagaan Selepas",
+  "add": "Tambah",
+  "loading": "Memuatkan...",
+  "unknown": "Tidak diketahui",
+  "faraid": "Faraid",
+  "terminateSubscriptions": "Tamatkan Langganan",
+  "transferAsGift": "Pindahkan sebagai Hadiah",
+  "settleDebts": "Selesaikan Hutang",
+  "coSampul": "Co-sampul",
+  "beneficiary": "Penerima Manfaat",
+  "guardian": "Penjaga"
 }

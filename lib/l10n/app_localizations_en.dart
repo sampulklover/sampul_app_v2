@@ -148,4 +148,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageChanged => 'Language changed';
+
+  @override
+  String get assalamualaikum => 'Assalamualaikum...';
+
+  @override
+  String assalamualaikumWithName(String name) {
+    return 'Assalamualaikum, $name';
+  }
+
+  @override
+  String get referrals => 'Referrals';
+
+  @override
+  String get myAssets => 'My Assets';
+
+  @override
+  String get seeAll => 'See All →';
+
+  @override
+  String get myFamily => 'My Family';
+
+  @override
+  String get submitted => 'Submitted';
+
+  @override
+  String get approved => 'Approved';
+
+  @override
+  String get rejected => 'Rejected';
+
+  @override
+  String get draft => 'Draft';
+
+  @override
+  String get yourPlanIsActive => 'Your plan is active';
+
+  @override
+  String get familyAccount => 'Family Account';
+
+  @override
+  String get createYourFirstTrustFund => 'Create Your First Trust Fund';
+
+  @override
+  String get addNewTrustFund => 'Add New Trust Fund';
+
+  @override
+  String get tapToGetStarted => 'Tap to get started';
+
+  @override
+  String get will => 'Will';
+
+  @override
+  String get hibah => 'Hibah';
+
+  @override
+  String get trust => 'Trust';
+
+  @override
+  String get others => 'Others';
+
+  @override
+  String get assets => 'Assets';
+
+  @override
+  String get family => 'Family';
+
+  @override
+  String get checklist => 'Checklist';
+
+  @override
+  String get execution => 'Execution';
+
+  @override
+  String get aftercare => 'Aftercare';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get faraid => 'Faraid';
+
+  @override
+  String get terminateSubscriptions => 'Terminate Subscriptions';
+
+  @override
+  String get transferAsGift => 'Transfer as Gift';
+
+  @override
+  String get settleDebts => 'Settle Debts';
+
+  @override
+  String get coSampul => 'Co-sampul';
+
+  @override
+  String get beneficiary => 'Beneficiary';
+
+  @override
+  String get guardian => 'Guardian';
 }

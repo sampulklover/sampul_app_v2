@@ -157,6 +157,8 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _selectedCategory,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       decoration: InputDecoration(labelText: 'Category',
                       ),
                       items: TrustConstants.donationCategories
@@ -202,6 +204,7 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                     DropdownButtonFormField<String>(
                       value: _selectedBank,
                       isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       decoration: InputDecoration(labelText: 'Bank *',
                       ),
                       items: TrustConstants.banks
@@ -247,6 +250,8 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             value: _selectedDonationDuration,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(labelText: 'Frequency *',
                             ),
                             items: TrustConstants.donationDurations
@@ -356,6 +361,8 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedCountry,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(
                               labelText: 'Country',                            ),
                             items: TrustConstants.countries

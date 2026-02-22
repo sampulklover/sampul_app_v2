@@ -5,6 +5,7 @@ import '../config/trust_constants.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import '../services/image_upload_service.dart';
+import '../utils/form_decoration_helper.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -376,11 +377,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Username',
                         hintText: 'Enter your username',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.person_outline,
                       ),
                     ),
                     
@@ -388,11 +389,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _nricNameController,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Full Name (NRIC)',
                         hintText: 'Enter your full name as per NRIC',
-                        prefixIcon: Icon(Icons.badge_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.badge_outlined,
                       ),
                     ),
                     
@@ -400,11 +401,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _phoneNoController,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Phone Number',
                         hintText: 'Enter your phone number',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.phone_outlined,
                       ),
                       keyboardType: TextInputType.phone,
                     ),
@@ -413,10 +414,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     DropdownButtonFormField<String>(
                       value: _selectedGender,
-                      decoration: const InputDecoration(
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Gender',
-                        prefixIcon: Icon(Icons.wc_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.wc_outlined,
                       ),
                       items: TrustConstants.genders
                           .map(
@@ -433,11 +436,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Email',
                         hintText: 'Enter your email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.email_outlined,
                       ),
                       keyboardType: TextInputType.emailAddress,
                       enabled: false, // Email cannot be changed
@@ -477,11 +480,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _address1Controller,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Address Line 1',
                         hintText: 'Enter your address',
-                        prefixIcon: Icon(Icons.home_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.home_outlined,
                       ),
                     ),
                     
@@ -489,11 +492,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _address2Controller,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Address Line 2',
                         hintText: 'Enter additional address details',
-                        prefixIcon: Icon(Icons.home_work_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.home_work_outlined,
                       ),
                     ),
                     
@@ -505,11 +508,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           flex: 2,
                           child: TextFormField(
                             controller: _cityController,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'City',
                               hintText: 'Enter city',
-                              prefixIcon: Icon(Icons.location_city_outlined),
-                              border: OutlineInputBorder(),
+                              prefixIcon: Icons.location_city_outlined,
                             ),
                           ),
                         ),
@@ -517,11 +520,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _stateController,
-                            decoration: const InputDecoration(
+                            decoration: FormDecorationHelper.roundedInputDecoration(
+                              context: context,
                               labelText: 'State',
                               hintText: 'State',
-                              prefixIcon: Icon(Icons.map_outlined),
-                              border: OutlineInputBorder(),
+                              prefixIcon: Icons.map_outlined,
                             ),
                           ),
                         ),
@@ -532,11 +535,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     TextFormField(
                       controller: _postcodeController,
-                      decoration: const InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Postcode',
                         hintText: 'Enter postcode',
-                        prefixIcon: Icon(Icons.local_post_office_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.local_post_office_outlined,
                       ),
                       keyboardType: TextInputType.number,
                     ),
@@ -545,10 +548,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     
                     DropdownButtonFormField<String>(
                       value: _selectedCountry,
-                      decoration: const InputDecoration(
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
                         labelText: 'Country',
-                        prefixIcon: Icon(Icons.public_outlined),
-                        border: OutlineInputBorder(),
+                        prefixIcon: Icons.public_outlined,
                       ),
                       items: TrustConstants.countries
                           .map(

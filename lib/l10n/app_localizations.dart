@@ -355,6 +355,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language changed'**
   String get languageChanged;
+
+  /// No description provided for @assalamualaikum.
+  ///
+  /// In en, this message translates to:
+  /// **'Assalamualaikum...'**
+  String get assalamualaikum;
+
+  /// No description provided for @assalamualaikumWithName.
+  ///
+  /// In en, this message translates to:
+  /// **'Assalamualaikum, {name}'**
+  String assalamualaikumWithName(String name);
+
+  /// No description provided for @referrals.
+  ///
+  /// In en, this message translates to:
+  /// **'Referrals'**
+  String get referrals;
+
+  /// No description provided for @myAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'My Assets'**
+  String get myAssets;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See All →'**
+  String get seeAll;
+
+  /// No description provided for @myFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'My Family'**
+  String get myFamily;
+
+  /// No description provided for @submitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted'**
+  String get submitted;
+
+  /// No description provided for @approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get approved;
+
+  /// No description provided for @rejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get rejected;
+
+  /// No description provided for @draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get draft;
+
+  /// No description provided for @yourPlanIsActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan is active'**
+  String get yourPlanIsActive;
+
+  /// No description provided for @familyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Account'**
+  String get familyAccount;
+
+  /// No description provided for @createYourFirstTrustFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your First Trust Fund'**
+  String get createYourFirstTrustFund;
+
+  /// No description provided for @addNewTrustFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Trust Fund'**
+  String get addNewTrustFund;
+
+  /// No description provided for @tapToGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to get started'**
+  String get tapToGetStarted;
+
+  /// No description provided for @will.
+  ///
+  /// In en, this message translates to:
+  /// **'Will'**
+  String get will;
+
+  /// No description provided for @hibah.
+  ///
+  /// In en, this message translates to:
+  /// **'Hibah'**
+  String get hibah;
+
+  /// No description provided for @trust.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust'**
+  String get trust;
+
+  /// No description provided for @others.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get others;
+
+  /// No description provided for @assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get assets;
+
+  /// No description provided for @family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get family;
+
+  /// No description provided for @checklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get checklist;
+
+  /// No description provided for @execution.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution'**
+  String get execution;
+
+  /// No description provided for @aftercare.
+  ///
+  /// In en, this message translates to:
+  /// **'Aftercare'**
+  String get aftercare;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @faraid.
+  ///
+  /// In en, this message translates to:
+  /// **'Faraid'**
+  String get faraid;
+
+  /// No description provided for @terminateSubscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminate Subscriptions'**
+  String get terminateSubscriptions;
+
+  /// No description provided for @transferAsGift.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer as Gift'**
+  String get transferAsGift;
+
+  /// No description provided for @settleDebts.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle Debts'**
+  String get settleDebts;
+
+  /// No description provided for @coSampul.
+  ///
+  /// In en, this message translates to:
+  /// **'Co-sampul'**
+  String get coSampul;
+
+  /// No description provided for @beneficiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Beneficiary'**
+  String get beneficiary;
+
+  /// No description provided for @guardian.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian'**
+  String get guardian;
 }
 
 class _AppLocalizationsDelegate

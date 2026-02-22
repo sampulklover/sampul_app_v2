@@ -90,18 +90,22 @@ class MyApp extends StatelessWidget {
               locale: locale,
           theme: ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(83, 61, 233, 1)),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color.fromARGB(156, 136, 122, 226),
+            ).copyWith(
+              primary: const Color.fromRGBO(83, 61, 233, 100),
+            ),
             brightness: Brightness.light,
             scaffoldBackgroundColor: const Color.fromRGBO(250, 250, 250, 1),
             textTheme: GoogleFonts.interTextTheme(),
             iconTheme: const IconThemeData(
-              color: Color.fromRGBO(83, 61, 233, 1),
+              color: Color.fromRGBO(83, 61, 233, 100),
             ),
             appBarTheme: const AppBarTheme(
               backgroundColor: Color.fromRGBO(255, 255, 255, 1),
               elevation: 1,
               iconTheme: IconThemeData(
-                color: Color.fromRGBO(83, 61, 233, 1),
+                color: Color.fromRGBO(83, 61, 233, 100),
               ),
             ),
             cardTheme: const CardThemeData(
@@ -109,24 +113,29 @@ class MyApp extends StatelessWidget {
             ),
             bottomNavigationBarTheme: const BottomNavigationBarThemeData(
               backgroundColor: Colors.white,
-              selectedItemColor: Color.fromRGBO(83, 61, 233, 1),
+              selectedItemColor: Color.fromRGBO(83, 61, 233, 100),
               unselectedItemColor: Colors.grey,
             ),
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(83, 61, 233, 1), brightness: Brightness.dark),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color.fromRGBO(83, 61, 233, 100),
+              brightness: Brightness.dark,
+            ).copyWith(
+              primary: const Color.fromRGBO(83, 61, 233, 100),
+            ),
             brightness: Brightness.dark,
             scaffoldBackgroundColor: const Color.fromRGBO(18, 18, 18, 1),
             textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
             iconTheme: const IconThemeData(
-              color: Color.fromRGBO(83, 61, 233, 1),
+              color: Color.fromRGBO(83, 61, 233, 100),
             ),
             appBarTheme: const AppBarTheme(
               backgroundColor: Color.fromRGBO(30, 30, 30, 1),
               elevation: 1,
               iconTheme: IconThemeData(
-                color: Color.fromRGBO(83, 61, 233, 1),
+                color: Color.fromRGBO(83, 61, 233, 100),
               ),
             ),
             cardTheme: const CardThemeData(
@@ -134,7 +143,7 @@ class MyApp extends StatelessWidget {
             ),
             bottomNavigationBarTheme: const BottomNavigationBarThemeData(
               backgroundColor: Color.fromRGBO(30, 30, 30, 1),
-              selectedItemColor: Color.fromRGBO(83, 61, 233, 1),
+              selectedItemColor: Color.fromRGBO(83, 61, 233, 100),
               unselectedItemColor: Colors.grey,
             ),
           ),

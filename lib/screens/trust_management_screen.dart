@@ -370,7 +370,7 @@ class _TrustSummaryCard extends StatelessWidget {
                                 title,
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: scheme.primary,
+                                  color: const Color.fromRGBO(83, 61, 233, 1),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

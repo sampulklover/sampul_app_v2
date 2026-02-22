@@ -3,6 +3,7 @@ import '../config/executor_constants.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
+import '../utils/form_decoration_helper.dart';
 import 'edit_profile_screen.dart';
 import 'executor_deceased_form_screen.dart';
 import 'executor_guardian_form_screen.dart';
@@ -274,8 +275,13 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedRelationship,
-              decoration: InputDecoration(
-                labelText: 'Relationship with Deceased *',                prefixIcon: Icon(Icons.people_outline),              ),
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_outlined),
+              decoration: FormDecorationHelper.roundedInputDecoration(
+                context: context,
+                labelText: 'Relationship with Deceased *',
+                prefixIcon: Icons.people_outline,
+              ),
               items: ExecutorConstants.executorRelationships
                   .map((r) => DropdownMenuItem<String>(
                         value: r['value'],
@@ -302,8 +308,11 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _otherRelationshipCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Other Relationship *',                ),
+                decoration: FormDecorationHelper.roundedInputDecoration(
+                  context: context,
+                  labelText: 'Other Relationship *',
+                  prefixIcon: Icons.edit_outlined,
+                ),
                 validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
               ),
             ],
@@ -314,8 +323,11 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   child: TextFormField(
                     controller: _applicantHomePhoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'Home Phone',                      prefixIcon: Icon(Icons.home_outlined),                    ),
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Home Phone',
+                      prefixIcon: Icons.home_outlined,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -323,8 +335,11 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   child: TextFormField(
                     controller: _applicantOfficePhoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'Office Phone',                      prefixIcon: Icon(Icons.business_outlined),                    ),
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Office Phone',
+                      prefixIcon: Icons.business_outlined,
+                    ),
                   ),
                 ),
               ],
@@ -359,15 +374,21 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _correspondenceAddress1Ctrl,
-                decoration: InputDecoration(
-                  labelText: 'Address Line 1 *',                ),
+                decoration: FormDecorationHelper.roundedInputDecoration(
+                  context: context,
+                  labelText: 'Address Line 1 *',
+                  prefixIcon: Icons.home_outlined,
+                ),
                 validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _correspondenceAddress2Ctrl,
-                decoration: InputDecoration(
-                  labelText: 'Address Line 2',                ),
+                decoration: FormDecorationHelper.roundedInputDecoration(
+                  context: context,
+                  labelText: 'Address Line 2',
+                  prefixIcon: Icons.home_work_outlined,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -376,8 +397,11 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                     flex: 2,
                     child: TextFormField(
                       controller: _correspondenceCityCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'City *',                      ),
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'City *',
+                        prefixIcon: Icons.location_city_outlined,
+                      ),
                       validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                     ),
                   ),
@@ -386,8 +410,11 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                     child: TextFormField(
                       controller: _correspondencePostcodeCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Postcode *',                      ),
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'Postcode *',
+                        prefixIcon: Icons.local_post_office_outlined,
+                      ),
                       validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                     ),
                   ),
@@ -399,8 +426,11 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _correspondenceStateCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'State *',                      ),
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'State *',
+                        prefixIcon: Icons.map_outlined,
+                      ),
                       validator: (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null,
                     ),
                   ),
@@ -408,8 +438,13 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       value: _selectedCorrespondenceCountry,
-                      decoration: InputDecoration(
-                        labelText: 'Country *',                      ),
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'Country *',
+                        prefixIcon: Icons.public_outlined,
+                      ),
                       items: ExecutorConstants.countries
                           .map((c) => DropdownMenuItem<String>(
                                 value: c['value'],
@@ -615,31 +650,27 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
             TextFormField(
               controller: _supportingDocumentsCtrl,
               maxLines: 5,
-              decoration: InputDecoration(
+              decoration: FormDecorationHelper.roundedInputDecoration(
+                context: context,
                 labelText: 'Supporting Documents',
                 hintText: 'List the documents you have (e.g., Death certificate, Will, Identity documents, etc.)',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: Icon(Icons.description_outlined),
-                alignLabelWithHint: true,                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                ),
+                prefixIcon: Icons.description_outlined,
+              ).copyWith(
+                alignLabelWithHint: true,
               ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _additionalNotesCtrl,
               maxLines: 5,
-              decoration: InputDecoration(
+              decoration: FormDecorationHelper.roundedInputDecoration(
+                context: context,
                 labelText: 'Additional Notes',
-                hintText: 'Any additional information that might help with your executor registration...',                prefixIcon: Icon(Icons.note_outlined),
-                alignLabelWithHint: true,              ),
+                hintText: 'Any additional information that might help with your executor registration...',
+                prefixIcon: Icons.note_outlined,
+              ).copyWith(
+                alignLabelWithHint: true,
+              ),
             ),
           ],
         ),

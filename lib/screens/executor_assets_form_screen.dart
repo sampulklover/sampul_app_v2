@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/form_decoration_helper.dart';
 
 class ExecutorAssetsFormScreen extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -67,22 +68,31 @@ class _ExecutorAssetsFormScreenState extends State<ExecutorAssetsFormScreen> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name/Description',                ),
+                decoration: FormDecorationHelper.roundedInputDecoration(
+                  context: context,
+                  labelText: 'Name/Description',
+                  prefixIcon: Icons.description_outlined,
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: valueController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Value (RM)',                ),
+                decoration: FormDecorationHelper.roundedInputDecoration(
+                  context: context,
+                  labelText: 'Value (RM)',
+                  prefixIcon: Icons.attach_money_outlined,
+                ),
               ),
               if (type == 'Beneficiary') ...[
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Additional Details',                  ),
+                  decoration: FormDecorationHelper.roundedInputDecoration(
+                    context: context,
+                    labelText: 'Additional Details',
+                    prefixIcon: Icons.note_outlined,
+                  ),
                   maxLines: 2,
                 ),
               ],
