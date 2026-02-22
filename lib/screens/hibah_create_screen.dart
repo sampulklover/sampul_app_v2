@@ -1010,6 +1010,8 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: _assetType,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
                   decoration: _fieldDecoration('Asset type'),
                   items: _assetTypes
                       .map(
@@ -1047,6 +1049,8 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
               children: <Widget>[
                 DropdownButtonFormField<String>(
                   initialValue: _loanStatus,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
                   decoration: _fieldDecoration('Loan status'),
                   items: _loanStatuses
                       .map(
@@ -1244,6 +1248,7 @@ class _BeneficiaryFormState extends State<_BeneficiaryForm> {
                   decoration: InputDecoration(labelText: 'Select from family',
                   ),
                   isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
                   items: widget.belovedOptions
                       .map(
                         (option) => DropdownMenuItem<int>(
@@ -1401,6 +1406,7 @@ class _HibahDocumentFormScreenState extends State<_HibahDocumentFormScreen> {
                       initialValue: _selectedDocType,
                       decoration: _sheetDecoration('Document type'),
                       isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       validator: (String? v) => v == null ? 'Required' : null,
                       items: _buildDocTypeItems(),
                       onChanged: (String? value) {
@@ -1426,6 +1432,7 @@ class _HibahDocumentFormScreenState extends State<_HibahDocumentFormScreen> {
                             : 'Optional',
                       ),
                       isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       items: widget.assets
                           .map(
                             (HibahGroupRequest asset) =>

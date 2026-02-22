@@ -152,4 +152,108 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get languageChanged => 'Bahasa telah ditukar';
+
+  @override
+  String get assalamualaikum => 'Assalamualaikum...';
+
+  @override
+  String assalamualaikumWithName(String name) {
+    return 'Assalamualaikum, $name';
+  }
+
+  @override
+  String get referrals => 'Rujukan';
+
+  @override
+  String get myAssets => 'Aset Saya';
+
+  @override
+  String get seeAll => 'Lihat Semua →';
+
+  @override
+  String get myFamily => 'Keluarga Saya';
+
+  @override
+  String get submitted => 'Dihantar';
+
+  @override
+  String get approved => 'Diluluskan';
+
+  @override
+  String get rejected => 'Ditolak';
+
+  @override
+  String get draft => 'Draf';
+
+  @override
+  String get yourPlanIsActive => 'Pelan anda aktif';
+
+  @override
+  String get familyAccount => 'Akaun Keluarga';
+
+  @override
+  String get createYourFirstTrustFund => 'Cipta Amanah Keluarga Pertama Anda';
+
+  @override
+  String get addNewTrustFund => 'Tambah Amanah Keluarga Baru';
+
+  @override
+  String get tapToGetStarted => 'Ketik untuk mula';
+
+  @override
+  String get will => 'Wasiat';
+
+  @override
+  String get hibah => 'Hibah';
+
+  @override
+  String get trust => 'Amanah';
+
+  @override
+  String get others => 'Lain-lain';
+
+  @override
+  String get assets => 'Aset';
+
+  @override
+  String get family => 'Keluarga';
+
+  @override
+  String get checklist => 'Senarai Semak';
+
+  @override
+  String get execution => 'Pelaksanaan';
+
+  @override
+  String get aftercare => 'Penjagaan Selepas';
+
+  @override
+  String get add => 'Tambah';
+
+  @override
+  String get loading => 'Memuatkan...';
+
+  @override
+  String get unknown => 'Tidak diketahui';
+
+  @override
+  String get faraid => 'Faraid';
+
+  @override
+  String get terminateSubscriptions => 'Tamatkan Langganan';
+
+  @override
+  String get transferAsGift => 'Pindahkan sebagai Hadiah';
+
+  @override
+  String get settleDebts => 'Selesaikan Hutang';
+
+  @override
+  String get coSampul => 'Co-sampul';
+
+  @override
+  String get beneficiary => 'Penerima Manfaat';
+
+  @override
+  String get guardian => 'Penjaga';
 }

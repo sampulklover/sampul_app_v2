@@ -1074,6 +1074,8 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                             children: <Widget>[
                               DropdownButtonFormField<String>(
                                 value: _selectedEstimatedNetWorth,
+                                isExpanded: true,
+                                icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                 decoration: const InputDecoration(
                                   labelText: 'Estimated Net Worth',
                                 ),
@@ -1088,6 +1090,8 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                               const SizedBox(height: 12),
                               DropdownButtonFormField<String>(
                                 value: _selectedSourceOfFund,
+                                isExpanded: true,
+                                icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                 decoration: const InputDecoration(
                                   labelText: 'Source of Fund',
                                 ),
@@ -1190,6 +1194,8 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
                                       value: _selectedBusinessCountry,
+                                      isExpanded: true,
+                                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                       decoration: const InputDecoration(
                                         labelText: 'Country',
                                       ),

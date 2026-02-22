@@ -257,6 +257,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                       const SizedBox(height: 12),
                       DropdownButtonFormField<int>(
                         value: _selectedFamilyMemberId,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_outlined),
                         decoration: InputDecoration(
                           labelText: 'Select Family Member',                        ),
                         items: [
@@ -350,6 +352,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _selectedRelationship,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       decoration: InputDecoration(
                         labelText: 'Relationship *',                      ),
                       items: TrustConstants.relationships
@@ -608,6 +612,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedGender,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(
                               labelText: 'Gender',                            ),
                             items: TrustConstants.genders
@@ -621,6 +627,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedResidentStatus,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(
                               labelText: 'Resident Status',                            ),
                             items: TrustConstants.residentStatus
@@ -634,6 +642,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedNationality,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(
                               labelText: 'Nationality',                            ),
                             items: TrustConstants.countries
@@ -711,6 +721,8 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedCountry,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: InputDecoration(
                               labelText: 'Country',                            ),
                             items: TrustConstants.countries

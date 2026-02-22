@@ -4,6 +4,7 @@ import '../controllers/auth_controller.dart';
 import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../utils/form_decoration_helper.dart';
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'asset_info_screen.dart';
@@ -75,11 +76,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                   controller: nameController,
                   autofocus: true,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
+                  decoration: FormDecorationHelper.roundedInputDecoration(
+                    context: context,
                     labelText: 'Asset Name *',
                     hintText: 'e.g., My Custom Platform',
-                    prefixIcon: Icon(Icons.apps_outlined),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icons.apps_outlined,
                   ),
                   validator: (String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                 ),
@@ -88,11 +89,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                   controller: urlController,
                   keyboardType: TextInputType.url,
                   textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(
+                  decoration: FormDecorationHelper.roundedInputDecoration(
+                    context: context,
                     labelText: 'Website URL (optional)',
                     hintText: 'https://example.com',
-                    prefixIcon: Icon(Icons.link_outlined),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icons.link_outlined,
                   ),
                 ),
               ],
@@ -403,11 +404,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       children: <Widget>[
         TextField(
           controller: _brandSearchController,
-          decoration: const InputDecoration(
+          decoration: FormDecorationHelper.roundedInputDecoration(
+            context: context,
             labelText: 'Search for a platform or service',
             hintText: 'e.g., Facebook, Google Drive, Maybank',
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(),
+            prefixIcon: Icons.search,
           ),
           onChanged: _onSearchChanged,
         ),
@@ -493,11 +494,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           inputFormatters: <TextInputFormatter>[
             FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]')),
           ],
-          decoration: const InputDecoration(
+          decoration: FormDecorationHelper.roundedInputDecoration(
+            context: context,
             labelText: 'Declared Value (MYR)',
             helperText: 'Estimated current value of this asset',
-            prefixIcon: Icon(Icons.payments_outlined),
-            border: OutlineInputBorder(),
+            prefixIcon: Icons.payments_outlined,
           ),
           validator: (String? v) {
             final String value = (v ?? '').trim();
@@ -512,6 +513,8 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _selectedInstructionId,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_outlined),
           items: _instructions
               .map((Map<String, String> c) => DropdownMenuItem<String>(
                     value: c['id'],
@@ -527,10 +530,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               await _loadBelovedOptions();
             }
           },
-          decoration: const InputDecoration(
+          decoration: FormDecorationHelper.roundedInputDecoration(
+            context: context,
             labelText: 'Instructions After Death',
-            prefixIcon: Icon(Icons.assignment_outlined),
-            border: OutlineInputBorder(),
+            prefixIcon: Icons.assignment_outlined,
           ),
           validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
         ),
@@ -538,6 +541,8 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         if (_selectedInstructionId == 'transfer_as_gift')
           DropdownButtonFormField<int>(
             initialValue: _selectedBelovedId,
+            isExpanded: true,
+            icon: const Icon(Icons.keyboard_arrow_down_outlined),
             items: _belovedOptions
                 .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                       value: (b['id'] as num).toInt(),
@@ -545,10 +550,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                     ))
                 .toList(),
             onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
-            decoration: InputDecoration(
+            decoration: FormDecorationHelper.roundedInputDecoration(
+              context: context,
               labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
-              prefixIcon: const Icon(Icons.card_giftcard_outlined),
-              border: const OutlineInputBorder(),
+              prefixIcon: Icons.card_giftcard_outlined,
             ),
             validator: (int? v) {
               if (_selectedInstructionId == 'transfer_as_gift') {
@@ -562,11 +567,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           controller: _remarksController,
           maxLines: 3,
           textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
+          decoration: FormDecorationHelper.roundedInputDecoration(
+            context: context,
             labelText: 'Remarks (optional)',
             hintText: 'Any additional instructions or notes',
-            prefixIcon: Icon(Icons.notes_outlined),
-            border: OutlineInputBorder(),
+            prefixIcon: Icons.notes_outlined,
           ),
         ),
       ],

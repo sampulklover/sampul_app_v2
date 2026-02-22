@@ -27,6 +27,7 @@ import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'notification_screen.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -169,14 +170,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             actions: <Widget>[
-              IconButton(
-                tooltip: 'Referrals',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+              Builder(
+                builder: (BuildContext context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return IconButton(
+                    tooltip: l10n.referrals,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.card_giftcard_outlined, color: Colors.white),
                   );
                 },
-                icon: const Icon(Icons.card_giftcard_outlined, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
@@ -205,25 +211,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8, top: 48),
-                  child: Offstage(
-                    offstage: t < 0.15,
-                    child: Opacity(
-                      opacity: t,
-                      child: Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Text(
-                          _isLoadingProfile
-                              ? 'Assalamualaikum...'
-                              : 'Assalamualaikum, ${_userProfile?.displayName ?? AuthController.instance.currentUser?.email?.split('@')[0] ?? 'User'}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                  child: Builder(
+                    builder: (BuildContext context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return Offstage(
+                        offstage: t < 0.15,
+                        child: Opacity(
+                          opacity: t,
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Text(
+                              _isLoadingProfile
+                                  ? l10n.assalamualaikum
+                                  : l10n.assalamualaikumWithName(_userProfile?.displayName ?? AuthController.instance.currentUser?.email?.split('@')[0] ?? l10n.unknown),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 );
               },
@@ -244,36 +255,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _ActionsGrid(onRefresh: _refreshData),
                 ),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _SectionHeader(
-                    title: 'My Assets',
-                    actionText: 'See All →',
-                    onAction: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
-                      );
-                      // Refresh data when returning from assets list
-                      await _refreshData();
-                    },
-                  ),
+                Builder(
+                  builder: (BuildContext context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: _SectionHeader(
+                        title: l10n.myAssets,
+                        actionText: l10n.seeAll,
+                        onAction: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                          );
+                          // Refresh data when returning from assets list
+                          await _refreshData();
+                        },
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 8),
                 _AssetsList(key: _assetsListKey, onRefresh: _refreshData),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _SectionHeader(
-                    title: 'My Family',
-                    actionText: 'See All →',
-                    onAction: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder: (_) => const FamilyListScreen()),
-                      );
-                      // Refresh data when returning from family list
-                      await _refreshData();
-                    },
-                  ),
+                Builder(
+                  builder: (BuildContext context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: _SectionHeader(
+                        title: l10n.myFamily,
+                        actionText: l10n.seeAll,
+                        onAction: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(builder: (_) => const FamilyListScreen()),
+                          );
+                          // Refresh data when returning from family list
+                          await _refreshData();
+                        },
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 8),
                 _FamilyList(key: _familyListKey, onRefresh: _refreshData),
@@ -338,16 +359,17 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
     super.dispose();
   }
 
-  String _statusLabel(TrustStatus s) {
+  String _statusLabel(TrustStatus s, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (s) {
       case TrustStatus.submitted:
-        return 'Submitted';
+        return l10n.submitted;
       case TrustStatus.approved:
-        return 'Approved';
+        return l10n.approved;
       case TrustStatus.rejected:
-        return 'Rejected';
+        return l10n.rejected;
       case TrustStatus.draft:
-        return 'Draft';
+        return l10n.draft;
     }
   }
 
@@ -463,21 +485,31 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              Text(
-                                widget.trusts.isEmpty ? 'Create Your First Trust Fund' : 'Add New Trust Fund',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                textAlign: TextAlign.center,
+                              Builder(
+                                builder: (BuildContext context) {
+                                  final l10n = AppLocalizations.of(context)!;
+                                  return Text(
+                                    widget.trusts.isEmpty ? l10n.createYourFirstTrustFund : l10n.addNewTrustFund,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  );
+                                },
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                'Tap to get started',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                textAlign: TextAlign.center,
+                              Builder(
+                                builder: (BuildContext context) {
+                                  final l10n = AppLocalizations.of(context)!;
+                                  return Text(
+                                    l10n.tapToGetStarted,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -542,12 +574,17 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    Text(
-                                      'Family Account',
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: theme.colorScheme.primary,
-                                      ),
+                                    Builder(
+                                      builder: (BuildContext context) {
+                                        final l10n = AppLocalizations.of(context)!;
+                                        return Text(
+                                          l10n.familyAccount,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: const Color.fromRGBO(83, 61, 233, 1),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -600,11 +637,16 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                isActive ? 'Your plan is active' : _statusLabel(status),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: isActive ? Colors.green.shade700 : _statusColor(status),
-                                ),
+                              Builder(
+                                builder: (BuildContext context) {
+                                  final l10n = AppLocalizations.of(context)!;
+                                  return Text(
+                                    isActive ? l10n.yourPlanIsActive : _statusLabel(status, context),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isActive ? Colors.green.shade700 : _statusColor(status),
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -672,53 +714,61 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
 
 class _ActionsGrid extends StatelessWidget {
   // Main menu items: Will, Hibah, Trust, Others
-  final List<_ActionItem> items = const <_ActionItem>[
-    _ActionItem(Icons.description_outlined, 'Will'),
-    _ActionItem(Icons.group_outlined, 'Hibah'),
-    _ActionItem(Icons.gavel_outlined, 'Trust'),
-    _ActionItem(Icons.more_horiz, 'Others'),
-  ];
+  List<_ActionItem> _getItems(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return <_ActionItem>[
+      _ActionItem(Icons.description_outlined, l10n.will),
+      _ActionItem(Icons.group_outlined, l10n.hibah),
+      _ActionItem(Icons.gavel_outlined, l10n.trust),
+      _ActionItem(Icons.more_horiz, l10n.others),
+    ];
+  }
 
   // Items that go inside "Others" menu
-  final List<_ActionItem> othersItems = const <_ActionItem>[
-    _ActionItem(Icons.account_balance_wallet_outlined, 'Assets'),
-    _ActionItem(Icons.family_restroom, 'Family'),
-    _ActionItem(Icons.checklist_outlined, 'Checklist'),
-    _ActionItem(Icons.task_alt_outlined, 'Execution'),
-    _ActionItem(Icons.medical_services_outlined, 'Aftercare'),
-  ];
+  List<_ActionItem> _getOthersItems(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return <_ActionItem>[
+      _ActionItem(Icons.account_balance_wallet_outlined, l10n.assets),
+      _ActionItem(Icons.family_restroom, l10n.family),
+      _ActionItem(Icons.checklist_outlined, l10n.checklist),
+      _ActionItem(Icons.task_alt_outlined, l10n.execution),
+      _ActionItem(Icons.medical_services_outlined, l10n.aftercare),
+    ];
+  }
 
   final VoidCallback? onRefresh;
   const _ActionsGrid({this.onRefresh});
 
   void _handleItemTap(String label, BuildContext context) {
-    if (label == 'Will') {
+    final l10n = AppLocalizations.of(context)!;
+    if (label == l10n.will) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const WillManagementScreen(),
         ),
       );
-    } else if (label == 'Hibah') {
+    } else if (label == l10n.hibah) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const HibahManagementScreen(),
         ),
       );
-    } else if (label == 'Trust') {
+    } else if (label == l10n.trust) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const TrustManagementScreen(),
         ),
       );
-    } else if (label == 'Others') {
+    } else if (label == l10n.others) {
       _showOthersMenu(context);
     }
   }
 
   void _handleOthersItemTap(String label, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Navigator.of(context).pop(); // Close the bottom sheet first
     
-    if (label == 'Assets') {
+    if (label == l10n.assets) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const AssetsListScreen(),
@@ -726,7 +776,7 @@ class _ActionsGrid extends StatelessWidget {
       ).then((_) {
         onRefresh?.call();
       });
-    } else if (label == 'Family') {
+    } else if (label == l10n.family) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const FamilyListScreen(),
@@ -734,19 +784,19 @@ class _ActionsGrid extends StatelessWidget {
       ).then((_) {
         onRefresh?.call();
       });
-    } else if (label == 'Checklist') {
+    } else if (label == l10n.checklist) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const ChecklistScreen(),
         ),
       );
-    } else if (label == 'Execution') {
+    } else if (label == l10n.execution) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const ExecutorManagementScreen(),
         ),
       );
-    } else if (label == 'Aftercare') {
+    } else if (label == l10n.aftercare) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => const AftercareScreen(),
@@ -788,9 +838,14 @@ class _ActionsGrid extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: <Widget>[
-                        Text(
-                          'Others',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        Builder(
+                          builder: (BuildContext context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Text(
+                              l10n.others,
+                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -798,18 +853,21 @@ class _ActionsGrid extends StatelessWidget {
                   const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: othersItems.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 0.9,
-                      ),
-                      itemBuilder: (BuildContext context, int index) {
-                        final _ActionItem item = othersItems[index];
+                    child: Builder(
+                      builder: (BuildContext context) {
+                        final othersItems = _getOthersItems(context);
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: othersItems.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: 0.9,
+                          ),
+                          itemBuilder: (BuildContext context, int index) {
+                            final _ActionItem item = othersItems[index];
                         return GestureDetector(
                           onTap: () => _handleOthersItemTap(item.label, context),
                           child: Column(
@@ -837,6 +895,8 @@ class _ActionsGrid extends StatelessWidget {
                             ],
                           ),
                         );
+                          },
+                        );
                       },
                     ),
                   ),
@@ -853,6 +913,7 @@ class _ActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final items = _getItems(context);
     return GridView.builder(
       itemCount: items.length,
       shrinkWrap: true,
@@ -927,16 +988,17 @@ class _AssetsListState extends State<_AssetsList> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _assets = <Map<String, dynamic>>[];
 
-  String _prettyInstruction(String? key) {
+  String _prettyInstruction(String? key, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch ((key ?? '').toLowerCase()) {
       case 'faraid':
-        return 'Faraid';
+        return l10n.faraid;
       case 'terminate':
-        return 'Terminate Subscriptions';
+        return l10n.terminateSubscriptions;
       case 'transfer_as_gift':
-        return 'Transfer as Gift';
+        return l10n.transferAsGift;
       case 'settle':
-        return 'Settle Debts';
+        return l10n.settleDebts;
       default:
         return '';
     }
@@ -1042,26 +1104,37 @@ class _AssetsListState extends State<_AssetsList> {
                   widget.onRefresh?.call();
                 }
               },
-              child: const _AddCircle(label: 'Add'),
+              child: Builder(
+                builder: (BuildContext context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _AddCircle(label: l10n.add);
+                },
+              ),
             );
           }
 
           if (_isLoading) {
-            return Column(
-              children: const <Widget>[
-                SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 2)),
-                SizedBox(height: 6),
-                SizedBox(width: 76, child: Text('Loading...', textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
-              ],
+            return Builder(
+              builder: (BuildContext context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  children: <Widget>[
+                    const SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 2)),
+                    const SizedBox(height: 6),
+                    SizedBox(width: 76, child: Text(l10n.loading, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+                  ],
+                );
+              },
             );
           }
 
           final Map<String, dynamic> asset = _assets[index - 1];
           final int id = (asset['id'] as num).toInt();
-          final String name = (asset['new_service_platform_name'] as String?) ?? 'Unknown';
+          final l10n = AppLocalizations.of(context)!;
+          final String name = (asset['new_service_platform_name'] as String?) ?? l10n.unknown;
           final String? logoUrl = asset['new_service_platform_logo_url'] as String?;
           final String? category = asset['instructions_after_death'] as String?;
-          final String categoryText = _prettyInstruction(category);
+          final String categoryText = _prettyInstruction(category, context);
           return GestureDetector(
             onTap: () async {
               final bool? updated = await Navigator.of(context).push(
@@ -1131,14 +1204,15 @@ class _FamilyListState extends State<_FamilyList> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _family = <Map<String, dynamic>>[];
 
-  String _prettyType(String? t) {
+  String _prettyType(String? t, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch ((t ?? '').toLowerCase()) {
       case 'co_sampul':
-        return 'Co-sampul';
+        return l10n.coSampul;
       case 'future_owner':
-        return 'Beneficiary';
+        return l10n.beneficiary;
       case 'guardian':
-        return 'Guardian';
+        return l10n.guardian;
       default:
         return '';
     }
@@ -1240,23 +1314,34 @@ class _FamilyListState extends State<_FamilyList> {
                   widget.onRefresh?.call();
                 }
               },
-              child: const _AddCircle(label: 'Add'),
+              child: Builder(
+                builder: (BuildContext context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _AddCircle(label: l10n.add);
+                },
+              ),
             );
           }
           if (_isLoading) {
-            return Column(
-              children: const <Widget>[
-                SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 2)),
-                SizedBox(height: 6),
-                SizedBox(width: 72, child: Text('Loading...', textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
-              ],
+            return Builder(
+              builder: (BuildContext context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  children: <Widget>[
+                    const SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 2)),
+                    const SizedBox(height: 6),
+                    SizedBox(width: 72, child: Text(l10n.loading, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)),
+                  ],
+                );
+              },
             );
           }
           final Map<String, dynamic> f = _family[index - 1];
-          final String name = (f['name'] as String?) ?? 'Unknown';
+          final l10n = AppLocalizations.of(context)!;
+          final String name = (f['name'] as String?) ?? l10n.unknown;
           final String? imagePath = f['image_path'] as String?;
           final String? type = f['type'] as String?;
-          final String typeText = _prettyType(type);
+          final String typeText = _prettyType(type, context);
           return GestureDetector(
             onTap: () async {
               final bool? updated = await Navigator.of(context).push(

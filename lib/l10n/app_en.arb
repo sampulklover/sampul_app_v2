@@ -74,5 +74,47 @@
   "selectLanguage": "Select Language",
   "english": "English",
   "malay": "Malay",
-  "languageChanged": "Language changed"
+  "languageChanged": "Language changed",
+  
+  "assalamualaikum": "Assalamualaikum...",
+  "assalamualaikumWithName": "Assalamualaikum, {name}",
+  "@assalamualaikumWithName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "referrals": "Referrals",
+  "myAssets": "My Assets",
+  "seeAll": "See All →",
+  "myFamily": "My Family",
+  "submitted": "Submitted",
+  "approved": "Approved",
+  "rejected": "Rejected",
+  "draft": "Draft",
+  "yourPlanIsActive": "Your plan is active",
+  "familyAccount": "Family Account",
+  "createYourFirstTrustFund": "Create Your First Trust Fund",
+  "addNewTrustFund": "Add New Trust Fund",
+  "tapToGetStarted": "Tap to get started",
+  "will": "Will",
+  "hibah": "Hibah",
+  "trust": "Trust",
+  "others": "Others",
+  "assets": "Assets",
+  "family": "Family",
+  "checklist": "Checklist",
+  "execution": "Execution",
+  "aftercare": "Aftercare",
+  "add": "Add",
+  "loading": "Loading...",
+  "unknown": "Unknown",
+  "faraid": "Faraid",
+  "terminateSubscriptions": "Terminate Subscriptions",
+  "transferAsGift": "Transfer as Gift",
+  "settleDebts": "Settle Debts",
+  "coSampul": "Co-sampul",
+  "beneficiary": "Beneficiary",
+  "guardian": "Guardian"
 }

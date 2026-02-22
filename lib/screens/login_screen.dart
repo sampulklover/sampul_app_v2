@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/form_decoration_helper.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'main_shell.dart';
@@ -153,11 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: l10n.email,
                       hintText: l10n.emailHint,
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: Icons.email_outlined,
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
@@ -173,10 +174,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: !_isPasswordVisible,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
                       labelText: l10n.password,
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: Icons.lock_outline,
+                    ).copyWith(
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {

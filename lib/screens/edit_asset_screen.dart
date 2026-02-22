@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/form_decoration_helper.dart';
 
 class EditAssetScreen extends StatefulWidget {
   final int assetId;
@@ -233,6 +234,8 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: _instruction,
+                        isExpanded: true,
+                        icon: const Icon(Icons.keyboard_arrow_down_outlined),
                         items: _instructions
                             .map((Map<String, String> c) => DropdownMenuItem<String>(
                                   value: c['id'],
@@ -250,10 +253,10 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                             await _loadBelovedOptions();
                           }
                         },
-                        decoration: const InputDecoration(
+                        decoration: FormDecorationHelper.roundedInputDecoration(
+                          context: context,
                           labelText: 'Instructions After Death',
-                          prefixIcon: Icon(Icons.assignment_outlined),
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icons.assignment_outlined,
                         ),
                         validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
                       ),
@@ -261,6 +264,8 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       if (_instruction == 'transfer_as_gift')
                         DropdownButtonFormField<int>(
                           initialValue: _selectedBelovedId,
+                          isExpanded: true,
+                          icon: const Icon(Icons.keyboard_arrow_down_outlined),
                           items: _belovedOptions
                               .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                                     value: (b['id'] as num).toInt(),
@@ -268,10 +273,10 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                                   ))
                               .toList(),
                           onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
-                          decoration: InputDecoration(
+                          decoration: FormDecorationHelper.roundedInputDecoration(
+                            context: context,
                             labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
-                            prefixIcon: const Icon(Icons.card_giftcard_outlined),
-                            border: const OutlineInputBorder(),
+                            prefixIcon: Icons.card_giftcard_outlined,
                           ),
                           validator: (int? v) {
                             if (_instruction == 'transfer_as_gift') {
@@ -285,10 +290,10 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         controller: _declaredValueController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
-                        decoration: const InputDecoration(
+                        decoration: FormDecorationHelper.roundedInputDecoration(
+                          context: context,
                           labelText: 'Declared Value (MYR)',
-                          prefixIcon: Icon(Icons.payments_outlined),
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icons.payments_outlined,
                         ),
                         validator: (String? v) {
                           final String value = (v ?? '').trim();
@@ -304,10 +309,10 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       TextFormField(
                         controller: _remarksController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
+                        decoration: FormDecorationHelper.roundedInputDecoration(
+                          context: context,
                           labelText: 'Remarks (optional)',
-                          prefixIcon: Icon(Icons.notes_outlined),
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icons.notes_outlined,
                         ),
                       ),
                     ],
