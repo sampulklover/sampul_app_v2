@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'ai_chat_settings_service.dart';
+import 'ai_chat_qna_service.dart';
 
 class OpenRouterService {
   static const String _baseUrl = 'https://openrouter.ai/api/v1';
@@ -35,15 +36,26 @@ class OpenRouterService {
       final maxTokens = settings.maxTokens;
       final temperature = settings.temperature;
       final settingsModel = settings.model;
-      
+
+      // Load a small set of curated Q&A pairs for additional low-token context
+      final qnaItems = await AiChatQnaService.instance.getActiveQna(limit: 5);
+
       // Debug logging to verify settings are being used
-      debugPrint('🔧 OpenRouter Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}');
+      debugPrint('🔧 OpenRouter Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}, qna_count=${qnaItems.length}');
 
       // Build enhanced system prompt with resources context
       String enhancedPrompt = systemPrompt;
       final resourcesContext = settings.getResourcesContext();
       if (resourcesContext.isNotEmpty) {
         enhancedPrompt += '\n\n' + resourcesContext;
+      }
+
+      // Append Q&A context
+      if (qnaItems.isNotEmpty) {
+        enhancedPrompt += '\n\nFrequently Asked Questions and Answers (use these when relevant):\n';
+        for (final q in qnaItems) {
+          enhancedPrompt += 'Q: ${q.question}\nA: ${q.answer}\n\n';
+        }
       }
 
       final response = await http.post(
@@ -138,15 +150,26 @@ class OpenRouterService {
       final maxTokens = settings.maxTokens;
       final temperature = settings.temperature;
       final settingsModel = settings.model;
+
+      // Load curated Q&A pairs for context
+      final qnaItems = await AiChatQnaService.instance.getActiveQna(limit: 5);
       
       // Debug logging to verify settings are being used
-      debugPrint('🔧 OpenRouter Streaming Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}');
+      debugPrint('🔧 OpenRouter Streaming Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}, qna_count=${qnaItems.length}');
 
       // Build enhanced system prompt with resources context
       String enhancedPrompt = systemPrompt;
       final resourcesContext = settings.getResourcesContext();
       if (resourcesContext.isNotEmpty) {
         enhancedPrompt += '\n\n' + resourcesContext;
+      }
+
+      // Append Q&A context
+      if (qnaItems.isNotEmpty) {
+        enhancedPrompt += '\n\nFrequently Asked Questions and Answers (use these when relevant):\n';
+        for (final q in qnaItems) {
+          enhancedPrompt += 'Q: ${q.question}\nA: ${q.answer}\n\n';
+        }
       }
 
       final request = http.Request('POST', Uri.parse('$_baseUrl/chat/completions'));

@@ -36,7 +36,7 @@ class ImageUploadService {
     return null;
   }
 
-  /// Upload image to Supabase storage
+  /// Upload profile image to Supabase storage
   Future<String> uploadProfileImage({
     required File imageFile,
     required String userId,
@@ -71,6 +71,39 @@ class ImageUploadService {
       }
     } catch (e) {
       throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  /// Upload feedback screenshot image to Supabase storage
+  Future<String> uploadFeedbackImage({
+    required File imageFile,
+    required String userId,
+    Function(double)? onProgress,
+  }) async {
+    try {
+      final int timestamp = DateTime.now().millisecondsSinceEpoch;
+      final String extension = imageFile.path.split('.').last;
+      final String fileName = '$timestamp-${userId.hashCode}.$extension';
+      final String storagePath = '$userId/feedback/$fileName';
+
+      final response = await _client.storage
+          .from('images')
+          .uploadBinary(
+            storagePath,
+            await imageFile.readAsBytes(),
+            fileOptions: const FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+            ),
+          );
+
+      if (response.isNotEmpty) {
+        return storagePath;
+      } else {
+        throw Exception('Upload failed: Empty response');
+      }
+    } catch (e) {
+      throw Exception('Failed to upload feedback image: $e');
     }
   }
 

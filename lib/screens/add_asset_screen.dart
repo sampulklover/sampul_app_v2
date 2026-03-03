@@ -8,6 +8,7 @@ import '../utils/form_decoration_helper.dart';
 import 'dart:async';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'asset_info_screen.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 
 class AddAssetScreen extends StatefulWidget {
   const AddAssetScreen({super.key});
@@ -39,12 +40,15 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   String? _selectedInstructionId;
   int _currentStep = 0;
 
-  static const List<Map<String, String>> _instructions = <Map<String, String>>[
-    {'id': 'faraid', 'name': 'Faraid'},
-    {'id': 'terminate', 'name': 'Terminate Subscriptions'},
-    {'id': 'transfer_as_gift', 'name': 'Transfer as Gift'},
-    {'id': 'settle', 'name': 'Settle Debts'},
-  ];
+  List<Map<String, String>> _getInstructions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return <Map<String, String>>[
+      {'id': 'faraid', 'name': l10n.faraid},
+      {'id': 'terminate', 'name': l10n.terminateSubscriptions},
+      {'id': 'transfer_as_gift', 'name': l10n.transferAsGift},
+      {'id': 'settle', 'name': l10n.settleDebts},
+    ];
+  }
 
   @override
   void dispose() {
@@ -63,58 +67,61 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text('Add Custom Asset'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                TextFormField(
-                  controller: nameController,
-                  autofocus: true,
-                  textInputAction: TextInputAction.next,
-                  decoration: FormDecorationHelper.roundedInputDecoration(
-                    context: context,
-                    labelText: 'Asset Name *',
-                    hintText: 'e.g., My Custom Platform',
-                    prefixIcon: Icons.apps_outlined,
+      builder: (BuildContext context) {
+        final l10nDialog = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l10nDialog.addCustomAsset),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  TextFormField(
+                    controller: nameController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10nDialog.assetName,
+                      hintText: l10nDialog.assetNameHint,
+                      prefixIcon: Icons.apps_outlined,
+                    ),
+                    validator: (String? v) => (v == null || v.trim().isEmpty) ? l10nDialog.required : null,
                   ),
-                  validator: (String? v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: urlController,
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.done,
-                  decoration: FormDecorationHelper.roundedInputDecoration(
-                    context: context,
-                    labelText: 'Website URL (optional)',
-                    hintText: 'https://example.com',
-                    prefixIcon: Icons.link_outlined,
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: urlController,
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.done,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10nDialog.websiteUrlOptional,
+                      hintText: l10nDialog.websiteUrlHint,
+                      prefixIcon: Icons.link_outlined,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(context).pop(true);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10nDialog.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState?.validate() ?? false) {
+                  Navigator.of(context).pop(true);
+                }
+              },
+              child: Text(l10nDialog.add),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && nameController.text.trim().isNotEmpty) {
@@ -215,19 +222,21 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           _isSearching = false;
           _showAddCustomOption = q.length >= 3;
         });
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: $e')),
+          SnackBar(content: Text(l10n.searchFailed(e.toString()))),
         );
       }
     });
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     // Validate step 0 selection
     if (_brandInfo == null) {
       setState(() => _currentStep = 0);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a platform/service')),
+        SnackBar(content: Text(l10n.pleaseSelectPlatformService)),
       );
       return;
     }
@@ -241,7 +250,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     if (_selectedInstructionId == null) {
       setState(() => _currentStep = 1);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an instruction')),
+        SnackBar(content: Text(l10n.pleaseSelectInstruction)),
       );
       return;
     }
@@ -250,7 +259,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     try {
       final user = AuthController.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be signed in');
+        throw Exception(l10n.youMustBeSignedIn);
       }
 
       // Persist minimal record to digital_assets table
@@ -281,7 +290,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
       if (instructions == 'transfer_as_gift') {
         if (_selectedBelovedId == null) {
-          throw Exception('Please select a gift recipient');
+          throw Exception(l10n.pleaseSelectGiftRecipient);
         }
         payload['beloved_id'] = _selectedBelovedId;
       }
@@ -295,8 +304,8 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Asset added successfully'),
+        SnackBar(
+          content: Text(l10n.assetAddedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );
@@ -306,7 +315,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to add asset: $e'),
+          content: Text(l10n.failedToAddAsset(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -317,12 +326,13 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Asset'),
+        title: Text(l10n.addAsset),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Assets',
+            tooltip: l10n.aboutAssets,
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(
@@ -342,19 +352,19 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           },
           steps: <Step>[
             Step(
-              title: const Text('Platform / Service'),
+              title: Text(l10n.platformService),
               state: StepState.indexed,
               isActive: _currentStep >= 0,
               content: _buildPlatformSelector(),
             ),
             Step(
-              title: const Text('Details'),
+              title: Text(l10n.details),
               state: StepState.indexed,
               isActive: _currentStep >= 1,
               content: Form(key: _detailsFormKey, child: _buildDetailsForm()),
             ),
             Step(
-              title: const Text('Review'),
+              title: Text(l10n.review),
               state: StepState.indexed,
               isActive: _currentStep >= 2,
               content: _buildReview(),
@@ -370,7 +380,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           if (_currentStep == 0) {
             if (_brandInfo == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please select a platform/service')),
+                SnackBar(content: Text(l10n.pleaseSelectPlatformService)),
               );
               return;
             }
@@ -379,7 +389,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             if (!(_detailsFormKey.currentState?.validate() ?? false)) return;
             if (_selectedInstructionId == 'transfer_as_gift' && _selectedBelovedId == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Gift Recipient is required')),
+                SnackBar(content: Text(l10n.giftRecipientRequired)),
               );
               return;
             }
@@ -393,12 +403,13 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 setState(() => _currentStep = _currentStep - 1);
               }
             : null,
-        primaryLabel: _currentStep == 2 ? 'Save' : null,
+        primaryLabel: _currentStep == 2 ? l10n.save : null,
       ),
     );
   }
 
   Widget _buildPlatformSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -406,8 +417,8 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           controller: _brandSearchController,
           decoration: FormDecorationHelper.roundedInputDecoration(
             context: context,
-            labelText: 'Search for a platform or service',
-            hintText: 'e.g., Facebook, Google Drive, Maybank',
+            labelText: l10n.searchForPlatformOrService,
+            hintText: l10n.searchPlatformHint,
             prefixIcon: Icons.search,
           ),
           onChanged: _onSearchChanged,
@@ -458,16 +469,21 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             },
           ),
         if (_showAddCustomOption && !_isSearching)
-          ListTile(
-            leading: const Icon(Icons.add_circle_outline, color: Color.fromRGBO(83, 61, 233, 1)),
-            title: const Text('Add your own asset'),
-            subtitle: Text(
-              _searchResults.isEmpty
-                  ? 'Use "${_brandSearchController.text.trim()}" as the asset name'
-                  : 'Can\'t find it? Add "${_brandSearchController.text.trim()}" as custom',
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => _showCustomAssetDialog(),
+          Builder(
+            builder: (BuildContext context) {
+              final l10n = AppLocalizations.of(context)!;
+              return ListTile(
+                leading: const Icon(Icons.add_circle_outline, color: Color.fromRGBO(83, 61, 233, 1)),
+                title: Text(l10n.addYourOwnAsset),
+                subtitle: Text(
+                  _searchResults.isEmpty
+                      ? l10n.useAsAssetName(_brandSearchController.text.trim())
+                      : l10n.cantFindItAddAsCustom(_brandSearchController.text.trim()),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () => _showCustomAssetDialog(),
+              );
+            },
           ),
         if (_brandInfo != null && _searchResults.isEmpty && !_showAddCustomOption) ...<Widget>[
           const SizedBox(height: 8),
@@ -485,6 +501,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   }
 
   Widget _buildDetailsForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: <Widget>[
         TextFormField(
@@ -496,17 +513,17 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           ],
           decoration: FormDecorationHelper.roundedInputDecoration(
             context: context,
-            labelText: 'Declared Value (MYR)',
-            helperText: 'Estimated current value of this asset',
+            labelText: l10n.declaredValueMyr,
+            helperText: l10n.estimatedCurrentValue,
             prefixIcon: Icons.payments_outlined,
           ),
           validator: (String? v) {
             final String value = (v ?? '').trim();
-            if (value.isEmpty) return 'Required';
+            if (value.isEmpty) return l10n.required;
             final RegExp re = RegExp(r'^\d+(\.\d{1,2})?$');
-            if (!re.hasMatch(value)) return 'Enter a valid amount (max 2 decimals)';
+            if (!re.hasMatch(value)) return l10n.enterValidAmountMaxDecimals;
             final double? val = double.tryParse(value);
-            if (val == null || val < 0) return 'Enter a valid amount';
+            if (val == null || val < 0) return l10n.enterValidAmount;
             return null;
           },
         ),
@@ -515,7 +532,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           initialValue: _selectedInstructionId,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down_outlined),
-          items: _instructions
+          items: _getInstructions(context)
               .map((Map<String, String> c) => DropdownMenuItem<String>(
                     value: c['id'],
                     child: Text(c['name'] ?? ''),
@@ -532,10 +549,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           },
           decoration: FormDecorationHelper.roundedInputDecoration(
             context: context,
-            labelText: 'Instructions After Death',
+            labelText: l10n.instructionsAfterDeath,
             prefixIcon: Icons.assignment_outlined,
           ),
-          validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
+          validator: (String? v) => (v == null || v.isEmpty) ? l10n.required : null,
         ),
         const SizedBox(height: 12),
         if (_selectedInstructionId == 'transfer_as_gift')
@@ -546,18 +563,18 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             items: _belovedOptions
                 .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                       value: (b['id'] as num).toInt(),
-                      child: Text((b['name'] as String?) ?? 'Unnamed'),
+                      child: Text((b['name'] as String?) ?? l10n.unnamed),
                     ))
                 .toList(),
             onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
             decoration: FormDecorationHelper.roundedInputDecoration(
               context: context,
-              labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
+              labelText: _isLoadingBeloved ? l10n.loadingRecipients : l10n.giftRecipient,
               prefixIcon: Icons.card_giftcard_outlined,
             ),
             validator: (int? v) {
               if (_selectedInstructionId == 'transfer_as_gift') {
-                if (v == null) return 'Gift Recipient is required';
+                if (v == null) return l10n.giftRecipientRequired;
               }
               return null;
             },
@@ -569,8 +586,8 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           textInputAction: TextInputAction.done,
           decoration: FormDecorationHelper.roundedInputDecoration(
             context: context,
-            labelText: 'Remarks (optional)',
-            hintText: 'Any additional instructions or notes',
+            labelText: l10n.remarksOptional,
+            hintText: l10n.remarksHint,
             prefixIcon: Icons.notes_outlined,
           ),
         ),
@@ -579,12 +596,13 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   }
 
   Widget _buildReview() {
+    final l10n = AppLocalizations.of(context)!;
     final TextStyle? label = Theme.of(context).textTheme.bodySmall;
     final TextStyle? value = Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600);
     String? recipientName() {
       if (_selectedBelovedId == null) return null;
       for (final Map<String, dynamic> b in _belovedOptions) {
-        if ((b['id'] as num).toInt() == _selectedBelovedId) return (b['name'] as String?) ?? 'Unnamed';
+        if ((b['id'] as num).toInt() == _selectedBelovedId) return (b['name'] as String?) ?? l10n.unnamed;
       }
       return null;
     }
@@ -631,7 +649,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This asset will be included in your will. Any changes you make will automatically sync to your will.',
+                      l10n.assetWillBeIncludedInWill,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -651,11 +669,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            row('Website', (_brandInfo?.websiteUrl ?? '').isEmpty ? null : _brandInfo!.websiteUrl),
-            row('Declared Value (MYR)', _declaredValueController.text),
-            row('Instruction', _selectedInstructionLabel()),
-            if (_selectedInstructionId == 'transfer_as_gift') row('Gift Recipient', recipientName()),
-            row('Remarks', _remarksController.text),
+            row(l10n.website, (_brandInfo?.websiteUrl ?? '').isEmpty ? null : _brandInfo!.websiteUrl),
+            row(l10n.declaredValueMyr, _declaredValueController.text),
+            row(l10n.instruction, _selectedInstructionLabel()),
+            if (_selectedInstructionId == 'transfer_as_gift') row(l10n.giftRecipient, recipientName()),
+            row(l10n.remarks, _remarksController.text),
           ],
         ),
       ),
@@ -665,7 +683,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   String _selectedInstructionLabel() {
     final String? id = _selectedInstructionId;
     if (id == null) return '';
-    final Map<String, String> item = _instructions.firstWhere(
+    final Map<String, String> item = _getInstructions(context).firstWhere(
       (Map<String, String> e) => e['id'] == id,
       orElse: () => <String, String>{},
     );

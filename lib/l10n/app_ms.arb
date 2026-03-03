@@ -65,6 +65,9 @@
   "onboardingSubtitle2": "Kunci aset anda, labur untuk masa depan, dan pastikan orang tersayang mendapat apa yang menjadi hak mereka.",
   "onboardingTitle3": "Jangan biarkan emosi\nmenentukan.",
   "onboardingSubtitle3": "Pelaksana profesional memastikan wasiat anda diikuti—tiada drama keluarga, tiada kekacauan undang-undang, hanya penyerahan yang lancar.",
+  "next": "Seterusnya",
+  "getStarted": "Mula",
+  "skip": "Langkau",
   
   "settings": "Tetapan",
   "language": "Bahasa",
@@ -113,5 +116,865 @@
   "settleDebts": "Selesaikan Hutang",
   "coSampul": "Co-sampul",
   "beneficiary": "Penerima Manfaat",
-  "guardian": "Penjaga"
+  "guardian": "Penjaga",
+  
+  "account": "Akaun",
+  "user": "Pengguna",
+  "noEmail": "Tiada e-mel",
+  "edit": "Edit",
+  "identityVerification": "Pengesahan Identiti",
+  "checkingStatus": "Menyemak status...",
+  "yourIdentityIsVerified": "Identiti anda telah disahkan",
+  "verificationInProgress": "Pengesahan sedang dijalankan",
+  "verificationWasDeclined": "Pengesahan telah ditolak",
+  "verificationWasRejected": "Pengesahan telah ditolak",
+  "verifyYourIdentity": "Sahkan identiti anda",
+  "verified": "Disahkan",
+  "pending": "Menunggu",
+  "declined": "Ditolak",
+  "rejected": "Ditolak",
+  "changePassword": "Tukar kata laluan",
+  "logOut": "Log keluar",
+  "billing": "Bil",
+  "plansAndSubscription": "Pelan & langganan",
+  "manageYourSampulPlan": "Urus pelan Sampul anda",
+  "preferences": "Pilihan",
+  "yourCodeAndReferrals": "Kod dan rujukan anda",
+  "aiChatSettings": "Tetapan AI Chat",
+  "manageSampulAiResponses": "Urus respons AI Sampul",
+  "darkMode": "Mod gelap",
+  "restartOnboarding": "Mulakan semula onboarding",
+  "runTheSetupFlowAgain": "Jalankan aliran persediaan semula",
+  "onboardingHasBeenReset": "Onboarding telah ditetapkan semula",
+  "failedToResetOnboarding": "Gagal menetapkan semula onboarding: {error}",
+  "@failedToResetOnboarding": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sendFeedback": "Hantar maklum balas",
+  "reportBugsOrRequestFeatures": "Laporkan pepijat atau cadangkan ciri baharu",
+  "about": "Mengenai",
+  "appVersion": "Versi aplikasi",
+  "appVersionDemo": "1.0.0 (demo)",
+  "termsOfService": "Terma Perkhidmatan",
+  "termsTappedDemo": "Terma diketuk (demo)",
+  "privacyPolicy": "Dasar Privasi",
+  "privacyTappedDemo": "Privasi diketuk (demo)",
+  "deleteAccount": "Padam Akaun",
+  "changePasswordTitle": "Tukar Kata Laluan",
+  "enterCurrentPasswordAndChooseNew": "Masukkan kata laluan semasa anda dan pilih yang baru",
+  "currentPassword": "Kata Laluan Semasa",
+  "pleaseEnterCurrentPassword": "Sila masukkan kata laluan semasa anda",
+  "newPassword": "Kata Laluan Baru",
+  "pleaseEnterNewPassword": "Sila masukkan kata laluan baru",
+  "confirmNewPassword": "Sahkan Kata Laluan Baru",
+  "pleaseConfirmNewPassword": "Sila sahkan kata laluan baru anda",
+  "passwordsDoNotMatch": "Kata laluan tidak sepadan",
+  "updatingPassword": "Mengemas kini kata laluan...",
+  "cancel": "Batal",
+  "copy": "Salin",
+  "passwordChangedSuccessfully": "Kata laluan berjaya ditukar!",
+  "deleteAccountTitle": "Padam Akaun",
+  "areYouSureDeleteAccount": "Adakah anda pasti mahu memadam akaun anda? Tindakan ini tidak boleh dibatalkan.",
+  "areYouSureYouWantToLogOut": "Adakah anda pasti mahu log keluar?",
+  "toConfirmTypeDelete": "Untuk mengesahkan, sila taip \"DELETE\" dalam kotak di bawah:",
+  "typeDeleteToConfirm": "Taip DELETE untuk mengesahkan",
+  "delete": "Padam",
+  "deleteAccountFeatureComingSoon": "Ciri padam akaun akan datang tidak lama lagi",
+  "creatingVerificationSession": "Membuat sesi pengesahan...",
+  "couldNotOpenVerificationLink": "Tidak dapat membuka pautan pengesahan",
+  "failedToStartVerification": "Gagal memulakan pengesahan: {error}",
+  "@failedToStartVerification": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "diditNotConfigured": "Didit tidak dikonfigurasi. Sila tetapkan DIDIT_CLIENT_ID (kunci API) dan DIDIT_WORKFLOW_ID dalam fail .env anda.",
+  "identityVerificationRequired": "Pengesahan identiti diperlukan untuk mewujudkan kepercayaan dan memastikan kesahan undang-undang wasiat anda.",
+  "legalValidity": "Kesahan Undang-undang",
+  "establishesLegalValidity": "Mewujudkan kesahan undang-undang wasiat anda",
+  "buildsTrust": "Membina Kepercayaan",
+  "providesAssurance": "Memberi jaminan kepada benefisiari dan pelaksana",
+  "regulatoryCompliance": "Pematuhan Peraturan",
+  "ensuresCompliance": "Memastikan pematuhan dengan keperluan peraturan",
+  "fraudProtection": "Perlindungan Penipuan",
+  "protectsAgainstFraud": "Melindungi daripada penipuan dan kecurian identiti",
+  "yourInformationIsEncrypted": "Maklumat anda disulitkan dan selamat",
+  "startVerification": "Mula Pengesahan",
+  
+  "editProfile": "Edit Profil",
+  "save": "Simpan",
+  "invalidImage": "Imej tidak sah. Sila pilih fail imej yang sah (maks 5MB)",
+  "imageUploadedSuccessfully": "Imej berjaya dimuat naik",
+  "failedToUploadImage": "Gagal memuat naik imej: {error}",
+  "@failedToUploadImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectImageSource": "Pilih Sumber Imej",
+  "camera": "Kamera",
+  "gallery": "Galeri",
+  "profileUpdatedSuccessfully": "Profil berjaya dikemas kini",
+  "failedToUpdateProfile": "Gagal mengemas kini profil: {error}",
+  "@failedToUpdateProfile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uploading": "Memuat naik...",
+  "changePhoto": "Tukar Foto",
+  "personalInformation": "Maklumat Peribadi",
+  "username": "Nama pengguna",
+  "enterYourUsername": "Masukkan nama pengguna anda",
+  "fullNameNric": "Nama Penuh (NRIC)",
+  "enterYourFullNameAsPerNric": "Masukkan nama penuh anda seperti dalam NRIC",
+  "phoneNumber": "Nombor Telefon",
+  "enterYourPhoneNumber": "Masukkan nombor telefon anda",
+  "gender": "Jantina",
+  "enterYourEmail": "Masukkan e-mel anda",
+  "emailCannotBeChanged": "E-mel tidak boleh ditukar",
+  "addressInformation": "Maklumat Alamat",
+  "addressLine1": "Baris Alamat 1",
+  "enterYourAddress": "Masukkan alamat anda",
+  "addressLine2": "Baris Alamat 2",
+  "enterAdditionalAddressDetails": "Masukkan butiran alamat tambahan",
+  "city": "Bandar",
+  "enterCity": "Masukkan bandar",
+  "state": "Negeri",
+  "enterState": "Negeri",
+  "postcode": "Poskod",
+  "enterPostcode": "Masukkan poskod",
+  "country": "Negara",
+  
+  "myWill": "Wasiat Saya",
+  "shareWill": "Kongsi Wasiat",
+  "whyCreateYourWillInSampul": "Mengapa buat wasiat anda di Sampul?",
+  "yourWillPullsFromProfile": "Wasiat anda mengambil maklumat daripada profil, senarai keluarga, aset digital, dan hasrat tambahan supaya semuanya kekal bersambung.",
+  "keepAllKeyInformation": "Simpan semua maklumat penting (profil, keluarga, aset) di satu tempat.",
+  "generateStructuredWillDocument": "Hasilkan dokumen wasiat berstruktur yang boleh anda baca, eksport, dan kongsi.",
+  "updateWillLater": "Kemas kini wasiat anda kemudian apabila kehidupan atau aset anda berubah.",
+  "startMyWill": "Mula wasiat saya",
+  "deleting": "Memadam...",
+  "publish": "Terbitkan",
+  "unpublish": "Nyahterbit",
+  "publishWill": "Terbitkan Wasiat",
+  "publishWillConfirmation": "Adakah anda pasti mahu menerbitkan wasiat ini?\n\nSetelah diterbitkan, wasiat ini akan boleh diakses oleh sesiapa yang mempunyai pautan kongsi:\n{url}\n\nPastikan anda hanya berkongsi pautan ini dengan ahli keluarga atau pelaksana yang dipercayai.",
+  "@publishWillConfirmation": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLinkCopiedToClipboard": "Pautan kongsi disalin ke papan klip",
+  "willPublishedSuccessfully": "Wasiat berjaya diterbitkan",
+  "willUnpublishedSuccessfully": "Wasiat berjaya dinyahterbit",
+  "failedToPublishWill": "Gagal menerbitkan wasiat: {error}",
+  "@failedToPublishWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToUnpublishWill": "Gagal menyahterbit wasiat: {error}",
+  "@failedToUnpublishWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDeleteWill": "Gagal memadam wasiat: {error}",
+  "@failedToDeleteWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadWillData": "Gagal memuatkan data wasiat: {error}",
+  "@failedToLoadWillData": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "code": "Kod",
+  "warningsReviewRecommended": "{count} amaran - Semakan disyorkan",
+  "@warningsReviewRecommended": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "issuesActionRequired": "{count} isu - Tindakan diperlukan",
+  "@issuesActionRequired": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "published": "Diterbitkan",
+  "deleteWill": "Padam Wasiat",
+  "areYouSureDeleteWill": "Adakah anda pasti mahu memadam wasiat anda? Tindakan ini tidak boleh dibatalkan.",
+  "createWill": "Cipta Wasiat",
+  "editWill": "Edit Wasiat",
+  "updateWill": "Kemas Kini Wasiat",
+  "executors": "Pelaksana",
+  "guardians": "Penjaga",
+  "extraWishes": "Hasrat Tambahan",
+  "reviewSave": "Semak & Simpan",
+  "primaryExecutor": "Pelaksana Utama (Co-Sampul 1)",
+  "selectPrimaryExecutor": "Pilih orang utama untuk melaksanakan wasiat anda",
+  "secondaryExecutor": "Pelaksana Sekunder (Co-Sampul 2)",
+  "selectSecondaryExecutor": "Pilihan: Pilih pelaksana sekunder",
+  "primaryGuardian": "Penjaga Utama",
+  "selectPrimaryGuardian": "Pilih penjaga untuk kanak-kanak bawah umur (jika berkenaan)",
+  "secondaryGuardian": "Penjaga Sekunder",
+  "selectSecondaryGuardian": "Pilihan: Pilih penjaga sekunder",
+  "selectFamilyMember": "Pilih ahli keluarga",
+  "noneSelected": "Tiada dipilih",
+  "notFound": "Tidak dijumpai",
+  "yourAssets": "Aset Anda",
+  "manageAll": "Urus Semua",
+  "noAssetsYet": "Tiada aset lagi. Tambah sekurang-kurangnya satu untuk dimasukkan dalam wasiat anda.",
+  "showMore": "Tunjukkan lebih banyak ({count})",
+  "@showMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yourExtraWishes": "Hasrat Tambahan Anda",
+  "noWishesYet": "Tiada hasrat lagi. Tambah nazar, fidyah, ikrar penderma organ, dan peruntukan amal anda.",
+  "nazarWishes": "Hasrat nazar",
+  "nazarCost": "Kos nazar",
+  "fidyahDays": "Hari fidyah",
+  "fidyahAmount": "Jumlah fidyah",
+  "organDonorPledge": "Ikrar penderma organ",
+  "yes": "Ya",
+  "no": "Tidak",
+  "waqf": "Wakaf: {count} badan • RM {total}",
+  "@waqf": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "charity": "Amal: {count} badan • RM {total}",
+  "@charity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "name": "Nama",
+  "nric": "NRIC",
+  "phone": "Telefon",
+  "address": "Alamat",
+  "notProvided": "Tidak disediakan",
+  "totalAssets": "Jumlah aset: RM {total}",
+  "@totalAssets": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "yourWillUpdatesAutomatically": "Wasiat anda dikemas kini secara automatik dengan perubahan profil, aset, dan keluarga anda.",
+  "willCreatedSuccessfully": "Wasiat berjaya dicipta!",
+  "willUpdatedSuccessfully": "Wasiat berjaya dikemas kini!",
+  "failedToSaveWill": "Gagal menyimpan wasiat: {error}",
+  "@failedToSaveWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadInitialData": "Gagal memuatkan data awal: {error}",
+  "@failedToLoadInitialData": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "addAsset": "Tambah Aset",
+  "aboutAssets": "Mengenai Aset",
+  "platformService": "Platform / Perkhidmatan",
+  "details": "Butiran",
+  "review": "Semak",
+  "searchForPlatformOrService": "Cari platform atau perkhidmatan",
+  "searchPlatformHint": "cth., Facebook, Google Drive, Maybank",
+  "addYourOwnAsset": "Tambah aset anda sendiri",
+  "useAsAssetName": "Gunakan \"{text}\" sebagai nama aset",
+  "@useAsAssetName": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "cantFindItAddAsCustom": "Tidak jumpa? Tambah \"{text}\" sebagai tersuai",
+  "@cantFindItAddAsCustom": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "addCustomAsset": "Tambah Aset Tersuai",
+  "assetName": "Nama Aset *",
+  "assetNameHint": "cth., Platform Tersuai Saya",
+  "websiteUrlOptional": "URL Laman Web (pilihan)",
+  "websiteUrlHint": "https://example.com",
+  "required": "Diperlukan",
+  "declaredValueMyr": "Nilai Dinyatakan (MYR)",
+  "estimatedCurrentValue": "Anggaran nilai semasa aset ini",
+  "enterValidAmountMaxDecimals": "Masukkan jumlah yang sah (maks 2 perpuluhan)",
+  "enterValidAmount": "Masukkan jumlah yang sah",
+  "instructionsAfterDeath": "Arahan Selepas Kematian",
+  "loadingRecipients": "Memuatkan penerima...",
+  "giftRecipient": "Penerima Hadiah",
+  "giftRecipientRequired": "Penerima Hadiah diperlukan",
+  "remarksOptional": "Catatan (pilihan)",
+  "remarksHint": "Sebarang arahan atau nota tambahan",
+  "assetWillBeIncludedInWill": "Aset ini akan dimasukkan dalam wasiat anda. Sebarang perubahan yang anda buat akan disegerakkan secara automatik ke wasiat anda.",
+  "website": "Laman Web",
+  "instruction": "Arahan",
+  "remarks": "Catatan",
+  "pleaseSelectPlatformService": "Sila pilih platform/perkhidmatan",
+  "pleaseSelectInstruction": "Sila pilih arahan",
+  "pleaseSelectGiftRecipient": "Sila pilih penerima hadiah",
+  "assetAddedSuccessfully": "Aset berjaya ditambah",
+  "failedToAddAsset": "Gagal menambah aset: {error}",
+  "@failedToAddAsset": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchFailed": "Carian gagal: {error}",
+  "@searchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "youMustBeSignedIn": "Anda mesti log masuk",
+  "unnamed": "Tanpa nama",
+  
+  "editAsset": "Edit Aset",
+  "changesHereUpdateWillAutomatically": "Perubahan di sini mengemas kini wasiat anda secara automatik.",
+  "assetUpdated": "Aset dikemas kini",
+  "failedToUpdate": "Gagal mengemas kini: {error}",
+  "@failedToUpdate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAsset": "Padam Aset",
+  "areYouSureDeleteAsset": "Adakah anda pasti mahu memadam aset ini? Tindakan ini tidak boleh dibatalkan.",
+  "assetDeleted": "Aset dipadam",
+  "failedToDelete": "Gagal memadam: {error}",
+  "@failedToDelete": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "whyAddYourAssets": "Mengapa tambah aset anda?",
+  "digitalAssetsInclude": "Aset digital termasuk aplikasi bank, dompet elektronik, langganan, media sosial, dan akaun dalam talian lain.",
+  "makeItEasyForExecutors": "Memudahkan pelaksana anda mengetahui akaun yang anda miliki.",
+  "linkEachAssetToInstructions": "Pautkan setiap aset dengan arahan yang jelas (Faraid, tamatkan, pindahkan sebagai hadiah, selesaikan hutang).",
+  "keepWillUpToDate": "Kekalkan wasiat dan perancangan anda terkini apabila kehidupan dalam talian anda berubah.",
+  "addAssetButton": "Tambah aset",
+  
+  "aboutFamilyMembers": "Mengenai Ahli Keluarga",
+  "letsAddYourFamily": "Mari kita tambah keluarga anda",
+  "addPeopleWhoMatterMost": "Tambah orang yang paling penting — pelaksana, penerima manfaat, dan penjaga — supaya wasiat anda kekal jelas dan bersambung.",
+  "whyAddFamilyMembers": "Mengapa tambah ahli keluarga?",
+  "familyListConnectsToWill": "Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan hibah anda. Tambah pelaksana (Co-Sampul), penerima manfaat, dan penjaga.",
+  "assignExecutorsCoSampul": "Tugaskan pelaksana (Co-Sampul) yang akan melaksanakan wasiat anda.",
+  "listBeneficiariesWhoReceive": "Senaraikan penerima manfaat yang akan menerima aset anda.",
+  "designateGuardiansForMinors": "Tentukan penjaga untuk kanak-kanak bawah umur jika diperlukan.",
+  "addFamilyMember": "Tambah ahli keluarga",
+  "waris": "Waris",
+  "nonWaris": "Bukan Waris",
+  "legacy": "Warisan",
+  "addFamilyMemberTitle": "Tambah Ahli Keluarga",
+  "basicInfo": "Maklumat Asas",
+  "addPhoto": "Tambah foto",
+  "fullName": "Nama Penuh",
+  "nameRequired": "Nama diperlukan",
+  "pleaseEnterValidName": "Sila masukkan nama yang sah",
+  "relationship": "Hubungan",
+  "relationshipRequired": "Hubungan diperlukan",
+  "category": "Kategori",
+  "coSampulExecutor": "Co-sampul (Pelaksana)",
+  "coSampulExecutorHelp": "Co-sampul (Pelaksana): Orang yang dipercayai yang melaksanakan wasiat anda bersama-sama dengan anda.",
+  "beneficiaryHelp": "Penerima Manfaat: Orang yang akan mewarisi aset yang anda pilih.",
+  "guardianHelp": "Penjaga: Orang yang bertanggungjawab menjaga tanggungan atau kanak-kanak bawah umur anda.",
+  "percentage0To100": "Peratusan (0 - 100)",
+  "otherInfoOptional": "Maklumat Lain (pilihan)",
+  "icNricNumber": "Nombor IC/NRIC",
+  "phone": "Telefon",
+  "pleaseEnterValidEmailAddress": "Sila masukkan alamat e-mel yang sah",
+  "pleaseProvidePercentageForBeneficiary": "Sila berikan peratusan untuk penerima manfaat",
+  "percentageMustBeBetween0And100": "Peratusan mestilah antara 0 dan 100",
+  "contactId": "Hubungan & ID",
+  "address": "Alamat",
+  "ifPersonPartOfWillSync": "Jika orang ini adalah sebahagian daripada wasiat anda, sebarang kemas kini yang anda buat di sini akan disegerakkan secara automatik ke wasiat anda.",
+  "familyMemberAdded": "Ahli keluarga ditambah",
+  "failedToAdd": "Gagal menambah: {error}",
+  "@failedToAdd": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidImageUseJpgPngWebp": "Imej tidak sah. Gunakan JPG/PNG/WebP di bawah 5MB.",
+  "imageSelectionFailed": "Pemilihan imej gagal: {error}",
+  "@imageSelectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editFamilyMember": "Edit Ahli Keluarga",
+  "deleteFamilyMember": "Padam Ahli Keluarga",
+  "areYouSureDeleteFamilyMember": "Adakah anda pasti mahu memadam ahli keluarga ini? Tindakan ini tidak boleh dibatalkan.",
+  "familyMemberDeleted": "Ahli keluarga dipadam",
+  "failedToDeleteFamilyMember": "Gagal memadam: {error}",
+  "@failedToDeleteFamilyMember": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSaveFamilyMember": "Gagal menyimpan: {error}",
+  "@failedToSaveFamilyMember": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changesHereUpdateWillAutomatically": "Perubahan di sini mengemas kini wasiat anda secara automatik.",
+  "basicInfoSection": "Maklumat Asas",
+  "contactIdSection": "Hubungan & ID",
+  "addressSection": "Alamat",
+  
+  "addTask": "Tambah Tugas",
+  "editTask": "Edit Tugas",
+  "task": "Tugas",
+  "deleteTask": "Padam tugas?",
+  "thisActionCannotBeUndone": "Tindakan ini tidak boleh dibatalkan.",
+  "deleteAllTasks": "Padam semua tugas?",
+  "thisWillRemoveAllTasksPermanently": "Ini akan membuang semua tugas secara kekal.",
+  "deleteAll": "Padam semua",
+  "createYourChecklist": "Cipta senarai semak anda",
+  "organiseYourAftercareTasks": "Susun tugas penjagaan selepas anda dan pantau langkah penting.",
+  "whyUseAChecklist": "Mengapa gunakan senarai semak?",
+  "structuredChecklistHelps": "Senarai semak berstruktur membantu anda dan keluarga anda mengikuti tugas penting selepas kematian, langkah demi langkah.",
+  "startQuicklyWithRecommended": "Mula dengan cepat dengan set tugas penjagaan selepas penting yang disyorkan.",
+  "addYourOwnCustomTasks": "Tambah tugas tersuai anda sendiri yang sesuai dengan situasi dan budaya anda.",
+  "trackProgressSoNothingForgotten": "Pantau kemajuan supaya tiada perkara penting yang dilupakan semasa masa sukar.",
+  "aboutChecklists": "Mengenai senarai semak",
+  "defaultChecklistIncludes": "Senarai semak lalai termasuk langkah penjagaan selepas penting seperti:\n\n• Memaklumkan ahli keluarga\n• Menguruskan akaun bank dan aset\n• Mengendalikan hal undang-undang dan dokumen\n• Menyusun barang peribadi\n• Mengemas kini penerima manfaat dan kenalan\n\nAnda juga boleh mencipta tugas tersuai khusus untuk keperluan anda.",
+  "gotIt": "Faham",
+  "learnMoreAboutChecklists": "Ketahui lebih lanjut tentang senarai semak",
+  "useDefaultChecklist": "Gunakan senarai semak lalai",
+  "createCustomTask": "Cipta tugas tersuai",
+  "pin": "Pin",
+  "unpin": "Nyahpin",
+  
+  "getStartedTitle": "Mula",
+  "completeYourProfile": "Lengkapkan Profil Anda",
+  "setUpYourBasicInformation": "Sediakan maklumat asas anda",
+  "addYourFirstFamilyMember": "Tambah Ahli Keluarga Pertama Anda",
+  "addSomeoneImportantToYourWill": "Tambah seseorang yang penting dalam wasiat anda",
+  "addYourFirstAsset": "Tambah Aset Pertama Anda",
+  "startTrackingYourDigitalAssets": "Mula menjejaki aset digital anda",
+  "createYourWill": "Cipta Wasiat Anda",
+  "createYourWillWithSampul": "Cipta wasiat anda dengan Sampul",
+  "referralCode": "Kod rujukan",
+  "addReferralCodeOptional": "Tambah kod rujukan (pilihan)",
+  "haveReferralCode": "Ada kod rujukan?",
+  "enterReferralCodeBelow": "Masukkan kod rujukan anda di bawah untuk membuka kunci faedah",
+  "referralCodeLabel": "Kod rujukan",
+  "codeLooksTooShort": "Kod kelihatan terlalu pendek",
+  "clear": "Kosongkan",
+  "apply": "Guna",
+  "referralCodeApplied": "Kod rujukan telah digunakan",
+  "setUpYourFamilyTrustAccount": "Sediakan Akaun Amanah Keluarga Anda",
+  "createFamilyAccountForLongTermSupport": "Cipta akaun keluarga untuk mengurus sokongan jangka panjang (pilihan).",
+  "pleaseCompleteAllStepsBeforeFinishing": "Sila lengkapkan semua langkah sebelum selesai",
+  "failedToCompleteOnboarding": "Gagal melengkapkan onboarding: {error}",
+  "@failedToCompleteOnboarding": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseComplete": "Sila lengkapkan: {nextTitle}",
+  "@pleaseComplete": {
+    "placeholders": {
+      "nextTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "completeSetup": "Lengkapkan persediaan",
+  "theRemainingSteps": "langkah yang tinggal",
+  
+  "familyTrustFund": "Amanah Keluarga",
+  "aboutFamilyTrustFund": "Mengenai Amanah Keluarga",
+  "noTrustFundsYet": "Tiada amanah keluarga lagi",
+  "createNew": "Cipta Baru",
+  "createTrust": "Cipta amanah",
+  "trustCodeUnique": "Kod amanah (unik)",
+  "all": "Semua",
+  "aboutTrustFund": "Mengenai Amanah",
+  "newToTrusts": "Baru kepada amanah?",
+  "learnMore": "Ketahui lebih lanjut",
+  "startSettingUp": "Mula menyediakan",
+  "whySetUpFamilyTrustFund": "Mengapa sediakan Amanah Keluarga?",
+  "familyTrustFundDescription": "Amanah Keluarga membolehkan anda memutuskan bagaimana wang anda digunakan untuk keluarga anda, walaupun anda tidak berada di sekeliling.",
+  "chooseHowMoneySpent": "Pilih bagaimana wang anda dibelanjakan (penjagaan kesihatan, yuran sekolah, derma)",
+  "changePlansAnytime": "Tukar pelan anda pada bila-bila masa yang anda mahu",
+  "familyKnowsExactly": "Keluarga anda tahu dengan tepat apa yang perlu dilakukan — tiada kekeliruan",
+  "sampulPartnerWithRakyat": "Sampul bekerjasama dengan Rakyat Trustee dan Halogen Capital untuk memproses dana anda. ",
+  "learnMoreAboutPartners": "Ketahui lebih lanjut tentang rakan kongsi kami",
+  "trustFundDetails": "Butiran Amanah Keluarga",
+  "deleteTrustFund": "Padam Amanah Keluarga",
+  "areYouSureDeleteTrustFund": "Adakah anda pasti mahu memadam amanah keluarga ini? Tindakan ini tidak boleh dibatalkan.",
+  "trustFundDeleted": "Amanah Keluarga dipadam",
+  "failedToDeleteTrustFund": "Gagal memadam amanah keluarga: {error}",
+  "@failedToDeleteTrustFund": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "trustIdNotAvailable": "ID Amanah tidak tersedia",
+  "trustIdCopiedToClipboard": "ID Amanah disalin ke papan klip",
+  "beneficiaries": "Penerima Manfaat",
+  "whoFundWillBeDistributedTo": "Siapa yang akan menerima dana ini",
+  "pleaseSaveTrustFirst": "Sila simpan amanah terlebih dahulu sebelum menambah penerima manfaat",
+  "beneficiaryAddedSuccessfully": "Penerima manfaat berjaya ditambah",
+  "failedToAddBeneficiary": "Gagal menambah penerima manfaat: {error}",
+  "@failedToAddBeneficiary": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "beneficiaryUpdatedSuccessfully": "Penerima manfaat berjaya dikemas kini",
+  "failedToUpdateBeneficiary": "Gagal mengemas kini penerima manfaat: {error}",
+  "@failedToUpdateBeneficiary": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "instructions": "Arahan",
+  "allocateWhatTrustFundWillCover": "Peruntukkan apa yang akan dilindungi oleh amanah keluarga ini",
+  "education": "Pendidikan",
+  "livingExpenses": "Perbelanjaan Hidup",
+  "healthcare": "Penjagaan Kesihatan",
+  "charitable": "Amal",
+  "debt": "Hutang",
+  "tapToSetUp": "Ketik untuk menyediakan",
+  "settingsSaved": "Tetapan disimpan",
+  "failedToSave": "Gagal menyimpan: {error}",
+  "@failedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "familyAccountCreated": "Akaun keluarga dicipta",
+  "yourFamilyNowHasClearGuidance": "Keluarga anda kini mempunyai panduan yang jelas, walaupun anda tidak berada di sekeliling untuk menerangkan.",
+  "whatHappensNow": "Apa yang berlaku sekarang",
+  "familyAccountSavedAndFollowed": "Akaun keluarga ini disimpan dan akan diikuti mengikut peraturan yang telah anda tetapkan.",
+  "nextSteps": "Langkah seterusnya",
+  "youMayReceiveConfirmationEmail": "Anda mungkin menerima e-mel pengesahan untuk rekod anda (jika didayakan).",
+  "youCanAlwaysReturnHere": "Anda sentiasa boleh kembali ke sini untuk mengemas kini kategori atau jumlah.",
+  "viewInstructions": "Lihat arahan",
+  "openTrust": "Buka amanah",
+  
+  "createTrustFund": "Cipta Amanah Keluarga",
+  "weCouldNotLoadYourProfile": "Kami tidak dapat memuatkan profil anda secara automatik. Sila isi butiran secara manual.",
+  "dismiss": "TUTUP",
+  "personalInformation": "Maklumat Peribadi",
+  "fundSupport": "Sokongan Dana",
+  "executorSelection": "Pemilihan Pelaksana",
+  "financialInformation": "Maklumat Kewangan",
+  "employmentBusinessInformation": "Maklumat Pekerjaan/Perniagaan",
+  "reviewSubmit": "Semak & Hantar",
+  "livingExpensesSubtitle": "Perumahan, makanan, utiliti, keperluan harian",
+  "healthcareSubtitle": "Bil perubatan, rawatan",
+  "charitableSubtitle": "Zakat, wakaf, sedekah, derma",
+  "debtSubtitle": "Bayaran balik pinjaman, obligasi tertunggak",
+  "youCanSelectMoreThanOne": "Anda boleh memilih lebih daripada satu. Anda boleh menukar ini pada bila-bila masa. Ini menetapkan peraturan. Dana bergerak hanya apabila syarat dipenuhi.",
+  "forLabel": "Untuk",
+  "untilTheyTurn": "Sehingga mereka berumur {age}",
+  "@untilTheyTurn": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "forTheirWholeLife": "Sepanjang hayat mereka",
+  "everyMonth": "setiap bulan",
+  "every3Months": "setiap 3 bulan",
+  "everyYear": "setiap tahun",
+  "whenConditionsAreMet": "apabila syarat dipenuhi",
+  "whenNeeded": "Apabila diperlukan",
+  "allAtOnceAtTheEnd": "Semua sekaligus pada akhir",
+  "someoneIKnow": "Seseorang yang Saya Kenali",
+  "familyMemberCloseFriendOrTrustedAdvisor": "Ahli keluarga, rakan rapat, atau penasihat yang dipercayai",
+  "freeUsually": "Percuma (biasanya)",
+  "basicReportingAndAnalytics": "Laporan dan analitik asas",
+  "personalConflict": "Konflik peribadi",
+  "administrativeBurden": "Beban pentadbiran",
+  "whosThisFamilyTrustAccountFor": "Akaun amanah keluarga ini untuk siapa?",
+  "noFamilyMembersFound": "Tiada ahli keluarga dijumpai. Tambah ahli keluarga dalam profil anda.",
+  "sampulsProfessionalExecutor": "Pelaksana Profesional Sampul",
+  "expertManagement": "Pengurusan pakar",
+  "neutralParty": "Pihak neutral",
+  "estFeeR4320yr": "Anggaran Yuran: RM4,320/tahun (Dibayar daripada dana amanah)",
+  "executorGoodToKnow": "Pelaksana anda bertindak sebagai perlindungan — bukan pembuat keputusan. Pilih seseorang yang teratur dan boleh dipercayai. Mereka mestilah sekurang-kurangnya berumur 21 tahun. Sekurang-kurangnya 2 Pelaksana Bersama diperlukan apabila salah satu penerima manfaat adalah bawah umur. Jika salah satu penerima manfaat anda berumur di bawah 18 tahun, anda memerlukan sekurang-kurangnya dua pelaksana yang bekerjasama. Kami akan mengingatkan anda tentang perkara ini kemudian.",
+  "estimatedNetWorth": "Anggaran Nilai Bersih",
+  "sourceOfFund": "Sumber Dana",
+  "purposeOfTransaction": "Tujuan Transaksi",
+  "employerName": "Nama Majikan",
+  "businessNature": "Sifat Perniagaan",
+  "businessAddressLine1": "Baris Alamat Perniagaan 1",
+  "businessAddressLine2": "Baris Alamat Perniagaan 2",
+  "fullName": "Nama Penuh",
+  "accountFor": "Akaun untuk",
+  "duration": "Tempoh",
+  "untilAge": "Sehingga umur {age}",
+  "@untilAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "theirEntireLifetime": "Sepanjang hayat mereka",
+  "paymentType": "Jenis Pembayaran",
+  "regularPayments": "Pembayaran tetap",
+  "amount": "Jumlah",
+  "frequency": "Kekerapan",
+  "monthly": "Bulanan",
+  "quarterly": "Suku Tahunan",
+  "yearly": "Tahunan",
+  "whenConditions": "Apabila syarat",
+  "asNeededTrusteeDecides": "Mengikut keperluan (pemegang amanah memutuskan)",
+  "lumpSumAtTheEnd": "Jumlah sekaligus pada akhir",
+  "executorType": "Jenis Pelaksana",
+  "selectedExecutors": "Pelaksana Terpilih",
+  "familyMembersSelected": "{count} ahli keluarga dipilih",
+  "@familyMembersSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "businessInformation": "Maklumat Perniagaan",
+  "employerCompanyName": "Nama Majikan/Syarikat",
+  "natureOfBusiness": "Sifat Perniagaan",
+  "businessAddress": "Alamat Perniagaan",
+  "charitiesDonations": "Amal/Derma ({count})",
+  "@charitiesDonations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseSelectAtLeastOneFundSupport": "Sila pilih sekurang-kurangnya satu kategori sokongan dana dan sediakan butirannya",
+  "pleaseSelectAtLeastOneExecutor": "Sila pilih sekurang-kurangnya satu pelaksana",
+  "pleaseCompleteYourProfileFirst": "Sila lengkapkan profil anda terlebih dahulu",
+  "trustFundCreatedSuccessfully": "Amanah Keluarga berjaya dicipta",
+  "failedToCreateTrustFund": "Gagal mencipta amanah keluarga: {error}",
+  "@failedToCreateTrustFund": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "charitiesSelected": "{count} badan amal dipilih",
+  "@charitiesSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "charitySelected": "1 badan amal dipilih",
+  
+  "fundSupport": "Sokongan Dana",
+  "whosThisFamilyTrustAccountFor": "Akaun amanah keluarga ini untuk siapa?",
+  "pickOneMainPersonForCategory": "Pilih satu orang utama untuk kategori ini. Anda masih boleh menyokong orang lain dalam kategori lain.",
+  "noFamilyMembersYet": "Tiada ahli keluarga lagi.\nKetik \"Tambah Baru\" di bawah untuk menambah orang pertama untuk akaun ini.",
+  "addNew": "Tambah Baru",
+  "save": "Simpan",
+  "saveYourChanges": "Simpan perubahan anda?",
+  "youHaveUnsavedChanges": "Anda mempunyai perubahan yang tidak disimpan pada halaman ini. Adakah anda ingin menyimpan persediaan ini sebelum anda kembali?",
+  "discardChanges": "Buang perubahan",
+  "saveExit": "Simpan & keluar",
+  "supportForTuitionFees": "Sokongan untuk yuran tuisyen, buku, dan perbelanjaan pendidikan",
+  "coverDailyLivingExpenses": "Melindungi perbelanjaan hidup harian dan keperluan asas",
+  "medicalExpensesTreatments": "Perbelanjaan perubatan, rawatan, dan perkhidmatan penjagaan kesihatan",
+  "donationsContributions": "Derma dan sumbangan kepada organisasi amal",
+  "paymentsOutstandingDebts": "Pembayaran untuk hutang tertunggak dan obligasi kewangan",
+  "fundSupportConfiguration": "Konfigurasi sokongan dana untuk amanah anda",
+  "requestPending": "Permintaan Menunggu",
+  "paused": "Dijeda",
+  "totalDonations": "Jumlah Derma",
+  "charity": "Amal",
+  "noCharitiesDonationsAddedYet": "Tiada amal/derma ditambah lagi",
+  "addCharitableOrganizations": "Tambah organisasi amal untuk mula membuat perbezaan",
+  "unnamedOrganization": "Organisasi Tanpa Nama",
+  "donationAmount": "Jumlah Derma",
+  "annualTotal": "Jumlah Tahunan",
+  "monthlyAverage": "Purata Bulanan",
+  "na": "T/A",
+  "supportDuration": "Tempoh Sokongan",
+  "untilAge": "Sehingga umur {age}",
+  "@untilAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "endsInYear": "Berakhir pada Tahun {year} ({years} tahun dari sekarang)",
+  "@endsInYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "continuousSupportLifetime": "Sokongan berterusan sepanjang hayat mereka",
+  "paymentMethod": "Kaedah Pembayaran",
+  "regularPayments": "Pembayaran Tetap",
+  "asNeeded": "Mengikut Keperluan",
+  "trusteeDecidesRelease": "Pemegang amanah memutuskan bila untuk melepaskan dana berdasarkan tujuan yang diluluskan",
+  "lumpSum": "Jumlah Sekaligus",
+  "allFundsReleasedEnd": "Semua dana dilepaskan apabila tempoh amanah berakhir",
+  "cancelRequest": "Batal Permintaan",
+  "requestFund": "Minta Dana",
+  "areYouSureRequestFunds": "Adakah anda pasti mahu meminta dana? Ini akan memberitahu pemegang amanah anda untuk memproses permintaan dana.",
+  "fundRequestSubmittedSuccessfully": "Permintaan dana berjaya dihantar",
+  "areYouSureCancelRequest": "Adakah anda pasti mahu membatalkan permintaan dana ini?",
+  "noKeepIt": "Tidak, Simpan",
+  "fundRequestCancelledSuccessfully": "Permintaan dana berjaya dibatalkan",
+  "resumeInstruction": "Sambung Semula Arahan",
+  "pauseInstruction": "Jeda Arahan",
+  "areYouSureResumeInstruction": "Adakah anda pasti mahu menyambung semula arahan {category}? Pembayaran akan diteruskan mengikut jadual.",
+  "@areYouSureResumeInstruction": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "areYouSurePauseInstruction": "Adakah anda pasti mahu menjeda arahan {category}? Ini akan menghentikan sementara semua pembayaran sehingga anda menyambung semula.",
+  "@areYouSurePauseInstruction": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "resume": "Sambung Semula",
+  "pause": "Jeda",
+  "instructionResumedSuccessfully": "Arahan {category} berjaya disambung semula",
+  "@instructionResumedSuccessfully": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "instructionPausedSuccessfully": "Arahan {category} berjaya dijeda",
+  "@instructionPausedSuccessfully": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "howLongShouldThisLast": "Berapa lama ini harus bertahan?",
+  "untilSpecificAge": "Sehingga umur tertentu",
+  "age": "Umur",
+  "thatsYearsFromNow": "Itu {years} tahun dari sekarang (Tahun {year})",
+  "@thatsYearsFromNow": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "paymentConfiguration": "Konfigurasi Pembayaran",
+  "howOftenContribution": "Berapa kerap sumbangan ini harus dijalankan?",
+  "yourTrusteeReleasesMoney": "Pemegang amanah anda melepaskan wang apabila diperlukan untuk tujuan yang diluluskan",
+  "everythingReleasedEnd": "Semuanya dilepaskan apabila tempoh amanah berakhir",
+  "thisIsAGuide": "Ini adalah panduan. Pelaksana anda boleh menyesuaikan berdasarkan keperluan sebenar.",
+  "addCharitableOrganizationsDonate": "Tambah organisasi amal yang anda ingin dermakan",
+  "addCharity": "Tambah Amal/Derma"
 }

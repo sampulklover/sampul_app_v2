@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
@@ -124,7 +125,8 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         setState(() {
           _isLoading = false;
         });
-        _showErrorSnackBar('Failed to load will data: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorSnackBar(l10n.failedToLoadWillData(e.toString()));
       }
     }
   }
@@ -178,20 +180,20 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Future<void> _publishWill() async {
     if (_will == null || _will!.id == null) return;
     
+    final l10n = AppLocalizations.of(context)!;
+    final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
+    
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Publish Will'),
+        title: Text(l10n.publishWill),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Are you sure you want to publish this will?\n\n'
-              'Once published, this will will be accessible to anyone with the share link:\n'
-              'https://sampul.co/view-will?id=${_will!.willCode}\n\n'
-              'Make sure you only share this link with trusted family members or executors.',
+              l10n.publishWillConfirmation(url),
             ),
             const SizedBox(height: 12),
             Row(
@@ -212,16 +214,17 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                     final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
                     await Clipboard.setData(ClipboardData(text: url));
                     if (context.mounted) {
+                      final l10n = AppLocalizations.of(context)!;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Share link copied to clipboard'),
+                        SnackBar(
+                          content: Text(l10n.shareLinkCopiedToClipboard),
                           backgroundColor: Colors.green,
                         ),
                       );
                     }
                   },
                   icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Copy'),
+                  label: Text(l10n.copy),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -236,12 +239,12 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Publish'),
+            child: Text(l10n.publish),
           ),
         ],
       ),
@@ -262,14 +265,17 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       }
       
       await _loadWillData();
-      _showSuccessSnackBar('Will published successfully');
+      final l10n = AppLocalizations.of(context)!;
+      _showSuccessSnackBar(l10n.willPublishedSuccessfully);
     } catch (e) {
-      _showErrorSnackBar('Failed to publish will: $e');
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar(l10n.failedToPublishWill(e.toString()));
     }
   }
 
   Future<void> _unpublishWill() async {
     if (_will == null || _will!.id == null) return;
+    final l10n = AppLocalizations.of(context)!;
     try {
       final updatedWill = await WillService.instance.updateWill(
         willId: _will!.id!,
@@ -278,34 +284,35 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       
       // Check if the will was actually unpublished
       if (updatedWill.isDraft == false) {
-        _showErrorSnackBar('Failed to unpublish will: Still marked as published');
+        _showErrorSnackBar(l10n.failedToUnpublishWill('Still marked as published'));
         return;
       }
       
       await _loadWillData();
-      _showSuccessSnackBar('Will unpublished successfully');
+      _showSuccessSnackBar(l10n.willUnpublishedSuccessfully);
     } catch (e) {
-      _showErrorSnackBar('Failed to unpublish will: $e');
+      _showErrorSnackBar(l10n.failedToUnpublishWill(e.toString()));
     }
   }
 
   Future<void> _deleteWill() async {
     if (_will == null) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Will'),
-        content: const Text('Are you sure you want to delete your will? This action cannot be undone.'),
+        title: Text(l10n.deleteWill),
+        content: Text(l10n.areYouSureDeleteWill),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -318,10 +325,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
       try {
         await WillService.instance.deleteWill(_will!.id!);
-        _showSuccessSnackBar('Will deleted successfully');
+        _showSuccessSnackBar(l10n.willUpdatedSuccessfully);
         await _loadWillData();
       } catch (e) {
-        _showErrorSnackBar('Failed to delete will: $e');
+        _showErrorSnackBar(l10n.failedToDeleteWill(e.toString()));
       } finally {
         if (mounted) {
           setState(() {
@@ -335,23 +342,25 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
   Future<void> _shareWillDocument() async {
     if (_will == null) return;
+    final l10n = AppLocalizations.of(context)!;
     final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
     await Clipboard.setData(ClipboardData(text: url));
-    _showSuccessSnackBar('Share link copied to clipboard');
+    _showSuccessSnackBar(l10n.shareLinkCopiedToClipboard);
   }
 
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Will'),
+        title: Text(l10n.myWill),
         actions: [
           if (_will != null && _will!.isDraft == false)
             IconButton(
               onPressed: _shareWillDocument,
               icon: const Icon(Icons.share_outlined),
-              tooltip: 'Share Will',
+              tooltip: l10n.shareWill,
             ),
         ],
       ),
@@ -364,6 +373,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Widget _buildNoWillState() {
+    final l10n = AppLocalizations.of(context)!;
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
@@ -383,7 +393,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          "Let's create your will",
+                          l10n.letsCreateYourWill,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -392,7 +402,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Bring your profile, family, assets, and wishes together in one clear document.",
+                          l10n.willDescription,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                             height: 1.4,
@@ -406,10 +416,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     child: Center(
-                      child: Icon(
-                        Icons.description_outlined,
-                        size: 80,
-                        color: colorScheme.primary,
+                      child: Image.asset(
+                        'assets/will-certificate-scroll.png',
+                        width: 180,
+                        height: 180,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
@@ -427,7 +438,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Why create your will in Sampul?",
+                            l10n.whyCreateYourWillInSampul,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -435,7 +446,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
+                            l10n.yourWillPullsFromProfile,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -443,19 +454,19 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                           ),
                           const SizedBox(height: 20),
                           _buildWillBullet(
-                            "Keep all key information (profile, family, assets) in one place.",
+                            l10n.keepAllKeyInformation,
                             theme,
                             colorScheme,
                           ),
                           const SizedBox(height: 16),
                           _buildWillBullet(
-                            "Generate a structured will document you can read, export, and share.",
+                            l10n.generateStructuredWillDocument,
                             theme,
                             colorScheme,
                           ),
                           const SizedBox(height: 16),
                           _buildWillBullet(
-                            "Update your will later whenever your life or assets change.",
+                            l10n.updateWillLater,
                             theme,
                             colorScheme,
                           ),
@@ -499,7 +510,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      "Start my will",
+                      l10n.startMyWill,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onPrimary,
@@ -556,6 +567,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Widget _buildWillState() {
+    final l10n = AppLocalizations.of(context)!;
     final validation = WillService.instance.validateWill(_will!);
 
     return Column(
@@ -600,7 +612,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               ),
               const Spacer(),
               Text(
-                'Code: ${_will!.willCode}',
+                '${l10n.code}: ${_will!.willCode}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontFamily: 'monospace',
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -626,8 +638,8 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 const SizedBox(width: 8),
                 Text(
                   validation['isValid'] 
-                      ? '${(validation['warnings'] as List).length} warning(s) - Review recommended'
-                      : '${(validation['issues'] as List).length} issue(s) - Action required',
+                      ? l10n.warningsReviewRecommended((validation['warnings'] as List).length)
+                      : l10n.issuesActionRequired((validation['issues'] as List).length),
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: validation['isValid'] ? Colors.orange.shade700 : Colors.red.shade700,
@@ -651,51 +663,56 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
               ),
             ),
-          child: Row(
-            children: [
-              TextButton.icon(
-                onPressed: _editWill,
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Edit'),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const SizedBox(width: 16),
-              TextButton.icon(
-                onPressed: _isDeleting ? null : _deleteWill,
-                icon: _isDeleting 
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_outline, size: 16),
-                label: Text(_isDeleting ? 'Deleting...' : 'Delete'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red.shade600,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: _will!.isDraft == true ? _publishWill : _unpublishWill,
-                icon: Icon(
-                  _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
-                  size: 16,
-                ),
-                label: Text(_will!.isDraft == true ? 'Publish' : 'Unpublish'),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ],
+          child: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: _editWill,
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: Text(l10n.edit),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton.icon(
+                    onPressed: _isDeleting ? null : _deleteWill,
+                    icon: _isDeleting 
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.delete_outline, size: 16),
+                    label: Text(_isDeleting ? l10n.deleting : l10n.delete),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red.shade600,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _will!.isDraft == true ? _publishWill : _unpublishWill,
+                    icon: Icon(
+                      _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
+                      size: 16,
+                    ),
+                    label: Text(_will!.isDraft == true ? l10n.publish : l10n.unpublish),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           ),
         ),

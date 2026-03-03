@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../config/trust_constants.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import '../services/image_upload_service.dart';
 import '../utils/form_decoration_helper.dart';
+import '../utils/card_decoration_helper.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -111,9 +113,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // Validate image
       if (!_imageUploadService.validateImage(imageFile)) {
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid image. Please select a valid image file (max 5MB)'),
+          SnackBar(
+            content: Text(l10n.invalidImage),
             backgroundColor: Colors.red,
           ),
         );
@@ -142,18 +145,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       });
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image uploaded successfully'),
+        SnackBar(
+          content: Text(l10n.imageUploadedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       if (mounted) {
         setState(() => _isUploadingImage = false);
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload image: $e'),
+            content: Text(l10n.failedToUploadImage(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -162,22 +167,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<ImageSource?> _showImageSourceDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<ImageSource>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select Image Source'),
+          title: Text(l10n.selectImageSource),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text('Camera'),
+                title: Text(l10n.camera),
                 onTap: () => Navigator.of(context).pop(ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Gallery'),
+                title: Text(l10n.gallery),
                 onTap: () => Navigator.of(context).pop(ImageSource.gallery),
               ),
             ],
@@ -209,9 +215,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (!mounted) return;
       
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
+        SnackBar(
+          content: Text(l10n.profileUpdatedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );
@@ -220,9 +227,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to update profile: $e'),
+          content: Text(l10n.failedToUpdateProfile(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -235,10 +243,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoadingProfile) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Profile'),
+          title: Text(l10n.editProfile),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -248,7 +258,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(l10n.editProfile),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveProfile,
@@ -258,7 +268,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -352,7 +362,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.photo_camera),
-                    label: Text(_isUploadingImage ? 'Uploading...' : 'Change Photo'),
+                    label: Text(_isUploadingImage ? l10n.uploading : l10n.changePhoto),
                   ),
                 ],
               ),
@@ -361,129 +371,113 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 32),
 
             // Form Fields
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Personal Information',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+            CardDecorationHelper.styledCardWithTitle(
+              context: context,
+              title: l10n.personalInformation,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _usernameController,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10n.username,
+                      hintText: l10n.enterYourUsername,
+                      prefixIcon: Icons.person_outline,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Username',
-                        hintText: 'Enter your username',
-                        prefixIcon: Icons.person_outline,
-                      ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  TextFormField(
+                    controller: _nricNameController,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10n.fullNameNric,
+                      hintText: l10n.enterYourFullNameAsPerNric,
+                      prefixIcon: Icons.badge_outlined,
                     ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _nricNameController,
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Full Name (NRIC)',
-                        hintText: 'Enter your full name as per NRIC',
-                        prefixIcon: Icons.badge_outlined,
-                      ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  TextFormField(
+                    controller: _phoneNoController,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10n.phoneNumber,
+                      hintText: l10n.enterYourPhoneNumber,
+                      prefixIcon: Icons.phone_outlined,
                     ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _phoneNoController,
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Phone Number',
-                        hintText: 'Enter your phone number',
-                        prefixIcon: Icons.phone_outlined,
-                      ),
-                      keyboardType: TextInputType.phone,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  DropdownButtonFormField<String>(
+                    value: _selectedGender,
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10n.gender,
+                      prefixIcon: Icons.wc_outlined,
                     ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    DropdownButtonFormField<String>(
-                      value: _selectedGender,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Gender',
-                        prefixIcon: Icons.wc_outlined,
-                      ),
-                      items: TrustConstants.genders
-                          .map(
-                            (Map<String, String> item) => DropdownMenuItem<String>(
-                              value: item['value'],
-                              child: Text(item['name']!),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (String? value) => setState(() => _selectedGender = value),
+                    items: TrustConstants.genders
+                        .map(
+                          (Map<String, String> item) => DropdownMenuItem<String>(
+                            value: item['value'],
+                            child: Text(item['name']!),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (String? value) => setState(() => _selectedGender = value),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10n.email,
+                      hintText: l10n.enterYourEmail,
+                      prefixIcon: Icons.email_outlined,
                     ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Email',
-                        hintText: 'Enter your email',
-                        prefixIcon: Icons.email_outlined,
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      enabled: false, // Email cannot be changed
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
-                      ),
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: false, // Email cannot be changed
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6),
                     ),
-                    
-                    const SizedBox(height: 8),
-                    Text(
-                      'Email cannot be changed',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                      ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.emailCannotBeChanged,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 16),
 
             // Address Information Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Address Information',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+            CardDecorationHelper.styledCardWithTitle(
+              context: context,
+              title: l10n.addressInformation,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                     
                     TextFormField(
                       controller: _address1Controller,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Address Line 1',
-                        hintText: 'Enter your address',
+                        labelText: l10n.addressLine1,
+                        hintText: l10n.enterYourAddress,
                         prefixIcon: Icons.home_outlined,
                       ),
                     ),
@@ -494,8 +488,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       controller: _address2Controller,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Address Line 2',
-                        hintText: 'Enter additional address details',
+                        labelText: l10n.addressLine2,
+                        hintText: l10n.enterAdditionalAddressDetails,
                         prefixIcon: Icons.home_work_outlined,
                       ),
                     ),
@@ -510,8 +504,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             controller: _cityController,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'City',
-                              hintText: 'Enter city',
+                              labelText: l10n.city,
+                              hintText: l10n.enterCity,
                               prefixIcon: Icons.location_city_outlined,
                             ),
                           ),
@@ -522,8 +516,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             controller: _stateController,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'State',
-                              hintText: 'State',
+                              labelText: l10n.state,
+                              hintText: l10n.enterState,
                               prefixIcon: Icons.map_outlined,
                             ),
                           ),
@@ -537,8 +531,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       controller: _postcodeController,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Postcode',
-                        hintText: 'Enter postcode',
+                        labelText: l10n.postcode,
+                        hintText: l10n.enterPostcode,
                         prefixIcon: Icons.local_post_office_outlined,
                       ),
                       keyboardType: TextInputType.number,
@@ -552,7 +546,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Country',
+                        labelText: l10n.country,
                         prefixIcon: Icons.public_outlined,
                       ),
                       items: TrustConstants.countries
@@ -565,8 +559,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           .toList(),
                       onChanged: (String? value) => setState(() => _selectedCountry = value),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
 

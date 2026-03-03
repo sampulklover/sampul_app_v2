@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'add_asset_screen.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 
 class AssetInfoScreen extends StatelessWidget {
   final bool fromHelpIcon;
@@ -8,12 +9,13 @@ class AssetInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Assets'),
+        title: Text(l10n.aboutAssets),
         elevation: 0,
       ),
       body: SafeArea(
@@ -32,7 +34,7 @@ class AssetInfoScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's list your digital assets",
+                            l10n.letsListYourDigitalAssets,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -41,7 +43,7 @@ class AssetInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Keep important online accounts and platforms in one place so your will stays clear and up to date.",
+                            l10n.assetsDescription,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -55,10 +57,11 @@ class AssetInfoScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Center(
-                        child: Icon(
-                          Icons.account_balance_wallet_outlined,
-                          size: 80,
-                          color: colorScheme.primary,
+                        child: Image.asset(
+                          'assets/assets-vault.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -76,7 +79,7 @@ class AssetInfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "Why add your assets?",
+                              l10n.whyAddYourAssets,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -84,7 +87,7 @@ class AssetInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Digital assets include bank apps, e‑wallets, subscriptions, social media, and other online accounts.",
+                              l10n.digitalAssetsInclude,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -92,17 +95,17 @@ class AssetInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             _AssetFeatureItem(
-                              text: "Make it easy for your executors to know which accounts you have.",
+                              text: l10n.makeItEasyForExecutors,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _AssetFeatureItem(
-                              text: "Link each asset to clear instructions (Faraid, terminate, transfer as gift, settle debts).",
+                              text: l10n.linkEachAssetToInstructions,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _AssetFeatureItem(
-                              text: "Keep your will and planning up to date as your online life changes.",
+                              text: l10n.keepWillUpToDate,
                               colorScheme: colorScheme,
                             ),
                           ],
@@ -168,7 +171,7 @@ class AssetInfoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Add asset",
+                          l10n.addAssetButton,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,

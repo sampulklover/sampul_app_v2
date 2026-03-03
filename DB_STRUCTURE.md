@@ -64,6 +64,26 @@ CREATE TABLE public.agents (
   CONSTRAINT organization_join_requests_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
   CONSTRAINT organization_join_requests_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
+CREATE TABLE public.ai_chat_settings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  system_prompt text NOT NULL DEFAULT 'You are Sampul AI, a helpful assistant for estate planning and will management. You help users with questions about creating wills, managing assets, family planning, and estate planning. Be friendly, professional, and knowledgeable about these topics. Keep answers concise (2–4 short sentences). Use bullet points only when listing items. Avoid long paragraphs.'::text,
+  max_tokens integer NOT NULL DEFAULT 220,
+  temperature numeric NOT NULL DEFAULT 0.5,
+  model text,
+  welcome_message text NOT NULL DEFAULT 'Hello! I''m Sampul AI, your estate planning assistant. How can I help you today?'::text,
+  reference_links jsonb DEFAULT '[]'::jsonb,
+  knowledge_base_files jsonb DEFAULT '[]'::jsonb,
+  context_resources text,
+  is_active boolean NOT NULL DEFAULT true,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  updated_by uuid,
+  resources jsonb DEFAULT '[]'::jsonb,
+  CONSTRAINT ai_chat_settings_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_chat_settings_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
+  CONSTRAINT ai_chat_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+);
 CREATE TABLE public.beloved (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -611,6 +631,8 @@ CREATE TABLE public.trust (
   dob date,
   doc_status text NOT NULL DEFAULT 'draft'::text CHECK (doc_status = ANY (ARRAY['draft'::text, 'submitted'::text, 'approved'::text, 'rejected'::text])),
   doc_validation_errors jsonb DEFAULT '{}'::jsonb,
+  fund_support_categories ARRAY DEFAULT '{}'::text[],
+  fund_support_configs jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT trust_pkey PRIMARY KEY (id),
   CONSTRAINT trust_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
@@ -669,6 +691,17 @@ CREATE TABLE public.trust_charity (
   CONSTRAINT trust_charity_pkey PRIMARY KEY (id),
   CONSTRAINT charity_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid),
   CONSTRAINT trust_charity_trust_id_fkey FOREIGN KEY (trust_id) REFERENCES public.trust(id)
+);
+CREATE TABLE public.trust_executor (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  trust_id bigint NOT NULL,
+  executor_type text NOT NULL CHECK (executor_type = ANY (ARRAY['someone_i_know'::text, 'sampul_professional'::text])),
+  beloved_id integer,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT trust_executor_pkey PRIMARY KEY (id),
+  CONSTRAINT trust_executor_trust_id_fkey FOREIGN KEY (trust_id) REFERENCES public.trust(id),
+  CONSTRAINT trust_executor_beloved_id_fkey FOREIGN KEY (beloved_id) REFERENCES public.beloved(id)
 );
 CREATE TABLE public.trust_payment (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

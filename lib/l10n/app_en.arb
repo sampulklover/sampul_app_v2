@@ -68,6 +68,9 @@
   "onboardingSubtitle2": "Lock in your assets, invest for the future, and ensure your loved ones get what's rightfully theirs.",
   "onboardingTitle3": "Don't let emotions\ndecide.",
   "onboardingSubtitle3": "A professional executor ensures your will is followed—no family drama, no legal mess, just a smooth handover.",
+  "next": "Next",
+  "getStarted": "Get Started",
+  "skip": "Skip",
   
   "settings": "Settings",
   "language": "Language",
@@ -116,5 +119,865 @@
   "settleDebts": "Settle Debts",
   "coSampul": "Co-sampul",
   "beneficiary": "Beneficiary",
-  "guardian": "Guardian"
+  "guardian": "Guardian",
+  
+  "account": "Account",
+  "user": "User",
+  "noEmail": "No email",
+  "edit": "Edit",
+  "identityVerification": "Identity Verification",
+  "checkingStatus": "Checking status...",
+  "yourIdentityIsVerified": "Your identity is verified",
+  "verificationInProgress": "Verification in progress",
+  "verificationWasDeclined": "Verification was declined",
+  "verificationWasRejected": "Verification was rejected",
+  "verifyYourIdentity": "Verify your identity",
+  "verified": "Verified",
+  "pending": "Pending",
+  "declined": "Declined",
+  "rejected": "Rejected",
+  "changePassword": "Change password",
+  "logOut": "Log out",
+  "billing": "Billing",
+  "plansAndSubscription": "Plans & subscription",
+  "manageYourSampulPlan": "Manage your Sampul plan",
+  "preferences": "Preferences",
+  "yourCodeAndReferrals": "Your code and referrals",
+  "aiChatSettings": "AI Chat Settings",
+  "manageSampulAiResponses": "Manage Sampul AI responses",
+  "darkMode": "Dark mode",
+  "restartOnboarding": "Restart onboarding",
+  "runTheSetupFlowAgain": "Run the setup flow again",
+  "onboardingHasBeenReset": "Onboarding has been reset",
+  "failedToResetOnboarding": "Failed to reset onboarding: {error}",
+  "@failedToResetOnboarding": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sendFeedback": "Send feedback",
+  "reportBugsOrRequestFeatures": "Report bugs or request new features",
+  "about": "About",
+  "appVersion": "App version",
+  "appVersionDemo": "1.0.0 (demo)",
+  "termsOfService": "Terms of Service",
+  "termsTappedDemo": "Terms tapped (demo)",
+  "privacyPolicy": "Privacy Policy",
+  "privacyTappedDemo": "Privacy tapped (demo)",
+  "deleteAccount": "Delete Account",
+  "changePasswordTitle": "Change Password",
+  "enterCurrentPasswordAndChooseNew": "Enter your current password and choose a new one",
+  "currentPassword": "Current Password",
+  "pleaseEnterCurrentPassword": "Please enter your current password",
+  "newPassword": "New Password",
+  "pleaseEnterNewPassword": "Please enter a new password",
+  "confirmNewPassword": "Confirm New Password",
+  "pleaseConfirmNewPassword": "Please confirm your new password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "updatingPassword": "Updating password...",
+  "cancel": "Cancel",
+  "copy": "Copy",
+  "passwordChangedSuccessfully": "Password changed successfully!",
+  "deleteAccountTitle": "Delete Account",
+  "areYouSureDeleteAccount": "Are you sure you want to delete your account? This action cannot be undone.",
+  "areYouSureYouWantToLogOut": "Are you sure you want to log out?",
+  "toConfirmTypeDelete": "To confirm, please type \"DELETE\" in the box below:",
+  "typeDeleteToConfirm": "Type DELETE to confirm",
+  "delete": "Delete",
+  "deleteAccountFeatureComingSoon": "Delete account feature coming soon",
+  "creatingVerificationSession": "Creating verification session...",
+  "couldNotOpenVerificationLink": "Could not open verification link",
+  "failedToStartVerification": "Failed to start verification: {error}",
+  "@failedToStartVerification": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "diditNotConfigured": "Didit is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.",
+  "identityVerificationRequired": "Identity verification is required to establish trust and ensure the legal validity of your will.",
+  "legalValidity": "Legal Validity",
+  "establishesLegalValidity": "Establishes the legal validity of your will",
+  "buildsTrust": "Builds Trust",
+  "providesAssurance": "Provides assurance to beneficiaries and executors",
+  "regulatoryCompliance": "Regulatory Compliance",
+  "ensuresCompliance": "Ensures compliance with regulatory requirements",
+  "fraudProtection": "Fraud Protection",
+  "protectsAgainstFraud": "Protects against fraud and identity theft",
+  "yourInformationIsEncrypted": "Your information is encrypted and secure",
+  "startVerification": "Start Verification",
+  
+  "editProfile": "Edit Profile",
+  "save": "Save",
+  "invalidImage": "Invalid image. Please select a valid image file (max 5MB)",
+  "imageUploadedSuccessfully": "Image uploaded successfully",
+  "failedToUploadImage": "Failed to upload image: {error}",
+  "@failedToUploadImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectImageSource": "Select Image Source",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "profileUpdatedSuccessfully": "Profile updated successfully",
+  "failedToUpdateProfile": "Failed to update profile: {error}",
+  "@failedToUpdateProfile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uploading": "Uploading...",
+  "changePhoto": "Change Photo",
+  "personalInformation": "Personal Information",
+  "username": "Username",
+  "enterYourUsername": "Enter your username",
+  "fullNameNric": "Full Name (NRIC)",
+  "enterYourFullNameAsPerNric": "Enter your full name as per NRIC",
+  "phoneNumber": "Phone Number",
+  "enterYourPhoneNumber": "Enter your phone number",
+  "gender": "Gender",
+  "enterYourEmail": "Enter your email",
+  "emailCannotBeChanged": "Email cannot be changed",
+  "addressInformation": "Address Information",
+  "addressLine1": "Address Line 1",
+  "enterYourAddress": "Enter your address",
+  "addressLine2": "Address Line 2",
+  "enterAdditionalAddressDetails": "Enter additional address details",
+  "city": "City",
+  "enterCity": "Enter city",
+  "state": "State",
+  "enterState": "State",
+  "postcode": "Postcode",
+  "enterPostcode": "Enter postcode",
+  "country": "Country",
+  
+  "myWill": "My Will",
+  "shareWill": "Share Will",
+  "whyCreateYourWillInSampul": "Why create your will in Sampul?",
+  "yourWillPullsFromProfile": "Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
+  "keepAllKeyInformation": "Keep all key information (profile, family, assets) in one place.",
+  "generateStructuredWillDocument": "Generate a structured will document you can read, export, and share.",
+  "updateWillLater": "Update your will later whenever your life or assets change.",
+  "startMyWill": "Start my will",
+  "deleting": "Deleting...",
+  "publish": "Publish",
+  "unpublish": "Unpublish",
+  "publishWill": "Publish Will",
+  "publishWillConfirmation": "Are you sure you want to publish this will?\n\nOnce published, this will will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or executors.",
+  "@publishWillConfirmation": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLinkCopiedToClipboard": "Share link copied to clipboard",
+  "willPublishedSuccessfully": "Will published successfully",
+  "willUnpublishedSuccessfully": "Will unpublished successfully",
+  "failedToPublishWill": "Failed to publish will: {error}",
+  "@failedToPublishWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToUnpublishWill": "Failed to unpublish will: {error}",
+  "@failedToUnpublishWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToDeleteWill": "Failed to delete will: {error}",
+  "@failedToDeleteWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadWillData": "Failed to load will data: {error}",
+  "@failedToLoadWillData": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "code": "Code",
+  "warningsReviewRecommended": "{count} warning(s) - Review recommended",
+  "@warningsReviewRecommended": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "issuesActionRequired": "{count} issue(s) - Action required",
+  "@issuesActionRequired": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "published": "Published",
+  "deleteWill": "Delete Will",
+  "areYouSureDeleteWill": "Are you sure you want to delete your will? This action cannot be undone.",
+  "createWill": "Create Will",
+  "editWill": "Edit Will",
+  "updateWill": "Update Will",
+  "executors": "Executors",
+  "guardians": "Guardians",
+  "extraWishes": "Extra Wishes",
+  "reviewSave": "Review & Save",
+  "primaryExecutor": "Primary Executor (Co-Sampul 1)",
+  "selectPrimaryExecutor": "Select the primary person to execute your will",
+  "secondaryExecutor": "Secondary Executor (Co-Sampul 2)",
+  "selectSecondaryExecutor": "Optional: Select a secondary executor",
+  "primaryGuardian": "Primary Guardian",
+  "selectPrimaryGuardian": "Select guardian for minor children (if applicable)",
+  "secondaryGuardian": "Secondary Guardian",
+  "selectSecondaryGuardian": "Optional: Select a secondary guardian",
+  "selectFamilyMember": "Select family member",
+  "noneSelected": "None selected",
+  "notFound": "Not found",
+  "yourAssets": "Your Assets",
+  "manageAll": "Manage All",
+  "noAssetsYet": "No assets yet. Add at least one to include in your will.",
+  "showMore": "Show more ({count})",
+  "@showMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yourExtraWishes": "Your Extra Wishes",
+  "noWishesYet": "No wishes yet. Add your nazar, fidyah, organ donor pledge, and charitable allocations.",
+  "nazarWishes": "Nazar wishes",
+  "nazarCost": "Nazar cost",
+  "fidyahDays": "Fidyah days",
+  "fidyahAmount": "Fidyah amount",
+  "organDonorPledge": "Organ donor pledge",
+  "yes": "Yes",
+  "no": "No",
+  "waqf": "Waqf: {count} bodies • RM {total}",
+  "@waqf": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "charity": "Charity: {count} bodies • RM {total}",
+  "@charity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "name": "Name",
+  "nric": "NRIC",
+  "phone": "Phone",
+  "address": "Address",
+  "notProvided": "Not provided",
+  "totalAssets": "Total assets: RM {total}",
+  "@totalAssets": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "yourWillUpdatesAutomatically": "Your will updates automatically with your profile, assets, and family changes.",
+  "willCreatedSuccessfully": "Will created successfully!",
+  "willUpdatedSuccessfully": "Will updated successfully!",
+  "failedToSaveWill": "Failed to save will: {error}",
+  "@failedToSaveWill": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToLoadInitialData": "Failed to load initial data: {error}",
+  "@failedToLoadInitialData": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "addAsset": "Add Asset",
+  "aboutAssets": "About Assets",
+  "platformService": "Platform / Service",
+  "details": "Details",
+  "review": "Review",
+  "searchForPlatformOrService": "Search for a platform or service",
+  "searchPlatformHint": "e.g., Facebook, Google Drive, Maybank",
+  "addYourOwnAsset": "Add your own asset",
+  "useAsAssetName": "Use \"{text}\" as the asset name",
+  "@useAsAssetName": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "cantFindItAddAsCustom": "Can't find it? Add \"{text}\" as custom",
+  "@cantFindItAddAsCustom": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "addCustomAsset": "Add Custom Asset",
+  "assetName": "Asset Name *",
+  "assetNameHint": "e.g., My Custom Platform",
+  "websiteUrlOptional": "Website URL (optional)",
+  "websiteUrlHint": "https://example.com",
+  "required": "Required",
+  "declaredValueMyr": "Declared Value (MYR)",
+  "estimatedCurrentValue": "Estimated current value of this asset",
+  "enterValidAmountMaxDecimals": "Enter a valid amount (max 2 decimals)",
+  "enterValidAmount": "Enter a valid amount",
+  "instructionsAfterDeath": "Instructions After Death",
+  "loadingRecipients": "Loading recipients...",
+  "giftRecipient": "Gift Recipient",
+  "giftRecipientRequired": "Gift Recipient is required",
+  "remarksOptional": "Remarks (optional)",
+  "remarksHint": "Any additional instructions or notes",
+  "assetWillBeIncludedInWill": "This asset will be included in your will. Any changes you make will automatically sync to your will.",
+  "website": "Website",
+  "instruction": "Instruction",
+  "remarks": "Remarks",
+  "pleaseSelectPlatformService": "Please select a platform/service",
+  "pleaseSelectInstruction": "Please select an instruction",
+  "pleaseSelectGiftRecipient": "Please select a gift recipient",
+  "assetAddedSuccessfully": "Asset added successfully",
+  "failedToAddAsset": "Failed to add asset: {error}",
+  "@failedToAddAsset": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchFailed": "Search failed: {error}",
+  "@searchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "youMustBeSignedIn": "You must be signed in",
+  "unnamed": "Unnamed",
+  
+  "editAsset": "Edit Asset",
+  "changesHereUpdateWillAutomatically": "Changes here update your will automatically.",
+  "assetUpdated": "Asset updated",
+  "failedToUpdate": "Failed to update: {error}",
+  "@failedToUpdate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAsset": "Delete Asset",
+  "areYouSureDeleteAsset": "Are you sure you want to delete this asset? This action cannot be undone.",
+  "assetDeleted": "Asset deleted",
+  "failedToDelete": "Failed to delete: {error}",
+  "@failedToDelete": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "whyAddYourAssets": "Why add your assets?",
+  "digitalAssetsInclude": "Digital assets include bank apps, e‑wallets, subscriptions, social media, and other online accounts.",
+  "makeItEasyForExecutors": "Make it easy for your executors to know which accounts you have.",
+  "linkEachAssetToInstructions": "Link each asset to clear instructions (Faraid, terminate, transfer as gift, settle debts).",
+  "keepWillUpToDate": "Keep your will and planning up to date as your online life changes.",
+  "addAssetButton": "Add asset",
+  
+  "aboutFamilyMembers": "About Family Members",
+  "letsAddYourFamily": "Let's add your family",
+  "addPeopleWhoMatterMost": "Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.",
+  "whyAddFamilyMembers": "Why add family members?",
+  "familyListConnectsToWill": "Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.",
+  "assignExecutorsCoSampul": "Assign executors (Co-Sampul) who will carry out your will.",
+  "listBeneficiariesWhoReceive": "List beneficiaries who will receive your assets.",
+  "designateGuardiansForMinors": "Designate guardians for minor children if needed.",
+  "addFamilyMember": "Add family member",
+  "waris": "Waris",
+  "nonWaris": "Non-Waris",
+  "legacy": "Legacy",
+  "addFamilyMemberTitle": "Add Family Member",
+  "basicInfo": "Basic Info",
+  "addPhoto": "Add photo",
+  "fullName": "Full Name",
+  "nameRequired": "Name is required",
+  "pleaseEnterValidName": "Please enter a valid name",
+  "relationship": "Relationship",
+  "relationshipRequired": "Relationship is required",
+  "category": "Category",
+  "coSampulExecutor": "Co-sampul (Executor)",
+  "coSampulExecutorHelp": "Co-sampul (Executor): A trusted person who executes your will together with you.",
+  "beneficiaryHelp": "Beneficiary: A person who will inherit your selected assets.",
+  "guardianHelp": "Guardian: A person responsible for the care of your dependents or minors.",
+  "percentage0To100": "Percentage (0 - 100)",
+  "otherInfoOptional": "Other Info (optional)",
+  "icNricNumber": "IC/NRIC Number",
+  "phone": "Phone",
+  "pleaseEnterValidEmailAddress": "Please enter a valid email address",
+  "pleaseProvidePercentageForBeneficiary": "Please provide percentage for beneficiary",
+  "percentageMustBeBetween0And100": "Percentage must be between 0 and 100",
+  "contactId": "Contact & ID",
+  "address": "Address",
+  "ifPersonPartOfWillSync": "If this person is part of your will, any updates you make here will automatically sync to your will.",
+  "familyMemberAdded": "Family member added",
+  "failedToAdd": "Failed to add: {error}",
+  "@failedToAdd": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidImageUseJpgPngWebp": "Invalid image. Use JPG/PNG/WebP under 5MB.",
+  "imageSelectionFailed": "Image selection failed: {error}",
+  "@imageSelectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editFamilyMember": "Edit Family Member",
+  "deleteFamilyMember": "Delete Family Member",
+  "areYouSureDeleteFamilyMember": "Are you sure you want to delete this family member? This action cannot be undone.",
+  "familyMemberDeleted": "Family member deleted",
+  "failedToDeleteFamilyMember": "Failed to delete: {error}",
+  "@failedToDeleteFamilyMember": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSaveFamilyMember": "Failed to save: {error}",
+  "@failedToSaveFamilyMember": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changesHereUpdateWillAutomatically": "Changes here update your will automatically.",
+  "basicInfoSection": "Basic Info",
+  "contactIdSection": "Contact & ID",
+  "addressSection": "Address",
+  
+  "addTask": "Add Task",
+  "editTask": "Edit Task",
+  "task": "Task",
+  "deleteTask": "Delete task?",
+  "thisActionCannotBeUndone": "This action cannot be undone.",
+  "deleteAllTasks": "Delete all tasks?",
+  "thisWillRemoveAllTasksPermanently": "This will remove all tasks permanently.",
+  "deleteAll": "Delete all",
+  "createYourChecklist": "Create your checklist",
+  "organiseYourAftercareTasks": "Organise your aftercare tasks and keep track of important steps.",
+  "whyUseAChecklist": "Why use a checklist?",
+  "structuredChecklistHelps": "A structured checklist helps you and your family stay on top of important after‑death tasks, one step at a time.",
+  "startQuicklyWithRecommended": "Start quickly with a recommended set of essential aftercare tasks.",
+  "addYourOwnCustomTasks": "Add your own custom tasks that fit your situation and culture.",
+  "trackProgressSoNothingForgotten": "Track progress so nothing important is forgotten during a difficult time.",
+  "aboutChecklists": "About checklists",
+  "defaultChecklistIncludes": "The default checklist includes essential aftercare steps like:\n\n• Notifying family members\n• Managing bank accounts and assets\n• Handling legal matters and documents\n• Organising personal belongings\n• Updating beneficiaries and contacts\n\nYou can also create custom tasks specific to your needs.",
+  "gotIt": "Got it",
+  "learnMoreAboutChecklists": "Learn more about checklists",
+  "useDefaultChecklist": "Use default checklist",
+  "createCustomTask": "Create custom task",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  
+  "getStartedTitle": "Get Started",
+  "completeYourProfile": "Complete Your Profile",
+  "setUpYourBasicInformation": "Set up your basic information",
+  "addYourFirstFamilyMember": "Add Your First Family Member",
+  "addSomeoneImportantToYourWill": "Add someone important to your will",
+  "addYourFirstAsset": "Add Your First Asset",
+  "startTrackingYourDigitalAssets": "Start tracking your digital assets",
+  "createYourWill": "Create Your Will",
+  "createYourWillWithSampul": "Create your will with Sampul",
+  "referralCode": "Referral code",
+  "addReferralCodeOptional": "Add a referral code (optional)",
+  "haveReferralCode": "Have a referral code?",
+  "enterReferralCodeBelow": "Enter your referral code below to unlock benefits",
+  "referralCodeLabel": "Referral code",
+  "codeLooksTooShort": "Code looks too short",
+  "clear": "Clear",
+  "apply": "Apply",
+  "referralCodeApplied": "Referral code applied",
+  "setUpYourFamilyTrustAccount": "Set up your Family Trust account",
+  "createFamilyAccountForLongTermSupport": "Create a family account to manage long-term support (optional).",
+  "pleaseCompleteAllStepsBeforeFinishing": "Please complete all steps before finishing",
+  "failedToCompleteOnboarding": "Failed to complete onboarding: {error}",
+  "@failedToCompleteOnboarding": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseComplete": "Please complete: {nextTitle}",
+  "@pleaseComplete": {
+    "placeholders": {
+      "nextTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "completeSetup": "Complete setup",
+  "theRemainingSteps": "the remaining steps",
+  
+  "familyTrustFund": "Family Trust Fund",
+  "aboutFamilyTrustFund": "About Family Trust Fund",
+  "noTrustFundsYet": "No trust funds yet",
+  "createNew": "Create New",
+  "createTrust": "Create trust",
+  "trustCodeUnique": "Trust code (unique)",
+  "all": "All",
+  "aboutTrustFund": "About Trust Fund",
+  "newToTrusts": "New to trusts?",
+  "learnMore": "Learn more",
+  "startSettingUp": "Start setting up",
+  "whySetUpFamilyTrustFund": "Why set up a Family Trust Fund?",
+  "familyTrustFundDescription": "A Family Trust Fund lets you decide how your money is used for your family, even when you're not around.",
+  "chooseHowMoneySpent": "Choose how your money is spent (healthcare, school fees, donations)",
+  "changePlansAnytime": "Change your plans anytime you want",
+  "familyKnowsExactly": "Your family knows exactly what to do — no confusion",
+  "sampulPartnerWithRakyat": "Sampul partner with Rakyat Trustee and Halogen Capital to process your fund. ",
+  "learnMoreAboutPartners": "Learn more about our partners",
+  "trustFundDetails": "Trust Fund Details",
+  "deleteTrustFund": "Delete Trust Fund",
+  "areYouSureDeleteTrustFund": "Are you sure you want to delete this trust fund? This action cannot be undone.",
+  "trustFundDeleted": "Trust Fund deleted",
+  "failedToDeleteTrustFund": "Failed to delete trust fund: {error}",
+  "@failedToDeleteTrustFund": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "trustIdNotAvailable": "Trust ID not available",
+  "trustIdCopiedToClipboard": "Trust ID copied to clipboard",
+  "beneficiaries": "Beneficiaries",
+  "whoFundWillBeDistributedTo": "Who this fund will be distributed to",
+  "pleaseSaveTrustFirst": "Please save the trust first before adding beneficiaries",
+  "beneficiaryAddedSuccessfully": "Beneficiary added successfully",
+  "failedToAddBeneficiary": "Failed to add beneficiary: {error}",
+  "@failedToAddBeneficiary": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "beneficiaryUpdatedSuccessfully": "Beneficiary updated successfully",
+  "failedToUpdateBeneficiary": "Failed to update beneficiary: {error}",
+  "@failedToUpdateBeneficiary": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "instructions": "Instructions",
+  "allocateWhatTrustFundWillCover": "Allocate what this trust fund will cover",
+  "education": "Education",
+  "livingExpenses": "Living Expenses",
+  "healthcare": "Healthcare",
+  "charitable": "Charitable",
+  "debt": "Debt",
+  "tapToSetUp": "Tap to set up",
+  "settingsSaved": "Settings saved",
+  "failedToSave": "Failed to save: {error}",
+  "@failedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "familyAccountCreated": "Family account created",
+  "yourFamilyNowHasClearGuidance": "Your family now has clear guidance, even if you're not around to explain.",
+  "whatHappensNow": "What happens now",
+  "familyAccountSavedAndFollowed": "This family account is saved and will be followed according to the rules you've set.",
+  "nextSteps": "Next steps",
+  "youMayReceiveConfirmationEmail": "You may receive a confirmation email for your records (if enabled).",
+  "youCanAlwaysReturnHere": "You can always return here to update your categories or amounts.",
+  "viewInstructions": "View instructions",
+  "openTrust": "Open trust",
+  
+  "createTrustFund": "Create Trust Fund",
+  "weCouldNotLoadYourProfile": "We could not load your profile automatically. Please fill the details manually.",
+  "dismiss": "DISMISS",
+  "personalInformation": "Personal Information",
+  "fundSupport": "Fund Support",
+  "executorSelection": "Executor Selection",
+  "financialInformation": "Financial Information",
+  "employmentBusinessInformation": "Employment/Business Information",
+  "reviewSubmit": "Review & Submit",
+  "livingExpensesSubtitle": "Housing, food, utilities, daily needs",
+  "healthcareSubtitle": "Medical bills, treatment",
+  "charitableSubtitle": "Zakat, waqf, sadaqah, donations",
+  "debtSubtitle": "Loan repayments, outstanding obligations",
+  "youCanSelectMoreThanOne": "You can select more than one. You can change this anytime. This sets a rule. Funds move only when conditions are met.",
+  "forLabel": "For",
+  "untilTheyTurn": "Until they turn {age}",
+  "@untilTheyTurn": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "forTheirWholeLife": "For their whole life",
+  "everyMonth": "every month",
+  "every3Months": "every 3 months",
+  "everyYear": "every year",
+  "whenConditionsAreMet": "when conditions are met",
+  "whenNeeded": "When needed",
+  "allAtOnceAtTheEnd": "All at once at the end",
+  "someoneIKnow": "Someone I Know",
+  "familyMemberCloseFriendOrTrustedAdvisor": "Family member, close friend, or trusted advisor",
+  "freeUsually": "Free (usually)",
+  "basicReportingAndAnalytics": "Basic reporting and analytics",
+  "personalConflict": "Personal conflict",
+  "administrativeBurden": "Administrative burden",
+  "whosThisFamilyTrustAccountFor": "Who's this family trust account for?",
+  "noFamilyMembersFound": "No family members found. Add family members in your profile.",
+  "sampulsProfessionalExecutor": "Sampul's Professional Executor",
+  "expertManagement": "Expert management",
+  "neutralParty": "Neutral party",
+  "estFeeR4320yr": "Est. Fee: RM4,320/yr (Paid from trust funds)",
+  "executorGoodToKnow": "Your executor acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. At least 2 joint Executors are necessary when one of the beneficiaries is a minor. If one of your beneficiaries is under 18, you'll need at least two executors working together. We'll remind you about this later.",
+  "estimatedNetWorth": "Estimated Net Worth",
+  "sourceOfFund": "Source of Fund",
+  "purposeOfTransaction": "Purpose of Transaction",
+  "employerName": "Employer Name",
+  "businessNature": "Business Nature",
+  "businessAddressLine1": "Business Address Line 1",
+  "businessAddressLine2": "Business Address Line 2",
+  "fullName": "Full Name",
+  "accountFor": "Account for",
+  "duration": "Duration",
+  "untilAge": "Until age {age}",
+  "@untilAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "theirEntireLifetime": "Their entire lifetime",
+  "paymentType": "Payment Type",
+  "regularPayments": "Regular payments",
+  "amount": "Amount",
+  "frequency": "Frequency",
+  "monthly": "Monthly",
+  "quarterly": "Quarterly",
+  "yearly": "Yearly",
+  "whenConditions": "When conditions",
+  "asNeededTrusteeDecides": "As needed (trustee decides)",
+  "lumpSumAtTheEnd": "Lump sum at the end",
+  "executorType": "Executor Type",
+  "selectedExecutors": "Selected Executors",
+  "familyMembersSelected": "{count} family member(s) selected",
+  "@familyMembersSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "businessInformation": "Business Information",
+  "employerCompanyName": "Employer/Company Name",
+  "natureOfBusiness": "Nature of Business",
+  "businessAddress": "Business Address",
+  "charitiesDonations": "Charities/Donations ({count})",
+  "@charitiesDonations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseSelectAtLeastOneFundSupport": "Please select at least one fund support category and set up its details",
+  "pleaseSelectAtLeastOneExecutor": "Please select at least one executor",
+  "pleaseCompleteYourProfileFirst": "Please complete your profile first",
+  "trustFundCreatedSuccessfully": "Trust Fund created successfully",
+  "failedToCreateTrustFund": "Failed to create trust fund: {error}",
+  "@failedToCreateTrustFund": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "charitiesSelected": "{count} charities selected",
+  "@charitiesSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "charitySelected": "1 charity selected",
+  
+  "fundSupport": "Fund Support",
+  "whosThisFamilyTrustAccountFor": "Who's this family trust account for?",
+  "pickOneMainPersonForCategory": "Pick one main person for this category. You can still support others in other categories.",
+  "noFamilyMembersYet": "No family members yet.\nTap \"Add New\" below to add the first person for this account.",
+  "addNew": "Add New",
+  "save": "Save",
+  "saveYourChanges": "Save your changes?",
+  "youHaveUnsavedChanges": "You have unsaved changes on this page. Would you like to save this setup before you go back?",
+  "discardChanges": "Discard changes",
+  "saveExit": "Save & exit",
+  "supportForTuitionFees": "Support for tuition fees, books, and educational expenses",
+  "coverDailyLivingExpenses": "Cover daily living expenses and basic needs",
+  "medicalExpensesTreatments": "Medical expenses, treatments, and healthcare services",
+  "donationsContributions": "Donations and contributions to charitable organizations",
+  "paymentsOutstandingDebts": "Payments for outstanding debts and financial obligations",
+  "fundSupportConfiguration": "Fund support configuration for your trust",
+  "requestPending": "Request Pending",
+  "paused": "Paused",
+  "totalDonations": "Total Donations",
+  "charity": "Charity",
+  "noCharitiesDonationsAddedYet": "No charities/donations added yet",
+  "addCharitableOrganizations": "Add charitable organizations to start making a difference",
+  "unnamedOrganization": "Unnamed Organization",
+  "donationAmount": "Donation Amount",
+  "annualTotal": "Annual Total",
+  "monthlyAverage": "Monthly Average",
+  "na": "N/A",
+  "supportDuration": "Support Duration",
+  "untilAge": "Until age {age}",
+  "@untilAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "endsInYear": "Ends in Year {year} ({years} years from now)",
+  "@endsInYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "continuousSupportLifetime": "Continuous support throughout their lifetime",
+  "paymentMethod": "Payment Method",
+  "regularPayments": "Regular Payments",
+  "asNeeded": "As Needed",
+  "trusteeDecidesRelease": "Trustee decides when to release funds based on approved purposes",
+  "lumpSum": "Lump Sum",
+  "allFundsReleasedEnd": "All funds released when the trust period ends",
+  "cancelRequest": "Cancel Request",
+  "requestFund": "Request Fund",
+  "areYouSureRequestFunds": "Are you sure you want to request funds? This will notify your trustee to process the fund request.",
+  "fundRequestSubmittedSuccessfully": "Fund request submitted successfully",
+  "areYouSureCancelRequest": "Are you sure you want to cancel this fund request?",
+  "noKeepIt": "No, Keep It",
+  "fundRequestCancelledSuccessfully": "Fund request cancelled successfully",
+  "resumeInstruction": "Resume Instruction",
+  "pauseInstruction": "Pause Instruction",
+  "areYouSureResumeInstruction": "Are you sure you want to resume the {category} instruction? Payments will continue according to the schedule.",
+  "@areYouSureResumeInstruction": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "areYouSurePauseInstruction": "Are you sure you want to pause the {category} instruction? This will temporarily stop all payments until you resume it.",
+  "@areYouSurePauseInstruction": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "resume": "Resume",
+  "pause": "Pause",
+  "instructionResumedSuccessfully": "{category} instruction resumed successfully",
+  "@instructionResumedSuccessfully": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "instructionPausedSuccessfully": "{category} instruction paused successfully",
+  "@instructionPausedSuccessfully": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "howLongShouldThisLast": "How long should this last?",
+  "untilSpecificAge": "Until a specific age",
+  "age": "Age",
+  "thatsYearsFromNow": "That's {years} years from now (Year {year})",
+  "@thatsYearsFromNow": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "paymentConfiguration": "Payment Configuration",
+  "howOftenContribution": "How often should this contribution be carried out?",
+  "yourTrusteeReleasesMoney": "Your trustee releases money when needed for approved purposes",
+  "everythingReleasedEnd": "Everything released when the trust period ends",
+  "thisIsAGuide": "This is a guide. Your executor can adjust based on real needs.",
+  "addCharitableOrganizationsDonate": "Add charitable organizations you would like to donate to",
+  "addCharity": "Add Charity/Donation"
 }

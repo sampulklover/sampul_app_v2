@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/trust.dart';
-import '../models/trust_beneficiary.dart';
 import '../services/trust_service.dart';
+import '../services/supabase_service.dart';
+import '../controllers/auth_controller.dart';
 import 'trust_edit_screen.dart';
-import 'trust_beneficiary_form_screen.dart';
 import 'fund_support_config_screen.dart';
+import '../utils/card_decoration_helper.dart';
+import '../widgets/trust_payment_form_modal.dart';
+import '../widgets/trust_payment_history_modal.dart';
+import '../widgets/payment_status_modal.dart';
 
 class TrustDashboardScreen extends StatefulWidget {
   final Trust trust;
@@ -25,20 +30,27 @@ class TrustDashboardScreen extends StatefulWidget {
   State<TrustDashboardScreen> createState() => _TrustDashboardScreenState();
 }
 
-class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
+class _TrustDashboardScreenState extends State<TrustDashboardScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
-  List<TrustBeneficiary> _beneficiaries = [];
   bool _isCopyCooldown = false;
   Timer? _cooldownTimer;
   /// Local copy of trust so we can refresh after editing fund support config.
   Trust? _currentTrust;
+  // Family members (beneficiaries) so we can show profile avatars in cards.
+  List<Map<String, dynamic>> _familyMembers = <Map<String, dynamic>>[];
+  // Track if we're waiting for a payment to complete
+  String? _pendingPaymentId;
+  // Track previous payment count to detect new payments
+  int _previousPaymentCount = 0;
 
   Trust get _trust => _currentTrust ?? widget.trust;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _currentTrust = widget.trust;
+    _previousPaymentCount = _trust.trustPayments?.length ?? 0;
     _loadData();
     if (widget.showWelcome) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -54,30 +66,150 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cooldownTimer?.cancel();
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // When app resumes, check if payment was completed
+    if (state == AppLifecycleState.resumed) {
+      _checkPaymentStatus();
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    if (_trust.id == null) return;
+    
+    try {
+      // Reload trust data to get latest payment status
+      final updatedTrust = await TrustService.instance.getTrustWithPayments(_trust.id!);
+      if (!mounted || updatedTrust == null) return;
+
+      final currentPaymentCount = updatedTrust.trustPayments?.length ?? 0;
+      
+      // If we have a new payment or payment count changed, show status
+      if (currentPaymentCount > _previousPaymentCount) {
+        // New payment detected
+        final latestPayment = updatedTrust.trustPayments?.last;
+        if (latestPayment != null) {
+          setState(() {
+            _currentTrust = updatedTrust;
+            _previousPaymentCount = currentPaymentCount;
+          });
+          
+          // Show payment status modal
+          if (mounted) {
+            final isSuccess = latestPayment.isSuccessful;
+            showDialog(
+              context: context,
+              builder: (context) => PaymentStatusModal(
+                isSuccess: isSuccess,
+                message: isSuccess
+                    ? 'Your payment of ${latestPayment.formattedAmount} has been processed successfully.'
+                    : 'Your payment could not be processed. Please try again.',
+              ),
+            );
+          }
+        }
+      } else if (_pendingPaymentId != null) {
+        // Check if pending payment status changed
+        final pendingPayment = updatedTrust.trustPayments?.firstWhere(
+          (p) => p.id == _pendingPaymentId,
+          orElse: () => throw StateError('Payment not found'),
+        );
+        
+        if (pendingPayment != null) {
+          final isSuccess = pendingPayment.isSuccessful;
+          if (isSuccess || pendingPayment.status == 'failed') {
+            setState(() {
+              _currentTrust = updatedTrust;
+              _pendingPaymentId = null;
+            });
+            
+            // Show payment status modal
+            if (mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => PaymentStatusModal(
+                  isSuccess: isSuccess,
+                  message: isSuccess
+                      ? 'Your payment of ${pendingPayment.formattedAmount} has been processed successfully.'
+                      : 'Your payment could not be processed. Please try again.',
+                ),
+              );
+            }
+          }
+        }
+      } else {
+        // Just refresh the data
+        setState(() {
+          _currentTrust = updatedTrust;
+          _previousPaymentCount = currentPaymentCount;
+        });
+      }
+    } catch (e) {
+      print('🔴 [TRUST DASHBOARD] Error checking payment status: $e');
+      // Fail silently - user can manually refresh
+    }
+  }
+
   Future<void> _loadData() async {
+    // If the widget is no longer in the tree, bail out early to avoid
+    // looking up inherited widgets or calling setState on a deactivated context.
+    if (!mounted) return;
+
     if (widget.trust.id == null) {
       setState(() => _isLoading = false);
       return;
     }
+    setState(() => _isLoading = true);
 
+    // Load family members so we can resolve beneficiary profiles per category.
+    await _fetchFamilyMembers();
+
+    // Reload trust with payment data
+    if (widget.trust.id != null) {
+      try {
+        final updatedTrust = await TrustService.instance.getTrustWithPayments(widget.trust.id!);
+        if (mounted && updatedTrust != null) {
+          setState(() => _currentTrust = updatedTrust);
+        }
+      } catch (_) {
+        // Fail silently if payment data can't be loaded
+      }
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _fetchFamilyMembers() async {
     try {
-      final beneficiaries = await TrustService.instance.getBeneficiariesByTrustId(widget.trust.id!);
-      // Note: Charities are now stored in fundSupportConfigs['charitable']['charities']
-      
-      if (mounted) {
-        setState(() {
-          _beneficiaries = beneficiaries;
-          _isLoading = false;
-        });
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+
+      final List<dynamic> rows = await SupabaseService.instance.client
+          .from('beloved')
+          .select('id, name, image_path, relationship, type')
+          .eq('uuid', user.id)
+          .order('created_at', ascending: false);
+
+      if (!mounted) return;
+      setState(() {
+        _familyMembers = rows.cast<Map<String, dynamic>>();
+      });
+    } catch (_) {
+      // Fail silently; beneficiary avatars are a UX enhancement only.
+      if (!mounted) return;
+      setState(() {
+        _familyMembers = <Map<String, dynamic>>[];
+      });
     }
   }
 
@@ -87,6 +219,45 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},',
     )}';
+  }
+
+  Future<void> _showPaymentForm() async {
+    if (_trust.id == null) return;
+    
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TrustPaymentFormModal(trust: _trust),
+    );
+
+    // If payment was initiated, refresh data
+    if (result == true && mounted) {
+      await _loadData();
+    }
+  }
+
+  Future<void> _showPaymentHistory() async {
+    if (_trust.id == null) return;
+    
+    // Reload trust with latest payment data
+    try {
+      final updatedTrust = await TrustService.instance.getTrustWithPayments(_trust.id!);
+      if (mounted && updatedTrust != null) {
+        setState(() => _currentTrust = updatedTrust);
+      }
+    } catch (_) {
+      // Fail silently
+    }
+
+    if (mounted) {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => TrustPaymentHistoryModal(trust: _currentTrust ?? _trust),
+      );
+    }
   }
 
   String _formatEstimatedNetWorth(String? estimatedNetWorth) {
@@ -107,16 +278,17 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
     );
   }
 
-  String _getStatusLabel(TrustStatus status) {
+  String _getStatusLabel(TrustStatus status, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (status) {
       case TrustStatus.submitted:
-        return 'Submitted';
+        return l10n.submitted;
       case TrustStatus.approved:
-        return 'Your plan is active';
+        return l10n.yourPlanIsActive;
       case TrustStatus.rejected:
-        return 'Rejected';
+        return l10n.rejected;
       case TrustStatus.draft:
-        return 'Draft';
+        return l10n.draft;
     }
   }
 
@@ -189,37 +361,19 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
     return _calculateCategoryAmount('debt');
   }
 
-  double _calculateTotalDistribution() {
-    double total = 0.0;
-    for (var beneficiary in _beneficiaries) {
-      total += (beneficiary.monthlyDistributionLiving ?? 0).toDouble();
-      total += (beneficiary.monthlyDistributionEducation ?? 0).toDouble();
-    }
-    return total;
-  }
-
-  double _calculateBeneficiaryPercentage(TrustBeneficiary beneficiary) {
-    final total = _calculateTotalDistribution();
-    if (total == 0) return 0.0;
-    
-    final beneficiaryTotal = (beneficiary.monthlyDistributionLiving ?? 0).toDouble() +
-        (beneficiary.monthlyDistributionEducation ?? 0).toDouble();
-    
-    return (beneficiaryTotal / total) * 100;
-  }
-
   Future<void> _copyTrustId() async {
     // Prevent abuse: silently ignore clicks during cooldown period
     if (_isCopyCooldown) {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
     final trustCode = _trust.trustCode;
     if (trustCode == null || trustCode.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Trust ID not available'),
+          SnackBar(
+            content: Text(l10n.trustIdNotAvailable),
             backgroundColor: Colors.orange,
           ),
         );
@@ -236,10 +390,10 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
     
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Trust ID copied to clipboard'),
+        SnackBar(
+          content: Text(l10n.trustIdCopiedToClipboard),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
+          duration: const Duration(seconds: 1),
         ),
       );
     }
@@ -261,6 +415,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
 
@@ -322,14 +477,14 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Family account created',
+                            l10n.familyAccountCreated,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Your family now has clear guidance, even if you’re not around to explain.',
+                            l10n.yourFamilyNowHasClearGuidance,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -342,14 +497,14 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'What happens now',
+                  l10n.whatHappensNow,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'This family account is saved and will be followed according to the rules you’ve set.',
+                  l10n.familyAccountSavedAndFollowed,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     height: 1.4,
@@ -357,7 +512,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Next steps',
+                  l10n.nextSteps,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -372,7 +527,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                         const Text('• '),
                         Expanded(
                           child: Text(
-                            'You may receive a confirmation email for your records (if enabled).',
+                            l10n.youMayReceiveConfirmationEmail,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -388,7 +543,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                         const Text('• '),
                         Expanded(
                           child: Text(
-                            'You can always return here to update beneficiaries, categories or amounts.',
+                            l10n.youCanAlwaysReturnHere,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -415,7 +570,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                     ),
                     icon: const Icon(Icons.arrow_forward),
                     label: Text(
-                      'View instructions',
+                      l10n.viewInstructions,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onPrimary,
@@ -433,12 +588,13 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trust Fund Details'),
+        title: Text(l10n.trustFundDetails),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -459,17 +615,18 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                 final bool? confirm = await showDialog<bool>(
                   context: context,
                   builder: (BuildContext context) {
+                    final l10n = AppLocalizations.of(context)!;
                     return AlertDialog(
-                      title: const Text('Delete Trust Fund'),
-                      content: const Text('Are you sure you want to delete this trust fund? This action cannot be undone.'),
+                      title: Text(l10n.deleteTrustFund),
+                      content: Text(l10n.areYouSureDeleteTrustFund),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
+                          child: Text(l10n.cancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Delete'),
+                          child: Text(l10n.delete),
                         ),
                       ],
                     );
@@ -480,8 +637,8 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                     await TrustService.instance.deleteTrust(widget.trust.id!);
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Trust Fund deleted'),
+                        SnackBar(
+                          content: Text(l10n.trustFundDeleted),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -491,7 +648,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Failed to delete trust fund: ${e.toString()}'),
+                          content: Text(l10n.failedToDeleteTrustFund(e.toString())),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -501,13 +658,13 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'edit',
                 child: Row(
                   children: [
                     Icon(Icons.edit_outlined, size: 18),
                     SizedBox(width: 10),
-                    Text('Edit'),
+                    Text(l10n.edit),
                   ],
                 ),
               ),
@@ -517,7 +674,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                   children: [
                     Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
                     const SizedBox(width: 10),
-                    Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    Text(l10n.delete, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   ],
                 ),
               ),
@@ -536,11 +693,10 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Trust info header - matching homepage design
-                    Card(
+                    CardDecorationHelper.styledCard(
+                      context: context,
                       elevation: 1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                      padding: EdgeInsets.zero,
                       child: InkWell(
                         onTap: _copyTrustId,
                         borderRadius: BorderRadius.circular(16),
@@ -590,7 +746,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Family Account',
+                                                l10n.familyAccount,
                                                 style: theme.textTheme.titleMedium?.copyWith(
                                                   fontWeight: FontWeight.w700,
                                                   color: const Color.fromRGBO(83, 61, 233, 1),
@@ -631,7 +787,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          _getStatusLabel(_trust.computedStatus),
+                                          _getStatusLabel(_trust.computedStatus, context),
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: _getStatusColor(_trust.computedStatus, context),
                                           ),
@@ -648,142 +804,142 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Beneficiaries section
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Beneficiaries',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Who this fund will be distributed to',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 100,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _beneficiaries.length + 1,
-                            separatorBuilder: (_, __) => const SizedBox(width: 16),
-                            itemBuilder: (context, index) {
-                              if (index == 0) {
-                                // Add Beneficiary card
-                                return _AddBeneficiaryCard(
-                                  onTap: () async {
-                                    if (widget.trust.id == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Please save the trust first before adding beneficiaries'),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                    
-                                    final result = await Navigator.of(context).push<TrustBeneficiary>(
-                                      MaterialPageRoute<TrustBeneficiary>(
-                                        builder: (_) => const TrustBeneficiaryFormScreen(),
-                                      ),
-                                    );
-                                    
-                                    if (result != null && widget.trust.id != null) {
-                                      try {
-                                        await TrustService.instance.createBeneficiary(
-                                          result.copyWith(trustId: widget.trust.id),
-                                        );
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Beneficiary added successfully'),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
-                                          await _loadData();
-                                        }
-                                      } catch (e) {
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Failed to add beneficiary: ${e.toString()}'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  },
-                                );
-                              }
-                              
-                              final beneficiary = _beneficiaries[index - 1];
-                              final percentage = _calculateBeneficiaryPercentage(beneficiary);
-                              
-                              return _BeneficiaryCard(
-                                beneficiary: beneficiary,
-                                percentage: percentage,
-                                onTap: () async {
-                                  final result = await Navigator.of(context).push<TrustBeneficiary>(
-                                    MaterialPageRoute<TrustBeneficiary>(
-                                      builder: (_) => TrustBeneficiaryFormScreen(
-                                        beneficiary: beneficiary,
+                    // Payment section
+                    if (_trust.id != null) ...[
+                      CardDecorationHelper.styledCard(
+                        context: context,
+                        elevation: 1,
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Fund',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (_trust.trustPayments != null && _trust.trustPayments!.isNotEmpty)
+                                  TextButton.icon(
+                                    onPressed: () => _showPaymentHistory(),
+                                    icon: const Icon(Icons.history, size: 18),
+                                    label: const Text('History'),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Progress bar
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Progress',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
                                       ),
                                     ),
-                                  );
-                                  
-                                  if (result != null && beneficiary.id != null) {
-                                    try {
-                                      await TrustService.instance.updateBeneficiary(
-                                        beneficiary.id!,
-                                        result.toJson(),
-                                      );
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Beneficiary updated successfully'),
-                                            backgroundColor: Colors.green,
+                                    Text(
+                                      '${_trust.progressPercentage.toStringAsFixed(1)}%',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                LinearProgressIndicator(
+                                  value: _trust.progressPercentage / 100,
+                                  backgroundColor: colorScheme.surfaceContainerHighest,
+                                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                                  minHeight: 8,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Paid',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
                                           ),
-                                        );
-                                        await _loadData();
-                                      }
-                                    } catch (e) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Failed to update beneficiary: ${e.toString()}'),
-                                            backgroundColor: Colors.red,
+                                        ),
+                                        Text(
+                                          _formatAmount(_trust.totalPaidInCents / 100),
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        );
-                                      }
-                                    }
-                                  }
-                                },
-                              );
-                            },
-                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Remaining',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        Text(
+                                          _formatAmount(_trust.remainingInCents / 100),
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: _trust.remainingInCents > 0 ? Colors.orange : Colors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _showPaymentForm(),
+                                    icon: const Icon(Icons.account_balance_wallet),
+                                    label: const Text('Add Fund'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: colorScheme.primary,
+                                      foregroundColor: colorScheme.onPrimary,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
 
                     // Instructions / categories section
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Instructions',
+                          l10n.instructions,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Allocate what this trust fund will cover',
+                          l10n.allocateWhatTrustFundWillCover,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -798,31 +954,31 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                         final fundSupportCategories = [
                           {
                             'id': 'education',
-                            'title': 'Education',
+                            'title': l10n.education,
                             'icon': Icons.school_outlined,
                             'calculateAmount': () => _calculateEducation(),
                           },
                           {
                             'id': 'living',
-                            'title': 'Living Expenses',
+                            'title': l10n.livingExpenses,
                             'icon': Icons.home_outlined,
                             'calculateAmount': () => _calculateExpenses(),
                           },
                           {
                             'id': 'healthcare',
-                            'title': 'Healthcare',
+                            'title': l10n.healthcare,
                             'icon': Icons.medical_services_outlined,
                             'calculateAmount': () => _calculateHealthcare(),
                           },
                           {
                             'id': 'charitable',
-                            'title': 'Charitable',
+                            'title': l10n.charitable,
                             'icon': Icons.volunteer_activism_outlined,
                             'calculateAmount': () => _calculateCharitable(),
                           },
                           {
                             'id': 'debt',
-                            'title': 'Debt',
+                            'title': l10n.debt,
                             'icon': Icons.receipt_long_outlined,
                             'calculateAmount': () => _calculateDebt(),
                           },
@@ -843,15 +999,70 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                             final calculateAmount = category['calculateAmount'] as double Function()? ?? () => 0.0;
                             
                             final isSelected = _trust.fundSupportCategories?.contains(categoryId) ?? false;
-                            
+
+                            // Resolve beneficiary for this category (if any) so we can show profile avatar.
+                            final Map<String, dynamic>? categoryConfig = _getCategoryConfig(categoryId);
+                            int? beneficiaryId;
+                            if (categoryConfig != null) {
+                              final Object? rawId = categoryConfig['beneficiaryId'];
+                              if (rawId is num) {
+                                beneficiaryId = rawId.toInt();
+                              } else if (rawId is String) {
+                                beneficiaryId = int.tryParse(rawId);
+                              }
+                            }
+
+                            Map<String, dynamic>? beneficiaryData;
+                            if (beneficiaryId != null && _familyMembers.isNotEmpty) {
+                              beneficiaryData = _familyMembers.firstWhere(
+                                (member) => (member['id'] as num?)?.toInt() == beneficiaryId,
+                                orElse: () => <String, dynamic>{},
+                              );
+                              if (beneficiaryData.isEmpty) {
+                                beneficiaryData = null;
+                              }
+                            }
+
+                            Widget? beneficiaryAvatar;
+                            if (beneficiaryData != null) {
+                              final theme = Theme.of(context);
+                              final colorScheme = theme.colorScheme;
+                              final String name = (beneficiaryData['name'] as String?) ?? 'Unknown';
+                              final String? imagePath = beneficiaryData['image_path'] as String?;
+
+                              ImageProvider? imageProvider;
+                              if (imagePath != null && imagePath.isNotEmpty) {
+                                final String? url = SupabaseService.instance.getFullImageUrl(imagePath);
+                                if (url != null && url.isNotEmpty) {
+                                  imageProvider = NetworkImage(url);
+                                }
+                              }
+
+                              beneficiaryAvatar = CircleAvatar(
+                                radius: 14,
+                                backgroundImage: imageProvider,
+                                backgroundColor: colorScheme.primaryContainer,
+                                child: imageProvider == null
+                                    ? Text(
+                                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onPrimaryContainer,
+                                        ),
+                                      )
+                                    : null,
+                              );
+                            }
+
                             return _CategoryCard(
                               title: title,
-                              subtitle: isSelected ? _formatAmount(calculateAmount()) : 'Tap to set up',
+                              subtitle: isSelected ? _formatAmount(calculateAmount()) : l10n.tapToSetUp,
                               icon: icon,
                               iconColor: isSelected 
                                   ? const Color.fromRGBO(49, 24, 211, 1)
                                   : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
                               isUnselected: !isSelected,
+                              beneficiaryAvatar: beneficiaryAvatar,
                               onTap: () async {
                                 // Navigate to view/edit configuration (any category can be opened)
                                 final config = _getCategoryConfig(categoryId) ?? {};
@@ -867,6 +1078,9 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                       categoryId: categoryId,
                                       category: categoryInfo,
                                       initialConfig: config,
+                                      // In dashboard we manage live instructions,
+                                      // so keep pause / request fund actions visible.
+                                      showRequestActions: true,
                                     ),
                                   ),
                                 );
@@ -892,8 +1106,8 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                       setState(() => _currentTrust = updatedTrust);
                                       await _loadData();
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Settings saved'),
+                                        SnackBar(
+                                          content: Text(l10n.settingsSaved),
                                           backgroundColor: Colors.green,
                                         ),
                                       );
@@ -902,7 +1116,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> {
                                     if (mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('Failed to save: ${e.toString()}'),
+                                          content: Text(l10n.failedToSave(e.toString())),
                                           backgroundColor: Colors.red,
                                         ),
                                       );
@@ -935,6 +1149,8 @@ class _CategoryCard extends StatelessWidget {
   final Color? iconColor;
   /// Muted style for unselected; card stays tappable.
   final bool isUnselected;
+  /// Optional beneficiary avatar shown in the card (without name for quick visual context).
+  final Widget? beneficiaryAvatar;
 
   const _CategoryCard({
     required this.title,
@@ -943,6 +1159,7 @@ class _CategoryCard extends StatelessWidget {
     this.onTap,
     this.iconColor,
     this.isUnselected = false,
+    this.beneficiaryAvatar,
   });
 
   @override
@@ -950,14 +1167,10 @@ class _CategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return CardDecorationHelper.styledCard(
+      context: context,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outline.withOpacity(0.1),
-        ),
-      ),
+      padding: EdgeInsets.zero,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -969,191 +1182,79 @@ class _CategoryCard extends StatelessWidget {
                 ? colorScheme.surfaceContainerHighest.withOpacity(0.4)
                 : colorScheme.primaryContainer.withOpacity(0.4),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Stack(
             children: [
-              Icon(
-                icon,
-                size: 40,
-                color: iconColor ?? const Color.fromRGBO(49, 24, 211, 1),
-              ),
-              const SizedBox(height: 8),
-              // Bottom-aligned text block
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: isUnselected
-                          ? colorScheme.onSurface
-                          : colorScheme.onPrimaryContainer,
+                  // Icon in soft container to match other cards
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    textAlign: TextAlign.left,
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: iconColor ?? const Color.fromRGBO(49, 24, 211, 1),
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isUnselected
-                          ? colorScheme.onSurfaceVariant.withOpacity(0.9)
-                          : colorScheme.onPrimaryContainer.withOpacity(0.85),
-                    ),
-                    textAlign: TextAlign.left,
+                  const SizedBox(height: 12),
+                  // Bottom-aligned text block
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isUnselected
+                              ? colorScheme.onSurface
+                              : colorScheme.onPrimaryContainer,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isUnselected
+                              ? colorScheme.onSurfaceVariant.withOpacity(0.9)
+                              : colorScheme.onPrimaryContainer.withOpacity(0.85),
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
                   ),
                 ],
-              )
+              ),
+              if (beneficiaryAvatar != null)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colorScheme.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withOpacity(0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: beneficiaryAvatar!,
+                  ),
+                ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _AddBeneficiaryCard extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _AddBeneficiaryCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colorScheme.primaryContainer.withOpacity(0.4),
-              border: Border.all(
-                color: colorScheme.primary.withOpacity(0.3),
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              Icons.add,
-              size: 32,
-              color: colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Add',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BeneficiaryCard extends StatelessWidget {
-  final TrustBeneficiary beneficiary;
-  final double percentage;
-  final VoidCallback onTap;
-
-  const _BeneficiaryCard({
-    required this.beneficiary,
-    required this.percentage,
-    required this.onTap,
-  });
-
-  String _getInitials(String? name) {
-    if (name == null || name.isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[parts.length - 1][0]}'.toUpperCase();
-    }
-    return name[0].toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final name = beneficiary.name ?? 'Unknown';
-    final initials = _getInitials(name);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.primaryContainer.withOpacity(0.3),
-                  border: Border.all(
-                    color: colorScheme.outline.withOpacity(0.2),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    initials,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              // Percentage badge
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.surface,
-                      width: 2,
-                    ),
-                  ),
-                  child: Text(
-                    '${percentage.toStringAsFixed(0)}%',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: 70,
-            child: Text(
-              name,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1164,6 +1265,7 @@ class _PartnershipSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -1199,24 +1301,21 @@ class _PartnershipSection extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
                 children: [
-                  const TextSpan(
-                    text: 'Sampul partner with Rakyat Trustee and Halogen Capital ',
-                  ),
-                  const TextSpan(
-                    text: 'to process your fund. ',
+                  TextSpan(
+                    text: l10n.sampulPartnerWithRakyat,
                   ),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () {
                         // TODO: Navigate to learn more page or open URL
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Learn more about our partners'),
+                          SnackBar(
+                            content: Text(l10n.learnMoreAboutPartners),
                           ),
                         );
                       },
                       child: Text(
-                        'Learn more',
+                        l10n.learnMore,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.primary,
                           decoration: TextDecoration.underline,

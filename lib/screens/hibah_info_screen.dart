@@ -184,10 +184,11 @@ class HibahInfoScreen extends StatelessWidget {
 
   Widget _buildIllustration(BuildContext context, ColorScheme colorScheme) {
     return Center(
-      child: Icon(
-        Icons.card_giftcard_outlined,
-        size: 80,
-        color: colorScheme.primary,
+      child: Image.asset(
+        'assets/hibah-property-stone.png',
+        width: 180,
+        height: 180,
+        fit: BoxFit.contain,
       ),
     );
   }

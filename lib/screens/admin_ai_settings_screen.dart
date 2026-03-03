@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/ai_chat_settings.dart';
 import '../services/ai_chat_settings_service.dart';
 import '../utils/admin_utils.dart';
+import 'admin_ai_qna_screen.dart';
+import 'admin_ai_resources_screen.dart';
 
 class AdminAiSettingsScreen extends StatefulWidget {
   const AdminAiSettingsScreen({super.key});
@@ -28,9 +30,6 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
   // Dropdown values
   int? _selectedMaxTokens;
   double? _selectedTemperature;
-
-  // Resource management
-  List<AiResource> _resources = [];
 
   // Preset options
   static const List<Map<String, dynamic>> _maxTokensOptions = [
@@ -172,7 +171,6 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
     _modelController.text = settings.model ?? '';
     _welcomeMessageController.text = settings.welcomeMessage;
     _contextResourcesController.text = settings.contextResources ?? '';
-    _resources = List.from(settings.resources);
   }
 
   Future<void> _saveSettings() async {
@@ -208,9 +206,6 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
       final maxTokens = _selectedMaxTokens!;
       final temperature = _selectedTemperature!;
 
-      // Convert resources to JSON format
-      final resourcesJson = _resources.map((resource) => resource.toJson()).toList();
-
       // If there's an active settings, update it; otherwise create new
       if (_activeSettings != null) {
         await AiChatSettingsService.instance.updateSettings(
@@ -220,7 +215,6 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
           temperature: temperature,
           model: _modelController.text.trim().isEmpty ? null : _modelController.text.trim(),
           welcomeMessage: _welcomeMessageController.text.trim(),
-          resources: resourcesJson,
           contextResources: _contextResourcesController.text.trim().isEmpty 
               ? null 
               : _contextResourcesController.text.trim(),
@@ -232,7 +226,6 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
           temperature: temperature,
           model: _modelController.text.trim().isEmpty ? null : _modelController.text.trim(),
           welcomeMessage: _welcomeMessageController.text.trim(),
-          resources: resourcesJson,
           contextResources: _contextResourcesController.text.trim().isEmpty 
               ? null 
               : _contextResourcesController.text.trim(),
@@ -608,9 +601,57 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Resources Section
-                      _buildResourcesSection(theme),
-                      const SizedBox(height: 24),
+                      // Resources & Q&A management (separate pages for a consistent admin UI)
+                      Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: theme.colorScheme.outline.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              title: const Text('Knowledge Base Resources'),
+                              subtitle: Text(
+                                'Manage links and documents Sampul AI should prioritize.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const AdminAiResourcesScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            const Divider(height: 1),
+                            ListTile(
+                              title: const Text('Q&A Knowledge Base'),
+                              subtitle: Text(
+                                'Manage common questions and concise answers.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const AdminAiQnaScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
 
                       // Context Resources
                       Text(
@@ -638,8 +679,7 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: 32),
-
-                      // Save Button
+                      // Save Button (only affects settings on this screen)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -715,6 +755,8 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                             ),
                           ),
                         ),
+                      const SizedBox(height: 32),
+
                     ],
                   ),
                 ),
@@ -725,155 +767,6 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-  }
-
-  Widget _buildResourcesSection(ThemeData theme) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Resources',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: _addResource,
-                  tooltip: 'Add Resource',
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Add links, documents, or any resources the AI should prioritize',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (_resources.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Text(
-                    'No resources added',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              )
-            else
-              ...List.generate(_resources.length, (index) {
-                return _buildResourceItem(theme, index);
-              }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResourceItem(ThemeData theme, int index) {
-    final resource = _resources[index];
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-      child: ListTile(
-        leading: Icon(
-          _getResourceIcon(resource.type),
-          color: theme.colorScheme.primary,
-        ),
-        title: Text(
-          resource.title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              resource.url,
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            if (resource.type != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Chip(
-                  label: Text(
-                    resource.type!.toUpperCase(),
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                  padding: EdgeInsets.zero,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            if (resource.description != null && resource.description!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  resource.description!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () {
-            setState(() {
-              _resources.removeAt(index);
-            });
-          },
-        ),
-        onTap: () => _editResource(index),
-      ),
-    );
-  }
-
-  IconData _getResourceIcon(String? type) {
-    if (type == null) return Icons.link;
-    switch (type.toLowerCase()) {
-      case 'pdf':
-        return Icons.picture_as_pdf;
-      case 'doc':
-      case 'docx':
-        return Icons.description;
-      case 'article':
-      case 'webpage':
-      case 'link':
-        return Icons.link;
-      default:
-        return Icons.insert_drive_file;
-    }
-  }
-
-  void _addResource() {
-    _showResourceDialog();
-  }
-
-  void _editResource(int index) {
-    _showResourceDialog(resource: _resources[index], index: index);
   }
 
   Future<void> _openOpenRouterModels() async {
@@ -891,95 +784,4 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
     }
   }
 
-  void _showResourceDialog({AiResource? resource, int? index}) {
-    final urlController = TextEditingController(text: resource?.url ?? '');
-    final titleController = TextEditingController(text: resource?.title ?? '');
-    final descController = TextEditingController(text: resource?.description ?? '');
-    final typeController = TextEditingController(text: resource?.type ?? '');
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(index == null ? 'Add Resource' : 'Edit Resource'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title *',
-                    hintText: 'e.g., Estate Planning Guide',
-                  ),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Title is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: urlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL *',
-                    hintText: 'https://example.com/article',
-                  ),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'URL is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: typeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Type (Optional)',
-                    hintText: 'e.g., link, pdf, doc, article, webpage',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (Optional)',
-                    hintText: 'Brief description of the resource',
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                final newResource = AiResource(
-                  url: urlController.text.trim(),
-                  title: titleController.text.trim(),
-                  type: typeController.text.trim().isEmpty
-                      ? null
-                      : typeController.text.trim(),
-                  description: descController.text.trim().isEmpty
-                      ? null
-                      : descController.text.trim(),
-                );
-                setState(() {
-                  if (index != null) {
-                    _resources[index] = newResource;
-                  } else {
-                    _resources.add(newResource);
-                  }
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../config/stripe_config.dart';
 import '../services/billing_service.dart';
+import '../utils/card_decoration_helper.dart';
 
 class BillingScreen extends StatefulWidget {
   const BillingScreen({super.key});
@@ -171,7 +172,9 @@ class _BillingScreenState extends State<BillingScreen> with WidgetsBindingObserv
                     ],
                   ],
                   if (_status.status != null)
-                    Card(
+                    CardDecorationHelper.styledCard(
+                      context: context,
+                      padding: EdgeInsets.zero,
                       child: ListTile(
                         leading: const Icon(Icons.verified_outlined),
                         title: Text('Current status: ${_status.status}'),
@@ -225,14 +228,8 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isRecommended ? theme.colorScheme.primary : theme.colorScheme.outlineVariant;
-    return Card(
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: color.withValues(alpha: 0.6)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return CardDecorationHelper.styledCard(
+      context: context,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -317,7 +314,6 @@ class _PlanCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

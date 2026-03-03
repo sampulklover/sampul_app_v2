@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/trust.dart';
 import 'trust_create_screen.dart';
 import 'trust_dashboard_screen.dart';
@@ -10,12 +11,13 @@ class TrustInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Family Trust Fund'),
+        title: Text(l10n.aboutFamilyTrustFund),
         elevation: 0,
       ),
       body: SafeArea(
@@ -34,7 +36,7 @@ class TrustInfoScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Let's set up your family account",
+                            l10n.letsSetUpYourFamilyAccount,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -43,7 +45,7 @@ class TrustInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Clear wishes, for the people you love.",
+                            l10n.trustDescription,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -72,7 +74,7 @@ class TrustInfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Why set up a Family Trust Fund?",
+                              l10n.whySetUpFamilyTrustFund,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -80,7 +82,7 @@ class TrustInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "A Family Trust Fund lets you decide how your money is used for your family, even when you're not around.",
+                              l10n.familyTrustFundDescription,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -89,19 +91,19 @@ class TrustInfoScreen extends StatelessWidget {
                             const SizedBox(height: 20),
                             _buildFeatureItem(
                               context,
-                              "Choose how your money is spent (healthcare, school fees, donations)",
+                              l10n.chooseHowMoneySpent,
                               colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _buildFeatureItem(
                               context,
-                              "Change your plans anytime you want",
+                              l10n.changePlansAnytime,
                               colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _buildFeatureItem(
                               context,
-                              "Your family knows exactly what to do — no confusion",
+                              l10n.familyKnowsExactly,
                               colorScheme,
                             ),
                           ],
@@ -160,24 +162,21 @@ class TrustInfoScreen extends StatelessWidget {
                                   color: colorScheme.onSurfaceVariant,
                                 ),
                                 children: [
-                                  const TextSpan(
-                                    text: 'Sampul partner with Rakyat Trustee and Halogen Capital ',
-                                  ),
-                                  const TextSpan(
-                                    text: 'to process your fund. ',
+                                  TextSpan(
+                                    text: l10n.sampulPartnerWithRakyat,
                                   ),
                                   WidgetSpan(
                                     child: GestureDetector(
                                       onTap: () {
                                         // TODO: Navigate to learn more page or open URL
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Learn more about our partners'),
+                                          SnackBar(
+                                            content: Text(l10n.learnMoreAboutPartners),
                                           ),
                                         );
                                       },
                                       child: Text(
-                                        'Learn more',
+                                        l10n.learnMore,
                                         style: theme.textTheme.bodyMedium?.copyWith(
                                           color: colorScheme.primary,
                                           decoration: TextDecoration.underline,
@@ -258,7 +257,7 @@ class TrustInfoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Start setting up",
+                          l10n.startSettingUp,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,
@@ -284,9 +283,10 @@ class TrustInfoScreen extends StatelessWidget {
   Widget _buildIllustration(BuildContext context, ColorScheme colorScheme) {
     return Center(
       child: Image.asset(
-        'assets/3-colour-coins.png',
+        'assets/trust-family-card.png',
+        width: 180,
+        height: 180,
         fit: BoxFit.contain,
-        height: 120,
       ),
     );
   }

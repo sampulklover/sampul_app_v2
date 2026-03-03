@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
 import '../models/trust.dart';
 import '../models/trust_beneficiary.dart';
@@ -8,6 +9,7 @@ import '../services/trust_service.dart';
 import '../services/supabase_service.dart';
 import '../config/trust_constants.dart';
 import '../utils/form_decoration_helper.dart';
+import '../utils/card_decoration_helper.dart';
 import 'trust_info_screen.dart';
 import 'edit_profile_screen.dart';
 import 'fund_support_config_screen.dart';
@@ -186,38 +188,39 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   // can still pass any existing data through to the service if present.
 
   Widget _buildFundSupportStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     final fundSupportCategories = [
       {
         'id': 'education',
-        'title': 'Education',
+        'title': l10n.education,
         'subtitle': 'Tuition, books, school fees',
         'icon': Icons.school_outlined,
       },
       {
         'id': 'living',
-        'title': 'Living Expenses',
-        'subtitle': 'Housing, food, utilities, daily needs',
+        'title': l10n.livingExpenses,
+        'subtitle': l10n.livingExpensesSubtitle,
         'icon': Icons.home_outlined,
       },
       {
         'id': 'healthcare',
-        'title': 'Healthcare',
-        'subtitle': 'Medical bills, treatment',
+        'title': l10n.healthcare,
+        'subtitle': l10n.healthcareSubtitle,
         'icon': Icons.medical_services_outlined,
       },
       {
         'id': 'charitable',
-        'title': 'Charitable',
-        'subtitle': 'Zakat, waqf, sadaqah, donations',
+        'title': l10n.charitable,
+        'subtitle': l10n.charitableSubtitle,
         'icon': Icons.volunteer_activism_outlined,
       },
       {
         'id': 'debt',
-        'title': 'Debt',
-        'subtitle': 'Loan repayments, outstanding obligations',
+        'title': l10n.debt,
+        'subtitle': l10n.debtSubtitle,
         'icon': Icons.receipt_long_outlined,
       },
     ];
@@ -341,12 +344,17 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     category: category,
                     config: config,
                     onTap: () async {
-                      final updatedConfig = await Navigator.of(context).push<Map<String, dynamic>>(
+                      final updatedConfig =
+                          await Navigator.of(context).push<Map<String, dynamic>>(
                         MaterialPageRoute(
                           builder: (context) => FundSupportConfigScreen(
                             categoryId: categoryId,
                             category: category,
                             initialConfig: Map<String, dynamic>.from(config),
+                            // In create flow we only configure instructions;
+                            // hide pause / request fund UI which is meant for
+                            // live trusts.
+                            showRequestActions: false,
                           ),
                         ),
                       );
@@ -366,7 +374,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
-            'You can select more than one. You can change this anytime. This sets a rule. Funds move only when conditions are met.',
+            l10n.youCanSelectMoreThanOne,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -456,7 +464,8 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
 
     // Beneficiary preview (who this is for)
     if (beneficiaryLine != null) {
-      previewItems.add('For $beneficiaryLine');
+      final l10n = AppLocalizations.of(context)!;
+      previewItems.add('${l10n.forLabel} $beneficiaryLine');
     }
 
     // Special preview for charitable category: show selected charities
@@ -466,29 +475,31 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         final List<TrustCharity> charities = charitiesData
             .map((dynamic c) => TrustCharity.fromJson(c as Map<String, dynamic>))
             .toList();
+        final l10n = AppLocalizations.of(context)!;
         if (charities.length == 1) {
-          final String name = charities.first.organizationName ?? '1 charity selected';
+          final String name = charities.first.organizationName ?? l10n.charitySelected;
           previewItems.add(name);
         } else {
-          previewItems.add('${charities.length} charities selected');
+          previewItems.add(l10n.charitiesSelected(charities.length));
         }
       }
     }
 
     // Duration preview
+    final l10n = AppLocalizations.of(context)!;
     if (durationType == 'age') {
-      previewItems.add('Until they turn ${endAge.round()}');
+      previewItems.add(l10n.untilTheyTurn(endAge.round()));
     } else if (durationType == 'lifetime') {
-      previewItems.add('For their whole life');
+      previewItems.add(l10n.forTheirWholeLife);
     }
 
     // Payment preview
     if (isRegularPayments == true) {
       final frequencyLabels = {
-        'monthly': 'every month',
-        'quarterly': 'every 3 months',
-        'yearly': 'every year',
-        'when_conditions': 'when conditions are met',
+        'monthly': l10n.everyMonth,
+        'quarterly': l10n.every3Months,
+        'yearly': l10n.everyYear,
+        'when_conditions': l10n.whenConditionsAreMet,
       };
       final frequencyLabel = frequencyLabels[paymentFrequency] ?? '';
       final formattedAmount = paymentAmount.toStringAsFixed(0).replaceAllMapped(
@@ -497,9 +508,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       );
       previewItems.add('RM $formattedAmount $frequencyLabel');
     } else if (releaseCondition == 'as_needed') {
-      previewItems.add('When needed');
+      previewItems.add(l10n.whenNeeded);
     } else if (releaseCondition == 'lump_sum') {
-      previewItems.add('All at once at the end');
+      previewItems.add(l10n.allAtOnceAtTheEnd);
     }
 
     return InkWell(
@@ -547,7 +558,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       }).toList(),
                     )
                   : Text(
-                      'Tap to set up',
+                      l10n.tapToSetUp,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w500,
@@ -566,6 +577,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   }
 
   Widget _buildExecutorSelectionStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isSomeoneIKnow = _executorType == 'someone_i_know';
@@ -628,7 +640,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Someone I Know',
+                        l10n.someoneIKnow,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: isSomeoneIKnow
@@ -641,7 +653,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Family member, close friend, or trusted advisor',
+                  l10n.familyMemberCloseFriendOrTrustedAdvisor,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -654,9 +666,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildProConItem(Icons.check_circle_outline, 'Free (usually)', Colors.green),
+                          _buildProConItem(Icons.check_circle_outline, l10n.freeUsually, Colors.green),
                           const SizedBox(height: 8),
-                          _buildProConItem(Icons.check_circle_outline, 'Basic reporting and analytics', Colors.green),
+                          _buildProConItem(Icons.check_circle_outline, l10n.basicReportingAndAnalytics, Colors.green),
                         ],
                       ),
                     ),
@@ -665,9 +677,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildProConItem(Icons.warning_amber_outlined, 'Personal conflict', Colors.orange),
+                          _buildProConItem(Icons.warning_amber_outlined, l10n.personalConflict, Colors.orange),
                           const SizedBox(height: 8),
-                          _buildProConItem(Icons.warning_amber_outlined, 'Administrative burden', Colors.orange),
+                          _buildProConItem(Icons.warning_amber_outlined, l10n.administrativeBurden, Colors.orange),
                         ],
                       ),
                     ),
@@ -677,7 +689,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 if (isSomeoneIKnow) ...[
                   const SizedBox(height: 24),
                   Text(
-                    'Who\'s this family trust account for?',
+                    l10n.whosThisFamilyTrustAccountFor,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -689,7 +701,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        'No family members found. Add family members in your profile.',
+                        l10n.noFamilyMembersFound,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -864,7 +876,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Sampul\'s Professional Executor',
+                        l10n.sampulsProfessionalExecutor,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: isSampulProfessional
@@ -880,11 +892,11 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildProConItem(Icons.check_circle_outline, 'Expert management', Colors.green),
+                    _buildProConItem(Icons.check_circle_outline, l10n.expertManagement, Colors.green),
                     const SizedBox(height: 8),
-                    _buildProConItem(Icons.check_circle_outline, 'Neutral party', Colors.green),
+                    _buildProConItem(Icons.check_circle_outline, l10n.neutralParty, Colors.green),
                     const SizedBox(height: 8),
-                    _buildProConItem(Icons.info_outline, 'Est. Fee: RM4,320/yr (Paid from trust funds)', Colors.blue),
+                    _buildProConItem(Icons.info_outline, l10n.estFeeR4320yr, Colors.blue),
                   ],
                 ),
               ],
@@ -914,7 +926,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Your executor acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. At least 2 joint Executors are necessary when one of the beneficiaries is a minor. If one of your beneficiaries is under 18, you\'ll need at least two executors working together. We\'ll remind you about this later.',
+                    l10n.executorGoodToKnow,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -960,16 +972,14 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
 
 
   Widget _buildReviewStep() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Personal Information Section
-        Card(
-          elevation: 0,
-          color: const Color.fromRGBO(255, 255, 255, 1),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        CardDecorationHelper.styledCard(
+          context: context,
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -977,7 +987,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     Icon(Icons.person, color: const Color.fromRGBO(83, 61, 233, 1)),
                     const SizedBox(width: 8),
                     Text(
-                      'Personal Information',
+                      l10n.personalInformation,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -985,14 +995,13 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                   ],
                 ),
                 const Divider(height: 24),
-                _buildReviewRow('Full Name', _userProfile?.nricName ?? _userProfile?.username),
-                _buildReviewRow('NRIC', _userProfile?.nricNo),
-                _buildReviewRow('Phone', _userProfile?.phoneNo),
-                _buildReviewRow('Email', _userProfile?.email),
-                _buildReviewRow('Address', _formatAddress(_userProfile)),
+                _buildReviewRow(l10n.fullName, _userProfile?.nricName ?? _userProfile?.username),
+                _buildReviewRow(l10n.nric, _userProfile?.nricNo),
+                _buildReviewRow(l10n.phone, _userProfile?.phoneNo),
+                _buildReviewRow(l10n.email, _userProfile?.email),
+                _buildReviewRow(l10n.address, _formatAddress(_userProfile)),
               ],
             ),
-          ),
         ),
         
         const SizedBox(height: 16),
@@ -1001,11 +1010,11 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         if (_selectedFundSupports.isNotEmpty)
           ..._selectedFundSupports.map((categoryId) {
             final categoryNames = {
-              'education': 'Education',
-              'living': 'Living Expenses',
-              'healthcare': 'Healthcare',
-              'charitable': 'Charitable',
-              'debt': 'Debt',
+              'education': l10n.education,
+              'living': l10n.livingExpenses,
+              'healthcare': l10n.healthcare,
+              'charitable': l10n.charitable,
+              'debt': l10n.debt,
             };
             final config = _fundSupportConfigs[categoryId];
             if (config == null) return const SizedBox.shrink();
@@ -1068,24 +1077,24 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       ),
                       const Divider(height: 24),
                       if (beneficiaryName != null)
-                        _buildReviewRow('Account for', beneficiaryName),
+                        _buildReviewRow(l10n.accountFor, beneficiaryName),
                       // Support Duration
                       if (durationType != null) ...[
                         _buildReviewRow(
-                          'Duration',
+                          l10n.duration,
                           durationType == 'age'
-                              ? 'Until age ${endAge?.round() ?? 24}'
-                              : 'Their entire lifetime',
+                              ? l10n.untilAge(endAge?.round() ?? 24)
+                              : l10n.theirEntireLifetime,
                         ),
                       ],
                       // Payment Configuration
                       if (isRegularPayments == true && paymentAmount != null) ...[
                         _buildReviewRow(
-                          'Payment Type',
-                          'Regular payments',
+                          l10n.paymentType,
+                          l10n.regularPayments,
                         ),
                         _buildReviewRow(
-                          'Amount',
+                          l10n.amount,
                           'RM ${paymentAmount.toStringAsFixed(2).replaceAllMapped(
                             RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
                             (Match m) => '${m[1]},',
@@ -1093,23 +1102,23 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         ),
                         if (paymentFrequency != null)
                           _buildReviewRow(
-                            'Frequency',
+                            l10n.frequency,
                             {
-                              'monthly': 'Monthly',
-                              'quarterly': 'Quarterly',
-                              'yearly': 'Yearly',
-                              'when_conditions': 'When conditions',
+                              'monthly': l10n.monthly,
+                              'quarterly': l10n.quarterly,
+                              'yearly': l10n.yearly,
+                              'when_conditions': l10n.whenConditions,
                             }[paymentFrequency] ?? paymentFrequency,
                           ),
                       ] else if (releaseCondition == 'as_needed') ...[
                         _buildReviewRow(
-                          'Payment Type',
-                          'As needed (trustee decides)',
+                          l10n.paymentType,
+                          l10n.asNeededTrusteeDecides,
                         ),
                       ] else if (releaseCondition == 'lump_sum') ...[
                         _buildReviewRow(
-                          'Payment Type',
-                          'Lump sum at the end',
+                          l10n.paymentType,
+                          l10n.lumpSumAtTheEnd,
                         ),
                       ],
                     ],
@@ -1121,12 +1130,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         
         // Executor Selection Section
         if (_executorType != null)
-          Card(
-            elevation: 0,
-            color: const Color.fromRGBO(255, 255, 255, 1),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+          CardDecorationHelper.styledCard(
+            context: context,
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1134,7 +1140,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       Icon(Icons.person_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
                       const SizedBox(width: 8),
                       Text(
-                        'Executor Selection',
+                        l10n.executorSelection,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -1143,18 +1149,18 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                   ),
                   const Divider(height: 24),
                   _buildReviewRow(
-                    'Executor Type',
+                    l10n.executorType,
                     _executorType == 'someone_i_know'
-                        ? 'Someone I Know'
+                        ? l10n.someoneIKnow
                         : _executorType == 'sampul_professional'
-                            ? 'Sampul\'s Professional Executor'
+                            ? l10n.sampulsProfessionalExecutor
                             : null,
                   ),
                   if (_executorType == 'someone_i_know' && _selectedExecutorIds.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     _buildReviewRow(
-                      'Selected Executors',
-                      '${_selectedExecutorIds.length} family member(s) selected',
+                      l10n.selectedExecutors,
+                      l10n.familyMembersSelected(_selectedExecutorIds.length),
                     ),
                     const SizedBox(height: 8),
                     ..._selectedExecutorIds.map((id) {
@@ -1175,17 +1181,13 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 ],
               ),
             ),
-          ),
         
         if (_executorType != null)
           const SizedBox(height: 16),
         
         // Financial Information Section
-          Card(
-            elevation: 0,
-            color: const Color.fromRGBO(255, 255, 255, 1),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          CardDecorationHelper.styledCard(
+            context: context,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1194,7 +1196,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     Icon(Icons.account_balance_wallet, color: const Color.fromRGBO(83, 61, 233, 1)),
                     const SizedBox(width: 8),
                     Text(
-                      'Financial Information',
+                      l10n.financialInformation,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -1203,7 +1205,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 ),
                 const Divider(height: 24),
                 _buildReviewRow(
-                  'Estimated Net Worth',
+                  l10n.estimatedNetWorth,
                   _selectedEstimatedNetWorth != null
                       ? TrustConstants.estimatedNetWorths
                           .firstWhere((e) => e['value'] == _selectedEstimatedNetWorth,
@@ -1211,17 +1213,16 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       : null,
                 ),
                 _buildReviewRow(
-                  'Source of Fund',
+                  l10n.sourceOfFund,
                   _selectedSourceOfFund != null
                       ? TrustConstants.sourceOfWealth
                           .firstWhere((e) => e['value'] == _selectedSourceOfFund,
                               orElse: () => {'name': _selectedSourceOfFund!})['name']
                       : null,
                 ),
-                _buildReviewRow('Purpose of Transaction', _purposeOfTransactionCtrl.text.trim().isEmpty ? null : _purposeOfTransactionCtrl.text.trim()),
+                _buildReviewRow(l10n.purposeOfTransaction, _purposeOfTransactionCtrl.text.trim().isEmpty ? null : _purposeOfTransactionCtrl.text.trim()),
               ],
             ),
-          ),
         ),
         
         const SizedBox(height: 16),
@@ -1229,12 +1230,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         // Business Information Section
         if (_employerNameCtrl.text.trim().isNotEmpty ||
             _businessNatureCtrl.text.trim().isNotEmpty)
-          Card(
-            elevation: 0,
-            color: const Color.fromRGBO(255, 255, 255, 1),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+          CardDecorationHelper.styledCard(
+            context: context,
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1242,7 +1240,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       Icon(Icons.business, color: const Color.fromRGBO(83, 61, 233, 1)),
                       const SizedBox(width: 8),
                       Text(
-                        'Business Information',
+                        l10n.businessInformation,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -1250,13 +1248,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     ],
                   ),
                   const Divider(height: 24),
-                  _buildReviewRow('Employer/Company Name', _employerNameCtrl.text.trim().isEmpty ? null : _employerNameCtrl.text.trim()),
-                  _buildReviewRow('Nature of Business', _businessNatureCtrl.text.trim().isEmpty ? null : _businessNatureCtrl.text.trim()),
-                  _buildReviewRow('Business Address', _formatBusinessAddress()),
+                  _buildReviewRow(l10n.employerCompanyName, _employerNameCtrl.text.trim().isEmpty ? null : _employerNameCtrl.text.trim()),
+                  _buildReviewRow(l10n.natureOfBusiness, _businessNatureCtrl.text.trim().isEmpty ? null : _businessNatureCtrl.text.trim()),
+                  _buildReviewRow(l10n.businessAddress, _formatBusinessAddress()),
                 ],
               ),
-            ),
-          ),
+        ),
         
         if (_employerNameCtrl.text.trim().isNotEmpty ||
             _businessNatureCtrl.text.trim().isNotEmpty)
@@ -1286,7 +1283,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                         Icon(Icons.volunteer_activism, color: const Color.fromRGBO(83, 61, 233, 1)),
                         const SizedBox(width: 8),
                         Text(
-                          'Charities/Donations (${charities.length})',
+                          l10n.charitiesDonations(charities.length),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -1392,6 +1389,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   }
 
   Widget _buildPersonalInfoStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Card(
@@ -1405,7 +1403,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Personal Information',
+                    l10n.personalInformation,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -1424,7 +1422,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     await _prefillFromProfile();
                   },
                   icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Edit Profile'),
+                  label: Text(l10n.editProfile),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
@@ -1504,11 +1502,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       setState(() => _currentStep = 1);
     } else if (_currentStep == 1) {
       // Fund Support - validate at least one selected and configured
+      final l10n = AppLocalizations.of(context)!;
       if (!_validateFundSupport()) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select at least one fund support category and set up its details'),
+          SnackBar(
+            content: Text(l10n.pleaseSelectAtLeastOneFundSupport),
             backgroundColor: Colors.orange,
           ),
         );
@@ -1517,11 +1516,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       setState(() => _currentStep = 2);
     } else if (_currentStep == 2) {
       // Executor Selection - validate executor is selected
+      final l10n = AppLocalizations.of(context)!;
       if (!_validateExecutorSelection()) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select at least one executor'),
+          SnackBar(
+            content: Text(l10n.pleaseSelectAtLeastOneExecutor),
             backgroundColor: Colors.orange,
           ),
         );
@@ -1540,11 +1540,12 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     // Validate profile exists
     if (_userProfile == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete your profile first'), backgroundColor: Colors.orange),
+        SnackBar(content: Text(l10n.pleaseCompleteYourProfileFirst), backgroundColor: Colors.orange),
       );
       setState(() => _currentStep = 0);
       return;
@@ -1553,8 +1554,8 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     if (!_validateFundSupport()) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one fund support category and set up its details'),
+        SnackBar(
+          content: Text(l10n.pleaseSelectAtLeastOneFundSupport),
           backgroundColor: Colors.orange,
         ),
       );
@@ -1565,8 +1566,8 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     if (!_validateExecutorSelection()) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one executor'),
+        SnackBar(
+          content: Text(l10n.pleaseSelectAtLeastOneExecutor),
           backgroundColor: Colors.orange,
         ),
       );
@@ -1636,16 +1637,18 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         }(),
       );
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trust Fund created successfully'), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.trustFundCreatedSuccessfully), backgroundColor: Colors.green),
       );
       await Future<void>.delayed(const Duration(milliseconds: 300));
       // Return the created trust so callers can navigate to its detail page.
       Navigator.of(context).pop(createdTrust);
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create trust fund: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToCreateTrustFund(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -1654,19 +1657,20 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoadingProfile) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Create Trust Fund')),
+        appBar: AppBar(title: Text(l10n.createTrustFund)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Trust Fund'),
+        title: Text(l10n.createTrustFund),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Trust Fund',
+            tooltip: l10n.aboutTrustFund,
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(
@@ -1685,13 +1689,13 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 child: MaterialBanner(
                   elevation: 0,
                   content: Text(
-                    'We could not load your profile automatically. Please fill the details manually.\n$_profileError',
+                    '${l10n.weCouldNotLoadYourProfile}\n$_profileError',
                   ),
                   leading: const Icon(Icons.info_outline),
                   actions: <Widget>[
                     TextButton(
                       onPressed: () => setState(() => _profileError = null),
-                      child: const Text('DISMISS'),
+                      child: Text(l10n.dismiss),
                     )
                   ],
                 ),
@@ -1706,25 +1710,25 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                 },
                 steps: <Step>[
                   Step(
-                    title: const Text('Personal Information'),
+                    title: Text(l10n.personalInformation),
                     state: _currentStep > 0 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 0,
                     content: _buildPersonalInfoStep(),
                   ),
                   Step(
-                    title: const Text('Fund Support'),
+                    title: Text(l10n.fundSupport),
                     state: _currentStep > 1 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 1,
                     content: _buildFundSupportStep(),
                   ),
                   Step(
-                    title: const Text('Executor Selection'),
+                    title: Text(l10n.executorSelection),
                     state: _currentStep > 2 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 2,
                     content: _buildExecutorSelectionStep(),
                   ),
                   Step(
-                    title: const Text('Financial Information'),
+                    title: Text(l10n.financialInformation),
                     state: _currentStep > 3 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 3,
                     content: Form(
@@ -1737,7 +1741,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Estimated Net Worth',
+                              labelText: l10n.estimatedNetWorth,
                               prefixIcon: Icons.account_balance_wallet_outlined,
                             ),
                             items: TrustConstants.estimatedNetWorths
@@ -1755,7 +1759,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             icon: const Icon(Icons.keyboard_arrow_down_outlined),
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Source of Fund',
+                              labelText: l10n.sourceOfFund,
                               prefixIcon: Icons.payments_outlined,
                             ),
                             items: TrustConstants.sourceOfWealth
@@ -1772,7 +1776,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             maxLines: 3,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Purpose of Transaction',
+                              labelText: l10n.purposeOfTransaction,
                               prefixIcon: Icons.description_outlined,
                             ).copyWith(
                               alignLabelWithHint: true,
@@ -1783,7 +1787,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     ),
                   ),
                   Step(
-                    title: const Text('Employment/Business Information'),
+                    title: Text(l10n.employmentBusinessInformation),
                     state: _currentStep > 4 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 4,
                     content: Form(
@@ -1794,7 +1798,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             controller: _employerNameCtrl,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Employer Name',
+                              labelText: l10n.employerName,
                               prefixIcon: Icons.business_outlined,
                             ),
                           ),
@@ -1803,7 +1807,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             controller: _businessNatureCtrl,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Business Nature',
+                              labelText: l10n.businessNature,
                               prefixIcon: Icons.work_outline,
                             ),
                           ),
@@ -1812,7 +1816,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             controller: _businessAddress1Ctrl,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Business Address Line 1',
+                              labelText: l10n.businessAddressLine1,
                               prefixIcon: Icons.location_on_outlined,
                             ),
                           ),
@@ -1821,7 +1825,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                             controller: _businessAddress2Ctrl,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Business Address Line 2',
+                              labelText: l10n.businessAddressLine2,
                               prefixIcon: Icons.location_on_outlined,
                             ),
                           ),
@@ -1834,7 +1838,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                   controller: _businessCityCtrl,
                                   decoration: FormDecorationHelper.roundedInputDecoration(
                                     context: context,
-                                    labelText: 'City',
+                                    labelText: l10n.city,
                                     prefixIcon: Icons.location_city_outlined,
                                   ),
                                 ),
@@ -1846,7 +1850,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                   keyboardType: TextInputType.number,
                                   decoration: FormDecorationHelper.roundedInputDecoration(
                                     context: context,
-                                    labelText: 'Postcode',
+                                    labelText: l10n.postcode,
                                     prefixIcon: Icons.local_post_office_outlined,
                                   ),
                                 ),
@@ -1861,7 +1865,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                   controller: _businessStateCtrl,
                                   decoration: FormDecorationHelper.roundedInputDecoration(
                                     context: context,
-                                    labelText: 'State',
+                                    labelText: l10n.state,
                                     prefixIcon: Icons.map_outlined,
                                   ),
                                 ),
@@ -1874,7 +1878,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                                   icon: const Icon(Icons.keyboard_arrow_down_outlined),
                                   decoration: FormDecorationHelper.roundedInputDecoration(
                                     context: context,
-                                    labelText: 'Country',
+                                    labelText: l10n.country,
                                     prefixIcon: Icons.public_outlined,
                                   ),
                                   items: TrustConstants.countries
@@ -1893,7 +1897,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     ),
                   ),
                   Step(
-                    title: const Text('Review & Submit'),
+                    title: Text(l10n.reviewSubmit),
                     state: StepState.indexed,
                     isActive: _currentStep >= 5,
                     content: _buildReviewStep(),

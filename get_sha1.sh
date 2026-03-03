@@ -31,5 +31,5 @@ fi
 echo ""
 echo "📋 Your app details:"
 echo "   Android Package: com.example.sampul_app_v2"
-echo "   iOS Bundle ID: com.example.sampulAppV2"
+echo "   iOS Bundle ID: com.sampul.app"
 echo "   Supabase URL: https://rfzblaianldrfwdqdijl.supabase.co"

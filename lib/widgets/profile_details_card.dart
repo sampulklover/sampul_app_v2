@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/card_decoration_helper.dart';
 
 class ProfileDetailItem {
   final IconData icon;
@@ -31,64 +32,64 @@ class ProfileDetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: padding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+    return CardDecorationHelper.styledCard(
+      context: context,
+      padding: padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (onEdit != null)
+                TextButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: const Text('Edit profile'),
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   ),
                 ),
-                if (onEdit != null)
-                  TextButton.icon(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Edit profile'),
-                    style: TextButton.styleFrom(
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...items.map((ProfileDetailItem item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Icon(item.icon, size: 20, color: const Color.fromRGBO(49, 24, 211, 1)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              item.label,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.textTheme.bodySmall?.color?.withOpacity(0.8),
-                              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...items.map((ProfileDetailItem item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Icon(item.icon, size: 20, color: const Color.fromRGBO(49, 24, 211, 1)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            item.label,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.8),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item.displayValue,
-                              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.displayValue,
+                            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
-          ],
-        ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
       ),
     );
   }

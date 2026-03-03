@@ -10,6 +10,8 @@ import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
 import 'package:flutter/services.dart';
 import '../services/affiliate_service.dart';
+import '../l10n/app_localizations.dart';
+import 'login_screen.dart';
 
 class OnboardingFlowScreen extends StatefulWidget {
   const OnboardingFlowScreen({super.key});
@@ -29,28 +31,30 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   bool _isReferralSubmitting = false;
   String? _referralCodePreview;
 
-  final List<_OnboardingStep> _steps = const <_OnboardingStep>[
-    _OnboardingStep(
-      title: 'Complete Your Profile',
-      description: 'Set up your basic information',
-      icon: Icons.person_outline,
-    ),
-    _OnboardingStep(
-      title: 'Add Your First Family Member',
-      description: 'Add someone important to your will',
-      icon: Icons.family_restroom,
-    ),
-    _OnboardingStep(
-      title: 'Add Your First Asset',
-      description: 'Start tracking your digital assets',
-      icon: Icons.account_balance_wallet_outlined,
-    ),
-    _OnboardingStep(
-      title: 'Create Your Will',
-      description: 'Create your will with Sampul',
-      icon: Icons.description_outlined,
-    ),
-  ];
+  List<_OnboardingStep> _getSteps(AppLocalizations l10n) {
+    return <_OnboardingStep>[
+      _OnboardingStep(
+        title: l10n.completeYourProfile,
+        description: l10n.setUpYourBasicInformation,
+        icon: Icons.person_outline,
+      ),
+      _OnboardingStep(
+        title: l10n.addYourFirstFamilyMember,
+        description: l10n.addSomeoneImportantToYourWill,
+        icon: Icons.family_restroom,
+      ),
+      _OnboardingStep(
+        title: l10n.addYourFirstAsset,
+        description: l10n.startTrackingYourDigitalAssets,
+        icon: Icons.account_balance_wallet_outlined,
+      ),
+      _OnboardingStep(
+        title: l10n.createYourWill,
+        description: l10n.createYourWillWithSampul,
+        icon: Icons.description_outlined,
+      ),
+    ];
+  }
 
   @override
   void initState() {
@@ -196,7 +200,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                               
                               // Title
                               Text(
-                                'Have a referral code?',
+                                AppLocalizations.of(context)!.haveReferralCode,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -205,7 +209,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Enter your referral code below to unlock benefits',
+                                AppLocalizations.of(context)!.enterReferralCodeBelow,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
@@ -227,7 +231,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                   textInputAction: TextInputAction.done,
                                   textCapitalization: TextCapitalization.characters,
                                   decoration: InputDecoration(
-                                    labelText: 'Referral code',
+                                    labelText: AppLocalizations.of(context)!.referralCodeLabel,
                                     prefixIcon: Icon(
                                       Icons.card_giftcard_outlined,
                                       color: const Color.fromRGBO(83, 61, 233, 1),
@@ -249,7 +253,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                   validator: (value) {
                                     final v = (value ?? '').trim();
                                     if (v.isEmpty) return null; // optional
-                                    if (v.length < 4) return 'Code looks too short';
+                                    if (v.length < 4) return AppLocalizations.of(context)!.codeLooksTooShort;
                                     return null;
                                   },
                                 ),
@@ -367,7 +371,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                   side: BorderSide(color: theme.colorScheme.outline),
                                 ),
                                 child: Text(
-                                  'Clear',
+                                  AppLocalizations.of(context)!.clear,
                                   style: TextStyle(
                                     color: theme.colorScheme.onSurface,
                                     fontWeight: FontWeight.w600,
@@ -404,7 +408,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                           if (!mounted) return;
                                           setState(() => _referralCodePreview = normalized);
                                           setModalState(() {
-                                            inlineSuccess = 'Referral code applied';
+                                            inlineSuccess = AppLocalizations.of(context)!.referralCodeApplied;
                                           });
                                           // Close automatically after a short delay so user sees feedback.
                                           Future.delayed(const Duration(milliseconds: 900), () {
@@ -440,9 +444,9 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text(
-                                        'Apply',
-                                        style: TextStyle(
+                                    : Text(
+                                        AppLocalizations.of(context)!.apply,
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 16,
                                         ),
@@ -464,9 +468,12 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    if (!_profileCompleted || !_familyMemberAdded || !_assetAdded || !_willGenerated) {
+    final l10n = AppLocalizations.of(context)!;
+    // Only the first three steps are required to finish onboarding.
+    // Creating a will and setting up a family trust are now optional.
+    if (!_profileCompleted || !_familyMemberAdded || !_assetAdded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all steps before finishing'), backgroundColor: Colors.orange),
+        SnackBar(content: Text(l10n.pleaseCompleteAllStepsBeforeFinishing), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -479,7 +486,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to complete onboarding: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToCompleteOnboarding(e.toString())), backgroundColor: Colors.red),
       );
     }
   }
@@ -525,21 +532,22 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   }
 
   Future<void> _handleCompleteTap(int completed) async {
-    if (completed == 4) {
+    // When all required steps (3) are done, allow completing onboarding.
+    if (completed == 3) {
       await _completeOnboarding();
       return;
     }
 
-    // Identify first incomplete step
-    final List<bool> steps = <bool>[_profileCompleted, _familyMemberAdded, _assetAdded, _willGenerated];
-    final int firstIncomplete = steps.indexWhere((bool s) => !s);
+    // Identify first incomplete *required* step (profile, family, asset).
+    final List<bool> stepStatuses = <bool>[_profileCompleted, _familyMemberAdded, _assetAdded];
+    final int firstIncomplete = stepStatuses.indexWhere((bool s) => !s);
 
     // Haptic feedback
     await HapticFeedback.mediumImpact();
 
     // Scroll to approximate position of the first incomplete step
     if (_listController.hasClients && firstIncomplete >= 0) {
-      final double target = (_listController.position.maxScrollExtent) * (firstIncomplete / (steps.length - 1));
+      final double target = (_listController.position.maxScrollExtent) * (firstIncomplete / (stepStatuses.length - 1));
       _listController.animateTo(
         target.clamp(0, _listController.position.maxScrollExtent),
         duration: const Duration(milliseconds: 400),
@@ -548,26 +556,68 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     }
 
     // Show snackbar hint
-    final List<String> titles = _steps.map((e) => e.title).toList();
-    final String nextTitle = firstIncomplete >= 0 ? titles[firstIncomplete] : 'the remaining steps';
+    final l10n = AppLocalizations.of(context)!;
+    final List<_OnboardingStep> onboardingSteps = _getSteps(l10n);
+    // Only required steps are used for guidance here.
+    final List<String> titles = onboardingSteps.take(3).map((e) => e.title).toList();
+    final String nextTitle = firstIncomplete >= 0 ? titles[firstIncomplete] : l10n.theRemainingSteps;
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please complete: $nextTitle')),
+        SnackBar(content: Text(l10n.pleaseComplete(nextTitle))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final ThemeData theme = Theme.of(context);
-    final int completed = <bool>[_profileCompleted, _familyMemberAdded, _assetAdded, _willGenerated].where((bool e) => e).length;
+    // Only the first three steps are required for onboarding completion.
+    final int completed = <bool>[_profileCompleted, _familyMemberAdded, _assetAdded].where((bool e) => e).length;
+    final List<_OnboardingStep> steps = _getSteps(l10n);
 
     return PopScope(
-      canPop: completed == 4,
+      // Allow leaving this screen once required steps are done.
+      canPop: completed == 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Get Started'),
+          title: Text(l10n.getStartedTitle),
           automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: l10n.logOut,
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(l10n.logOut),
+                    content: Text(l10n.areYouSureYouWantToLogOut),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(l10n.cancel),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(l10n.logOut),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed != true) return;
+
+                final navigator = Navigator.of(context);
+                await AuthController.instance.signOut();
+                if (!mounted) return;
+                navigator.pushAndRemoveUntil(
+                  MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+                  (Route<dynamic> route) => false,
+                );
+              },
+            ),
+          ],
         ),
         body: Column(
           children: <Widget>[
@@ -588,7 +638,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                             ),
                           ),
                           FractionallySizedBox(
-                            widthFactor: completed / 4,
+                            widthFactor: completed / 3,
                             alignment: Alignment.centerLeft,
                             child: Container(
                               decoration: BoxDecoration(
@@ -602,8 +652,18 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text('$completed/4', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                  Text('$completed/3', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
                 ],
+              ),
+            ),
+            // Intro helper text (kept short and simple)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: Text(
+                'Before we get started, complete these quick steps to set up your Sampul account.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             Expanded(
@@ -611,10 +671,9 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 padding: const EdgeInsets.all(16),
                 controller: _listController,
                 // +1 for referral card, +1 for optional trust step
-                itemCount: _steps.length + 2,
+                itemCount: steps.length + 2,
                 itemBuilder: (BuildContext context, int index) {
                   if (index == 0) {
-                    const subtitle = 'Add a referral code (optional)';
                     final bool isReferralApplied = _referralCodePreview != null;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -647,14 +706,14 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Text(
-                                      'Referral code',
+                                      l10n.referralCode,
                                       style: theme.textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      subtitle,
+                                      l10n.addReferralCodeOptional,
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.onSurfaceVariant,
                                       ),
@@ -677,7 +736,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                   }
 
                   // Last item: optional Family Trust setup step
-                  if (index == _steps.length + 1) {
+                  if (index == steps.length + 1) {
                     final theme = Theme.of(context);
                     final isCompleted = _trustCreated;
 
@@ -713,7 +772,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Text(
-                                      'Set up your Family Trust account',
+                                      l10n.setUpYourFamilyTrustAccount,
                                       style: theme.textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         decoration: isCompleted ? TextDecoration.lineThrough : null,
@@ -721,7 +780,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Create a family account to manage long-term support (optional).',
+                                      l10n.createFamilyAccountForLongTermSupport,
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.onSurfaceVariant,
                                       ),
@@ -745,7 +804,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
 
                   final stepIndex = index - 1;
                   // Adjust completion mapping for shifted index (because referral card is index 0 now).
-                  final _OnboardingStep step2 = _steps[stepIndex];
+                  final _OnboardingStep step2 = steps[stepIndex];
                   final bool isCompleted2 = stepIndex == 0
                       ? _profileCompleted
                       : stepIndex == 1
@@ -817,12 +876,12 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isLoading || completed < 4 ? null : () => _handleCompleteTap(completed),
+                  onPressed: _isLoading || completed < 3 ? null : () => _handleCompleteTap(completed),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: completed == 4
+                    backgroundColor: completed == 3
                         ? Colors.green
                         : Theme.of(context).colorScheme.surfaceContainerHighest,
-                    foregroundColor: completed == 4
+                    foregroundColor: completed == 3
                         ? Colors.white
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                     shape: RoundedRectangleBorder(
@@ -841,10 +900,10 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Complete setup',
+                              l10n.completeSetup,
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: completed == 4
+                                      color: completed == 3
                                         ? Colors.white
                                         : Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
@@ -852,7 +911,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                             const SizedBox(width: 8),
                             Icon(
                               Icons.arrow_forward,
-                              color: completed == 4
+                                color: completed == 3
                                   ? Colors.white
                                   : Theme.of(context).colorScheme.onSurfaceVariant,
                             ),

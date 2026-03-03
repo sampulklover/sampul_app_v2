@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../models/aftercare_task.dart';
 import '../services/aftercare_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ChecklistScreen extends StatefulWidget {
   const ChecklistScreen({super.key});
@@ -19,7 +20,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     super.initState();
     _load();
   }
-
+  
   Future<void> _load() async {
     final user = AuthController.instance.currentUser;
     if (user == null) {
@@ -28,29 +29,39 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
       });
       return;
     }
-    final tasks = await AftercareService.instance.listTasks(user.id);
-    setState(() {
-      _tasks = tasks;
-      _loading = false;
-    });
+    try {
+      final tasks = await AftercareService.instance.listTasks(user.id);
+      if (!mounted) return;
+      setState(() {
+        _tasks = tasks;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+      });
+      _showErrorMessage();
+    }
   }
 
   Future<void> _addOrEdit({AftercareTask? existing}) async {
+    final l10n = AppLocalizations.of(context)!;
     final TextEditingController controller = TextEditingController(text: existing?.task ?? '');
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(existing == null ? 'Add Task' : 'Edit Task'),
+          title: Text(existing == null ? l10n.addTask : l10n.editTask),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              TextField(controller: controller, decoration: InputDecoration(labelText: 'Task')),
+              TextField(controller: controller, decoration: InputDecoration(labelText: l10n.task)),
             ],
           ),
           actions: <Widget>[
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Save')),
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.save)),
           ],
         );
       },
@@ -58,49 +69,67 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     if (result != true) return;
     final user = AuthController.instance.currentUser;
     if (user == null) return;
-    if (existing == null) {
-      await AftercareService.instance.createTask(uuid: user.id, task: controller.text.trim());
-    } else {
-      await AftercareService.instance.updateTask(id: existing.id!, task: controller.text.trim());
+    try {
+      if (existing == null) {
+        await AftercareService.instance.createTask(uuid: user.id, task: controller.text.trim());
+      } else {
+        await AftercareService.instance.updateTask(id: existing.id!, task: controller.text.trim());
+      }
+      await _load();
+    } catch (e) {
+      _showErrorMessage();
     }
-    await _load();
   }
 
   Future<void> _toggleComplete(AftercareTask t) async {
-    await AftercareService.instance.updateTask(id: t.id!, isCompleted: !t.isCompleted);
-    await _load();
+    try {
+      await AftercareService.instance.updateTask(id: t.id!, isCompleted: !t.isCompleted);
+      await _load();
+    } catch (e) {
+      _showErrorMessage();
+    }
   }
 
   Future<void> _togglePin(AftercareTask t) async {
-    await AftercareService.instance.updateTask(id: t.id!, isPinned: !t.isPinned);
-    await _load();
+    try {
+      await AftercareService.instance.updateTask(id: t.id!, isPinned: !t.isPinned);
+      await _load();
+    } catch (e) {
+      _showErrorMessage();
+    }
   }
 
   Future<void> _delete(AftercareTask t) async {
+    final l10n = AppLocalizations.of(context)!;
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete task?'),
-          content: const Text('This action cannot be undone.'),
+          title: Text(l10n.deleteTask),
+          content: Text(l10n.thisActionCannotBeUndone),
           actions: <Widget>[
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-            FilledButton.tonal(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+            FilledButton.tonal(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.delete)),
           ],
         );
       },
     );
     if (ok == true) {
-      await AftercareService.instance.deleteTask(t.id!);
-      await _load();
+      try {
+        await AftercareService.instance.deleteTask(t.id!);
+        await _load();
+      } catch (e) {
+        _showErrorMessage();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Checklist'),
+        title: Text(l10n.checklist),
         actions: <Widget>[
           if (_tasks.isNotEmpty)
             PopupMenuButton<String>(
@@ -111,22 +140,26 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                   final bool? ok = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Delete all tasks?'),
-                      content: const Text('This will remove all tasks permanently.'),
+                      title: Text(l10n.deleteAllTasks),
+                      content: Text(l10n.thisWillRemoveAllTasksPermanently),
                       actions: <Widget>[
-                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-                        FilledButton.tonal(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete all')),
+                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+                        FilledButton.tonal(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.deleteAll)),
                       ],
                     ),
                   );
                   if (ok == true) {
-                    await AftercareService.instance.deleteAll(uuid: user.id);
-                    await _load();
+                    try {
+                      await AftercareService.instance.deleteAll(uuid: user.id);
+                      await _load();
+                    } catch (e) {
+                      _showErrorMessage();
+                    }
                   }
                 }
               },
-              itemBuilder: (context) => const <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(value: 'delete_all', child: Text('Delete all')),
+              itemBuilder: (context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(value: 'delete_all', child: Text(l10n.deleteAll)),
               ],
             ),
         ],
@@ -160,10 +193,14 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                     });
                     final user = AuthController.instance.currentUser;
                     if (user != null) {
-                      await AftercareService.instance.updatePositions(
-                        uuid: user.id,
-                        orderedIds: _tasks.map((e) => e.id!).toList(),
-                      );
+                      try {
+                        await AftercareService.instance.updatePositions(
+                          uuid: user.id,
+                          orderedIds: _tasks.map((e) => e.id!).toList(),
+                        );
+                      } catch (e) {
+                        _showErrorMessage();
+                      }
                     }
                   },
                   itemBuilder: (context, index) {
@@ -261,7 +298,17 @@ class _DotsHandle extends StatelessWidget {
 }
 
 extension on _ChecklistScreenState {
+  void _showErrorMessage() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Unable to connect. Please check your internet connection.'),
+      ),
+    );
+  }
+
   Future<void> _showItemActions(AftercareTask t) async {
+    final l10n = AppLocalizations.of(context)!;
     final String? action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -272,17 +319,17 @@ extension on _ChecklistScreenState {
             children: <Widget>[
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
-                title: const Text('Edit'),
+                title: Text(l10n.edit),
                 onTap: () => Navigator.of(context).pop('edit'),
               ),
               ListTile(
                 leading: Icon(t.isPinned ? Icons.push_pin : Icons.push_pin_outlined),
-                title: Text(t.isPinned ? 'Unpin' : 'Pin'),
+                title: Text(t.isPinned ? l10n.unpin : l10n.pin),
                 onTap: () => Navigator.of(context).pop('toggle_pin'),
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline),
-                title: const Text('Delete'),
+                title: Text(l10n.delete),
                 onTap: () => Navigator.of(context).pop('delete'),
               ),
               const SizedBox(height: 8),
@@ -305,6 +352,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -317,17 +365,18 @@ class _EmptyState extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   Center(
-                    child: Icon(
-                      Icons.checklist_outlined,
-                      size: 80,
-                      color: colorScheme.primary,
+                    child: Image.asset(
+                      'assets/checklist-tick.png',
+                      width: 180,
+                      height: 180,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   Text(
-                    'Create your checklist',
+                    l10n.createYourChecklist,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -337,7 +386,7 @@ class _EmptyState extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Organise your aftercare tasks and keep track of important steps.',
+                    l10n.organiseYourAftercareTasks,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurfaceVariant,
@@ -355,7 +404,7 @@ class _EmptyState extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          'Why use a checklist?',
+                          l10n.whyUseAChecklist,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -363,7 +412,7 @@ class _EmptyState extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'A structured checklist helps you and your family stay on top of important after‑death tasks, one step at a time.',
+                          l10n.structuredChecklistHelps,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                             height: 1.4,
@@ -371,17 +420,17 @@ class _EmptyState extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         _ChecklistBenefitItem(
-                          text: 'Start quickly with a recommended set of essential aftercare tasks.',
+                          text: l10n.startQuicklyWithRecommended,
                           colorScheme: colorScheme,
                         ),
                         const SizedBox(height: 16),
                         _ChecklistBenefitItem(
-                          text: 'Add your own custom tasks that fit your situation and culture.',
+                          text: l10n.addYourOwnCustomTasks,
                           colorScheme: colorScheme,
                         ),
                         const SizedBox(height: 16),
                         _ChecklistBenefitItem(
-                          text: 'Track progress so nothing important is forgotten during a difficult time.',
+                          text: l10n.trackProgressSoNothingForgotten,
                           colorScheme: colorScheme,
                         ),
                       ],
@@ -401,22 +450,14 @@ class _EmptyState extends StatelessWidget {
                                   color: colorScheme.primary,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text('About checklists'),
+                                Text(l10n.aboutChecklists),
                               ],
                             ),
-                            content: const Text(
-                              'The default checklist includes essential aftercare steps like:\n\n'
-                              '• Notifying family members\n'
-                              '• Managing bank accounts and assets\n'
-                              '• Handling legal matters and documents\n'
-                              '• Organising personal belongings\n'
-                              '• Updating beneficiaries and contacts\n\n'
-                              'You can also create custom tasks specific to your needs.',
-                            ),
+                            content: Text(l10n.defaultChecklistIncludes),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Got it'),
+                                child: Text(l10n.gotIt),
                               ),
                             ],
                           ),
@@ -428,7 +469,7 @@ class _EmptyState extends StatelessWidget {
                         color: colorScheme.primary,
                       ),
                       label: Text(
-                        'Learn more about checklists',
+                        l10n.learnMoreAboutChecklists,
                         style: TextStyle(
                           color: colorScheme.primary,
                         ),
@@ -463,7 +504,7 @@ class _EmptyState extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: onCreateDefault,
                     icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Use default checklist'),
+                    label: Text(l10n.useDefaultChecklist),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -480,7 +521,7 @@ class _EmptyState extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onCreateCustom,
                     icon: const Icon(Icons.add),
-                    label: const Text('Create custom task'),
+                    label: Text(l10n.createCustomTask),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),

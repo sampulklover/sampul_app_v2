@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'asset_info_screen.dart';
@@ -28,6 +29,9 @@ import 'trust_info_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'notification_screen.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
+import '../utils/card_decoration_helper.dart';
+
+const Color _trustAccentColor = Color.fromRGBO(83, 61, 233, 1);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -339,9 +343,9 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
     if (!_scrollController.hasClients || widget.trusts.isEmpty) return;
     final double scrollPosition = _scrollController.offset;
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double cardWidth = screenWidth - 32; // Full width minus padding
+    final double mainCardWidth = (screenWidth - 32) * 0.7; // 70% of available width
     final double spacing = 12; // Separator width
-    final double itemWidth = cardWidth + spacing;
+    final double itemWidth = mainCardWidth + spacing;
     final int newPage = (scrollPosition / itemWidth).round();
     // Clamp to valid trust card indices (exclude the add card at the end)
     final int clampedPage = newPage.clamp(0, widget.trusts.length - 1);
@@ -408,6 +412,13 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final double screenWidth = MediaQuery.of(context).size.width;
+    // Calculate card width: show ~1.5 cards visible (main card + peek of next)
+    // Main card takes ~70% of screen, add card is smaller
+    final double mainCardWidth = (screenWidth - 32) * 0.7; // 70% of available width
+    final double addCardWidth = (screenWidth - 32) * 0.5; // 50% of available width for add card
+    const double cardHeight = 200;
+    const double sectionHeight = cardHeight + 16; // small breathing space for shadow, padding
     
     if (widget.isLoading) {
       return SizedBox(
@@ -418,10 +429,111 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
       );
     }
 
+    // Empty state: user has no trusts yet -> show a single, larger centered add card
+    if (widget.trusts.isEmpty) {
+      return SizedBox(
+        height: sectionHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Center(
+            child: SizedBox(
+              width: screenWidth - 64, // a bit narrower than full width for a bolder look
+              height: cardHeight,
+              child: CardDecorationHelper.styledCard(
+                context: context,
+                elevation: 0,
+                padding: EdgeInsets.zero,
+                child: InkWell(
+                  onTap: () async {
+                    // Check if user has seen the about page before
+                    final SharedPreferences prefs = await SharedPreferences.getInstance();
+                    final bool hasSeenAbout = prefs.getBool('trust_about_seen') ?? false;
+
+                    // Navigate to the trust creation flow. When the user finishes
+                    // successfully, the flow returns the created Trust instance.
+                    final Trust? createdTrust = await Navigator.of(context).push<Trust>(
+                      MaterialPageRoute<Trust>(
+                        builder: (_) =>
+                            hasSeenAbout ? const TrustCreateScreen() : const TrustInfoScreen(),
+                      ),
+                    );
+                    if (createdTrust != null && widget.onRefresh != null) {
+                      widget.onRefresh!();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.transparent,
+                    ),
+                    child: CustomPaint(
+                      painter: _DashedBorderPainter(
+                        color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                        strokeWidth: 2,
+                        borderRadius: 16,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _trustAccentColor.withOpacity(0.4),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                    color: _trustAccentColor,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(context)!.add,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: _trustAccentColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Text(
+                              AppLocalizations.of(context)!.createYourFirstTrustFund,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Column(
       children: <Widget>[
         SizedBox(
-          height: 180,
+          height: sectionHeight,
           child: ListView.separated(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
@@ -432,24 +544,27 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
               // Show add new trust card at the end
               if (index == widget.trusts.length) {
                 return SizedBox(
-                  width: MediaQuery.of(context).size.width - 32,
-                  child: Card(
-                    elevation: 1,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  width: addCardWidth,
+                  child: CardDecorationHelper.styledCard(
+                    context: context,
+                    elevation: 0,
+                    padding: EdgeInsets.zero,
                     child: InkWell(
                       onTap: () async {
                         // Check if user has seen the about page before
                         final SharedPreferences prefs = await SharedPreferences.getInstance();
                         final bool hasSeenAbout = prefs.getBool('trust_about_seen') ?? false;
-                        
-                        final bool? created = await Navigator.of(context).push<bool>(
-                          MaterialPageRoute<bool>(
-                            builder: (_) => hasSeenAbout 
-                                ? const TrustCreateScreen() 
+
+                        // Navigate to the trust creation flow. When the user finishes
+                        // successfully, the flow returns the created Trust instance.
+                        final Trust? createdTrust = await Navigator.of(context).push<Trust>(
+                          MaterialPageRoute<Trust>(
+                            builder: (_) => hasSeenAbout
+                                ? const TrustCreateScreen()
                                 : const TrustInfoScreen(),
                           ),
                         );
-                        if (created == true && widget.onRefresh != null) {
+                        if (createdTrust != null && widget.onRefresh != null) {
                           widget.onRefresh!();
                         }
                       },
@@ -457,61 +572,71 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: <Color>[
-                              Colors.white,
-                              theme.colorScheme.primaryContainer.withOpacity(0.1),
-                            ],
-                          ),
+                          color: Colors.transparent,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.add_circle_outline,
-                                  color: theme.colorScheme.primary,
-                                  size: 32,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Builder(
-                                builder: (BuildContext context) {
-                                  final l10n = AppLocalizations.of(context)!;
-                                  return Text(
-                                    widget.trusts.isEmpty ? l10n.createYourFirstTrustFund : l10n.addNewTrustFund,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colorScheme.primary,
+                        child: CustomPaint(
+                          painter: _DashedBorderPainter(
+                            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                            strokeWidth: 2,
+                            borderRadius: 16,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: _trustAccentColor.withOpacity(0.4),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.add,
+                                        color: _trustAccentColor,
+                                        size: 24,
+                                      ),
                                     ),
-                                    textAlign: TextAlign.center,
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 4),
-                              Builder(
-                                builder: (BuildContext context) {
-                                  final l10n = AppLocalizations.of(context)!;
-                                  return Text(
-                                    l10n.tapToGetStarted,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
+                                    const SizedBox(width: 8),
+                                    Builder(
+                                      builder: (BuildContext context) {
+                                        final l10n = AppLocalizations.of(context)!;
+                                        return Text(
+                                          l10n.add,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: _trustAccentColor,
+                                          ),
+                                        );
+                                      },
                                     ),
-                                    textAlign: TextAlign.center,
-                                  );
-                                },
-                              ),
-                            ],
+                                  ],
+                                ),
+                                const Spacer(),
+                                Builder(
+                                  builder: (BuildContext context) {
+                                    return Text(
+                                      widget.trusts.isEmpty
+                                          ? AppLocalizations.of(context)!.createYourFirstTrustFund
+                                          : AppLocalizations.of(context)!.addNewTrustFund,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                        fontSize: 11,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -528,185 +653,133 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
               final bool isActive = status == TrustStatus.approved;
               
               return SizedBox(
-                width: MediaQuery.of(context).size.width - 32, // Full width minus padding
+                width: mainCardWidth,
                 child: Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (context) => TrustDashboardScreen(trust: trust),
-                    ),
-                  ).then((_) {
-                    if (widget.onRefresh != null) {
-                      widget.onRefresh!();
-                    }
-                  });
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Stack(
-                  children: <Widget>[
-                    // Background gradient
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: <Color>[
-                            Colors.white,
-                            theme.colorScheme.primaryContainer.withOpacity(0.1),
-                          ],
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (context) => TrustDashboardScreen(trust: trust),
                         ),
-                      ),
-                    ),
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Builder(
-                                      builder: (BuildContext context) {
-                                        final l10n = AppLocalizations.of(context)!;
-                                        return Text(
-                                          l10n.familyAccount,
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color.fromRGBO(83, 61, 233, 1),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      trustCode,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.arrow_outward,
-                                  size: 20,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) => TrustDashboardScreen(trust: trust),
-                                    ),
-                                  ).then((_) {
-                                    if (widget.onRefresh != null) {
-                                      widget.onRefresh!();
-                                    }
-                                  });
-                                },
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Text(
-                            amount,
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                      ).then((_) {
+                        if (widget.onRefresh != null) {
+                          widget.onRefresh!();
+                        }
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      children: <Widget>[
+                        // Background gradient
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: <Color>[
+                                Colors.white,
+                                theme.colorScheme.primaryContainer.withOpacity(0.1),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
+                        ),
+                        // Content
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: isActive ? Colors.green : _statusColor(status),
-                                  shape: BoxShape.circle,
+                              Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Builder(
+                                          builder: (BuildContext context) {
+                                            final l10n = AppLocalizations.of(context)!;
+                                            return Text(
+                                              l10n.familyAccount,
+                                              style: theme.textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color.fromRGBO(83, 61, 233, 1),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          trustCode,
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              Text(
+                                amount,
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              Builder(
-                                builder: (BuildContext context) {
-                                  final l10n = AppLocalizations.of(context)!;
-                                  return Text(
-                                    isActive ? l10n.yourPlanIsActive : _statusLabel(status, context),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isActive ? Colors.green.shade700 : _statusColor(status),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: <Widget>[
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: isActive ? Colors.green : _statusColor(status),
+                                      shape: BoxShape.circle,
                                     ),
-                                  );
-                                },
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Builder(
+                                    builder: (BuildContext context) {
+                                      final l10n = AppLocalizations.of(context)!;
+                                      return Text(
+                                        isActive ? l10n.yourPlanIsActive : _statusLabel(status, context),
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: isActive ? Colors.green.shade700 : _statusColor(status),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    // Decorative element (purple cube-like graphic)
-                    Positioned(
-                      right: -20,
-                      top: -20,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
                         ),
-                        transform: Matrix4.rotationZ(0.2),
-                      ),
+                        // Decorative element (purple cube-like graphic)
+                        Positioned(
+                          right: -20,
+                          top: -20,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            transform: Matrix4.rotationZ(0.2),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
+              );
             },
           ),
         ),
-        if (widget.trusts.length > 1) ...[
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              widget.trusts.length, // Only show dots for trust cards, not the add card
-              (index) => GestureDetector(
-                onTap: () {
-                  final double cardWidth = MediaQuery.of(context).size.width - 32;
-                  final double spacing = 12;
-                  final double targetOffset = index * (cardWidth + spacing);
-                  _scrollController.animateTo(
-                    targetOffset,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outlineVariant.withOpacity(0.3),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        // Remove page indicators since multiple cards are now visible
       ],
     );
   }
@@ -1418,9 +1491,17 @@ class _AddCircle extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.purple, style: BorderStyle.solid, width: 2),
+            border: Border.all(
+              color: _trustAccentColor.withOpacity(0.4),
+              style: BorderStyle.solid,
+              width: 1.5,
+            ),
           ),
-          child: const Icon(Icons.add, color: Color.fromRGBO(83, 61, 233, 1)),
+          child: const Icon(
+            Icons.add,
+            color: _trustAccentColor,
+            size: 24,
+          ),
         ),
         const SizedBox(height: 6),
         SizedBox(
@@ -1460,6 +1541,53 @@ class _Logo extends StatelessWidget {
       errorBuilder: (_, __, ___) => fallback,
     );
   }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double borderRadius;
+  final double dashWidth;
+  final double dashSpace;
+
+  _DashedBorderPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.borderRadius,
+    this.dashWidth = 5.0,
+    this.dashSpace = 3.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    // Draw dashed border
+    final Path path = Path();
+    path.addRRect(rrect);
+
+    final ui.PathMetrics pathMetrics = path.computeMetrics();
+    for (final ui.PathMetric pathMetric in pathMetrics) {
+      double distance = 0;
+      while (distance < pathMetric.length) {
+        final double end = (distance + dashWidth).clamp(0.0, pathMetric.length);
+        final Path extractPath = pathMetric.extractPath(distance, end);
+        canvas.drawPath(extractPath, paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 
@@ -14,26 +15,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingPageData> _pages = const <_OnboardingPageData>[
-    _OnboardingPageData(
-      title: 'Put your wealth in\nwriting',
-      subtitle:
-          'Without a Wasiat, your wealth could end up in the wrong hands. Get it sorted today—fast, legal, and dispute-free.',
-      image: 'assets/intro_safe.png',
-    ),
-    _OnboardingPageData(
-      title: 'Do more with Sampul\nTrust',
-      subtitle:
-          "Lock in your assets, invest for the future, and ensure your loved ones get what's rightfully theirs.",
-      image: 'assets/intro_gift.png',
-    ),
-    _OnboardingPageData(
-      title: "Don't let emotions\ndecide.",
-      subtitle:
-          'A professional executor ensures your will is followed—no family drama, no legal mess, just a smooth handover.',
-      image: 'assets/intro_home.png',
-    ),
-  ];
+  List<_OnboardingPageData> _getPages(AppLocalizations l10n) {
+    return <_OnboardingPageData>[
+      _OnboardingPageData(
+        title: l10n.onboardingTitle1,
+        subtitle: l10n.onboardingSubtitle1,
+        image: 'assets/intro_safe.png',
+      ),
+      _OnboardingPageData(
+        title: l10n.onboardingTitle2,
+        subtitle: l10n.onboardingSubtitle2,
+        image: 'assets/intro_gift.png',
+      ),
+      _OnboardingPageData(
+        title: l10n.onboardingTitle3,
+        subtitle: l10n.onboardingSubtitle3,
+        image: 'assets/intro_home.png',
+      ),
+    ];
+  }
 
   @override
   void dispose() {
@@ -51,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < _pages.length - 1) {
+    if (_currentPage < 2) {
       _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
     } else {
       _completeAndGo(const SignupScreen());
@@ -60,7 +60,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final Color primary = Theme.of(context).colorScheme.primary;
+    final List<_OnboardingPageData> pages = _getPages(l10n);
 
     return Scaffold(
       body: SafeArea(
@@ -69,10 +71,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 onPageChanged: (int index) => setState(() => _currentPage = index),
                 itemBuilder: (BuildContext context, int index) {
-                  final _OnboardingPageData data = _pages[index];
+                  final _OnboardingPageData data = pages[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
@@ -114,7 +116,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List<Widget>.generate(_pages.length, (int i) {
+              children: List<Widget>.generate(pages.length, (int i) {
                 final bool isActive = i == _currentPage;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -150,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                            _currentPage == pages.length - 1 ? l10n.getStarted : l10n.next,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Theme.of(context).colorScheme.onPrimary,
@@ -180,7 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage == _pages.length - 1 ? 'Log In' : 'Skip',
+                        _currentPage == pages.length - 1 ? l10n.login : l10n.skip,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

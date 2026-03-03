@@ -93,5 +93,9 @@ class TrustConstants {
     {'name': 'Quarterly', 'value': 'quarterly'},
     {'name': 'Yearly', 'value': 'yearly'},
   ];
+
+  // Payment constants
+  static const int minTrustAmount = 10000000; // RM 100,000 in cents
+  static const int maxTransactionAmount = 3000000; // RM 30,000 in cents
 }
 

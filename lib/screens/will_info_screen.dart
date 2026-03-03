@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'will_generation_screen.dart';
 
 class WillInfoScreen extends StatelessWidget {
@@ -6,12 +7,13 @@ class WillInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Your Will'),
+        title: Text(l10n.aboutYourWill),
         elevation: 0,
       ),
       body: SafeArea(
@@ -30,7 +32,7 @@ class WillInfoScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's create your will",
+                            l10n.letsCreateYourWill,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -39,7 +41,7 @@ class WillInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Bring your profile, family, assets, and wishes together in one clear document.",
+                            l10n.willDescription,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -53,10 +55,11 @@ class WillInfoScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Center(
-                        child: Icon(
-                          Icons.description_outlined,
-                          size: 80,
-                          color: colorScheme.primary,
+                        child: Image.asset(
+                          'assets/will-certificate-scroll.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -74,7 +77,7 @@ class WillInfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "Why create your will in Sampul?",
+                              l10n.whyCreateYourWillInSampul,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -82,7 +85,7 @@ class WillInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
+                              l10n.yourWillPullsFromProfile,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -90,17 +93,17 @@ class WillInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             _WillFeatureItem(
-                              text: "Keep all key information (profile, family, assets) in one place.",
+                              text: l10n.keepAllKeyInformation,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _WillFeatureItem(
-                              text: "Generate a structured will document you can read, export, and share.",
+                              text: l10n.generateStructuredWillDocument,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _WillFeatureItem(
-                              text: "Update your will later whenever your life or assets change.",
+                              text: l10n.updateWillLater,
                               colorScheme: colorScheme,
                             ),
                           ],
@@ -156,7 +159,7 @@ class WillInfoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Start my will",
+                          l10n.startMyWill,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,

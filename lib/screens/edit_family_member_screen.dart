@@ -4,6 +4,7 @@ import '../controllers/auth_controller.dart';
 import '../services/image_upload_service.dart';
 import '../services/will_service.dart';
 import '../models/relationship.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/form_decoration_helper.dart';
 import 'dart:io';
 
@@ -123,14 +124,15 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
         'state': _stateController.text.trim().isEmpty ? null : _stateController.text.trim(),
         'country': _country,
       };
+      final l10n = AppLocalizations.of(context)!;
       if (_type == 'future_owner') {
         final String p = _percentageController.text.trim();
         if (p.isEmpty) {
-          throw Exception('Please provide percentage for beneficiary');
+          throw Exception(l10n.pleaseProvidePercentageForBeneficiary);
         }
         final double parsed = double.tryParse(p) ?? -1;
         if (parsed < 0 || parsed > 100) {
-          throw Exception('Percentage must be between 0 and 100');
+          throw Exception(l10n.percentageMustBeBetween0And100);
         }
         payload['percentage'] = parsed;
       } else {
@@ -158,8 +160,9 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToSaveFamilyMember(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -168,20 +171,21 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Family Member'),
+        title: Text(l10n.editFamilyMember),
         actions: <Widget>[
           IconButton(
             onPressed: _isSaving ? null : _confirmAndDelete,
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Delete',
+            tooltip: l10n.delete,
           ),
           TextButton(
             onPressed: _isSaving ? null : _save,
             child: _isSaving
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -214,8 +218,9 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 if (file != null) {
                                   if (!ImageUploadService().validateImage(file)) {
                                     if (!mounted) return;
+                                    final l10n = AppLocalizations.of(context)!;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Invalid image. Use JPG/PNG/WebP under 5MB.')),
+                                      SnackBar(content: Text(l10n.invalidImageUseJpgPngWebp)),
                                     );
                                     return;
                                   }
@@ -223,13 +228,14 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 }
                               } catch (e) {
                                 if (!mounted) return;
+                                final l10n = AppLocalizations.of(context)!;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Image selection failed: $e')),
+                                  SnackBar(content: Text(l10n.imageSelectionFailed(e.toString()))),
                                 );
                               }
                             },
                             icon: const Icon(Icons.photo_outlined),
-                            label: const Text('Change photo'),
+                            label: Text(l10n.changePhoto),
                           ),
                         ],
                       ),
@@ -261,7 +267,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Changes here update your will automatically.',
+                                l10n.changesHereUpdateWillAutomatically,
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
@@ -277,18 +283,18 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text('Basic Info', style: Theme.of(context).textTheme.titleMedium),
+                            Text(l10n.basicInfoSection, style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _nameController,
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Full Name',
+                                labelText: l10n.fullName,
                                 prefixIcon: Icons.person_outline,
                               ),
                               validator: (String? v) {
-                                if (v == null || v.trim().isEmpty) return 'Name is required';
-                                if (v.trim().length < 2) return 'Please enter a valid name';
+                                if (v == null || v.trim().isEmpty) return l10n.nameRequired;
+                                if (v.trim().length < 2) return l10n.pleaseEnterValidName;
                                 return null;
                               },
                             ),
@@ -298,14 +304,14 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                               keyboardType: TextInputType.emailAddress,
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Email',
+                                labelText: l10n.email,
                                 prefixIcon: Icons.mail_outline,
                               ),
                               validator: (String? v) {
                                 final String value = (v ?? '').trim();
-                                if (value.isEmpty) return 'Email is required';
+                                if (value.isEmpty) return l10n.emailRequired;
                                 final RegExp re = RegExp(r"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", caseSensitive: false);
-                                if (!re.hasMatch(value)) return 'Please enter a valid email address';
+                                if (!re.hasMatch(value)) return l10n.pleaseEnterValidEmailAddress;
                                 return null;
                               },
                             ),
@@ -318,16 +324,16 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                               items: Relationship.allRelationships
                                   .map((Relationship r) => DropdownMenuItem<String>(
                                         value: r.value,
-                                        child: _buildRelationshipItem(r),
+                                        child: _buildRelationshipItem(r, l10n),
                                       ))
                                   .toList(),
                               onChanged: (String? v) => setState(() => _relationship = v),
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Relationship',
+                                labelText: l10n.relationship,
                                 prefixIcon: Icons.diversity_3_outlined,
                               ),
-                              validator: (String? v) => ((v ?? '').isEmpty) ? 'Relationship is required' : null,
+                              validator: (String? v) => ((v ?? '').isEmpty) ? l10n.relationshipRequired : null,
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
@@ -335,12 +341,15 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                               isExpanded: true,
                               icon: const Icon(Icons.keyboard_arrow_down_outlined),
                               items: _typeOptions
-                                  .map((String t) => DropdownMenuItem<String>(value: t, child: Text(t == 'future_owner' ? 'Beneficiary' : (t == 'co_sampul' ? 'Co-sampul (Executor)' : 'Guardian'))))
+                                  .map((String t) => DropdownMenuItem<String>(
+                                        value: t,
+                                        child: Text(t == 'future_owner' ? l10n.beneficiary : (t == 'co_sampul' ? l10n.coSampulExecutor : l10n.guardian)),
+                                      ))
                                   .toList(),
                               onChanged: (String? v) => setState(() => _type = v ?? 'co_sampul'),
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Category',
+                                labelText: l10n.category,
                                 prefixIcon: Icons.category_outlined,
                               ),
                             ),
@@ -351,7 +360,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 decoration: FormDecorationHelper.roundedInputDecoration(
                                   context: context,
-                                  labelText: 'Percentage (0 - 100)',
+                                  labelText: l10n.percentage0To100,
                                   prefixIcon: Icons.percent,
                                 ),
                               ),
@@ -368,13 +377,13 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text('Contact & ID', style: Theme.of(context).textTheme.titleMedium),
+                            Text(l10n.contactIdSection, style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _nricController,
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'IC/NRIC Number',
+                                labelText: l10n.icNricNumber,
                                 prefixIcon: Icons.badge_outlined,
                               ),
                             ),
@@ -384,7 +393,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                               keyboardType: TextInputType.phone,
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Phone',
+                                labelText: l10n.phone,
                                 prefixIcon: Icons.phone_outlined,
                               ),
                             ),
@@ -401,13 +410,13 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text('Address', style: Theme.of(context).textTheme.titleMedium),
+                            Text(l10n.addressSection, style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _address1Controller,
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Address Line 1',
+                                labelText: l10n.addressLine1,
                                 prefixIcon: Icons.home_outlined,
                               ),
                             ),
@@ -416,7 +425,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                               controller: _address2Controller,
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
-                                labelText: 'Address Line 2',
+                                labelText: l10n.addressLine2,
                                 prefixIcon: Icons.home_outlined,
                               ),
                             ),
@@ -428,7 +437,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                     controller: _cityController,
                                     decoration: FormDecorationHelper.roundedInputDecoration(
                                       context: context,
-                                      labelText: 'City',
+                                      labelText: l10n.city,
                                       prefixIcon: Icons.location_city_outlined,
                                     ),
                                   ),
@@ -440,7 +449,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                     keyboardType: TextInputType.number,
                                     decoration: FormDecorationHelper.roundedInputDecoration(
                                       context: context,
-                                      labelText: 'Postcode',
+                                      labelText: l10n.postcode,
                                       prefixIcon: Icons.local_post_office_outlined,
                                     ),
                                   ),
@@ -455,7 +464,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                     controller: _stateController,
                                     decoration: FormDecorationHelper.roundedInputDecoration(
                                       context: context,
-                                      labelText: 'State',
+                                      labelText: l10n.state,
                                       prefixIcon: Icons.map_outlined,
                                     ),
                                   ),
@@ -472,7 +481,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                     onChanged: (String? v) => setState(() => _country = v),
                                     decoration: FormDecorationHelper.roundedInputDecoration(
                                       context: context,
-                                      labelText: 'Country',
+                                      labelText: l10n.country,
                                       prefixIcon: Icons.public_outlined,
                                     ),
                                   ),
@@ -490,7 +499,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
     );
   }
 
-  Widget _buildRelationshipItem(Relationship relationship) {
+  Widget _buildRelationshipItem(Relationship relationship, AppLocalizations l10n) {
     final bool isLegacy = Relationship.isLegacyRelationship(relationship.value);
     
     return Row(
@@ -514,7 +523,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
             ),
           ),
           child: Text(
-            relationship.isWaris ? 'Waris' : 'Non-Waris',
+            relationship.isWaris ? l10n.waris : l10n.nonWaris,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -535,7 +544,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
               ),
             ),
             child: Text(
-              'Legacy',
+              l10n.legacy,
               style: TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w600,
@@ -552,12 +561,13 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
         return AlertDialog(
-          title: const Text('Delete Family Member'),
-          content: const Text('Are you sure you want to delete this family member? This action cannot be undone.'),
+          title: Text(l10n.deleteFamilyMember),
+          content: Text(l10n.areYouSureDeleteFamilyMember),
           actions: <Widget>[
-            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
+            TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.delete)),
           ],
         );
       },
@@ -573,14 +583,16 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
       }
       await SupabaseService.instance.client.from('beloved').delete().eq('id', widget.belovedId);
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Family member deleted'), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.familyMemberDeleted), backgroundColor: Colors.green),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToDeleteFamilyMember(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);

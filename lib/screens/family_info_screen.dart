@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import 'add_family_member_screen.dart';
 
 class FamilyInfoScreen extends StatelessWidget {
@@ -8,12 +9,13 @@ class FamilyInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Family Members'),
+        title: Text(l10n.aboutFamilyMembers),
         elevation: 0,
       ),
       body: SafeArea(
@@ -30,7 +32,7 @@ class FamilyInfoScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's add your family",
+                            l10n.letsAddYourFamily,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -39,7 +41,7 @@ class FamilyInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.",
+                            l10n.addPeopleWhoMatterMost,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -51,10 +53,11 @@ class FamilyInfoScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Center(
-                        child: Icon(
-                          Icons.family_restroom,
-                          size: 80,
-                          color: colorScheme.primary,
+                        child: Image.asset(
+                          'assets/family-relationship.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -70,7 +73,7 @@ class FamilyInfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "Why add family members?",
+                              l10n.whyAddFamilyMembers,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -78,7 +81,7 @@ class FamilyInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.",
+                              l10n.familyListConnectsToWill,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -86,17 +89,17 @@ class FamilyInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             _FamilyFeatureItem(
-                              text: "Assign executors (Co-Sampul) who will carry out your will.",
+                              text: l10n.assignExecutorsCoSampul,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _FamilyFeatureItem(
-                              text: "List beneficiaries who will receive your assets.",
+                              text: l10n.listBeneficiariesWhoReceive,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _FamilyFeatureItem(
-                              text: "Designate guardians for minor children if needed.",
+                              text: l10n.designateGuardiansForMinors,
                               colorScheme: colorScheme,
                             ),
                           ],
@@ -157,7 +160,7 @@ class FamilyInfoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Add family member",
+                          l10n.addFamilyMember,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,

@@ -4,6 +4,7 @@ import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/form_decoration_helper.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 
 class EditAssetScreen extends StatefulWidget {
   final int assetId;
@@ -30,12 +31,15 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
   int? _selectedBelovedId;
   bool _isLoadingBeloved = false;
 
-  static const List<Map<String, String>> _instructions = <Map<String, String>>[
-    {'id': 'faraid', 'name': 'Faraid'},
-    {'id': 'terminate', 'name': 'Terminate Subscriptions'},
-    {'id': 'transfer_as_gift', 'name': 'Transfer as Gift'},
-    {'id': 'settle', 'name': 'Settle Debts'},
-  ];
+  List<Map<String, String>> _getInstructions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return <Map<String, String>>[
+      {'id': 'faraid', 'name': l10n.faraid},
+      {'id': 'terminate', 'name': l10n.terminateSubscriptions},
+      {'id': 'transfer_as_gift', 'name': l10n.transferAsGift},
+      {'id': 'settle', 'name': l10n.settleDebts},
+    ];
+  }
 
   @override
   void initState() {
@@ -101,10 +105,11 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_instruction == 'transfer_as_gift' && _selectedBelovedId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gift recipient')),
+        SnackBar(content: Text(l10n.pleaseSelectGiftRecipient)),
       );
       return;
     }
@@ -129,13 +134,13 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Asset updated'), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.assetUpdated), backgroundColor: Colors.green),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToUpdate(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -144,23 +149,24 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Asset'),
+        title: Text(l10n.editAsset),
         actions: <Widget>[
           IconButton(
             onPressed: _isSubmitting ? null : _onDeletePressed,
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Delete',
+            tooltip: l10n.delete,
           ),
           TextButton(
             onPressed: _isSubmitting ? null : _submit,
             child: _isSubmitting
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save'),
+                : Text(l10n.save),
           ),
         ],
       ),
@@ -214,7 +220,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Changes here update your will automatically.',
+                      l10n.changesHereUpdateWillAutomatically,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -230,13 +236,13 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('Details', style: Theme.of(context).textTheme.titleMedium),
+                      Text(l10n.details, style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: _instruction,
                         isExpanded: true,
                         icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                        items: _instructions
+                        items: _getInstructions(context)
                             .map((Map<String, String> c) => DropdownMenuItem<String>(
                                   value: c['id'],
                                   child: Text(c['name'] ?? ''),
@@ -255,10 +261,10 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         },
                         decoration: FormDecorationHelper.roundedInputDecoration(
                           context: context,
-                          labelText: 'Instructions After Death',
+                          labelText: l10n.instructionsAfterDeath,
                           prefixIcon: Icons.assignment_outlined,
                         ),
-                        validator: (String? v) => (v == null || v.isEmpty) ? 'Required' : null,
+                        validator: (String? v) => (v == null || v.isEmpty) ? l10n.required : null,
                       ),
                       const SizedBox(height: 12),
                       if (_instruction == 'transfer_as_gift')
@@ -269,18 +275,18 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                           items: _belovedOptions
                               .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                                     value: (b['id'] as num).toInt(),
-                                    child: Text((b['name'] as String?) ?? 'Unnamed'),
+                                    child: Text((b['name'] as String?) ?? l10n.unnamed),
                                   ))
                               .toList(),
                           onChanged: _isLoadingBeloved ? null : (int? v) => setState(() => _selectedBelovedId = v),
                           decoration: FormDecorationHelper.roundedInputDecoration(
                             context: context,
-                            labelText: _isLoadingBeloved ? 'Loading recipients...' : 'Gift Recipient',
+                            labelText: _isLoadingBeloved ? l10n.loadingRecipients : l10n.giftRecipient,
                             prefixIcon: Icons.card_giftcard_outlined,
                           ),
                           validator: (int? v) {
                             if (_instruction == 'transfer_as_gift') {
-                              if (v == null) return 'Gift Recipient is required';
+                              if (v == null) return l10n.giftRecipientRequired;
                             }
                             return null;
                           },
@@ -292,16 +298,16 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[0-9\.]'))],
                         decoration: FormDecorationHelper.roundedInputDecoration(
                           context: context,
-                          labelText: 'Declared Value (MYR)',
+                          labelText: l10n.declaredValueMyr,
                           prefixIcon: Icons.payments_outlined,
                         ),
                         validator: (String? v) {
                           final String value = (v ?? '').trim();
-                          if (value.isEmpty) return 'Required';
+                          if (value.isEmpty) return l10n.required;
                           final RegExp re = RegExp(r'^\d+(\.\d{1,2})?$');
-                          if (!re.hasMatch(value)) return 'Enter a valid amount (max 2 decimals)';
+                          if (!re.hasMatch(value)) return l10n.enterValidAmountMaxDecimals;
                           final double? val = double.tryParse(value);
-                          if (val == null || val < 0) return 'Enter a valid amount';
+                          if (val == null || val < 0) return l10n.enterValidAmount;
                           return null;
                         },
                       ),
@@ -311,7 +317,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         maxLines: 3,
                         decoration: FormDecorationHelper.roundedInputDecoration(
                           context: context,
-                          labelText: 'Remarks (optional)',
+                          labelText: l10n.remarksOptional,
                           prefixIcon: Icons.notes_outlined,
                         ),
                       ),
@@ -330,12 +336,13 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
+        final l10nDialog = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Delete Asset'),
-          content: const Text('Are you sure you want to delete this asset? This action cannot be undone.'),
+          title: Text(l10nDialog.deleteAsset),
+          content: Text(l10nDialog.areYouSureDeleteAsset),
           actions: <Widget>[
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10nDialog.cancel)),
+            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10nDialog.delete)),
           ],
         );
       },
@@ -346,6 +353,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
   }
 
   Future<void> _deleteAsset() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSubmitting = true);
     try {
       await SupabaseService.instance.client
@@ -354,13 +362,13 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
           .eq('id', widget.assetId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Asset deleted'), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.assetDeleted), backgroundColor: Colors.green),
       );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToDelete(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

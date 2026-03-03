@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
@@ -123,7 +124,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showErrorSnackBar('Failed to load initial data: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorSnackBar(l10n.failedToLoadInitialData(e.toString()));
       }
     }
   }
@@ -171,7 +173,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           guardian2: _selectedGuardian2,
           isDraft: _isDraft,
         );
-        _showSuccessSnackBar('Will updated successfully!');
+        final l10n = AppLocalizations.of(context)!;
+        _showSuccessSnackBar(l10n.willUpdatedSuccessfully);
       } else {
         await WillService.instance.createWill(
           uuid: user.id,
@@ -182,7 +185,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           guardian2: _selectedGuardian2,
           isDraft: _isDraft,
         );
-        _showSuccessSnackBar('Will created successfully!');
+        final l10n = AppLocalizations.of(context)!;
+        _showSuccessSnackBar(l10n.willCreatedSuccessfully);
       }
 
       if (mounted) {
@@ -190,7 +194,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Failed to save will: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorSnackBar(l10n.failedToSaveWill(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -203,9 +208,10 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existingWill != null ? 'Edit Will' : 'Create Will'),
+        title: Text(widget.existingWill != null ? l10n.editWill : l10n.createWill),
         actions: [
           if (widget.existingWill != null && !_isLoading)
             TextButton(
@@ -216,7 +222,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save'),
+                  : Text(l10n.save),
             ),
         ],
       ),
@@ -257,46 +263,47 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     }
                   : null,
               primaryLabel: _currentStep == _getSteps().length - 1
-                  ? (widget.existingWill != null ? 'Update Will' : 'Create Will')
+                  ? (widget.existingWill != null ? l10n.updateWill : l10n.createWill)
                   : null,
             ),
     );
   }
 
   List<Step> _getSteps() {
+    final l10n = AppLocalizations.of(context)!;
     return [
       Step(
-        title: const Text('Personal Information'),
+        title: Text(l10n.personalInformation),
         content: _buildPersonalInfoStep(),
         isActive: _currentStep >= 0,
         state: _currentStep > 0 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('Executors'),
+        title: Text(l10n.executors),
         content: _buildExecutorsStep(),
         isActive: _currentStep >= 1,
         state: _currentStep > 1 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('Guardians'),
+        title: Text(l10n.guardians),
         content: _buildGuardiansStep(),
         isActive: _currentStep >= 2,
         state: _currentStep > 2 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('Assets'),
+        title: Text(l10n.assets),
         content: _buildAssetsStep(),
         isActive: _currentStep >= 3,
         state: _currentStep > 3 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('Extra Wishes'),
+        title: Text(l10n.extraWishes),
         content: _buildExtraWishesStep(),
         isActive: _currentStep >= 4,
         state: _currentStep > 4 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: const Text('Review & Save'),
+        title: Text(l10n.reviewSave),
         content: _buildReviewStep(),
         isActive: _currentStep >= 5,
         state: StepState.indexed,
@@ -305,6 +312,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
   }
 
   Widget _buildPersonalInfoStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Card(
@@ -318,7 +326,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Personal Information',
+                    l10n.personalInformation,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -342,7 +350,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     }
                   },
                   icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Edit Profile'),
+                  label: Text(l10n.editProfile),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     minimumSize: Size.zero,
@@ -395,15 +403,15 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoRow('Name', (_userProfile?.displayName ?? '').isNotEmpty ? _userProfile!.displayName : 'Not provided'),
+                      _buildInfoRow(l10n.name, (_userProfile?.displayName ?? '').isNotEmpty ? _userProfile!.displayName : l10n.notProvided),
                       const SizedBox(height: 8),
-                      _buildInfoRow('NRIC', _userProfile?.nricNo ?? 'Not provided'),
+                      _buildInfoRow(l10n.nric, _userProfile?.nricNo ?? l10n.notProvided),
                       const SizedBox(height: 8),
-                      _buildInfoRow('Phone', _userProfile?.phoneNo ?? 'Not provided'),
+                      _buildInfoRow(l10n.phone, _userProfile?.phoneNo ?? l10n.notProvided),
                       const SizedBox(height: 8),
-                      _buildInfoRow('Email', _userProfile?.email ?? 'Not provided'),
+                      _buildInfoRow(l10n.email, _userProfile?.email ?? l10n.notProvided),
                       const SizedBox(height: 8),
-                      _buildInfoRow('Address', _formatAddress(_userProfile)),
+                      _buildInfoRow(l10n.address, _formatAddress(_userProfile)),
                     ],
                   ),
                 ),
@@ -417,6 +425,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
 
   // Extra Wishes step
   Widget _buildExtraWishesStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final String nazar = (_extraWishes?.nazarWishes ?? '').trim();
     final double? nazarCost = _extraWishes?.nazarEstimatedCostMyr;
@@ -436,7 +445,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Your Extra Wishes', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.yourExtraWishes, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             TextButton.icon(
               onPressed: () async {
                 final bool? changed = await Navigator.of(context).push(
@@ -447,14 +456,14 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                 }
               },
               icon: const Icon(Icons.edit, size: 16),
-              label: Text(_extraWishes == null ? 'Add' : 'Edit'),
+              label: Text(_extraWishes == null ? l10n.add : l10n.edit),
               style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             ),
           ],
         ),
         const SizedBox(height: 12),
         if (_extraWishes == null)
-          Text('No wishes yet. Add your nazar, fidyah, organ donor pledge, and charitable allocations.', style: theme.textTheme.bodyMedium)
+          Text(l10n.noWishesYet, style: theme.textTheme.bodyMedium)
         else
           Card(
             child: Padding(
@@ -462,14 +471,14 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _previewRow('Nazar wishes', nazar.isEmpty ? '—' : nazar, theme),
-                  if (nazarCost != null) _previewRow('Nazar cost', 'RM ${nazarCost.toStringAsFixed(2)}', theme),
-                  if (fidyahDays != null) _previewRow('Fidyah days', '$fidyahDays', theme),
-                  if (fidyahAmount != null) _previewRow('Fidyah amount', 'RM ${fidyahAmount.toStringAsFixed(2)}', theme),
-                  _previewRow('Organ donor pledge', organ ? 'Yes' : 'No', theme),
+                  _previewRow(l10n.nazarWishes, nazar.isEmpty ? '—' : nazar, theme),
+                  if (nazarCost != null) _previewRow(l10n.nazarCost, 'RM ${nazarCost.toStringAsFixed(2)}', theme),
+                  if (fidyahDays != null) _previewRow(l10n.fidyahDays, '$fidyahDays', theme),
+                  if (fidyahAmount != null) _previewRow(l10n.fidyahAmount, 'RM ${fidyahAmount.toStringAsFixed(2)}', theme),
+                  _previewRow(l10n.organDonorPledge, organ ? l10n.yes : l10n.no, theme),
                   if (waqfCount > 0 || charityCount > 0) const SizedBox(height: 8),
-                  if (waqfCount > 0) _chipLine('Waqf: $waqfCount bodies • RM ${waqfTotal.toStringAsFixed(2)}', theme),
-                  if (charityCount > 0) _chipLine('Charity: $charityCount bodies • RM ${charityTotal.toStringAsFixed(2)}', theme),
+                  if (waqfCount > 0) _chipLine(l10n.waqf(waqfCount, waqfTotal.toStringAsFixed(2)), theme),
+                  if (charityCount > 0) _chipLine(l10n.charity(charityCount, charityTotal.toStringAsFixed(2)), theme),
                 ],
               ),
             ),
@@ -539,7 +548,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
   }
 
   String _formatAddress(UserProfile? profile) {
-    if (profile == null) return 'Not provided';
+    final l10n = AppLocalizations.of(context)!;
+    if (profile == null) return l10n.notProvided;
     
     final parts = <String>[];
     if (profile.address1?.isNotEmpty == true) parts.add(profile.address1!);
@@ -548,22 +558,23 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
     if (profile.state?.isNotEmpty == true) parts.add(profile.state!);
     if (profile.postcode?.isNotEmpty == true) parts.add(profile.postcode!);
     
-    return parts.isEmpty ? 'Not provided' : parts.join(', ');
+    return parts.isEmpty ? l10n.notProvided : parts.join(', ');
   }
 
   Widget _buildExecutorsStep() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         _buildFamilyMemberSelector(
-          title: 'Primary Executor (Co-Sampul 1)',
-          subtitle: 'Select the primary person to execute your will',
+          title: l10n.primaryExecutor,
+          subtitle: l10n.selectPrimaryExecutor,
           selectedId: _selectedCoSampul1,
           onChanged: (value) => setState(() => _selectedCoSampul1 = value),
         ),
         const SizedBox(height: 16),
         _buildFamilyMemberSelector(
-          title: 'Secondary Executor (Co-Sampul 2)',
-          subtitle: 'Optional: Select a secondary executor',
+          title: l10n.secondaryExecutor,
+          subtitle: l10n.selectSecondaryExecutor,
           selectedId: _selectedCoSampul2,
           onChanged: (value) => setState(() => _selectedCoSampul2 = value),
         ),
@@ -572,18 +583,19 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
   }
 
   Widget _buildGuardiansStep() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         _buildFamilyMemberSelector(
-          title: 'Primary Guardian',
-          subtitle: 'Select guardian for minor children (if applicable)',
+          title: l10n.primaryGuardian,
+          subtitle: l10n.selectPrimaryGuardian,
           selectedId: _selectedGuardian1,
           onChanged: (value) => setState(() => _selectedGuardian1 = value),
         ),
         const SizedBox(height: 16),
         _buildFamilyMemberSelector(
-          title: 'Secondary Guardian',
-          subtitle: 'Optional: Select a secondary guardian',
+          title: l10n.secondaryGuardian,
+          subtitle: l10n.selectSecondaryGuardian,
           selectedId: _selectedGuardian2,
           onChanged: (value) => setState(() => _selectedGuardian2 = value),
         ),
@@ -592,6 +604,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
   }
 
   Widget _buildReviewStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Column(
@@ -613,7 +626,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Personal Information',
+                      l10n.personalInformation,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -621,11 +634,11 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildPreviewInfoRow('Name', (_userProfile?.displayName ?? '').isNotEmpty ? _userProfile!.displayName : 'Not provided'),
-                _buildPreviewInfoRow('NRIC', _userProfile?.nricNo ?? 'Not provided'),
-                _buildPreviewInfoRow('Phone', _userProfile?.phoneNo ?? 'Not provided'),
-                _buildPreviewInfoRow('Email', _userProfile?.email ?? 'Not provided'),
-                _buildPreviewInfoRow('Address', _formatAddress(_userProfile)),
+                _buildPreviewInfoRow(l10n.name, (_userProfile?.displayName ?? '').isNotEmpty ? _userProfile!.displayName : l10n.notProvided),
+                _buildPreviewInfoRow(l10n.nric, _userProfile?.nricNo ?? l10n.notProvided),
+                _buildPreviewInfoRow(l10n.phone, _userProfile?.phoneNo ?? l10n.notProvided),
+                _buildPreviewInfoRow(l10n.email, _userProfile?.email ?? l10n.notProvided),
+                _buildPreviewInfoRow(l10n.address, _formatAddress(_userProfile)),
               ],
             ),
           ),
@@ -649,7 +662,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Executors',
+                      l10n.executors,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -657,8 +670,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildPreviewInfoRow('Primary Executor', _getSelectedMemberName(_selectedCoSampul1)),
-                _buildPreviewInfoRow('Secondary Executor', _getSelectedMemberName(_selectedCoSampul2)),
+                _buildPreviewInfoRow(l10n.primaryExecutor, _getSelectedMemberName(_selectedCoSampul1)),
+                _buildPreviewInfoRow(l10n.secondaryExecutor, _getSelectedMemberName(_selectedCoSampul2)),
               ],
             ),
           ),
@@ -682,7 +695,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Guardians',
+                      l10n.guardians,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -690,8 +703,8 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildPreviewInfoRow('Primary Guardian', _getSelectedMemberName(_selectedGuardian1)),
-                _buildPreviewInfoRow('Secondary Guardian', _getSelectedMemberName(_selectedGuardian2)),
+                _buildPreviewInfoRow(l10n.primaryGuardian, _getSelectedMemberName(_selectedGuardian1)),
+                _buildPreviewInfoRow(l10n.secondaryGuardian, _getSelectedMemberName(_selectedGuardian2)),
               ],
             ),
           ),
@@ -715,7 +728,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Assets',
+                      l10n.assets,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -724,9 +737,9 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Total assets: RM ' + _assets
+                  l10n.totalAssets(_assets
                       .fold<double>(0, (sum, a) => sum + ((a['value'] as num?)?.toDouble() ?? 0.0))
-                      .toStringAsFixed(2),
+                      .toStringAsFixed(2)),
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -754,7 +767,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Your will updates automatically with your profile, assets, and family changes.',
+                  l10n.yourWillUpdatesAutomatically,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -795,16 +808,17 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
   }
 
   String _getSelectedMemberName(int? memberId) {
-    if (memberId == null) return 'None selected';
+    final l10n = AppLocalizations.of(context)!;
+    if (memberId == null) return l10n.noneSelected;
     
     final member = _familyMembers.firstWhere(
       (m) => m['id'] == memberId,
       orElse: () => <String, dynamic>{},
     );
     
-    if (member.isEmpty) return 'Not found';
+    if (member.isEmpty) return l10n.notFound;
     
-    return '${member['name']} (${member['relationship'] ?? 'Family member'})';
+    return '${member['name']} (${member['relationship'] ?? l10n.family})';
   }
 
   Widget _buildFamilyMemberSelector({
@@ -838,23 +852,29 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<int?>(
-              value: selectedId,
-              isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down_outlined),
-              decoration: InputDecoration(
-                labelText: 'Select family member',              ),
-              items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text('None selected'),
-                ),
-                ..._familyMembers.map((member) => DropdownMenuItem<int?>(
-                  value: member['id'] as int,
-                  child: Text('${member['name']} (${member['relationship'] ?? 'Family member'})'),
-                )),
-              ],
-              onChanged: onChanged,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return DropdownButtonFormField<int?>(
+                  value: selectedId,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.selectFamilyMember,
+                  ),
+                  items: [
+                    DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text(l10n.noneSelected),
+                    ),
+                    ..._familyMembers.map((member) => DropdownMenuItem<int?>(
+                      value: member['id'] as int,
+                      child: Text('${member['name']} (${member['relationship'] ?? l10n.family})'),
+                    )),
+                  ],
+                  onChanged: onChanged,
+                );
+              },
             ),
             if (selectedMember.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -937,6 +957,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
 
   // Assets step
   Widget _buildAssetsStep() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Column(
@@ -945,7 +966,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Your Assets', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.yourAssets, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             Row(
               children: [
                 TextButton.icon(
@@ -968,7 +989,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     }
                   },
                   icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Add'),
+                  label: Text(l10n.add),
                   style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                 ),
                 const SizedBox(width: 8),
@@ -980,7 +1001,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     await _refreshAssets();
                   },
                   icon: const Icon(Icons.list_alt, size: 16),
-                  label: const Text('Manage All'),
+                  label: Text(l10n.manageAll),
                   style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                 ),
               ],
@@ -993,7 +1014,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(
-              child: Text('No assets yet. Add at least one to include in your will.', style: theme.textTheme.bodyMedium),
+              child: Text(l10n.noAssetsYet, style: theme.textTheme.bodyMedium),
             ),
           )
         else
@@ -1008,16 +1029,21 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                 final int remaining = _assets.length - 3;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Center(
-                    child: TextButton(
-                      onPressed: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
-                        );
-                        await _refreshAssets();
-                      },
-                      child: Text('Show more ($remaining)'),
-                    ),
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return Center(
+                        child: TextButton(
+                          onPressed: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                            );
+                            await _refreshAssets();
+                          },
+                          child: Text(l10n.showMore(remaining)),
+                        ),
+                      );
+                    },
                   ),
                 );
               }

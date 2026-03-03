@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
 import '../models/relationship.dart';
+import '../l10n/app_localizations.dart';
 import 'edit_family_member_screen.dart';
 import 'family_info_screen.dart';
 import 'add_family_member_screen.dart';
@@ -18,14 +19,15 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _items = <Map<String, dynamic>>[];
 
-  String _prettyType(String? t) {
+  String _prettyType(String? t, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch ((t ?? '').toLowerCase()) {
       case 'co_sampul':
-        return 'Co-sampul';
+        return l10n.coSampul;
       case 'future_owner':
-        return 'Beneficiary';
+        return l10n.beneficiary;
       case 'guardian':
-        return 'Guardian';
+        return l10n.guardian;
       default:
         return '';
     }
@@ -81,13 +83,18 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                 width: 1,
               ),
             ),
-            child: Text(
-              'Waris',
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
-                color: Colors.green[700],
-              ),
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Text(
+                  l10n.waris,
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green[700],
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -131,8 +138,9 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('My Family')),
+      appBar: AppBar(title: Text(l10n.myFamily)),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           // Check if user has seen the about page before
@@ -166,8 +174,8 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                       itemBuilder: (BuildContext context, int index) {
                         final Map<String, dynamic> b = _items[index];
                         final int id = (b['id'] as num).toInt();
-                        final String name = (b['name'] as String?) ?? 'Unknown';
-                        final String typeText = _prettyType(b['type'] as String?);
+                        final String name = (b['name'] as String?) ?? l10n.unknown;
+                        final String typeText = _prettyType(b['type'] as String?, context);
                         final double? pct = (b['percentage'] as num?)?.toDouble();
                         final String? relationship = b['relationship'] as String?;
                         final String? imagePath = b['image_path'] as String?;
@@ -213,6 +221,7 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return SafeArea(
@@ -229,7 +238,7 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          "Let's add your family",
+                          l10n.letsAddYourFamily,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -238,7 +247,7 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.",
+                          l10n.addPeopleWhoMatterMost,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                             height: 1.4,
@@ -265,41 +274,41 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                         color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            "Why add family members?",
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              l10n.whyAddFamilyMembers,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.",
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              height: 1.4,
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.familyListConnectsToWill,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.4,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          _FamilyFeatureItem(
-                            text: "Assign executors (Co-Sampul) who will carry out your will.",
-                            colorScheme: colorScheme,
-                          ),
-                          const SizedBox(height: 16),
-                          _FamilyFeatureItem(
-                            text: "List beneficiaries who will receive your assets.",
-                            colorScheme: colorScheme,
-                          ),
-                          const SizedBox(height: 16),
-                          _FamilyFeatureItem(
-                            text: "Designate guardians for minor children if needed.",
-                            colorScheme: colorScheme,
-                          ),
-                        ],
-                      ),
+                            const SizedBox(height: 20),
+                            _FamilyFeatureItem(
+                              text: l10n.assignExecutorsCoSampul,
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(height: 16),
+                            _FamilyFeatureItem(
+                              text: l10n.listBeneficiariesWhoReceive,
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(height: 16),
+                            _FamilyFeatureItem(
+                              text: l10n.designateGuardiansForMinors,
+                              colorScheme: colorScheme,
+                            ),
+                          ],
+                        ),
                     ),
                   ),
                 ],
@@ -346,7 +355,7 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        "Add family member",
+                        l10n.addFamilyMember,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onPrimary,

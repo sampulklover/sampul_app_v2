@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
 import '../models/trust_charity.dart';
 import '../config/trust_constants.dart';
@@ -7,17 +8,23 @@ import '../services/supabase_service.dart';
 import 'family_info_screen.dart';
 import 'trust_charity_form_screen.dart';
 import 'trust_charity_browse_screen.dart';
+import '../utils/card_decoration_helper.dart';
 
 class FundSupportConfigScreen extends StatefulWidget {
   final String categoryId;
   final Map<String, dynamic> category;
   final Map<String, dynamic> initialConfig;
+  /// When true, shows pause / request fund controls that are meant
+  /// for live, active trusts. When creating a new trust, this should
+  /// be false so the screen behaves purely as a configuration editor.
+  final bool showRequestActions;
 
   const FundSupportConfigScreen({
     super.key,
     required this.categoryId,
     required this.category,
     required this.initialConfig,
+    this.showRequestActions = true,
   });
 
   @override
@@ -38,18 +45,28 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   // Check if config is already set up (has meaningful data)
   bool get _isConfigSetUp {
     if (widget.initialConfig.isEmpty) return false;
-    
-    // For charitable category, check if charities exist
+
+    // For charitable category, treat as configured only when there are charities.
     if (widget.categoryId == 'charitable') {
-      final charitiesData = widget.initialConfig['charities'] as List?;
+      final List<dynamic>? charitiesData =
+          widget.initialConfig['charities'] as List<dynamic>?;
       return charitiesData != null && charitiesData.isNotEmpty;
     }
-    
-    // For other categories, check if beneficiaryId or durationType exists
-    return widget.initialConfig.containsKey('beneficiaryId') || 
-           widget.initialConfig.containsKey('durationType') ||
-           widget.initialConfig.containsKey('isRegularPayments') ||
-           widget.initialConfig.containsKey('releaseCondition');
+
+    // For other categories, treat as configured only when key fields
+    // actually have non-null values (not just present in the map).
+    final Object? beneficiaryId = widget.initialConfig['beneficiaryId'];
+    final String? durationType =
+        widget.initialConfig['durationType'] as String?;
+    final bool? isRegularPayments =
+        widget.initialConfig['isRegularPayments'] as bool?;
+    final String? releaseCondition =
+        widget.initialConfig['releaseCondition'] as String?;
+
+    return beneficiaryId != null ||
+        durationType != null ||
+        isRegularPayments != null ||
+        releaseCondition != null;
   }
 
   @override
@@ -231,16 +248,17 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       );
     }
 
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Who's this family trust account for?",
+          l10n.whosThisFamilyTrustAccountFor,
           style: titleStyle,
         ),
         const SizedBox(height: 4),
         Text(
-          'Pick one main person for this category. You can still support others in other categories.',
+          l10n.pickOneMainPersonForCategory,
           style: helperStyle,
         ),
         const SizedBox(height: 12),
@@ -253,7 +271,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'No family members yet.\nTap “Add New” below to add the first person for this account.',
+              l10n.noFamilyMembersYet,
               style: helperStyle,
             ),
           )
@@ -272,7 +290,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             }
           },
           icon: const Icon(Icons.add),
-          label: const Text('Add New'),
+          label: Text(l10n.addNew),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 0),
           ),
@@ -316,7 +334,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       onWillPop: _handleWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.category['title'] as String? ?? 'Fund Support'),
+          title: Text(widget.category['title'] as String? ?? AppLocalizations.of(context)!.fundSupport),
           actions: _isEditMode
               ? [
                   TextButton(
@@ -339,7 +357,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         }
                       });
                     },
-                    child: const Text('Save'),
+                    child: Text(AppLocalizations.of(context)!.save),
                   ),
                 ]
               : [
@@ -350,7 +368,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         _isEditMode = true;
                       });
                     },
-                    tooltip: 'Edit',
+                    tooltip: AppLocalizations.of(context)!.edit,
                   ),
                 ],
         ),
@@ -365,7 +383,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         ? _buildCharitablePreview(theme, colorScheme)
                         : _buildRegularPreview(theme, colorScheme),
                   ),
-                  _buildActionButtonsFooter(theme, colorScheme),
+                  if (widget.showRequestActions)
+                    _buildActionButtonsFooter(theme, colorScheme),
                 ],
               ),
       ),
@@ -397,19 +416,20 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     final String? action = await showDialog<String>(
       context: context,
       builder: (BuildContext dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
         return AlertDialog(
-          title: const Text('Save your changes?'),
-          content: const Text(
-            'You have unsaved changes on this page. Would you like to save this setup before you go back?',
+          title: Text(l10n.saveYourChanges),
+          content: Text(
+            l10n.youHaveUnsavedChanges,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop('discard'),
-              child: const Text('Discard changes'),
+              child: Text(l10n.discardChanges),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop('save'),
-              child: const Text('Save & exit'),
+              child: Text(l10n.saveExit),
             ),
           ],
         );
@@ -460,20 +480,21 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     )}';
   }
 
-  String _getCategoryDescription(String categoryId) {
+  String _getCategoryDescription(String categoryId, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (categoryId) {
       case 'education':
-        return 'Support for tuition fees, books, and educational expenses';
+        return l10n.supportForTuitionFees;
       case 'living':
-        return 'Cover daily living expenses and basic needs';
+        return l10n.coverDailyLivingExpenses;
       case 'healthcare':
-        return 'Medical expenses, treatments, and healthcare services';
+        return l10n.medicalExpensesTreatments;
       case 'charitable':
-        return 'Donations and contributions to charitable organizations';
+        return l10n.donationsContributions;
       case 'debt':
-        return 'Payments for outstanding debts and financial obligations';
+        return l10n.paymentsOutstandingDebts;
       default:
-        return 'Fund support configuration for your trust';
+        return l10n.fundSupportConfiguration;
     }
   }
 
@@ -534,7 +555,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _getCategoryDescription(widget.categoryId),
+                        _getCategoryDescription(widget.categoryId, context),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -575,7 +596,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Request Pending',
+                                      AppLocalizations.of(context)!.requestPending,
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: Colors.blue.shade700,
                                         fontWeight: FontWeight.w600,
@@ -605,7 +626,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Paused',
+                                      AppLocalizations.of(context)!.paused,
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: Colors.orange.shade700,
                                         fontWeight: FontWeight.w600,
@@ -638,7 +659,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Donations',
+                        AppLocalizations.of(context)!.totalDonations,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -660,7 +681,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '${_charities.length} ${_charities.length == 1 ? 'Charity' : 'Charities'}',
+                      _charities.length == 1 
+                          ? '${_charities.length} ${AppLocalizations.of(context)!.charity}'
+                          : AppLocalizations.of(context)!.charitiesSelected(_charities.length),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colorScheme.onPrimaryContainer,
@@ -673,16 +696,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             const SizedBox(height: 24),
           ],
           if (_charities.isEmpty)
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: colorScheme.outline.withOpacity(0.2),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(32),
+            CardDecorationHelper.styledCard(
+              context: context,
+              padding: const EdgeInsets.all(32),
                 child: Column(
                   children: [
                     Icon(
@@ -692,14 +708,14 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No charities/donations added yet',
+                      AppLocalizations.of(context)!.noCharitiesDonationsAddedYet,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Add charitable organizations to start making a difference',
+                      AppLocalizations.of(context)!.addCharitableOrganizations,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -707,7 +723,6 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     ),
                   ],
                 ),
-              ),
             )
           else
             ..._charities.map((charity) {
@@ -809,7 +824,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Donation Amount',
+                                AppLocalizations.of(context)!.donationAmount,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
@@ -932,7 +947,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _getCategoryDescription(widget.categoryId),
+                        _getCategoryDescription(widget.categoryId, context),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -973,7 +988,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Request Pending',
+                                      AppLocalizations.of(context)!.requestPending,
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: Colors.blue.shade700,
                                         fontWeight: FontWeight.w600,
@@ -1003,7 +1018,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Paused',
+                                      AppLocalizations.of(context)!.paused,
                                       style: theme.textTheme.bodySmall?.copyWith(
                                         color: Colors.orange.shade700,
                                         fontWeight: FontWeight.w600,
@@ -1036,7 +1051,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'Annual Total',
+                          AppLocalizations.of(context)!.annualTotal,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -1061,14 +1076,14 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'Monthly Average',
+                          AppLocalizations.of(context)!.monthlyAverage,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          monthlyTotal ?? 'N/A',
+                          monthlyTotal ?? AppLocalizations.of(context)!.na,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.primary,
@@ -1092,13 +1107,13 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             _buildEnhancedPreviewSection(
               theme,
               colorScheme,
-              'Support Duration',
+              AppLocalizations.of(context)!.supportDuration,
               durationType == 'age'
-                  ? 'Until age ${endAge?.round() ?? 'N/A'}'
-                  : 'Their entire lifetime',
+                  ? AppLocalizations.of(context)!.untilAge(endAge?.round() ?? 0)
+                  : AppLocalizations.of(context)!.theirEntireLifetime,
               durationType == 'age' && endYear != null
-                  ? 'Ends in Year $endYear (${yearsFromNow} years from now)'
-                  : 'Continuous support throughout their lifetime',
+                  ? AppLocalizations.of(context)!.endsInYear(endYear, yearsFromNow!)
+                  : AppLocalizations.of(context)!.continuousSupportLifetime,
               Icons.calendar_today_outlined,
               colorScheme.primaryContainer,
             ),
@@ -1109,8 +1124,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             _buildEnhancedPreviewSection(
               theme,
               colorScheme,
-              'Payment Method',
-              'Regular Payments',
+              AppLocalizations.of(context)!.paymentMethod,
+              AppLocalizations.of(context)!.regularPayments,
               '${_formatAmount(paymentAmount)} ${paymentFrequency != null ? paymentFrequencies[paymentFrequency] : ''}',
               Icons.payment_outlined,
               colorScheme.secondaryContainer,
@@ -1119,9 +1134,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             _buildEnhancedPreviewSection(
               theme,
               colorScheme,
-              'Payment Method',
-              'As Needed',
-              'Trustee decides when to release funds based on approved purposes',
+              AppLocalizations.of(context)!.paymentMethod,
+              AppLocalizations.of(context)!.asNeeded,
+              AppLocalizations.of(context)!.trusteeDecidesRelease,
               Icons.payment_outlined,
               colorScheme.tertiaryContainer,
             ),
@@ -1129,9 +1144,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             _buildEnhancedPreviewSection(
               theme,
               colorScheme,
-              'Payment Method',
-              'Lump Sum',
-              'All funds released when the trust period ends',
+              AppLocalizations.of(context)!.paymentMethod,
+              AppLocalizations.of(context)!.lumpSum,
+              AppLocalizations.of(context)!.allFundsReleasedEnd,
               Icons.payment_outlined,
               colorScheme.tertiaryContainer,
             ),
@@ -1189,7 +1204,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                   color: colorScheme.onPrimary,
                 ),
                 label: Text(
-                  hasPendingRequest ? 'Cancel Request' : 'Request Fund',
+                  hasPendingRequest ? AppLocalizations.of(context)!.cancelRequest : AppLocalizations.of(context)!.requestFund,
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: hasPendingRequest
@@ -1210,21 +1225,23 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   }
 
   Future<void> _handleRequestFund(ThemeData theme, ColorScheme colorScheme) async {
+    final l10n = AppLocalizations.of(context)!;
     // Show confirmation dialog
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
         return AlertDialog(
-          title: const Text('Request Fund'),
-          content: const Text('Are you sure you want to request funds? This will notify your trustee to process the fund request.'),
+          title: Text(l10n.requestFund),
+          content: Text(l10n.areYouSureRequestFunds),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Request Fund'),
+              child: Text(l10n.requestFund),
             ),
           ],
         );
@@ -1246,8 +1263,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       // 3. Updating the UI state
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fund request submitted successfully'),
+        SnackBar(
+          content: Text(l10n.fundRequestSubmittedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );
@@ -1255,21 +1272,23 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   }
 
   Future<void> _handleCancelRequest(ThemeData theme, ColorScheme colorScheme) async {
+    final l10n = AppLocalizations.of(context)!;
     // Show confirmation dialog
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
         return AlertDialog(
-          title: const Text('Cancel Request'),
-          content: const Text('Are you sure you want to cancel this fund request?'),
+          title: Text(l10n.cancelRequest),
+          content: Text(l10n.areYouSureCancelRequest),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('No, Keep It'),
+              child: Text(l10n.noKeepIt),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Cancel Request'),
+              child: Text(l10n.cancelRequest),
             ),
           ],
         );
@@ -1291,8 +1310,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       // 3. Updating the UI state
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fund request cancelled successfully'),
+        SnackBar(
+          content: Text(l10n.fundRequestCancelledSuccessfully),
           backgroundColor: Colors.orange,
         ),
       );
@@ -1304,27 +1323,29 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     ColorScheme colorScheme,
     bool isPaused,
   ) async {
-    final categoryTitle = widget.category['title'] as String? ?? 'Fund';
+    final l10n = AppLocalizations.of(context)!;
+    final categoryTitle = widget.category['title'] as String? ?? l10n.fundSupport;
     
     // Show confirmation dialog
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext)!;
         return AlertDialog(
-          title: Text(isPaused ? 'Resume Instruction' : 'Pause Instruction'),
+          title: Text(isPaused ? l10n.resumeInstruction : l10n.pauseInstruction),
           content: Text(
             isPaused
-                ? 'Are you sure you want to resume the $categoryTitle instruction? Payments will continue according to the schedule.'
-                : 'Are you sure you want to pause the $categoryTitle instruction? This will temporarily stop all payments until you resume it.',
+                ? l10n.areYouSureResumeInstruction(categoryTitle)
+                : l10n.areYouSurePauseInstruction(categoryTitle),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(isPaused ? 'Resume' : 'Pause'),
+              child: Text(isPaused ? l10n.resume : l10n.pause),
             ),
           ],
         );
@@ -1349,8 +1370,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
         SnackBar(
           content: Text(
             isPaused
-                ? '$categoryTitle instruction resumed successfully'
-                : '$categoryTitle instruction paused successfully',
+                ? l10n.instructionResumedSuccessfully(categoryTitle)
+                : l10n.instructionPausedSuccessfully(categoryTitle),
           ),
           backgroundColor: isPaused ? Colors.green : Colors.orange,
         ),
@@ -1414,7 +1435,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Beneficiary',
+                    AppLocalizations.of(context)!.beneficiary,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
@@ -1468,66 +1489,57 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     IconData icon,
     Color containerColor,
   ) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outline.withOpacity(0.1),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: containerColor.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: colorScheme.primary,
-                size: 24,
-              ),
+    return CardDecorationHelper.styledCard(
+      context: context,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: containerColor.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Icon(
+              icon,
+              color: colorScheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  mainValue,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (subtitle != null && subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
                   Text(
-                    title,
+                    subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
                       color: colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    mainValue,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (subtitle != null && subtitle.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1578,7 +1590,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _getCategoryDescription(widget.categoryId),
+                        _getCategoryDescription(widget.categoryId, context),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -1600,29 +1612,28 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
           ),
           const SizedBox(height: 24),
           if (_charities.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.volunteer_activism_outlined,
-                      size: 48,
-                      color: colorScheme.primary.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No charities/donations added yet',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Add charitable organizations you would like to donate to',
-                      style: theme.textTheme.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+            CardDecorationHelper.styledCard(
+              context: context,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.volunteer_activism_outlined,
+                    size: 48,
+                    color: colorScheme.primary.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No charities/donations added yet',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.addCharitableOrganizationsDonate,
+                    style: theme.textTheme.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             )
           else
@@ -1653,7 +1664,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  title: Text(charity.organizationName ?? 'Unnamed Organization'),
+                  title: Text(charity.organizationName ?? AppLocalizations.of(context)!.unnamedOrganization),
                   subtitle: subtitleText.isNotEmpty ? Text(subtitleText) : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1677,7 +1688,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             child: OutlinedButton.icon(
               onPressed: _addCharity,
               icon: const Icon(Icons.add),
-              label: const Text('Add Charity/Donation'),
+              label: Text(AppLocalizations.of(context)!.addCharity),
             ),
           ),
         ],
@@ -1694,11 +1705,12 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     final releaseCondition = _config['releaseCondition'] as String?;
 
     final presetAmounts = [1000.0, 2000.0, 3000.0, 5000.0];
+    final l10n = AppLocalizations.of(context)!;
     final paymentFrequencies = [
-      {'value': 'monthly', 'label': 'Monthly'},
-      {'value': 'quarterly', 'label': 'Quarterly'},
-      {'value': 'yearly', 'label': 'Yearly'},
-      {'value': 'when_conditions', 'label': 'When conditions'},
+      {'value': 'monthly', 'label': l10n.monthly},
+      {'value': 'quarterly', 'label': l10n.quarterly},
+      {'value': 'yearly', 'label': l10n.yearly},
+      {'value': 'when_conditions', 'label': l10n.whenConditions},
     ];
 
     // Calculate years from now and end year
@@ -1751,7 +1763,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _getCategoryDescription(widget.categoryId),
+                        _getCategoryDescription(widget.categoryId, context),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -1777,7 +1789,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
           const SizedBox(height: 24),
           // Support Duration Section
           Text(
-            'How long should this last?',
+            AppLocalizations.of(context)!.howLongShouldThisLast,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -1836,7 +1848,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Until a specific age',
+                            AppLocalizations.of(context)!.untilSpecificAge,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -1847,7 +1859,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     if (durationType == 'age') ...[
                       const SizedBox(height: 12),
                       Text(
-                        'Age',
+                        AppLocalizations.of(context)!.age,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -1874,7 +1886,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         },
                       ),
                       Text(
-                        "That's $yearsFromNow years from now (Year $endYear)",
+                        AppLocalizations.of(context)!.thatsYearsFromNow(yearsFromNow, endYear),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -1935,7 +1947,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Their entire lifetime',
+                        AppLocalizations.of(context)!.theirEntireLifetime,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -1948,7 +1960,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
           const SizedBox(height: 24),
           // Payment Configuration Section
           Text(
-              'Payment Configuration',
+              AppLocalizations.of(context)!.paymentConfiguration,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -2008,7 +2020,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Regular payments',
+                            AppLocalizations.of(context)!.regularPayments,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -2086,7 +2098,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'How often should this contribution be carried out?',
+                                  AppLocalizations.of(context)!.howOftenContribution,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -2184,14 +2196,14 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'As needed (trustee decides)',
+                            AppLocalizations.of(context)!.asNeededTrusteeDecides,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Your trustee releases money when needed for approved purposes',
+                            AppLocalizations.of(context)!.yourTrusteeReleasesMoney,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -2260,14 +2272,14 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Lump sum at the end',
+                            AppLocalizations.of(context)!.lumpSumAtTheEnd,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Everything released when the trust period ends',
+                            AppLocalizations.of(context)!.everythingReleasedEnd,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -2281,7 +2293,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             ),
           const SizedBox(height: 24),
           Text(
-            'This is a guide. Your executor can adjust based on real needs.',
+            AppLocalizations.of(context)!.thisIsAGuide,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
