@@ -49,9 +49,9 @@
   "passwordRequired": "Password is required",
   "passwordMinLength": "Password must be at least 6 characters",
   
-  "aboutYourWill": "About Your Will",
-  "letsCreateYourWill": "Let's create your will",
-  "willDescription": "Bring your profile, family, assets, and wishes together in one clear document.",
+  "aboutYourWill": "About Your Wasiat",
+  "letsCreateYourWill": "Let's create your wasiat",
+  "willDescription": "Bring your profile, family, assets, and wishes together in one clear wasiat document.",
   
   "letsListYourDigitalAssets": "Let's list your digital assets",
   "assetsDescription": "Keep important online accounts and platforms in one place so your will stays clear and up to date.",
@@ -59,15 +59,15 @@
   "letsSetUpYourFamilyAccount": "Let's set up your family account",
   "trustDescription": "Clear wishes, for the people you love.",
   
-  "letsPlanYourHibahGifts": "Let's plan your Hibah gifts",
-  "hibahDescription": "Decide clearly who should receive your assets as a lifetime gift.",
+  "letsPlanYourHibahGifts": "Let's plan your Property Trust",
+  "hibahDescription": "Decide clearly who should receive your Property Trust assets.",
   
   "onboardingTitle1": "Put your wealth in\nwriting",
   "onboardingSubtitle1": "Without a Wasiat, your wealth could end up in the wrong hands. Get it sorted today—fast, legal, and dispute-free.",
   "onboardingTitle2": "Do more with Sampul\nTrust",
   "onboardingSubtitle2": "Lock in your assets, invest for the future, and ensure your loved ones get what's rightfully theirs.",
   "onboardingTitle3": "Don't let emotions\ndecide.",
-  "onboardingSubtitle3": "A professional executor ensures your will is followed—no family drama, no legal mess, just a smooth handover.",
+  "onboardingSubtitle3": "A professional executor ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.",
   "next": "Next",
   "getStarted": "Get Started",
   "skip": "Skip",
@@ -98,11 +98,11 @@
   "draft": "Draft",
   "yourPlanIsActive": "Your plan is active",
   "familyAccount": "Family Account",
-  "createYourFirstTrustFund": "Create Your First Trust Fund",
-  "addNewTrustFund": "Add New Trust Fund",
+  "createYourFirstTrustFund": "Add Your First Family Account",
+  "addNewTrustFund": "Add Your First Family Account",
   "tapToGetStarted": "Tap to get started",
-  "will": "Will",
-  "hibah": "Hibah",
+  "will": "Wasiat",
+  "hibah": "Property",
   "trust": "Trust",
   "others": "Others",
   "assets": "Assets",
@@ -198,9 +198,9 @@
     }
   },
   "diditNotConfigured": "Didit is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.",
-  "identityVerificationRequired": "Identity verification is required to establish trust and ensure the legal validity of your will.",
+  "identityVerificationRequired": "Identity verification is required to establish trust and ensure the legal validity of your wasiat.",
   "legalValidity": "Legal Validity",
-  "establishesLegalValidity": "Establishes the legal validity of your will",
+  "establishesLegalValidity": "Establishes the legal validity of your wasiat",
   "buildsTrust": "Builds Trust",
   "providesAssurance": "Provides assurance to beneficiaries and executors",
   "regulatoryCompliance": "Regulatory Compliance",
@@ -259,19 +259,19 @@
   "enterPostcode": "Enter postcode",
   "country": "Country",
   
-  "myWill": "My Will",
-  "shareWill": "Share Will",
-  "whyCreateYourWillInSampul": "Why create your will in Sampul?",
-  "yourWillPullsFromProfile": "Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
+  "myWill": "My Wasiat",
+  "shareWill": "Share Wasiat",
+  "whyCreateYourWillInSampul": "Why create your wasiat in Sampul?",
+  "yourWillPullsFromProfile": "Your wasiat pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
   "keepAllKeyInformation": "Keep all key information (profile, family, assets) in one place.",
-  "generateStructuredWillDocument": "Generate a structured will document you can read, export, and share.",
-  "updateWillLater": "Update your will later whenever your life or assets change.",
-  "startMyWill": "Start my will",
+  "generateStructuredWillDocument": "Generate a structured wasiat document you can read, export, and share.",
+  "updateWillLater": "Update your wasiat later whenever your life or assets change.",
+  "startMyWill": "Start my wasiat",
   "deleting": "Deleting...",
   "publish": "Publish",
   "unpublish": "Unpublish",
-  "publishWill": "Publish Will",
-  "publishWillConfirmation": "Are you sure you want to publish this will?\n\nOnce published, this will will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or executors.",
+  "publishWill": "Publish Wasiat",
+  "publishWillConfirmation": "Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or executors.",
   "@publishWillConfirmation": {
     "placeholders": {
       "url": {
@@ -280,9 +280,9 @@
     }
   },
   "shareLinkCopiedToClipboard": "Share link copied to clipboard",
-  "willPublishedSuccessfully": "Will published successfully",
-  "willUnpublishedSuccessfully": "Will unpublished successfully",
-  "failedToPublishWill": "Failed to publish will: {error}",
+  "willPublishedSuccessfully": "Wasiat published successfully",
+  "willUnpublishedSuccessfully": "Wasiat unpublished successfully",
+  "failedToPublishWill": "Failed to publish wasiat: {error}",
   "@failedToPublishWill": {
     "placeholders": {
       "error": {
@@ -290,7 +290,7 @@
       }
     }
   },
-  "failedToUnpublishWill": "Failed to unpublish will: {error}",
+  "failedToUnpublishWill": "Failed to unpublish wasiat: {error}",
   "@failedToUnpublishWill": {
     "placeholders": {
       "error": {
@@ -298,7 +298,7 @@
       }
     }
   },
-  "failedToDeleteWill": "Failed to delete will: {error}",
+  "failedToDeleteWill": "Failed to delete wasiat: {error}",
   "@failedToDeleteWill": {
     "placeholders": {
       "error": {
@@ -306,7 +306,7 @@
       }
     }
   },
-  "failedToLoadWillData": "Failed to load will data: {error}",
+  "failedToLoadWillData": "Failed to load wasiat data: {error}",
   "@failedToLoadWillData": {
     "placeholders": {
       "error": {
@@ -332,18 +332,18 @@
     }
   },
   "published": "Published",
-  "deleteWill": "Delete Will",
-  "areYouSureDeleteWill": "Are you sure you want to delete your will? This action cannot be undone.",
-  "createWill": "Create Will",
-  "editWill": "Edit Will",
-  "updateWill": "Update Will",
+  "deleteWill": "Delete Wasiat",
+  "areYouSureDeleteWill": "Are you sure you want to delete your wasiat? This action cannot be undone.",
+  "createWill": "Create Wasiat",
+  "editWill": "Edit Wasiat",
+  "updateWill": "Update Wasiat",
   "executors": "Executors",
   "guardians": "Guardians",
   "extraWishes": "Extra Wishes",
   "reviewSave": "Review & Save",
-  "primaryExecutor": "Primary Executor (Co-Sampul 1)",
+  "primaryExecutor": "Primary Executor",
   "selectPrimaryExecutor": "Select the primary person to execute your will",
-  "secondaryExecutor": "Secondary Executor (Co-Sampul 2)",
+  "secondaryExecutor": "Secondary Executor",
   "selectSecondaryExecutor": "Optional: Select a secondary executor",
   "primaryGuardian": "Primary Guardian",
   "selectPrimaryGuardian": "Select guardian for minor children (if applicable)",
@@ -407,10 +407,10 @@
       }
     }
   },
-  "yourWillUpdatesAutomatically": "Your will updates automatically with your profile, assets, and family changes.",
-  "willCreatedSuccessfully": "Will created successfully!",
-  "willUpdatedSuccessfully": "Will updated successfully!",
-  "failedToSaveWill": "Failed to save will: {error}",
+  "yourWillUpdatesAutomatically": "Your wasiat updates automatically with your profile, assets, and family changes.",
+  "willCreatedSuccessfully": "Wasiat created successfully!",
+  "willUpdatedSuccessfully": "Wasiat updated successfully!",
+  "failedToSaveWill": "Failed to save wasiat: {error}",
   "@failedToSaveWill": {
     "placeholders": {
       "error": {
@@ -528,7 +528,7 @@
   "letsAddYourFamily": "Let's add your family",
   "addPeopleWhoMatterMost": "Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.",
   "whyAddFamilyMembers": "Why add family members?",
-  "familyListConnectsToWill": "Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.",
+  "familyListConnectsToWill": "Your family list connects to your will, trust, and Property Trust planning. Add executors (Co-Sampul), beneficiaries, and guardians.",
   "assignExecutorsCoSampul": "Assign executors (Co-Sampul) who will carry out your will.",
   "listBeneficiariesWhoReceive": "List beneficiaries who will receive your assets.",
   "designateGuardiansForMinors": "Designate guardians for minor children if needed.",
@@ -558,7 +558,7 @@
   "percentageMustBeBetween0And100": "Percentage must be between 0 and 100",
   "contactId": "Contact & ID",
   "address": "Address",
-  "ifPersonPartOfWillSync": "If this person is part of your will, any updates you make here will automatically sync to your will.",
+  "ifPersonPartOfWillSync": "If this person is part of your wasiat, any updates you make here will automatically sync to your wasiat.",
   "familyMemberAdded": "Family member added",
   "failedToAdd": "Failed to add: {error}",
   "@failedToAdd": {
@@ -597,7 +597,7 @@
       }
     }
   },
-  "changesHereUpdateWillAutomatically": "Changes here update your will automatically.",
+  "changesHereUpdateWillAutomatically": "Changes here update your wasiat automatically.",
   "basicInfoSection": "Basic Info",
   "contactIdSection": "Contact & ID",
   "addressSection": "Address",
@@ -630,11 +630,11 @@
   "completeYourProfile": "Complete Your Profile",
   "setUpYourBasicInformation": "Set up your basic information",
   "addYourFirstFamilyMember": "Add Your First Family Member",
-  "addSomeoneImportantToYourWill": "Add someone important to your will",
+  "addSomeoneImportantToYourWill": "Add someone important to your wasiat",
   "addYourFirstAsset": "Add Your First Asset",
   "startTrackingYourDigitalAssets": "Start tracking your digital assets",
-  "createYourWill": "Create Your Will",
-  "createYourWillWithSampul": "Create your will with Sampul",
+  "createYourWill": "Create Your Wasiat",
+  "createYourWillWithSampul": "Create your wasiat with Sampul",
   "referralCode": "Referral code",
   "addReferralCodeOptional": "Add a referral code (optional)",
   "haveReferralCode": "Have a referral code?",

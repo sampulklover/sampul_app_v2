@@ -233,19 +233,19 @@ abstract class AppLocalizations {
   /// No description provided for @aboutYourWill.
   ///
   /// In en, this message translates to:
-  /// **'About Your Will'**
+  /// **'About Your Wasiat'**
   String get aboutYourWill;
 
   /// No description provided for @letsCreateYourWill.
   ///
   /// In en, this message translates to:
-  /// **'Let\'s create your will'**
+  /// **'Let\'s create your wasiat'**
   String get letsCreateYourWill;
 
   /// No description provided for @willDescription.
   ///
   /// In en, this message translates to:
-  /// **'Bring your profile, family, assets, and wishes together in one clear document.'**
+  /// **'Bring your profile, family, assets, and wishes together in one clear wasiat document.'**
   String get willDescription;
 
   /// No description provided for @letsListYourDigitalAssets.
@@ -275,13 +275,13 @@ abstract class AppLocalizations {
   /// No description provided for @letsPlanYourHibahGifts.
   ///
   /// In en, this message translates to:
-  /// **'Let\'s plan your Hibah gifts'**
+  /// **'Let\'s plan your Property Trust'**
   String get letsPlanYourHibahGifts;
 
   /// No description provided for @hibahDescription.
   ///
   /// In en, this message translates to:
-  /// **'Decide clearly who should receive your assets as a lifetime gift.'**
+  /// **'Decide clearly who should receive your Property Trust assets.'**
   String get hibahDescription;
 
   /// No description provided for @onboardingTitle1.
@@ -317,7 +317,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingSubtitle3.
   ///
   /// In en, this message translates to:
-  /// **'A professional executor ensures your will is followed—no family drama, no legal mess, just a smooth handover.'**
+  /// **'A professional executor ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.'**
   String get onboardingSubtitle3;
 
   /// No description provided for @next.
@@ -449,13 +449,13 @@ abstract class AppLocalizations {
   /// No description provided for @createYourFirstTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Create Your First Trust Fund'**
+  /// **'Add Your First Family Account'**
   String get createYourFirstTrustFund;
 
   /// No description provided for @addNewTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Add New Trust Fund'**
+  /// **'Add Your First Family Account'**
   String get addNewTrustFund;
 
   /// No description provided for @tapToGetStarted.
@@ -467,13 +467,13 @@ abstract class AppLocalizations {
   /// No description provided for @will.
   ///
   /// In en, this message translates to:
-  /// **'Will'**
+  /// **'Wasiat'**
   String get will;
 
   /// No description provided for @hibah.
   ///
   /// In en, this message translates to:
-  /// **'Hibah'**
+  /// **'Property'**
   String get hibah;
 
   /// No description provided for @trust.
@@ -953,7 +953,7 @@ abstract class AppLocalizations {
   /// No description provided for @identityVerificationRequired.
   ///
   /// In en, this message translates to:
-  /// **'Identity verification is required to establish trust and ensure the legal validity of your will.'**
+  /// **'Identity verification is required to establish trust and ensure the legal validity of your wasiat.'**
   String get identityVerificationRequired;
 
   /// No description provided for @legalValidity.
@@ -965,7 +965,7 @@ abstract class AppLocalizations {
   /// No description provided for @establishesLegalValidity.
   ///
   /// In en, this message translates to:
-  /// **'Establishes the legal validity of your will'**
+  /// **'Establishes the legal validity of your wasiat'**
   String get establishesLegalValidity;
 
   /// No description provided for @buildsTrust.
@@ -1223,25 +1223,25 @@ abstract class AppLocalizations {
   /// No description provided for @myWill.
   ///
   /// In en, this message translates to:
-  /// **'My Will'**
+  /// **'My Wasiat'**
   String get myWill;
 
   /// No description provided for @shareWill.
   ///
   /// In en, this message translates to:
-  /// **'Share Will'**
+  /// **'Share Wasiat'**
   String get shareWill;
 
   /// No description provided for @whyCreateYourWillInSampul.
   ///
   /// In en, this message translates to:
-  /// **'Why create your will in Sampul?'**
+  /// **'Why create your wasiat in Sampul?'**
   String get whyCreateYourWillInSampul;
 
   /// No description provided for @yourWillPullsFromProfile.
   ///
   /// In en, this message translates to:
-  /// **'Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.'**
+  /// **'Your wasiat pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.'**
   String get yourWillPullsFromProfile;
 
   /// No description provided for @keepAllKeyInformation.
@@ -1253,19 +1253,19 @@ abstract class AppLocalizations {
   /// No description provided for @generateStructuredWillDocument.
   ///
   /// In en, this message translates to:
-  /// **'Generate a structured will document you can read, export, and share.'**
+  /// **'Generate a structured wasiat document you can read, export, and share.'**
   String get generateStructuredWillDocument;
 
   /// No description provided for @updateWillLater.
   ///
   /// In en, this message translates to:
-  /// **'Update your will later whenever your life or assets change.'**
+  /// **'Update your wasiat later whenever your life or assets change.'**
   String get updateWillLater;
 
   /// No description provided for @startMyWill.
   ///
   /// In en, this message translates to:
-  /// **'Start my will'**
+  /// **'Start my wasiat'**
   String get startMyWill;
 
   /// No description provided for @deleting.
@@ -1289,13 +1289,13 @@ abstract class AppLocalizations {
   /// No description provided for @publishWill.
   ///
   /// In en, this message translates to:
-  /// **'Publish Will'**
+  /// **'Publish Wasiat'**
   String get publishWill;
 
   /// No description provided for @publishWillConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to publish this will?\n\nOnce published, this will will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or executors.'**
+  /// **'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or executors.'**
   String publishWillConfirmation(String url);
 
   /// No description provided for @shareLinkCopiedToClipboard.
@@ -1307,37 +1307,37 @@ abstract class AppLocalizations {
   /// No description provided for @willPublishedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Will published successfully'**
+  /// **'Wasiat published successfully'**
   String get willPublishedSuccessfully;
 
   /// No description provided for @willUnpublishedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Will unpublished successfully'**
+  /// **'Wasiat unpublished successfully'**
   String get willUnpublishedSuccessfully;
 
   /// No description provided for @failedToPublishWill.
   ///
   /// In en, this message translates to:
-  /// **'Failed to publish will: {error}'**
+  /// **'Failed to publish wasiat: {error}'**
   String failedToPublishWill(String error);
 
   /// No description provided for @failedToUnpublishWill.
   ///
   /// In en, this message translates to:
-  /// **'Failed to unpublish will: {error}'**
+  /// **'Failed to unpublish wasiat: {error}'**
   String failedToUnpublishWill(String error);
 
   /// No description provided for @failedToDeleteWill.
   ///
   /// In en, this message translates to:
-  /// **'Failed to delete will: {error}'**
+  /// **'Failed to delete wasiat: {error}'**
   String failedToDeleteWill(String error);
 
   /// No description provided for @failedToLoadWillData.
   ///
   /// In en, this message translates to:
-  /// **'Failed to load will data: {error}'**
+  /// **'Failed to load wasiat data: {error}'**
   String failedToLoadWillData(String error);
 
   /// No description provided for @code.
@@ -1367,31 +1367,31 @@ abstract class AppLocalizations {
   /// No description provided for @deleteWill.
   ///
   /// In en, this message translates to:
-  /// **'Delete Will'**
+  /// **'Delete Wasiat'**
   String get deleteWill;
 
   /// No description provided for @areYouSureDeleteWill.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete your will? This action cannot be undone.'**
+  /// **'Are you sure you want to delete your wasiat? This action cannot be undone.'**
   String get areYouSureDeleteWill;
 
   /// No description provided for @createWill.
   ///
   /// In en, this message translates to:
-  /// **'Create Will'**
+  /// **'Create Wasiat'**
   String get createWill;
 
   /// No description provided for @editWill.
   ///
   /// In en, this message translates to:
-  /// **'Edit Will'**
+  /// **'Edit Wasiat'**
   String get editWill;
 
   /// No description provided for @updateWill.
   ///
   /// In en, this message translates to:
-  /// **'Update Will'**
+  /// **'Update Wasiat'**
   String get updateWill;
 
   /// No description provided for @executors.
@@ -1421,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @primaryExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Primary Executor (Co-Sampul 1)'**
+  /// **'Primary Executor'**
   String get primaryExecutor;
 
   /// No description provided for @selectPrimaryExecutor.
@@ -1433,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @secondaryExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Secondary Executor (Co-Sampul 2)'**
+  /// **'Secondary Executor'**
   String get secondaryExecutor;
 
   /// No description provided for @selectSecondaryExecutor.
@@ -1613,25 +1613,25 @@ abstract class AppLocalizations {
   /// No description provided for @yourWillUpdatesAutomatically.
   ///
   /// In en, this message translates to:
-  /// **'Your will updates automatically with your profile, assets, and family changes.'**
+  /// **'Your wasiat updates automatically with your profile, assets, and family changes.'**
   String get yourWillUpdatesAutomatically;
 
   /// No description provided for @willCreatedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Will created successfully!'**
+  /// **'Wasiat created successfully!'**
   String get willCreatedSuccessfully;
 
   /// No description provided for @willUpdatedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Will updated successfully!'**
+  /// **'Wasiat updated successfully!'**
   String get willUpdatedSuccessfully;
 
   /// No description provided for @failedToSaveWill.
   ///
   /// In en, this message translates to:
-  /// **'Failed to save will: {error}'**
+  /// **'Failed to save wasiat: {error}'**
   String failedToSaveWill(String error);
 
   /// No description provided for @failedToLoadInitialData.
@@ -1877,7 +1877,7 @@ abstract class AppLocalizations {
   /// No description provided for @changesHereUpdateWillAutomatically.
   ///
   /// In en, this message translates to:
-  /// **'Changes here update your will automatically.'**
+  /// **'Changes here update your wasiat automatically.'**
   String get changesHereUpdateWillAutomatically;
 
   /// No description provided for @assetUpdated.
@@ -1979,7 +1979,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyListConnectsToWill.
   ///
   /// In en, this message translates to:
-  /// **'Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.'**
+  /// **'Your family list connects to your will, trust, and Property Trust planning. Add executors (Co-Sampul), beneficiaries, and guardians.'**
   String get familyListConnectsToWill;
 
   /// No description provided for @assignExecutorsCoSampul.
@@ -2147,7 +2147,7 @@ abstract class AppLocalizations {
   /// No description provided for @ifPersonPartOfWillSync.
   ///
   /// In en, this message translates to:
-  /// **'If this person is part of your will, any updates you make here will automatically sync to your will.'**
+  /// **'If this person is part of your wasiat, any updates you make here will automatically sync to your wasiat.'**
   String get ifPersonPartOfWillSync;
 
   /// No description provided for @familyMemberAdded.
@@ -2393,7 +2393,7 @@ abstract class AppLocalizations {
   /// No description provided for @addSomeoneImportantToYourWill.
   ///
   /// In en, this message translates to:
-  /// **'Add someone important to your will'**
+  /// **'Add someone important to your wasiat'**
   String get addSomeoneImportantToYourWill;
 
   /// No description provided for @addYourFirstAsset.
@@ -2411,13 +2411,13 @@ abstract class AppLocalizations {
   /// No description provided for @createYourWill.
   ///
   /// In en, this message translates to:
-  /// **'Create Your Will'**
+  /// **'Create Your Wasiat'**
   String get createYourWill;
 
   /// No description provided for @createYourWillWithSampul.
   ///
   /// In en, this message translates to:
-  /// **'Create your will with Sampul'**
+  /// **'Create your wasiat with Sampul'**
   String get createYourWillWithSampul;
 
   /// No description provided for @referralCode.

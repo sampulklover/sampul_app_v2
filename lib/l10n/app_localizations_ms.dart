@@ -108,11 +108,12 @@ class AppLocalizationsMs extends AppLocalizations {
       'Hasrat yang jelas, untuk orang yang anda sayangi.';
 
   @override
-  String get letsPlanYourHibahGifts => 'Mari kita rancangkan hadiah Hibah anda';
+  String get letsPlanYourHibahGifts =>
+      'Mari kita rancangkan Property Trust anda';
 
   @override
   String get hibahDescription =>
-      'Tentukan dengan jelas siapa yang harus menerima aset anda sebagai hadiah seumur hidup.';
+      'Tentukan dengan jelas siapa yang harus menerima aset Property Trust anda.';
 
   @override
   String get onboardingTitle1 => 'Letakkan kekayaan anda\ndalam tulisan';
@@ -201,10 +202,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get familyAccount => 'Akaun Keluarga';
 
   @override
-  String get createYourFirstTrustFund => 'Cipta Amanah Keluarga Pertama Anda';
+  String get createYourFirstTrustFund => 'Tambah akaun keluarga pertama anda';
 
   @override
-  String get addNewTrustFund => 'Tambah Amanah Keluarga Baru';
+  String get addNewTrustFund => 'Tambah akaun keluarga pertama anda';
 
   @override
   String get tapToGetStarted => 'Ketik untuk mula';
@@ -213,7 +214,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get will => 'Wasiat';
 
   @override
-  String get hibah => 'Hibah';
+  String get hibah => 'Property';
 
   @override
   String get trust => 'Amanah';
@@ -732,14 +733,14 @@ class AppLocalizationsMs extends AppLocalizations {
   String get reviewSave => 'Semak & Simpan';
 
   @override
-  String get primaryExecutor => 'Pelaksana Utama (Co-Sampul 1)';
+  String get primaryExecutor => 'Pelaksana Utama';
 
   @override
   String get selectPrimaryExecutor =>
       'Pilih orang utama untuk melaksanakan wasiat anda';
 
   @override
-  String get secondaryExecutor => 'Pelaksana Sekunder (Co-Sampul 2)';
+  String get secondaryExecutor => 'Pelaksana Sekunder';
 
   @override
   String get selectSecondaryExecutor => 'Pilihan: Pilih pelaksana sekunder';
@@ -1050,7 +1051,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get familyListConnectsToWill =>
-      'Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan hibah anda. Tambah pelaksana (Co-Sampul), penerima manfaat, dan penjaga.';
+      'Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan Property Trust anda. Tambah pelaksana (Co-Sampul), penerima manfaat, dan penjaga.';
 
   @override
   String get assignExecutorsCoSampul =>

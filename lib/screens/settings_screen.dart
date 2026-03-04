@@ -14,7 +14,6 @@ import '../services/verification_service.dart';
 import '../services/account_service.dart';
 import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
-import 'billing_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'admin_ai_settings_screen.dart';
 import '../utils/admin_utils.dart';
@@ -1113,29 +1112,31 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             ),
           ),
 
-          const SizedBox(height: 16),
-          _buildSectionHeader(l10n.billing),
-          CardDecorationHelper.styledCard(
-            context: context,
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: <Widget>[
-                ListTile(
-                  leading: const Icon(Icons.credit_card_outlined),
-                  title: Text(l10n.plansAndSubscription),
-                  subtitle: Text(l10n.manageYourSampulPlan),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const BillingScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+          // Billing / subscription section temporarily hidden
+          // To re-enable, restore the section header and card below.
+          // const SizedBox(height: 16),
+          // _buildSectionHeader(l10n.billing),
+          // CardDecorationHelper.styledCard(
+          //   context: context,
+          //   padding: EdgeInsets.zero,
+          //   child: Column(
+          //     children: <Widget>[
+          //       ListTile(
+          //         leading: const Icon(Icons.credit_card_outlined),
+          //         title: Text(l10n.plansAndSubscription),
+          //         subtitle: Text(l10n.manageYourSampulPlan),
+          //         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          //         onTap: () {
+          //           Navigator.of(context).push(
+          //             MaterialPageRoute<void>(
+          //               builder: (_) => const BillingScreen(),
+          //             ),
+          //           );
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           const SizedBox(height: 16),
           _buildSectionHeader(l10n.preferences),

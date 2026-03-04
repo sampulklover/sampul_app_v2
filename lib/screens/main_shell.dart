@@ -10,6 +10,7 @@ import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../services/affiliate_service.dart';
 import '../services/ai_chat_settings_service.dart';
+import '../l10n/app_localizations.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -209,10 +210,19 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.description_outlined), label: 'Will'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.description_outlined),
+            label: AppLocalizations.of(context)!.will,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.settings_outlined),
+            label: AppLocalizations.of(context)!.settings,
+          ),
         ],
       ),
       floatingActionButton: RepaintBoundary(

@@ -81,14 +81,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordMinLength => 'Password must be at least 6 characters';
 
   @override
-  String get aboutYourWill => 'About Your Will';
+  String get aboutYourWill => 'About Your Wasiat';
 
   @override
-  String get letsCreateYourWill => 'Let\'s create your will';
+  String get letsCreateYourWill => 'Let\'s create your wasiat';
 
   @override
   String get willDescription =>
-      'Bring your profile, family, assets, and wishes together in one clear document.';
+      'Bring your profile, family, assets, and wishes together in one clear wasiat document.';
 
   @override
   String get letsListYourDigitalAssets => 'Let\'s list your digital assets';
@@ -104,11 +104,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trustDescription => 'Clear wishes, for the people you love.';
 
   @override
-  String get letsPlanYourHibahGifts => 'Let\'s plan your Hibah gifts';
+  String get letsPlanYourHibahGifts => 'Let\'s plan your Property Trust';
 
   @override
   String get hibahDescription =>
-      'Decide clearly who should receive your assets as a lifetime gift.';
+      'Decide clearly who should receive your Property Trust assets.';
 
   @override
   String get onboardingTitle1 => 'Put your wealth in\nwriting';
@@ -129,7 +129,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSubtitle3 =>
-      'A professional executor ensures your will is followed—no family drama, no legal mess, just a smooth handover.';
+      'A professional executor ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.';
 
   @override
   String get next => 'Next';
@@ -197,19 +197,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyAccount => 'Family Account';
 
   @override
-  String get createYourFirstTrustFund => 'Create Your First Trust Fund';
+  String get createYourFirstTrustFund => 'Add Your First Family Account';
 
   @override
-  String get addNewTrustFund => 'Add New Trust Fund';
+  String get addNewTrustFund => 'Add Your First Family Account';
 
   @override
   String get tapToGetStarted => 'Tap to get started';
 
   @override
-  String get will => 'Will';
+  String get will => 'Wasiat';
 
   @override
-  String get hibah => 'Hibah';
+  String get hibah => 'Property';
 
   @override
   String get trust => 'Trust';
@@ -460,14 +460,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get identityVerificationRequired =>
-      'Identity verification is required to establish trust and ensure the legal validity of your will.';
+      'Identity verification is required to establish trust and ensure the legal validity of your wasiat.';
 
   @override
   String get legalValidity => 'Legal Validity';
 
   @override
   String get establishesLegalValidity =>
-      'Establishes the legal validity of your will';
+      'Establishes the legal validity of your wasiat';
 
   @override
   String get buildsTrust => 'Builds Trust';
@@ -606,17 +606,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get country => 'Country';
 
   @override
-  String get myWill => 'My Will';
+  String get myWill => 'My Wasiat';
 
   @override
-  String get shareWill => 'Share Will';
+  String get shareWill => 'Share Wasiat';
 
   @override
-  String get whyCreateYourWillInSampul => 'Why create your will in Sampul?';
+  String get whyCreateYourWillInSampul => 'Why create your wasiat in Sampul?';
 
   @override
   String get yourWillPullsFromProfile =>
-      'Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.';
+      'Your wasiat pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.';
 
   @override
   String get keepAllKeyInformation =>
@@ -624,14 +624,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generateStructuredWillDocument =>
-      'Generate a structured will document you can read, export, and share.';
+      'Generate a structured wasiat document you can read, export, and share.';
 
   @override
   String get updateWillLater =>
-      'Update your will later whenever your life or assets change.';
+      'Update your wasiat later whenever your life or assets change.';
 
   @override
-  String get startMyWill => 'Start my will';
+  String get startMyWill => 'Start my wasiat';
 
   @override
   String get deleting => 'Deleting...';
@@ -643,40 +643,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unpublish => 'Unpublish';
 
   @override
-  String get publishWill => 'Publish Will';
+  String get publishWill => 'Publish Wasiat';
 
   @override
   String publishWillConfirmation(String url) {
-    return 'Are you sure you want to publish this will?\n\nOnce published, this will will be accessible to anyone with the share link:\n$url\n\nMake sure you only share this link with trusted family members or executors.';
+    return 'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n$url\n\nMake sure you only share this link with trusted family members or executors.';
   }
 
   @override
   String get shareLinkCopiedToClipboard => 'Share link copied to clipboard';
 
   @override
-  String get willPublishedSuccessfully => 'Will published successfully';
+  String get willPublishedSuccessfully => 'Wasiat published successfully';
 
   @override
-  String get willUnpublishedSuccessfully => 'Will unpublished successfully';
+  String get willUnpublishedSuccessfully => 'Wasiat unpublished successfully';
 
   @override
   String failedToPublishWill(String error) {
-    return 'Failed to publish will: $error';
+    return 'Failed to publish wasiat: $error';
   }
 
   @override
   String failedToUnpublishWill(String error) {
-    return 'Failed to unpublish will: $error';
+    return 'Failed to unpublish wasiat: $error';
   }
 
   @override
   String failedToDeleteWill(String error) {
-    return 'Failed to delete will: $error';
+    return 'Failed to delete wasiat: $error';
   }
 
   @override
   String failedToLoadWillData(String error) {
-    return 'Failed to load will data: $error';
+    return 'Failed to load wasiat data: $error';
   }
 
   @override
@@ -696,20 +696,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get published => 'Published';
 
   @override
-  String get deleteWill => 'Delete Will';
+  String get deleteWill => 'Delete Wasiat';
 
   @override
   String get areYouSureDeleteWill =>
-      'Are you sure you want to delete your will? This action cannot be undone.';
+      'Are you sure you want to delete your wasiat? This action cannot be undone.';
 
   @override
-  String get createWill => 'Create Will';
+  String get createWill => 'Create Wasiat';
 
   @override
-  String get editWill => 'Edit Will';
+  String get editWill => 'Edit Wasiat';
 
   @override
-  String get updateWill => 'Update Will';
+  String get updateWill => 'Update Wasiat';
 
   @override
   String get executors => 'Executors';
@@ -724,14 +724,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewSave => 'Review & Save';
 
   @override
-  String get primaryExecutor => 'Primary Executor (Co-Sampul 1)';
+  String get primaryExecutor => 'Primary Executor';
 
   @override
   String get selectPrimaryExecutor =>
       'Select the primary person to execute your will';
 
   @override
-  String get secondaryExecutor => 'Secondary Executor (Co-Sampul 2)';
+  String get secondaryExecutor => 'Secondary Executor';
 
   @override
   String get selectSecondaryExecutor => 'Optional: Select a secondary executor';
@@ -833,17 +833,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourWillUpdatesAutomatically =>
-      'Your will updates automatically with your profile, assets, and family changes.';
+      'Your wasiat updates automatically with your profile, assets, and family changes.';
 
   @override
-  String get willCreatedSuccessfully => 'Will created successfully!';
+  String get willCreatedSuccessfully => 'Wasiat created successfully!';
 
   @override
-  String get willUpdatedSuccessfully => 'Will updated successfully!';
+  String get willUpdatedSuccessfully => 'Wasiat updated successfully!';
 
   @override
   String failedToSaveWill(String error) {
-    return 'Failed to save will: $error';
+    return 'Failed to save wasiat: $error';
   }
 
   @override
@@ -980,7 +980,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changesHereUpdateWillAutomatically =>
-      'Changes here update your will automatically.';
+      'Changes here update your wasiat automatically.';
 
   @override
   String get assetUpdated => 'Asset updated';
@@ -1042,7 +1042,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyListConnectsToWill =>
-      'Your family list connects to your will, trust, and hibah planning. Add executors (Co-Sampul), beneficiaries, and guardians.';
+      'Your family list connects to your will, trust, and Property Trust planning. Add executors (Co-Sampul), beneficiaries, and guardians.';
 
   @override
   String get assignExecutorsCoSampul =>
@@ -1136,7 +1136,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ifPersonPartOfWillSync =>
-      'If this person is part of your will, any updates you make here will automatically sync to your will.';
+      'If this person is part of your wasiat, any updates you make here will automatically sync to your wasiat.';
 
   @override
   String get familyMemberAdded => 'Family member added';
@@ -1277,7 +1277,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addSomeoneImportantToYourWill =>
-      'Add someone important to your will';
+      'Add someone important to your wasiat';
 
   @override
   String get addYourFirstAsset => 'Add Your First Asset';
@@ -1287,10 +1287,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start tracking your digital assets';
 
   @override
-  String get createYourWill => 'Create Your Will';
+  String get createYourWill => 'Create Your Wasiat';
 
   @override
-  String get createYourWillWithSampul => 'Create your will with Sampul';
+  String get createYourWillWithSampul => 'Create your wasiat with Sampul';
 
   @override
   String get referralCode => 'Referral code';

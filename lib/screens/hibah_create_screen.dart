@@ -228,7 +228,7 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Hibah submission created'),
+          content: Text('Property submission created'),
           backgroundColor: Colors.green,
         ),
       );
@@ -329,10 +329,10 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Hibah'),
+        title: const Text('Create Property Trust'),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Hibah',
+            tooltip: 'About Property Trust',
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(

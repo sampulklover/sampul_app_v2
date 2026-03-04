@@ -20,17 +20,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _OnboardingPageData(
         title: l10n.onboardingTitle1,
         subtitle: l10n.onboardingSubtitle1,
-        image: 'assets/intro_safe.png',
+        image: 'assets/onboard-envelope.png',
       ),
       _OnboardingPageData(
         title: l10n.onboardingTitle2,
         subtitle: l10n.onboardingSubtitle2,
-        image: 'assets/intro_gift.png',
+        image: 'assets/onboard-property-tree.png',
       ),
       _OnboardingPageData(
         title: l10n.onboardingTitle3,
         subtitle: l10n.onboardingSubtitle3,
-        image: 'assets/intro_home.png',
+        image: 'assets/onboard-emotion.png',
       ),
     ];
   }

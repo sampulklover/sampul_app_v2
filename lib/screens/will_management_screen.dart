@@ -821,21 +821,22 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
                 const SizedBox(height: 20),
 
-                // 4. Pembatalan
+                // 4. Wasiat Pelengkap
                 _buildPaperSection(
-                  '4. Pembatalan',
+                  '4. Wasiat Pelengkap',
                   [
-                    'Dokumen ini menggantikan semua wasiat terdahulu pada aset.',
+                    'Wasiat ini adalah wasiat pelengkap yang terhad kepada aset yang disenaraikan dalam Jadual 1 sahaja.',
+                    'Semua wasiat terdahulu berkaitan aset lain kekal sah dan berkuat kuasa jika ada.',
                   ],
                 ),
 
                 const SizedBox(height: 20),
 
-                // 5. Co-Sampul Utama
+                // 5. Co-Sampul Utama dan Pentadbir Bersama
                 _buildPaperSection(
-                  '5. Co-Sampul Utama',
+                  '5. Co-Sampul Utama dan Pentadbir Bersama',
                   [
-                    '${_getCoSampulUtama()}, ${_getCoSampulUtamaNric()} dilantik untuk menyimpan dan menyampaikan wasiat aset saya ini kepada waris saya.',
+                    'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai Co-Sampul Utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
                   ],
                 ),
 
@@ -940,9 +941,9 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                     'pada ${_formatDateMalay(DateTime.now())}',
                     '',
                     'Diperakui oleh',
-                    'Mohammad Aiman bin Sulaiman',
-                    '871013875003',
-                    'Pengasas Bersama, SAMPUL',
+                    'Mohamad Hafiz bin Che Hamid',
+                    '950208035341',
+                    'Pembangun Perisian, SAMPUL',
                     'pada ${_formatDateMalay(DateTime.now())}',
                     '',
                     'Diperakui oleh',
@@ -1237,116 +1238,214 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       );
     }
 
-    final totalValue = _assets.fold<double>(0, (sum, asset) {
-      final value = _safeParseDouble(asset['value']);
-      return sum + value;
-    });
-    
-    final List<String> assetLines = [
-      'JADUAL 1: SENARAI ASET TERPERINCI',
-      '',
-      'Jumlah Nilai Aset: RM ${totalValue.toStringAsFixed(2)}',
-      'Bilangan Aset: ${_assets.length}',
-      '',
-      'ASET FIZIKAL:',
-      '',
-    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'JADUAL 1: SENARAI ASET',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            color: Colors.black87,
+          ),
+        ),
 
-    // Separate physical and digital assets
-    final physicalAssets = _assets.where((asset) => asset['type'] == 'physical').toList();
-    final digitalAssets = _assets.where((asset) => asset['type'] == 'digital').toList();
+        const SizedBox(height: 16),
 
-    // Display physical assets
-    if (physicalAssets.isNotEmpty) {
-      for (int i = 0; i < physicalAssets.length; i++) {
-        final asset = physicalAssets[i];
-        final value = _safeParseDouble(asset['value']);
-        final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
-        final institution = asset['institution'] ?? 'N/A';
-        final accountType = asset['account_type'] ?? 'N/A';
-        final accountNo = asset['account_no'] ?? 'N/A';
-        final loanCategory = asset['loan_category'] ?? 'N/A';
-        final rate = asset['rate'] ?? 'N/A';
-        final tenureStart = asset['tenure_start_date'] ?? 'N/A';
-        final tenureEnd = asset['tenure_end_date'] ?? 'N/A';
-        final remarks = asset['remarks'] ?? '';
-        final instructions = _formatInstructions(asset['instructions_after_death']);
-        
-        assetLines.addAll([
-          '${i + 1}. ${asset['name']}',
-          '   Jenis: ${asset['type']}',
-          '   Nilai: RM ${value.toStringAsFixed(2)} ($percentage%)',
-          '   Institusi: $institution',
-          '   Jenis Akaun: $accountType',
-          '   Nombor Akaun: $accountNo',
-          '   Kategori Pinjaman: $loanCategory',
-          '   Kadar: $rate',
-          '   Tempoh Mula: $tenureStart',
-          '   Tempoh Tamat: $tenureEnd',
-          if (instructions.isNotEmpty) '   Arahan Selepas Kematian: $instructions',
-          if (remarks.isNotEmpty) '   Catatan: $remarks',
-          '',
-        ]);
-      }
-    } else {
-      assetLines.add('Tiada aset fizikal didaftarkan.');
-      assetLines.add('');
+        // Flat list of all assets (physical + digital), simple like web
+        ..._assets.asMap().entries.map(
+          (entry) {
+            final index = entry.key;
+            final asset = entry.value;
+            final value = _safeParseDouble(asset['value']);
+            final instructionsRaw = asset['instructions_after_death'];
+            final instructions = _formatInstructions(instructionsRaw);
+            final remarks = asset['remarks'] ?? '';
+
+            return _buildAssetCard(
+              index: index + 1,
+              name: asset['name'] ?? '-',
+              typeLabel: '',
+              value: value,
+              percentage: '',
+              details: const [],
+              instructions: instructions,
+              instructionsRaw: instructionsRaw,
+              remarks: remarks,
+            );
+          },
+        ),
+
+      ],
+    );
+  }
+
+  Widget _buildAssetCard({
+    required int index,
+    required String name,
+    required String typeLabel,
+    required double value,
+    required String percentage,
+    required List<String> details,
+    required String instructions,
+    required dynamic instructionsRaw,
+    required String remarks,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade300, width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$index. $name',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (typeLabel.isNotEmpty) const SizedBox(height: 2),
+                    if (typeLabel.isNotEmpty)
+                      Text(
+                        typeLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'RM ${value.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green,
+                    ),
+                  ),
+                  if (percentage.isNotEmpty) const SizedBox(height: 2),
+                  if (percentage.isNotEmpty)
+                    Text(
+                      '$percentage%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          // Instruction chip
+          if (instructions.isNotEmpty)
+            Row(
+              children: [
+                _buildInstructionChip(instructionsRaw),
+              ],
+            ),
+
+          if (instructions.isNotEmpty) const SizedBox(height: 8),
+
+          // Details
+          ...details.map(
+            (d) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                d,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade800,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+
+          if (remarks.isNotEmpty) const SizedBox(height: 6),
+          if (remarks.isNotEmpty)
+            Text(
+              'Catatan: $remarks',
+              style: TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey.shade700,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstructionChip(dynamic instructionRaw) {
+    final String normalized = (instructionRaw ?? '').toString().toLowerCase();
+    final String label = _formatInstructions(instructionRaw);
+    final Color bgColor;
+    final Color textColor;
+
+    switch (normalized) {
+      case 'faraid':
+        bgColor = const Color(0xFFE7F5EC);
+        textColor = const Color(0xFF2E7D32);
+        break;
+      case 'terminate':
+        bgColor = const Color(0xFFFFF3E0);
+        textColor = const Color(0xFFEF6C00);
+        break;
+      case 'transfer_as_gift':
+        bgColor = const Color(0xFFEDE7F6);
+        textColor = const Color(0xFF5E35B1);
+        break;
+      case 'settle':
+        bgColor = const Color(0xFFE3F2FD);
+        textColor = const Color(0xFF1565C0);
+        break;
+      default:
+        bgColor = Colors.grey.shade200;
+        textColor = Colors.grey.shade800;
     }
 
-    assetLines.add('ASET DIGITAL:');
-    assetLines.add('');
-
-    // Display digital assets
-    if (digitalAssets.isNotEmpty) {
-      for (int i = 0; i < digitalAssets.length; i++) {
-        final asset = digitalAssets[i];
-        final value = _safeParseDouble(asset['value']);
-        final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
-        final accountType = asset['account_type'] ?? 'N/A';
-        final url = asset['url'] ?? '';
-        final username = asset['username'] ?? '';
-        final email = asset['email'] ?? '';
-        final frequency = asset['frequency'] ?? 'N/A';
-        final protection = asset['protection'] == true ? 'Ya' : 'Tidak';
-        final remarks = asset['remarks'] ?? '';
-        final instructions = _formatInstructions(asset['instructions_after_death']);
-        
-        assetLines.addAll([
-          '${i + 1}. ${asset['name']}',
-          '   Jenis: ${asset['type']}',
-          '   Nilai: RM ${value.toStringAsFixed(2)} ($percentage%)',
-          '   Jenis Akaun: $accountType',
-          if (url.isNotEmpty) '   URL: $url',
-          if (username.isNotEmpty) '   Nama Pengguna: $username',
-          if (email.isNotEmpty) '   Emel: $email',
-          '   Kekerapan: $frequency',
-          '   Perlindungan: $protection',
-          if (instructions.isNotEmpty) '   Arahan Selepas Kematian: $instructions',
-          if (remarks.isNotEmpty) '   Catatan: $remarks',
-          '',
-        ]);
-      }
-    } else {
-      assetLines.add('Tiada aset digital didaftarkan.');
-      assetLines.add('');
-    }
-
-    assetLines.addAll([
-      'JADUAL 2: PENGAGIHAN ASET MENGIKUT FARAID',
-      '',
-      'Aset akan diagihkan mengikut prinsip Faraid Islam berdasarkan waris yang layak.',
-      '',
-      'JADUAL 3: HADIAH (HIBAH) KHUSUS',
-      '',
-      'Tiada hadiah khusus ditetapkan pada masa ini.',
-      '',
-      'Nota: Senarai aset ini adalah berdasarkan maklumat yang didaftarkan pada ${_formatDateMalay(DateTime.now())}.',
-      'Sila kemas kini senarai aset sekiranya terdapat perubahan.',
-    ]);
-
-    return _buildPaperSection(
-      'SENARAI ASET',
-      assetLines,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      ),
     );
   }
 
