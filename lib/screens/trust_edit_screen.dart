@@ -10,6 +10,7 @@ import 'edit_profile_screen.dart';
 import 'trust_beneficiary_form_screen.dart';
 import 'trust_charity_form_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../utils/card_decoration_helper.dart';
 
 class TrustEditScreen extends StatefulWidget {
   final Trust initial;
@@ -502,10 +503,10 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_beneficiaries.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
+          CardDecorationHelper.styledCard(
+            context: context,
+            padding: const EdgeInsets.all(24),
+            child: Column(
                 children: [
                   Icon(
                     Icons.people_outline,
@@ -525,7 +526,6 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                   ),
                 ],
               ),
-            ),
           )
         else
           ..._beneficiaries.asMap().entries.map((entry) {
@@ -571,10 +571,10 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_charities.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
+          CardDecorationHelper.styledCard(
+            context: context,
+            padding: const EdgeInsets.all(24),
+            child: Column(
                 children: [
                   Icon(
                     Icons.volunteer_activism_outlined,
@@ -594,7 +594,6 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                   ),
                 ],
               ),
-            ),
           )
         else
           ..._charities.asMap().entries.map((entry) {
@@ -660,12 +659,9 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Personal Information Section
-        Card(
-          elevation: 0,
-          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        CardDecorationHelper.styledCard(
+          context: context,
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -688,18 +684,14 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                 _buildReviewRow('Address', _formatAddress(_userProfile)),
               ],
             ),
-          ),
         ),
         
         const SizedBox(height: 16),
         
         // Financial Information Section
-        Card(
-          elevation: 0,
-          color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        CardDecorationHelper.styledCard(
+          context: context,
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -734,7 +726,6 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                 _buildReviewRow('Purpose of Transaction', _purposeOfTransactionCtrl.text.trim().isEmpty ? null : _purposeOfTransactionCtrl.text.trim()),
               ],
             ),
-          ),
         ),
         
         const SizedBox(height: 16),
@@ -742,12 +733,9 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
         // Business Information Section
         if (_employerNameCtrl.text.trim().isNotEmpty ||
             _businessNatureCtrl.text.trim().isNotEmpty)
-          Card(
-            elevation: 0,
-            color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.3),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+          CardDecorationHelper.styledCard(
+            context: context,
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -768,19 +756,16 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                   _buildReviewRow('Business Address', _formatBusinessAddress()),
                 ],
               ),
-            ),
-          ),
+        ),
         
         if (_employerNameCtrl.text.trim().isNotEmpty ||
             _businessNatureCtrl.text.trim().isNotEmpty)
           const SizedBox(height: 16),
         
         // Beneficiaries Section
-        Card(
-          elevation: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        CardDecorationHelper.styledCard(
+          context: context,
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -841,17 +826,14 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                   }).toList(),
               ],
             ),
-          ),
         ),
         
         const SizedBox(height: 16),
         
         // Charities Section
-        Card(
-          elevation: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        CardDecorationHelper.styledCard(
+          context: context,
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -912,7 +894,6 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                   }).toList(),
               ],
             ),
-          ),
         ),
       ],
     );

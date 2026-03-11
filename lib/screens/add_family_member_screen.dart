@@ -3,10 +3,12 @@ import '../controllers/auth_controller.dart';
 import '../services/supabase_service.dart';
 import '../services/image_upload_service.dart';
 import '../models/relationship.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/stepper_footer_controls.dart';
 import '../utils/form_decoration_helper.dart';
 import 'dart:io';
 import 'family_info_screen.dart';
+import '../utils/sampul_icons.dart';
 
 class AddFamilyMemberScreen extends StatefulWidget {
   const AddFamilyMemberScreen({super.key});
@@ -72,7 +74,8 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     try {
       final user = AuthController.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be signed in');
+        final l10n = AppLocalizations.of(context)!;
+        throw Exception(l10n.youMustBeSignedIn);
       }
 
       final Map<String, dynamic> payload = <String, dynamic>{
@@ -92,13 +95,14 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       };
 
       if (_selectedType == 'future_owner') {
+        final l10n = AppLocalizations.of(context)!;
         final String p = _percentageController.text.trim();
         if (p.isEmpty) {
-          throw Exception('Please provide percentage for beneficiary');
+          throw Exception(l10n.pleaseProvidePercentageForBeneficiary);
         }
         final double parsed = double.tryParse(p) ?? -1;
         if (parsed < 0 || parsed > 100) {
-          throw Exception('Percentage must be between 0 and 100');
+          throw Exception(l10n.percentageMustBeBetween0And100);
         }
         payload['percentage'] = parsed;
       }
@@ -122,15 +126,17 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       }
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Family member added'), backgroundColor: Colors.green),
+        SnackBar(content: Text(l10n.familyMemberAdded), backgroundColor: Colors.green),
       );
       await Future<void>.delayed(const Duration(milliseconds: 300));
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.failedToAdd(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -139,13 +145,14 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Family Member'),
+        title: Text(l10n.addFamilyMemberTitle),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Family Members',
-            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.aboutFamilyMembers,
+            icon: SampulIcons.buildIconButtonIcon(SampulIcons.help, size: 24),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const FamilyInfoScreen(fromHelpIcon: true)),
@@ -164,7 +171,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
           },
           steps: <Step>[
             Step(
-              title: const Text('Basic Info'),
+              title: Text(l10n.basicInfo),
               state: StepState.indexed,
               isActive: _currentStep >= 0,
               content: Form(
@@ -182,7 +189,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 ? FileImage(_selectedImageFile!)
                                 : null,
                             child: _selectedImageFile == null
-                                ? const Icon(Icons.person, size: 36)
+                                ? SampulIcons.buildIcon(SampulIcons.person, width: 36, height: 36)
                                 : null,
                           ),
                           TextButton.icon(
@@ -192,8 +199,9 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 if (file != null) {
                                   if (!ImageUploadService().validateImage(file)) {
                                     if (!mounted) return;
+                                    final l10n = AppLocalizations.of(context)!;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Invalid image. Use JPG/PNG/WebP under 5MB.')),
+                                      SnackBar(content: Text(l10n.invalidImageUseJpgPngWebp)),
                                     );
                                     return;
                                   }
@@ -203,13 +211,14 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 }
                               } catch (e) {
                                 if (!mounted) return;
+                                final l10n = AppLocalizations.of(context)!;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Image selection failed: $e')),
+                                  SnackBar(content: Text(l10n.imageSelectionFailed(e.toString()))),
                                 );
                               }
                             },
-                            icon: const Icon(Icons.photo_outlined),
-                            label: const Text('Add photo'),
+                            icon: SampulIcons.buildIcon(SampulIcons.photo, width: 20, height: 20),
+                            label: Text(l10n.addPhoto),
                           ),
                         ],
                       ),
@@ -220,12 +229,12 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Full Name',
+                        labelText: l10n.fullName,
                         prefixIcon: Icons.person_outline,
                       ),
                       validator: (String? v) {
-                        if (v == null || v.trim().isEmpty) return 'Name is required';
-                        if (v.trim().length < 2) return 'Please enter a valid name';
+                        if (v == null || v.trim().isEmpty) return l10n.nameRequired;
+                        if (v.trim().length < 2) return l10n.pleaseEnterValidName;
                         return null;
                       },
                     ),
@@ -236,13 +245,13 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Email',
+                        labelText: l10n.email,
                         prefixIcon: Icons.mail_outline,
                       ),
                       validator: (String? v) {
                         final String value = (v ?? '').trim();
-                        if (value.isEmpty) return 'Email is required';
-                        if (!_isValidEmail(value)) return 'Please enter a valid email address';
+                        if (value.isEmpty) return l10n.emailRequired;
+                        if (!_isValidEmail(value)) return l10n.pleaseEnterValidEmailAddress;
                         return null;
                       },
                     ),
@@ -250,7 +259,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRelationship,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                       menuMaxHeight: 300, // Limit dropdown height
                       items: Relationship.allRelationships
                           .map((Relationship r) => DropdownMenuItem<String>(
@@ -261,11 +270,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       onChanged: (String? v) => setState(() => _selectedRelationship = v),
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Relationship',
+                        labelText: l10n.relationship,
                         prefixIcon: Icons.diversity_3_outlined,
                       ),
                       validator: (String? v) {
-                        if ((v ?? '').isEmpty) return 'Relationship is required';
+                        if ((v ?? '').isEmpty) return l10n.relationshipRequired;
                         return null;
                       },
                     ),
@@ -273,14 +282,14 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedType,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                       items: _typeOptions
-                          .map((String t) => DropdownMenuItem<String>(value: t, child: Text(_prettyType(t))))
+                          .map((String t) => DropdownMenuItem<String>(value: t, child: Text(_prettyType(t, l10n))))
                           .toList(),
                       onChanged: (String? v) => setState(() => _selectedType = v ?? 'co_sampul'),
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Category',
+                        labelText: l10n.category,
                         prefixIcon: Icons.category_outlined,
                       ),
                     ),
@@ -288,11 +297,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Icon(Icons.info_outline, size: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
+                        SampulIcons.buildIcon(SampulIcons.info, width: 16, height: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            _typeHelpText(_selectedType),
+                            _typeHelpText(_selectedType, l10n),
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
@@ -308,7 +317,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: FormDecorationHelper.roundedInputDecoration(
                           context: context,
-                          labelText: 'Percentage (0 - 100)',
+                          labelText: l10n.percentage0To100,
                           prefixIcon: Icons.percent,
                         ),
                       ),
@@ -317,7 +326,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
               ),
             ),
             Step(
-              title: const Text('Other Info (optional)'),
+              title: Text(l10n.otherInfoOptional),
               state: StepState.indexed,
               isActive: _currentStep >= 1,
               content: Form(
@@ -329,7 +338,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'IC/NRIC Number',
+                        labelText: l10n.icNricNumber,
                         prefixIcon: Icons.badge_outlined,
                       ),
                     ),
@@ -341,7 +350,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Phone',
+                        labelText: l10n.phone,
                         prefixIcon: Icons.phone_outlined,
                       ),
                     ),
@@ -351,7 +360,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Address Line 1',
+                        labelText: l10n.addressLine1,
                         prefixIcon: Icons.home_outlined,
                       ),
                     ),
@@ -361,7 +370,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Address Line 2',
+                        labelText: l10n.addressLine2,
                         prefixIcon: Icons.home_outlined,
                       ),
                     ),
@@ -374,7 +383,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'City',
+                              labelText: l10n.city,
                               prefixIcon: Icons.location_city_outlined,
                             ),
                           ),
@@ -387,7 +396,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Postcode',
+                              labelText: l10n.postcode,
                               prefixIcon: Icons.local_post_office_outlined,
                             ),
                           ),
@@ -403,7 +412,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'State',
+                              labelText: l10n.state,
                               prefixIcon: Icons.map_outlined,
                             ),
                           ),
@@ -413,14 +422,14 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedCountry,
                             isExpanded: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                            icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                             items: _countryOptions
                                 .map((String c) => DropdownMenuItem<String>(value: c, child: Text(_prettyCountry(c))))
                                 .toList(),
                             onChanged: (String? v) => setState(() => _selectedCountry = v),
                             decoration: FormDecorationHelper.roundedInputDecoration(
                               context: context,
-                              labelText: 'Country',
+                              labelText: l10n.country,
                               prefixIcon: Icons.public_outlined,
                             ),
                           ),
@@ -432,7 +441,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
               ),
             ),
             Step(
-              title: const Text('Review'),
+              title: Text(l10n.review),
               state: StepState.indexed,
               isActive: _currentStep >= 2,
               content: _buildReview(),
@@ -444,7 +453,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
         currentStep: _currentStep,
         lastStep: 2,
         isBusy: _isSubmitting,
-        primaryLabel: _currentStep == 2 ? 'Save' : null,
+        primaryLabel: _currentStep == 2 ? l10n.save : null,
         onPrimaryPressed: () async {
           if (_currentStep == 0) {
             if (!(_basicFormKey.currentState?.validate() ?? false)) return;
@@ -466,6 +475,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   }
 
   Widget _buildReview() {
+    final l10n = AppLocalizations.of(context)!;
     final TextStyle? label = Theme.of(context).textTheme.bodySmall;
     final TextStyle? value = Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600);
     Widget row(String k, String? v) {
@@ -511,50 +521,56 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'If this person is part of your will, any updates you make here will automatically sync to your will.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Text(
+                            l10n.ifPersonPartOfWillSync,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
 
-            row('Name', _nameController.text),
-            row('Relationship', _prettyRelationship(_selectedRelationship ?? '')),
-            row('Category', _prettyType(_selectedType)),
-            if (_selectedType == 'future_owner') row('Percentage', _percentageController.text.isEmpty ? null : '${_percentageController.text}%'),
-            row('IC/NRIC', _nricController.text),
-            row('Email', _emailController.text),
-            row('Phone', _phoneController.text),
-            row('Address 1', _address1Controller.text),
-            row('Address 2', _address2Controller.text),
-            row('City', _cityController.text),
-            row('Postcode', _postcodeController.text),
-            row('State', _stateController.text),
-            row('Country', _selectedCountry == null ? null : _prettyCountry(_selectedCountry!)),
+            row(l10n.name, _nameController.text),
+            row(l10n.relationship, _prettyRelationship(_selectedRelationship ?? '')),
+            row(l10n.category, _prettyType(_selectedType, l10n)),
+            if (_selectedType == 'future_owner') row(l10n.percentage0To100, _percentageController.text.isEmpty ? null : '${_percentageController.text}%'),
+            row(l10n.icNricNumber, _nricController.text),
+            row(l10n.email, _emailController.text),
+            row(l10n.phone, _phoneController.text),
+            row(l10n.addressLine1, _address1Controller.text),
+            row(l10n.addressLine2, _address2Controller.text),
+            row(l10n.city, _cityController.text),
+            row(l10n.postcode, _postcodeController.text),
+            row(l10n.state, _stateController.text),
+            row(l10n.country, _selectedCountry == null ? null : _prettyCountry(_selectedCountry!)),
           ],
         ),
       ),
     );
   }
 
-  String _prettyType(String t) {
+  String _prettyType(String t, AppLocalizations l10n) {
     switch (t) {
       case 'co_sampul':
-        return 'Co-sampul (Executor)';
+        return l10n.coSampulExecutor;
       case 'future_owner':
-        return 'Beneficiary';
+        return l10n.beneficiary;
       case 'guardian':
-        return 'Guardian';
+        return l10n.guardian;
       default:
         return t;
     }
   }
 
   Widget _buildRelationshipItem(Relationship relationship) {
+    final l10n = AppLocalizations.of(context)!;
     final bool isLegacy = Relationship.isLegacyRelationship(relationship.value);
     
     return Row(
@@ -578,7 +594,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
             ),
           ),
           child: Text(
-            relationship.isWaris ? 'Waris' : 'Non-Waris',
+            relationship.isWaris ? l10n.waris : l10n.nonWaris,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -599,7 +615,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
               ),
             ),
             child: Text(
-              'Legacy',
+              l10n.legacy,
               style: TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w600,
@@ -623,15 +639,15 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     return re.hasMatch(value);
   }
 
-  String _typeHelpText(String t) {
-    final String label = _prettyType(t);
+  String _typeHelpText(String t, AppLocalizations l10n) {
+    final String label = _prettyType(t, l10n);
     switch (t) {
       case 'co_sampul':
-        return '$label: A trusted person who executes your will together with you.';
+        return l10n.coSampulExecutorHelp;
       case 'future_owner':
-        return 'Beneficiary: A person who will inherit your selected assets.';
+        return l10n.beneficiaryHelp;
       case 'guardian':
-        return '$label: A person responsible for the care of your dependents or minors.';
+        return l10n.guardianHelp;
       default:
         return label;
     }

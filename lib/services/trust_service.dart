@@ -216,7 +216,22 @@ class TrustService {
   }
 
   Future<Trust?> getTrustById(int id) async {
-    final List<dynamic> rows = await _client.from('trust').select().eq('id', id).limit(1);
+    final List<dynamic> rows = await _client
+        .from('trust')
+        .select('*, trust_payments(*)')
+        .eq('id', id)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return Trust.fromJson(rows.first as Map<String, dynamic>);
+  }
+
+  /// Get trust with payment history
+  Future<Trust?> getTrustWithPayments(int id) async {
+    final List<dynamic> rows = await _client
+        .from('trust')
+        .select('*, trust_payments(*)')
+        .eq('id', id)
+        .limit(1);
     if (rows.isEmpty) return null;
     return Trust.fromJson(rows.first as Map<String, dynamic>);
   }

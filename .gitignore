@@ -56,6 +56,7 @@ web/.dart_tool/
 *.ipr
 *.iws
 .vscode/
+.cursorignore
 
 # OS / Misc
 .DS_Store
@@ -114,4 +115,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local environment & secrets
 .env
+key.properties
+android/key.properties
+*.jks
+*.keystore
+*service-account*.json

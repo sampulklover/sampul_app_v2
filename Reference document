@@ -1,0 +1,927 @@
+# Trust Payment Implementation Guide
+
+This document provides a comprehensive guide for implementing the Trust Payment feature in a Flutter mobile application, based on the existing web implementation.
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Database Schema](#database-schema)
+3. [API Endpoints](#api-endpoints)
+4. [Payment Flow](#payment-flow)
+5. [UI Components](#ui-components)
+6. [Business Rules & Validation](#business-rules--validation)
+7. [CHIP Payment Gateway Integration](#chip-payment-gateway-integration)
+8. [Webhook Handling](#webhook-handling)
+9. [Data Models](#data-models)
+10. [Error Handling](#error-handling)
+
+---
+
+## Overview
+
+The Trust Payment system allows users to make payments towards their trust accounts. The system integrates with CHIP payment gateway and tracks payment history. Key features include:
+
+- **Payment Initiation**: Users can make payments towards their trust accounts
+- **Payment History**: View all payment transactions for a trust
+- **Progress Tracking**: Track progress towards minimum trust amount (RM 100,000)
+- **Multiple Payment Methods**: Support for online payment via CHIP gateway
+- **Status Management**: Real-time payment status updates via webhooks
+
+---
+
+## Database Schema
+
+### `trust_payments` Table
+Stores individual payment transactions for trusts.
+
+```sql
+trust_payments:
+  - id: UUID (Primary Key)
+  - trust_id: UUID (Foreign Key to trust table)
+  - uuid: UUID (User ID)
+  - amount: INTEGER (Amount in cents, e.g., 100000 = RM 1,000.00)
+  - status: STRING (Payment status: 'initiated', 'paid', 'settled', 'cleared', 'failed', 'refunded', etc.)
+  - chip_payment_id: STRING (CHIP payment reference ID)
+  - chip_client_id: STRING (CHIP client ID)
+  - created_at: TIMESTAMP
+  - updated_at: TIMESTAMP
+```
+
+### `trust_payment` Table
+Stores trust payment configuration/metadata (different from `trust_payments`).
+
+```sql
+trust_payment:
+  - id: UUID (Primary Key)
+  - trust_id: UUID (Foreign Key to trust table)
+  - uuid: UUID (User ID)
+  - payment_method: STRING ('chip', 'bank_transfer', etc.)
+  - total_amount: DECIMAL (Total amount including fees)
+  - trust_amount: DECIMAL (Trust amount without fees)
+  - image_path: STRING (Receipt image path for bank transfers)
+  - created_at: TIMESTAMP
+  - updated_at: TIMESTAMP
+```
+
+### `accounts` Table
+Stores user account information including CHIP customer ID.
+
+```sql
+accounts:
+  - uuid: UUID (Primary Key, User ID)
+  - chip_customer_id: STRING (CHIP customer ID, created on first payment)
+  - ... (other account fields)
+```
+
+### `trust` Table
+Main trust table with relationships.
+
+```sql
+trust:
+  - id: UUID (Primary Key)
+  - uuid: UUID (User ID)
+  - trust_code: STRING (Unique trust identifier)
+  - ... (other trust fields)
+  - trust_payment: RELATION (One-to-one with trust_payment)
+  - trust_payments: RELATION (One-to-many with trust_payments)
+```
+
+---
+
+## API Endpoints
+
+### 1. Get CHIP Client ID
+**Endpoint**: `/api/chip/create-client` (POST)  
+**Purpose**: Creates or retrieves CHIP customer ID for the user
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "chip_customer_id_12345"
+  }
+}
+```
+
+**Implementation Notes**:
+- First checks if user already has `chip_customer_id` in `accounts` table
+- If exists, returns existing ID
+- If not, creates new CHIP client and stores in `accounts` table
+- This ID is required for all payment operations
+
+---
+
+### 2. Create Payment Session
+**Endpoint**: `/api/chip/create-payment` (POST)  
+**Purpose**: Creates a payment session with CHIP gateway
+
+**Request Body**:
+```json
+{
+  "trustId": "uuid-of-trust",
+  "trustCode": "TRUST-001",
+  "userId": "user-uuid",
+  "clientId": "chip_customer_id",
+  "amount": 1000000,  // Amount in cents (RM 10,000.00)
+  "description": "Payment for Trust TRUST-001"
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "chip_payment_id",
+    "checkout_url": "https://gate.chip-in.asia/checkout/...",
+    "status": "pending_charge",
+    "client_id": "chip_customer_id",
+    ...
+  }
+}
+```
+
+**Implementation Flow**:
+1. Create payment record in `trust_payments` table with status `'initiated'`
+2. Call CHIP API to create purchase
+3. Update `trust_payments` record with `chip_payment_id` and status
+4. Return checkout URL for redirect
+
+**CHIP API Details**:
+- **Base URL**: `https://gate.chip-in.asia/api/v1/purchases/`
+- **Method**: POST
+- **Headers**:
+  - `Content-Type: application/json`
+  - `Authorization: Bearer {CHIP_SECRET_KEY}`
+- **Body**:
+```json
+{
+  "brand_id": "{CHIP_BRAND_ID}",
+  "client_id": "{clientId}",
+  "success_callback": "{baseUrl}/api/chip/success-callback",
+  "success_redirect": "{baseUrl}/trust?payment=success",
+  "failure_redirect": "{baseUrl}/trust?payment=failed",
+  "send_receipt": true,
+  "purchase": {
+    "amount": 1000000,  // Amount in cents
+    "products": [
+      {
+        "name": "Payment for Trust TRUST-001",
+        "price": 1000000
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 3. Payment Webhook
+**Endpoint**: `/api/chip/hooks` (POST)  
+**Purpose**: Receives payment status updates from CHIP
+
+**Request Body** (from CHIP):
+```json
+{
+  "id": "chip_payment_id",
+  "status": "paid",  // or "failed", "settled", "cleared", etc.
+  ...
+}
+```
+
+**Implementation**:
+1. Find payment record in `trust_payments` table by `chip_payment_id`
+2. Update payment status and `updated_at` timestamp
+3. Return 200 OK
+
+**Note**: This is a server-side endpoint. Mobile app should poll or use push notifications to check payment status.
+
+---
+
+### 4. Get Trust with Payments
+**Endpoint**: Custom API (via Supabase)  
+**Purpose**: Retrieve trust data with payment history
+
+**Query**:
+```sql
+SELECT *, 
+  trust_beneficiary (*), 
+  trust_charity (*), 
+  trust_payment (*), 
+  trust_payments (*) 
+FROM trust 
+WHERE uuid = {userId}
+ORDER BY created_at DESC
+```
+
+**Response Structure**:
+```json
+{
+  "id": "trust-uuid",
+  "trust_code": "TRUST-001",
+  "trust_payments": [
+    {
+      "id": "payment-uuid",
+      "amount": 1000000,
+      "status": "paid",
+      "chip_payment_id": "chip_123",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "trust_payment": {
+    "id": "trust-payment-uuid",
+    "payment_method": "chip",
+    "total_amount": 1000000,
+    "trust_amount": 1000000
+  }
+}
+```
+
+---
+
+## Payment Flow
+
+### Complete Payment Flow Diagram
+
+```
+1. User selects "Make Payment" on a trust
+   ↓
+2. Payment Form Modal opens
+   ↓
+3. User enters payment amount (validated: max RM 30,000 per transaction)
+   ↓
+4. User clicks "Continue to Payment"
+   ↓
+5. App calls getChipClient() to get/create CHIP customer ID
+   ↓
+6. App calls addChipPayment() with:
+   - trustId
+   - trustCode
+   - amount (in cents)
+   - clientId (from step 5)
+   ↓
+7. Backend creates payment record in trust_payments (status: 'initiated')
+   ↓
+8. Backend calls CHIP API to create purchase
+   ↓
+9. Backend updates trust_payments with chip_payment_id
+   ↓
+10. Backend returns checkout_url
+    ↓
+11. App opens checkout_url in WebView or external browser
+    ↓
+12. User completes payment on CHIP gateway
+    ↓
+13. CHIP redirects to success_url or failure_url
+    ↓
+14. CHIP sends webhook to success_callback endpoint
+    ↓
+15. Backend updates payment status via webhook
+    ↓
+16. App shows payment status modal (success/failure)
+    ↓
+17. App refreshes trust data to show updated payment history
+```
+
+---
+
+## UI Components
+
+### 1. Trust Payment Form Modal
+
+**Purpose**: Allow users to enter payment amount and initiate payment
+
+**Key Features**:
+- Display trust progress (paid amount vs minimum target)
+- Progress bar showing completion percentage
+- Payment amount input (with RM currency formatting)
+- Validation for maximum transaction amount (RM 30,000)
+- Fee structure information (collapsible)
+- Payment limits information
+
+**Fields**:
+- **Payment Amount**: Text input (formatted as RM XX.XX, stored in cents)
+- **Trust Progress**: Shows paid amount, minimum target (RM 100,000), and percentage
+- **Remaining Amount**: Calculated as (RM 100,000 - total paid)
+
+**Validation Rules**:
+- Amount must be greater than 0
+- Maximum per transaction: RM 30,000 (3,000,000 cents)
+- Minimum trust amount: RM 100,000 (10,000,000 cents) - cumulative
+- User may need multiple payments to reach minimum
+
+**UI Elements**:
+- Progress bar (0-100%)
+- Currency formatted input field
+- Info sections for payment limits and fee structure
+- "Continue to Payment" button
+- Cancel button
+- Loading state during payment initiation
+
+**Flutter Implementation Notes**:
+- Use `TextFormField` with currency formatter
+- Use `LinearProgressIndicator` for progress bar
+- Use `AlertDialog` or `showModalBottomSheet` for modal
+- Format amounts: `(cents / 100).toStringAsFixed(2)`
+
+---
+
+### 2. Payment History Modal
+
+**Purpose**: Display all payment transactions for a trust
+
+**Key Features**:
+- List of all payments with status
+- Total paid amount
+- Remaining amount to reach minimum
+- Payment details: date, reference ID, amount, status
+
+**Display Fields**:
+- **Date & Time**: Formatted timestamp
+- **Payment Reference ID**: `chip_payment_id` from CHIP
+- **Amount**: Formatted as RM XX,XXX.XX
+- **Status**: Badge with color coding
+
+**Status Display**:
+- **Paid/Settled/Cleared**: Green badge ("Paid")
+- **Failed/Error/Expired/Cancelled**: Red badge ("Failed")
+- **Refunded/Chargeback**: Blue badge ("Refunded")
+- **Pending states**: Yellow badge ("Processing")
+
+**Filtering**:
+- Only show payments with valid status (exclude null/unknown statuses)
+- Sort by date descending (newest first)
+
+**Flutter Implementation Notes**:
+- Use `DataTable` or `ListView.builder` for payment list
+- Use `Chip` widget for status badges
+- Format currency with commas: `NumberFormat.currency(locale: 'en_MY', symbol: 'RM ')`
+
+---
+
+### 3. Payment Status Modal
+
+**Purpose**: Show success/failure message after payment redirect
+
+**Key Features**:
+- Success icon/image for successful payments
+- Failure icon/image for failed payments
+- Appropriate message based on status
+- Close button to dismiss
+
+**States**:
+- **Success**: Green checkmark icon, success message
+- **Failure**: Red X icon, failure message
+
+**Flutter Implementation Notes**:
+- Use `Dialog` or `showDialog`
+- Use `Icon` or `Image` for status icons
+- Auto-dismiss after 3-5 seconds (optional)
+
+---
+
+### 4. Trust Table Row
+
+**Purpose**: Display trust in a table with payment actions
+
+**Actions**:
+- **Make Payment** button: Opens payment form modal
+- **History** button: Opens payment history modal
+
+**Display**:
+- Trust code
+- Trust details
+- Payment status/actions
+
+---
+
+## Business Rules & Validation
+
+### Payment Amount Limits
+
+1. **Minimum Trust Amount**: RM 100,000 (10,000,000 cents)
+   - This is the cumulative target across all payments
+   - Users can make multiple payments to reach this amount
+
+2. **Maximum Per Transaction**: RM 30,000 (3,000,000 cents)
+   - Single payment cannot exceed this amount
+   - If remaining amount > RM 30,000, user must make multiple payments
+
+3. **Minimum Per Transaction**: No explicit minimum (but must be > 0)
+
+### Payment Status Flow
+
+```
+initiated → pending_charge → paid → settled → cleared
+                ↓
+            failed/error/expired/cancelled
+                ↓
+            refunded/chargeback
+```
+
+**Status Definitions**:
+- `initiated`: Payment record created, awaiting CHIP processing
+- `pending_charge`: Payment submitted to CHIP, awaiting processing
+- `paid`: Payment successful
+- `settled`: Payment settled by payment provider
+- `cleared`: Payment cleared and funds available
+- `failed`: Payment failed
+- `error`: Payment error occurred
+- `expired`: Payment session expired
+- `cancelled`: Payment cancelled by user
+- `refunded`: Payment refunded
+- `chargeback`: Payment charged back
+
+### Progress Calculation
+
+```dart
+// Calculate total paid
+int totalPaidInCents = trust.trustPayments
+    .where((p) => ['paid', 'settled', 'cleared'].contains(p.status))
+    .fold(0, (sum, payment) => sum + payment.amount);
+
+// Calculate remaining
+int remainingInCents = MIN_TRUST_AMOUNT - totalPaidInCents;
+
+// Calculate progress percentage
+double progressPercentage = (totalPaidInCents / MIN_TRUST_AMOUNT) * 100;
+```
+
+### Constants
+
+```dart
+const int MIN_TRUST_AMOUNT = 10000000; // RM 100,000 in cents
+const int MAX_TRANSACTION_AMOUNT = 3000000; // RM 30,000 in cents
+```
+
+---
+
+## CHIP Payment Gateway Integration
+
+### Environment Variables Required
+
+```dart
+// Backend/API
+CHIP_SECRET_KEY: "your_chip_secret_key"
+CHIP_BRAND_ID: "your_chip_brand_id"
+NEXT_PUBLIC_HOST: "https://your-domain.com" // or app deep link
+```
+
+### CHIP API Integration Steps
+
+1. **Get/Create CHIP Client**:
+   - Check if user has `chip_customer_id` in database
+   - If not, create via CHIP API
+   - Store in `accounts` table
+
+2. **Create Payment**:
+   - Create payment record in `trust_payments`
+   - Call CHIP API to create purchase
+   - Get `checkout_url` from response
+   - Redirect user to `checkout_url`
+
+3. **Handle Redirect**:
+   - Success: Redirect to app with `?payment=success`
+   - Failure: Redirect to app with `?payment=failed`
+   - Show appropriate status modal
+
+4. **Webhook Processing** (Backend):
+   - CHIP sends webhook to `success_callback` endpoint
+   - Update payment status in database
+   - Mobile app should poll or use push notifications
+
+### Deep Linking for Mobile
+
+For Flutter app, configure deep links:
+- **Success URL**: `sampul://trust?payment=success`
+- **Failure URL**: `sampul://trust?payment=failed`
+
+Handle deep links in Flutter:
+```dart
+// Using uni_links or flutter_deep_linking
+Uri uri = Uri.parse(deepLink);
+if (uri.queryParameters['payment'] == 'success') {
+  // Show success modal
+} else if (uri.queryParameters['payment'] == 'failed') {
+  // Show failure modal
+}
+```
+
+### WebView Integration (Alternative)
+
+Instead of external browser, use WebView:
+```dart
+// Using webview_flutter
+WebView(
+  initialUrl: checkoutUrl,
+  navigationDelegate: (NavigationRequest request) {
+    if (request.url.contains('payment=success')) {
+      // Handle success
+      return NavigationDecision.prevent;
+    } else if (request.url.contains('payment=failed')) {
+      // Handle failure
+      return NavigationDecision.prevent;
+    }
+    return NavigationDecision.navigate;
+  },
+)
+```
+
+---
+
+## Webhook Handling
+
+### Webhook Endpoint
+
+**URL**: `{baseUrl}/api/chip/hooks`  
+**Method**: POST  
+**Content-Type**: application/json
+
+### Webhook Payload (from CHIP)
+
+```json
+{
+  "id": "chip_payment_id",
+  "status": "paid",
+  "client_id": "chip_customer_id",
+  "amount": 1000000,
+  "created": "2024-01-01T00:00:00Z",
+  ...
+}
+```
+
+### Processing Logic
+
+1. Extract `id` (chip_payment_id) from webhook payload
+2. Find payment record in `trust_payments` table
+3. Update `status` and `updated_at` fields
+4. Return 200 OK
+
+### Mobile App Status Updates
+
+Since webhooks are server-side, mobile app should:
+
+**Option 1: Polling**
+- Poll payment status every few seconds after initiating payment
+- Stop polling when status is final (paid, failed, etc.)
+
+**Option 2: Push Notifications**
+- Backend sends push notification when webhook updates status
+- App receives notification and refreshes data
+
+**Option 3: Real-time Database**
+- Use Supabase real-time subscriptions
+- Listen to `trust_payments` table changes
+- Update UI when payment status changes
+
+---
+
+## Data Models
+
+### TrustPayment Model
+
+```dart
+class TrustPayment {
+  final String id;
+  final String trustId;
+  final String uuid;
+  final int amount; // Amount in cents
+  final String status;
+  final String? chipPaymentId;
+  final String? chipClientId;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+
+  TrustPayment({
+    required this.id,
+    required this.trustId,
+    required this.uuid,
+    required this.amount,
+    required this.status,
+    this.chipPaymentId,
+    this.chipClientId,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  factory TrustPayment.fromJson(Map<String, dynamic> json) {
+    return TrustPayment(
+      id: json['id'],
+      trustId: json['trust_id'],
+      uuid: json['uuid'],
+      amount: json['amount'] as int,
+      status: json['status'],
+      chipPaymentId: json['chip_payment_id'],
+      chipClientId: json['chip_client_id'],
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at']) 
+          : null,
+    );
+  }
+
+  // Helper method to format amount
+  String get formattedAmount {
+    final amountInRinggit = amount / 100;
+    return 'RM ${amountInRinggit.toStringAsFixed(2)}';
+  }
+
+  // Helper method to check if payment is successful
+  bool get isSuccessful {
+    return ['paid', 'settled', 'cleared'].contains(status);
+  }
+}
+```
+
+### Trust Model (with payments)
+
+```dart
+class Trust {
+  final String id;
+  final String uuid;
+  final String trustCode;
+  final List<TrustPayment>? trustPayments;
+  final TrustPaymentConfig? trustPayment;
+  // ... other trust fields
+
+  Trust({
+    required this.id,
+    required this.uuid,
+    required this.trustCode,
+    this.trustPayments,
+    this.trustPayment,
+  });
+
+  // Calculate total paid
+  int get totalPaidInCents {
+    if (trustPayments == null) return 0;
+    return trustPayments!
+        .where((p) => p.isSuccessful)
+        .fold(0, (sum, payment) => sum + payment.amount);
+  }
+
+  // Calculate remaining amount
+  int get remainingInCents {
+    return MIN_TRUST_AMOUNT - totalPaidInCents;
+  }
+
+  // Calculate progress percentage
+  double get progressPercentage {
+    return (totalPaidInCents / MIN_TRUST_AMOUNT) * 100;
+  }
+}
+```
+
+### ChipPaymentResponse Model
+
+```dart
+class ChipPaymentResponse {
+  final String id;
+  final String checkoutUrl;
+  final String status;
+  final String clientId;
+
+  ChipPaymentResponse({
+    required this.id,
+    required this.checkoutUrl,
+    required this.status,
+    required this.clientId,
+  });
+
+  factory ChipPaymentResponse.fromJson(Map<String, dynamic> json) {
+    return ChipPaymentResponse(
+      id: json['id'],
+      checkoutUrl: json['checkout_url'] ?? json['data']?['checkout_url'],
+      status: json['status'],
+      clientId: json['client_id'],
+    );
+  }
+}
+```
+
+---
+
+## Error Handling
+
+### Common Errors
+
+1. **Client ID Not Found**
+   - Error: "Client Id not found"
+   - Solution: Ensure `getChipClient()` is called before payment
+   - Retry: Call `getChipClient()` again
+
+2. **Payment Creation Failed**
+   - Error: "Payment creation failed"
+   - Solution: Check network connection, verify API credentials
+   - Retry: Allow user to retry payment
+
+3. **No Checkout URL**
+   - Error: "No checkout URL received from payment provider"
+   - Solution: Check CHIP API response, verify payment was created
+   - Retry: Create new payment session
+
+4. **Payment Failed**
+   - Status: "failed", "error", "expired", "cancelled"
+   - Solution: Show error message, allow user to retry
+   - Action: User can initiate new payment
+
+5. **Network Errors**
+   - Error: Connection timeout, no internet
+   - Solution: Show network error message
+   - Retry: Allow user to retry when connection restored
+
+### Error Messages to Display
+
+```dart
+// Payment initiation errors
+"Payment failed. Please try again later."
+"Unable to connect to payment service. Please check your internet connection."
+"Payment session expired. Please try again."
+
+// Validation errors
+"Please enter a valid amount"
+"Maximum transaction amount is RM 30,000"
+"Amount must be greater than 0"
+
+// Status errors
+"Payment was cancelled"
+"Payment expired. Please initiate a new payment."
+```
+
+### Error Handling Flow
+
+```dart
+try {
+  // Initiate payment
+  final payment = await addChipPayment(...);
+  
+  if (payment == null) {
+    throw Exception('Payment creation failed');
+  }
+  
+  if (payment.error != null) {
+    throw Exception(payment.error);
+  }
+  
+  final checkoutUrl = payment.checkoutUrl ?? payment.data?.checkoutUrl;
+  if (checkoutUrl == null) {
+    throw Exception('No checkout URL received');
+  }
+  
+  // Open checkout URL
+  await launchUrl(Uri.parse(checkoutUrl));
+  
+} on NetworkException {
+  // Handle network errors
+  showError('No internet connection');
+} on PaymentException catch (e) {
+  // Handle payment-specific errors
+  showError(e.message);
+} catch (e) {
+  // Handle generic errors
+  showError('Payment failed. Please try again later.');
+}
+```
+
+---
+
+## Implementation Checklist
+
+### Backend/API Integration
+- [ ] Implement `getChipClient()` function
+- [ ] Implement `addChipPayment()` function
+- [ ] Configure CHIP API credentials
+- [ ] Set up webhook endpoint (if applicable)
+- [ ] Configure deep links for mobile redirects
+
+### UI Components
+- [ ] Create TrustPaymentFormModal
+  - [ ] Payment amount input with currency formatting
+  - [ ] Progress bar showing trust completion
+  - [ ] Payment limits information
+  - [ ] Fee structure display
+  - [ ] Validation and error messages
+- [ ] Create PaymentHistoryModal
+  - [ ] Payment list with status badges
+  - [ ] Total paid and remaining amount
+  - [ ] Date formatting
+  - [ ] Status color coding
+- [ ] Create PaymentStatusModal
+  - [ ] Success state
+  - [ ] Failure state
+  - [ ] Appropriate icons/messages
+- [ ] Update TrustTable to include payment actions
+
+### Business Logic
+- [ ] Implement payment amount validation
+- [ ] Calculate trust progress
+- [ ] Handle payment status updates
+- [ ] Implement payment history filtering/sorting
+- [ ] Handle deep link redirects
+
+### Data Management
+- [ ] Create TrustPayment model
+- [ ] Create Trust model with payment relationships
+- [ ] Implement API service methods
+- [ ] Handle data refresh after payment
+- [ ] Implement real-time updates (if using Supabase)
+
+### Error Handling
+- [ ] Network error handling
+- [ ] Payment failure handling
+- [ ] Validation error messages
+- [ ] User-friendly error messages
+- [ ] Retry mechanisms
+
+### Testing
+- [ ] Test payment flow end-to-end
+- [ ] Test payment history display
+- [ ] Test error scenarios
+- [ ] Test validation rules
+- [ ] Test deep link handling
+- [ ] Test progress calculations
+
+---
+
+## Additional Notes
+
+### Currency Formatting
+
+Always format amounts for display:
+```dart
+String formatCurrency(int cents) {
+  final amount = cents / 100;
+  final formatter = NumberFormat.currency(
+    locale: 'en_MY',
+    symbol: 'RM ',
+    decimalDigits: 2,
+  );
+  return formatter.format(amount);
+}
+
+// With commas: RM 10,000.00
+String formatCurrencyWithCommas(int cents) {
+  final amount = cents / 100;
+  return 'RM ${amount.toStringAsFixed(2).replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (Match m) => '${m[1]},',
+  )}';
+}
+```
+
+### Date Formatting
+
+Format timestamps for display:
+```dart
+String formatTimestamp(DateTime dateTime) {
+  final formatter = DateFormat('dd MMM yyyy, hh:mm a');
+  return formatter.format(dateTime);
+}
+```
+
+### State Management
+
+Consider using:
+- **Provider** or **Riverpod** for state management
+- **BLoC** pattern for complex payment flows
+- **GetX** for simpler state management
+
+### Dependencies
+
+Recommended Flutter packages:
+```yaml
+dependencies:
+  http: ^1.1.0  # For API calls
+  url_launcher: ^6.2.0  # For opening checkout URL
+  webview_flutter: ^4.4.0  # For WebView (optional)
+  intl: ^0.18.0  # For currency/date formatting
+  uni_links: ^0.5.1  # For deep linking
+  flutter_localizations:
+    sdk: flutter
+```
+
+---
+
+## Summary
+
+This implementation guide provides all the necessary information to build the Trust Payment feature in Flutter. Key points to remember:
+
+1. **Amounts are stored in cents** (integers) - always convert for display
+2. **Minimum trust amount**: RM 100,000 (cumulative across payments)
+3. **Maximum per transaction**: RM 30,000
+4. **Payment flow**: Get client ID → Create payment → Redirect to CHIP → Handle redirect → Show status
+5. **Status updates**: Use polling, push notifications, or real-time subscriptions
+6. **Always validate** payment amounts and handle errors gracefully
+
+For questions or clarifications, refer to the web implementation in:
+- `components/TrustPaymentFormModal.js`
+- `components/TrustPaymentHistoryModal.js`
+- `components/TrustTable.js`
+- `pages/api/chip/create-payment.js`
+- `pages/api/chip/hooks.js`
+- `context/api.js` (addChipPayment function)

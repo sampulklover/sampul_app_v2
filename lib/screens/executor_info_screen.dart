@@ -51,10 +51,11 @@ class ExecutorInfoScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Center(
-                        child: Icon(
-                          Icons.person_outline,
-                          size: 80,
-                          color: colorScheme.primary,
+                        child: Image.asset(
+                          'assets/executor-assets-transition.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),

@@ -11,11 +11,14 @@ import 'controllers/locale_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'screens/login_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/update_password_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/main_shell.dart';
 import 'services/supabase_service.dart';
 import 'services/openrouter_service.dart';
+import 'services/onesignal_service.dart';
 import 'config/stripe_config.dart';
+import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +64,16 @@ void main() async {
   } catch (e) {
     debugPrint('Warning: OpenRouter initialization failed: $e');
     debugPrint('AI chat may not work until OPENROUTER_API_KEY and OPENROUTER_MODEL are configured.');
+  }
+  
+  // Initialize OneSignal (skip on web)
+  if (!kIsWeb) {
+    try {
+      await OneSignalService.initialize();
+    } catch (e) {
+      debugPrint('Warning: OneSignal initialization failed: $e');
+      debugPrint('Push notifications may not work until ONESIGNAL_APP_ID is configured.');
+    }
   }
   
   runApp(const MyApp());
@@ -157,45 +170,139 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
-      stream: AuthController.instance.authStateChanges,
-      builder: (context, snapshot) {
-        // Show loading indicator while checking auth state
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
 
-        // Check if user is authenticated
-        final session = snapshot.hasData ? snapshot.data!.session : null;
+class _AuthWrapperState extends State<AuthWrapper> {
+  StreamSubscription<AuthState>? _authSubscription;
+  bool _hasSetOneSignalUserId = false;
+  bool _isNavigatingToPasswordRecovery = false;
+  bool _isInitialized = false;
+  Session? _currentSession;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAuth();
+  }
+
+  Future<void> _initializeAuth() async {
+    // Get initial session state
+    _currentSession = Supabase.instance.client.auth.currentSession;
+    
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
+    
+    // Listen to auth state changes
+    _authSubscription = AuthController.instance.authStateChanges.listen(
+      (authState) async {
+        final AuthChangeEvent event = authState.event;
+        final user = authState.session?.user;
         
-        if (session != null) {
-          // User is authenticated, show main app
-          return const MainShell();
-        } else {
-          // User is not authenticated, decide between onboarding and login
-          return FutureBuilder<bool>(
-            future: _shouldShowOnboarding(),
-            builder: (BuildContext context, AsyncSnapshot<bool> snap) {
-              if (!snap.hasData) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              return snap.data! ? const OnboardingScreen() : const LoginScreen();
-            },
-          );
+        // Update current session
+        if (mounted) {
+          setState(() {
+            _currentSession = authState.session;
+          });
+        }
+        
+        // Handle password recovery event
+        if (event == AuthChangeEvent.passwordRecovery && !_isNavigatingToPasswordRecovery) {
+          _isNavigatingToPasswordRecovery = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const UpdatePasswordScreen(),
+                ),
+              ).then((_) {
+                _isNavigatingToPasswordRecovery = false;
+              });
+            }
+          });
+        }
+        
+        // Handle token refresh failure (expired link)
+        if (event == AuthChangeEvent.tokenRefreshed && authState.session == null) {
+          _showExpiredLinkMessage();
+        }
+        
+        if (user != null && !_hasSetOneSignalUserId) {
+          await OneSignalService.instance.setUserId(user.id);
+          _hasSetOneSignalUserId = true;
+        } else if (user == null && _hasSetOneSignalUserId) {
+          await OneSignalService.instance.clearUserId();
+          _hasSetOneSignalUserId = false;
+        }
+      },
+      onError: (error) {
+        // Handle auth errors (e.g., expired recovery link)
+        debugPrint('Auth error: $error');
+        if (mounted) {
+          setState(() {
+            _currentSession = null;
+          });
+          _showExpiredLinkMessage();
         }
       },
     );
+  }
+
+  void _showExpiredLinkMessage() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n?.resetLinkExpired ?? 'Reset link expired'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show loading indicator while initializing
+    if (!_isInitialized) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Check if user is authenticated
+    if (_currentSession != null) {
+      return const MainShell();
+    } else {
+      // User is not authenticated, decide between onboarding and login
+      return FutureBuilder<bool>(
+        future: _shouldShowOnboarding(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snap) {
+          if (!snap.hasData) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return snap.data! ? const OnboardingScreen() : const LoginScreen();
+        },
+      );
+    }
   }
 }
 

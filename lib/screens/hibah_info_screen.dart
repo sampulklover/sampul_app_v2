@@ -13,7 +13,7 @@ class HibahInfoScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Hibah'),
+        title: const Text('About Property Trust'),
         elevation: 0,
       ),
       body: SafeArea(
@@ -32,7 +32,7 @@ class HibahInfoScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's plan your Hibah gifts",
+                            "Let's plan your Property Trust",
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -41,7 +41,7 @@ class HibahInfoScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Decide clearly who should receive your assets as a lifetime gift.",
+                            "Decide clearly who should receive your Property Trust assets.",
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -70,7 +70,7 @@ class HibahInfoScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "What is Hibah?",
+                              "What is Property Trust?",
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -78,7 +78,7 @@ class HibahInfoScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Hibah is a Shariah-compliant gift — you transfer ownership of your assets to someone you choose while you are still alive.",
+                              "Property Trust is a Shariah-compliant, hibah-based way to transfer ownership of your assets to someone you choose while you are still alive.",
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -123,7 +123,7 @@ class HibahInfoScreen extends StatelessWidget {
               ),
               child: SafeArea(
                 top: false,
-                child: SizedBox(
+                        child: SizedBox(
                   width: double.infinity,
                   height: 56,
                     child: ElevatedButton(
@@ -159,7 +159,7 @@ class HibahInfoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Start Hibah",
+                          "Start Property Trust",
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,
@@ -184,10 +184,11 @@ class HibahInfoScreen extends StatelessWidget {
 
   Widget _buildIllustration(BuildContext context, ColorScheme colorScheme) {
     return Center(
-      child: Icon(
-        Icons.card_giftcard_outlined,
-        size: 80,
-        color: colorScheme.primary,
+      child: Image.asset(
+        'assets/hibah-property-stone.png',
+        width: 180,
+        height: 180,
+        fit: BoxFit.contain,
       ),
     );
   }

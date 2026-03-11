@@ -15,6 +15,7 @@ import '../services/file_upload_service.dart';
 import '../services/ai_chat_settings_service.dart';
 import '../services/ai_action_detector.dart';
 import '../services/supabase_service.dart';
+import '../utils/sampul_icons.dart';
 import 'trust_create_screen.dart';
 import 'trust_management_screen.dart';
 import 'trust_info_screen.dart';
@@ -908,7 +909,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.secondaryContainer,
               child: widget.conversation.conversationType == ConversationType.ai
-                  ? SvgPicture.asset('assets/sampul-icon-white.svg', width: 18, height: 18)
+                  ? SvgPicture.asset('assets/sampul-icon-all-white.svg', width: 18, height: 18)
                   : Text(
                       widget.conversation.name[0].toUpperCase(),
                       style: const TextStyle(
@@ -1038,7 +1039,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(context).colorScheme.secondaryContainer,
                     child: widget.conversation.conversationType == ConversationType.ai
-                      ? SvgPicture.asset('assets/sampul-icon-white.svg', width: 18, height: 18)
+                      ? SvgPicture.asset('assets/sampul-icon-all-white.svg', width: 18, height: 18)
                         : Text(
                           widget.conversation.name[0].toUpperCase(),
                           style: const TextStyle(
@@ -1249,9 +1250,11 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     final theme = Theme.of(context);
     return ElevatedButton.icon(
       onPressed: () => _handleAction(action),
-      icon: Icon(
+      icon: SampulIcons.buildIcon(
         _getActionIcon(action.actionType, action.parameters?['route']),
-        size: 16,
+        width: 16,
+        height: 16,
+        color: theme.colorScheme.onPrimaryContainer,
       ),
       label: Text(action.label),
       style: ElevatedButton.styleFrom(
@@ -1267,29 +1270,29 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     );
   }
 
-  IconData _getActionIcon(String actionType, String? route) {
+  String _getActionIcon(String actionType, String? route) {
     switch (route) {
       case 'trust_create':
       case 'trust_management':
-        return Icons.gavel_outlined;
+        return SampulIcons.trust;
       case 'hibah_management':
-        return Icons.group_outlined;
+        return SampulIcons.property;
       case 'will_management':
-        return Icons.description_outlined;
+        return SampulIcons.wasiat;
       case 'add_asset':
       case 'assets_list':
-        return Icons.account_balance_wallet_outlined;
+        return SampulIcons.assets;
       case 'add_family':
       case 'family_list':
-        return Icons.family_restroom;
+        return SampulIcons.family;
       case 'executor_management':
-        return Icons.person_outline;
+        return SampulIcons.person;
       case 'checklist':
-        return Icons.checklist_outlined;
+        return SampulIcons.checklist;
       case 'extra_wishes':
-        return Icons.favorite_outline;
+        return SampulIcons.favorite;
       default:
-        return Icons.arrow_forward;
+        return SampulIcons.arrowRight;
     }
   }
 

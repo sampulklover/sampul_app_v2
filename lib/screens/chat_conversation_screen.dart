@@ -443,7 +443,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                   : Theme.of(context).colorScheme.secondaryContainer,
               child: widget.conversation.id == 'sampul_ai'
                   ? SvgPicture.asset(
-                      'assets/sampul-icon-white.svg',
+                      'assets/sampul-icon-all-white.svg',
                       width: 18,
                       height: 18,
                     )
@@ -529,7 +529,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                   : Theme.of(context).colorScheme.secondaryContainer,
               child: widget.conversation.id == 'sampul_ai'
                   ? SvgPicture.asset(
-                      'assets/sampul-icon-white.svg',
+                      'assets/sampul-icon-all-white.svg',
                       width: 18,
                       height: 18,
                     )

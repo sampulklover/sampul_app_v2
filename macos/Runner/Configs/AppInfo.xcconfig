@@ -8,7 +8,7 @@
 PRODUCT_NAME = sampul_app_v2
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.sampulAppV2
+PRODUCT_BUNDLE_IDENTIFIER = com.sampul.app
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.

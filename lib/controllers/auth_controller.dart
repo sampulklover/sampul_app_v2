@@ -4,6 +4,7 @@ import '../services/supabase_service.dart';
 import '../models/user_profile.dart';
 import '../config/supabase_config.dart';
 import '../services/affiliate_service.dart';
+import '../services/onesignal_service.dart';
 
 class AuthController {
   AuthController._();
@@ -38,10 +39,17 @@ class AuthController {
     required String email,
     required String password,
   }) async {
-    return await _supabaseService.signInWithEmail(
+    final response = await _supabaseService.signInWithEmail(
       email: email,
       password: password,
     );
+    
+    // Set OneSignal user ID after successful login
+    if (response.user != null) {
+      await OneSignalService.instance.setUserId(response.user!.id);
+    }
+    
+    return response;
   }
 
   // Sign in with Google
@@ -56,11 +64,18 @@ class AuthController {
         throw Exception('Google authentication failed');
       }
 
-      return await _supabaseService.client.auth.signInWithIdToken(
+      final response = await _supabaseService.client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: googleAuth.idToken!,
         accessToken: googleAuth.accessToken!,
       );
+      
+      // Set OneSignal user ID after successful login
+      if (response.user != null) {
+        await OneSignalService.instance.setUserId(response.user!.id);
+      }
+      
+      return response;
     } catch (e) {
       throw Exception('Google sign in failed: $e');
     }
@@ -76,6 +91,9 @@ class AuthController {
       
       // Sign out from Google if previously signed in
       await _googleSignIn.signOut();
+      
+      // Clear OneSignal user ID
+      await OneSignalService.instance.clearUserId();
 
       // Clear cached affiliate data tied to the previous user.
       if (userId != null) {

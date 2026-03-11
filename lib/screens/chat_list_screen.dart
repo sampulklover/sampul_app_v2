@@ -152,7 +152,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   : Theme.of(context).colorScheme.secondaryContainer,
               child: conversation.conversationType == ConversationType.ai
                   ? SvgPicture.asset(
-                      'assets/sampul-icon-white.svg',
+                      'assets/sampul-icon-all-white.svg',
                       width: 24,
                       height: 24,
                     )

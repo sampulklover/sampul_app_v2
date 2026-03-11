@@ -109,7 +109,7 @@ No schema changes needed—`public.accounts` already stores subscription data:
       <!-- ... existing entries ... -->
       <dict>
         <key>CFBundleURLName</key>
-        <string>com.example.sampulAppV2</string>  <!-- ⚠️ Change to your production bundle ID for release -->
+        <string>com.sampul.app</string>  <!-- ⚠️ Change to your production bundle ID for release -->
         <key>CFBundleURLSchemes</key>
         <array>
           <string>sampul</string>  <!-- Must match STRIPE_RETURN_URL_SCHEME in .env -->
@@ -117,7 +117,7 @@ No schema changes needed—`public.accounts` already stores subscription data:
       </dict>
     </array>
     ```
-  - **Important:** The `CFBundleURLName` should match your app's bundle identifier. Currently set to `com.example.sampulAppV2` for testing. **Update this to your production bundle ID before releasing to App Store.**
+  - **Important:** The `CFBundleURLName` should match your app's bundle identifier. Currently set to `com.sampul.app` for testing. **Update this to your production bundle ID before releasing to App Store.**
 - **Android (`android/app/src/main/AndroidManifest.xml`):**
   - Add an intent filter to the main activity:
     ```xml

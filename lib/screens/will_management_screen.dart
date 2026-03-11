@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
@@ -124,7 +125,8 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         setState(() {
           _isLoading = false;
         });
-        _showErrorSnackBar('Failed to load will data: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorSnackBar(l10n.failedToLoadWillData(e.toString()));
       }
     }
   }
@@ -178,20 +180,20 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Future<void> _publishWill() async {
     if (_will == null || _will!.id == null) return;
     
+    final l10n = AppLocalizations.of(context)!;
+    final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
+    
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Publish Will'),
+        title: Text(l10n.publishWill),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Are you sure you want to publish this will?\n\n'
-              'Once published, this will will be accessible to anyone with the share link:\n'
-              'https://sampul.co/view-will?id=${_will!.willCode}\n\n'
-              'Make sure you only share this link with trusted family members or executors.',
+              l10n.publishWillConfirmation(url),
             ),
             const SizedBox(height: 12),
             Row(
@@ -212,16 +214,17 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                     final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
                     await Clipboard.setData(ClipboardData(text: url));
                     if (context.mounted) {
+                      final l10n = AppLocalizations.of(context)!;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Share link copied to clipboard'),
+                        SnackBar(
+                          content: Text(l10n.shareLinkCopiedToClipboard),
                           backgroundColor: Colors.green,
                         ),
                       );
                     }
                   },
                   icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Copy'),
+                  label: Text(l10n.copy),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -236,12 +239,12 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Publish'),
+            child: Text(l10n.publish),
           ),
         ],
       ),
@@ -262,14 +265,17 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       }
       
       await _loadWillData();
-      _showSuccessSnackBar('Will published successfully');
+      final l10n = AppLocalizations.of(context)!;
+      _showSuccessSnackBar(l10n.willPublishedSuccessfully);
     } catch (e) {
-      _showErrorSnackBar('Failed to publish will: $e');
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar(l10n.failedToPublishWill(e.toString()));
     }
   }
 
   Future<void> _unpublishWill() async {
     if (_will == null || _will!.id == null) return;
+    final l10n = AppLocalizations.of(context)!;
     try {
       final updatedWill = await WillService.instance.updateWill(
         willId: _will!.id!,
@@ -278,34 +284,35 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       
       // Check if the will was actually unpublished
       if (updatedWill.isDraft == false) {
-        _showErrorSnackBar('Failed to unpublish will: Still marked as published');
+        _showErrorSnackBar(l10n.failedToUnpublishWill('Still marked as published'));
         return;
       }
       
       await _loadWillData();
-      _showSuccessSnackBar('Will unpublished successfully');
+      _showSuccessSnackBar(l10n.willUnpublishedSuccessfully);
     } catch (e) {
-      _showErrorSnackBar('Failed to unpublish will: $e');
+      _showErrorSnackBar(l10n.failedToUnpublishWill(e.toString()));
     }
   }
 
   Future<void> _deleteWill() async {
     if (_will == null) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Will'),
-        content: const Text('Are you sure you want to delete your will? This action cannot be undone.'),
+        title: Text(l10n.deleteWill),
+        content: Text(l10n.areYouSureDeleteWill),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -318,10 +325,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
       try {
         await WillService.instance.deleteWill(_will!.id!);
-        _showSuccessSnackBar('Will deleted successfully');
+        _showSuccessSnackBar(l10n.willUpdatedSuccessfully);
         await _loadWillData();
       } catch (e) {
-        _showErrorSnackBar('Failed to delete will: $e');
+        _showErrorSnackBar(l10n.failedToDeleteWill(e.toString()));
       } finally {
         if (mounted) {
           setState(() {
@@ -335,23 +342,25 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
   Future<void> _shareWillDocument() async {
     if (_will == null) return;
+    final l10n = AppLocalizations.of(context)!;
     final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
     await Clipboard.setData(ClipboardData(text: url));
-    _showSuccessSnackBar('Share link copied to clipboard');
+    _showSuccessSnackBar(l10n.shareLinkCopiedToClipboard);
   }
 
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Will'),
+        title: Text(l10n.myWill),
         actions: [
           if (_will != null && _will!.isDraft == false)
             IconButton(
               onPressed: _shareWillDocument,
               icon: const Icon(Icons.share_outlined),
-              tooltip: 'Share Will',
+              tooltip: l10n.shareWill,
             ),
         ],
       ),
@@ -364,6 +373,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Widget _buildNoWillState() {
+    final l10n = AppLocalizations.of(context)!;
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
 
@@ -383,7 +393,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          "Let's create your will",
+                          l10n.letsCreateYourWill,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -392,7 +402,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Bring your profile, family, assets, and wishes together in one clear document.",
+                          l10n.willDescription,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                             height: 1.4,
@@ -406,10 +416,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     child: Center(
-                      child: Icon(
-                        Icons.description_outlined,
-                        size: 80,
-                        color: colorScheme.primary,
+                      child: Image.asset(
+                        'assets/will-certificate-scroll.png',
+                        width: 180,
+                        height: 180,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),
@@ -427,7 +438,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Why create your will in Sampul?",
+                            l10n.whyCreateYourWillInSampul,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -435,7 +446,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Your will pulls from your profile, family list, digital assets, and extra wishes so everything stays connected.",
+                            l10n.yourWillPullsFromProfile,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -443,19 +454,19 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                           ),
                           const SizedBox(height: 20),
                           _buildWillBullet(
-                            "Keep all key information (profile, family, assets) in one place.",
+                            l10n.keepAllKeyInformation,
                             theme,
                             colorScheme,
                           ),
                           const SizedBox(height: 16),
                           _buildWillBullet(
-                            "Generate a structured will document you can read, export, and share.",
+                            l10n.generateStructuredWillDocument,
                             theme,
                             colorScheme,
                           ),
                           const SizedBox(height: 16),
                           _buildWillBullet(
-                            "Update your will later whenever your life or assets change.",
+                            l10n.updateWillLater,
                             theme,
                             colorScheme,
                           ),
@@ -499,7 +510,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      "Start my will",
+                      l10n.startMyWill,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onPrimary,
@@ -556,6 +567,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Widget _buildWillState() {
+    final l10n = AppLocalizations.of(context)!;
     final validation = WillService.instance.validateWill(_will!);
 
     return Column(
@@ -600,7 +612,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               ),
               const Spacer(),
               Text(
-                'Code: ${_will!.willCode}',
+                '${l10n.code}: ${_will!.willCode}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontFamily: 'monospace',
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -626,8 +638,8 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 const SizedBox(width: 8),
                 Text(
                   validation['isValid'] 
-                      ? '${(validation['warnings'] as List).length} warning(s) - Review recommended'
-                      : '${(validation['issues'] as List).length} issue(s) - Action required',
+                      ? l10n.warningsReviewRecommended((validation['warnings'] as List).length)
+                      : l10n.issuesActionRequired((validation['issues'] as List).length),
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: validation['isValid'] ? Colors.orange.shade700 : Colors.red.shade700,
@@ -651,51 +663,56 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
               ),
             ),
-          child: Row(
-            children: [
-              TextButton.icon(
-                onPressed: _editWill,
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Edit'),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const SizedBox(width: 16),
-              TextButton.icon(
-                onPressed: _isDeleting ? null : _deleteWill,
-                icon: _isDeleting 
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_outline, size: 16),
-                label: Text(_isDeleting ? 'Deleting...' : 'Delete'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red.shade600,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: _will!.isDraft == true ? _publishWill : _unpublishWill,
-                icon: Icon(
-                  _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
-                  size: 16,
-                ),
-                label: Text(_will!.isDraft == true ? 'Publish' : 'Unpublish'),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ],
+          child: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: _editWill,
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: Text(l10n.edit),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton.icon(
+                    onPressed: _isDeleting ? null : _deleteWill,
+                    icon: _isDeleting 
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.delete_outline, size: 16),
+                    label: Text(_isDeleting ? l10n.deleting : l10n.delete),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red.shade600,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _will!.isDraft == true ? _publishWill : _unpublishWill,
+                    icon: Icon(
+                      _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
+                      size: 16,
+                    ),
+                    label: Text(_will!.isDraft == true ? l10n.publish : l10n.unpublish),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           ),
         ),
@@ -804,21 +821,22 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
                 const SizedBox(height: 20),
 
-                // 4. Pembatalan
+                // 4. Wasiat Pelengkap
                 _buildPaperSection(
-                  '4. Pembatalan',
+                  '4. Wasiat Pelengkap',
                   [
-                    'Dokumen ini menggantikan semua wasiat terdahulu pada aset.',
+                    'Wasiat ini adalah wasiat pelengkap yang terhad kepada aset yang disenaraikan dalam Jadual 1 sahaja.',
+                    'Semua wasiat terdahulu berkaitan aset lain kekal sah dan berkuat kuasa jika ada.',
                   ],
                 ),
 
                 const SizedBox(height: 20),
 
-                // 5. Co-Sampul Utama
+                // 5. Co-Sampul Utama dan Pentadbir Bersama
                 _buildPaperSection(
-                  '5. Co-Sampul Utama',
+                  '5. Co-Sampul Utama dan Pentadbir Bersama',
                   [
-                    '${_getCoSampulUtama()}, ${_getCoSampulUtamaNric()} dilantik untuk menyimpan dan menyampaikan wasiat aset saya ini kepada waris saya.',
+                    'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai Co-Sampul Utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
                   ],
                 ),
 
@@ -923,9 +941,9 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                     'pada ${_formatDateMalay(DateTime.now())}',
                     '',
                     'Diperakui oleh',
-                    'Mohammad Aiman bin Sulaiman',
-                    '871013875003',
-                    'Pengasas Bersama, SAMPUL',
+                    'Mohamad Hafiz bin Che Hamid',
+                    '950208035341',
+                    'Pembangun Perisian, SAMPUL',
                     'pada ${_formatDateMalay(DateTime.now())}',
                     '',
                     'Diperakui oleh',
@@ -1220,116 +1238,214 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       );
     }
 
-    final totalValue = _assets.fold<double>(0, (sum, asset) {
-      final value = _safeParseDouble(asset['value']);
-      return sum + value;
-    });
-    
-    final List<String> assetLines = [
-      'JADUAL 1: SENARAI ASET TERPERINCI',
-      '',
-      'Jumlah Nilai Aset: RM ${totalValue.toStringAsFixed(2)}',
-      'Bilangan Aset: ${_assets.length}',
-      '',
-      'ASET FIZIKAL:',
-      '',
-    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'JADUAL 1: SENARAI ASET',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            color: Colors.black87,
+          ),
+        ),
 
-    // Separate physical and digital assets
-    final physicalAssets = _assets.where((asset) => asset['type'] == 'physical').toList();
-    final digitalAssets = _assets.where((asset) => asset['type'] == 'digital').toList();
+        const SizedBox(height: 16),
 
-    // Display physical assets
-    if (physicalAssets.isNotEmpty) {
-      for (int i = 0; i < physicalAssets.length; i++) {
-        final asset = physicalAssets[i];
-        final value = _safeParseDouble(asset['value']);
-        final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
-        final institution = asset['institution'] ?? 'N/A';
-        final accountType = asset['account_type'] ?? 'N/A';
-        final accountNo = asset['account_no'] ?? 'N/A';
-        final loanCategory = asset['loan_category'] ?? 'N/A';
-        final rate = asset['rate'] ?? 'N/A';
-        final tenureStart = asset['tenure_start_date'] ?? 'N/A';
-        final tenureEnd = asset['tenure_end_date'] ?? 'N/A';
-        final remarks = asset['remarks'] ?? '';
-        final instructions = _formatInstructions(asset['instructions_after_death']);
-        
-        assetLines.addAll([
-          '${i + 1}. ${asset['name']}',
-          '   Jenis: ${asset['type']}',
-          '   Nilai: RM ${value.toStringAsFixed(2)} ($percentage%)',
-          '   Institusi: $institution',
-          '   Jenis Akaun: $accountType',
-          '   Nombor Akaun: $accountNo',
-          '   Kategori Pinjaman: $loanCategory',
-          '   Kadar: $rate',
-          '   Tempoh Mula: $tenureStart',
-          '   Tempoh Tamat: $tenureEnd',
-          if (instructions.isNotEmpty) '   Arahan Selepas Kematian: $instructions',
-          if (remarks.isNotEmpty) '   Catatan: $remarks',
-          '',
-        ]);
-      }
-    } else {
-      assetLines.add('Tiada aset fizikal didaftarkan.');
-      assetLines.add('');
+        // Flat list of all assets (physical + digital), simple like web
+        ..._assets.asMap().entries.map(
+          (entry) {
+            final index = entry.key;
+            final asset = entry.value;
+            final value = _safeParseDouble(asset['value']);
+            final instructionsRaw = asset['instructions_after_death'];
+            final instructions = _formatInstructions(instructionsRaw);
+            final remarks = asset['remarks'] ?? '';
+
+            return _buildAssetCard(
+              index: index + 1,
+              name: asset['name'] ?? '-',
+              typeLabel: '',
+              value: value,
+              percentage: '',
+              details: const [],
+              instructions: instructions,
+              instructionsRaw: instructionsRaw,
+              remarks: remarks,
+            );
+          },
+        ),
+
+      ],
+    );
+  }
+
+  Widget _buildAssetCard({
+    required int index,
+    required String name,
+    required String typeLabel,
+    required double value,
+    required String percentage,
+    required List<String> details,
+    required String instructions,
+    required dynamic instructionsRaw,
+    required String remarks,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade300, width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$index. $name',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (typeLabel.isNotEmpty) const SizedBox(height: 2),
+                    if (typeLabel.isNotEmpty)
+                      Text(
+                        typeLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'RM ${value.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green,
+                    ),
+                  ),
+                  if (percentage.isNotEmpty) const SizedBox(height: 2),
+                  if (percentage.isNotEmpty)
+                    Text(
+                      '$percentage%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          // Instruction chip
+          if (instructions.isNotEmpty)
+            Row(
+              children: [
+                _buildInstructionChip(instructionsRaw),
+              ],
+            ),
+
+          if (instructions.isNotEmpty) const SizedBox(height: 8),
+
+          // Details
+          ...details.map(
+            (d) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                d,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade800,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+
+          if (remarks.isNotEmpty) const SizedBox(height: 6),
+          if (remarks.isNotEmpty)
+            Text(
+              'Catatan: $remarks',
+              style: TextStyle(
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: Colors.grey.shade700,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstructionChip(dynamic instructionRaw) {
+    final String normalized = (instructionRaw ?? '').toString().toLowerCase();
+    final String label = _formatInstructions(instructionRaw);
+    final Color bgColor;
+    final Color textColor;
+
+    switch (normalized) {
+      case 'faraid':
+        bgColor = const Color(0xFFE7F5EC);
+        textColor = const Color(0xFF2E7D32);
+        break;
+      case 'terminate':
+        bgColor = const Color(0xFFFFF3E0);
+        textColor = const Color(0xFFEF6C00);
+        break;
+      case 'transfer_as_gift':
+        bgColor = const Color(0xFFEDE7F6);
+        textColor = const Color(0xFF5E35B1);
+        break;
+      case 'settle':
+        bgColor = const Color(0xFFE3F2FD);
+        textColor = const Color(0xFF1565C0);
+        break;
+      default:
+        bgColor = Colors.grey.shade200;
+        textColor = Colors.grey.shade800;
     }
 
-    assetLines.add('ASET DIGITAL:');
-    assetLines.add('');
-
-    // Display digital assets
-    if (digitalAssets.isNotEmpty) {
-      for (int i = 0; i < digitalAssets.length; i++) {
-        final asset = digitalAssets[i];
-        final value = _safeParseDouble(asset['value']);
-        final percentage = totalValue > 0 ? (value / totalValue * 100).toStringAsFixed(1) : '0.0';
-        final accountType = asset['account_type'] ?? 'N/A';
-        final url = asset['url'] ?? '';
-        final username = asset['username'] ?? '';
-        final email = asset['email'] ?? '';
-        final frequency = asset['frequency'] ?? 'N/A';
-        final protection = asset['protection'] == true ? 'Ya' : 'Tidak';
-        final remarks = asset['remarks'] ?? '';
-        final instructions = _formatInstructions(asset['instructions_after_death']);
-        
-        assetLines.addAll([
-          '${i + 1}. ${asset['name']}',
-          '   Jenis: ${asset['type']}',
-          '   Nilai: RM ${value.toStringAsFixed(2)} ($percentage%)',
-          '   Jenis Akaun: $accountType',
-          if (url.isNotEmpty) '   URL: $url',
-          if (username.isNotEmpty) '   Nama Pengguna: $username',
-          if (email.isNotEmpty) '   Emel: $email',
-          '   Kekerapan: $frequency',
-          '   Perlindungan: $protection',
-          if (instructions.isNotEmpty) '   Arahan Selepas Kematian: $instructions',
-          if (remarks.isNotEmpty) '   Catatan: $remarks',
-          '',
-        ]);
-      }
-    } else {
-      assetLines.add('Tiada aset digital didaftarkan.');
-      assetLines.add('');
-    }
-
-    assetLines.addAll([
-      'JADUAL 2: PENGAGIHAN ASET MENGIKUT FARAID',
-      '',
-      'Aset akan diagihkan mengikut prinsip Faraid Islam berdasarkan waris yang layak.',
-      '',
-      'JADUAL 3: HADIAH (HIBAH) KHUSUS',
-      '',
-      'Tiada hadiah khusus ditetapkan pada masa ini.',
-      '',
-      'Nota: Senarai aset ini adalah berdasarkan maklumat yang didaftarkan pada ${_formatDateMalay(DateTime.now())}.',
-      'Sila kemas kini senarai aset sekiranya terdapat perubahan.',
-    ]);
-
-    return _buildPaperSection(
-      'SENARAI ASET',
-      assetLines,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      ),
     );
   }
 

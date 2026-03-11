@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
@@ -50,11 +51,15 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
     final bool hasSeenAbout = prefs.getBool('trust_about_seen') ?? false;
     
     // If user hasn't seen about page, show it first
-    // Otherwise, go directly to create trust page
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => hasSeenAbout 
-            ? const TrustCreateScreen() 
+    // Otherwise, go directly to create trust page.
+    //
+    // The creation flow returns the created Trust instance on success,
+    // but we only need to know that the user returned to this screen,
+    // so we ignore the value and simply reload the list afterward.
+    await Navigator.of(context).push<Trust>(
+      MaterialPageRoute<Trust>(
+        builder: (_) => hasSeenAbout
+            ? const TrustCreateScreen()
             : const TrustInfoScreen(),
       ),
     );
@@ -65,6 +70,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final List<Trust> drafts = _trusts.where((t) => t.computedStatus == TrustStatus.draft).toList();
     final List<Trust> submitted = _trusts.where((t) => t.computedStatus == TrustStatus.submitted).toList();
     final List<Trust> approved = _trusts.where((t) => t.computedStatus == TrustStatus.approved).toList();
@@ -72,21 +78,21 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Family Trust Fund'),
+        title: Text(l10n.familyTrustFund),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: <Widget>[
-            Tab(text: 'All (${_trusts.length})'),
-            Tab(text: 'Draft (${drafts.length})'),
-            Tab(text: 'Submitted (${submitted.length})'),
-            Tab(text: 'Approved (${approved.length})'),
-            Tab(text: 'Rejected (${rejected.length})'),
+            Tab(text: '${l10n.all} (${_trusts.length})'),
+            Tab(text: '${l10n.draft} (${drafts.length})'),
+            Tab(text: '${l10n.submitted} (${submitted.length})'),
+            Tab(text: '${l10n.approved} (${approved.length})'),
+            Tab(text: '${l10n.rejected} (${rejected.length})'),
           ],
         ),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Trust Fund',
+            tooltip: l10n.aboutTrustFund,
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrustInfoScreen(fromHelpIcon: true)));
@@ -100,7 +106,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
               ? Column(
                   children: <Widget>[
                     if (_tabController.index == 0) _TrustInfoBanner(),
-                    const Expanded(child: Center(child: Text('No trust funds yet'))),
+                    Expanded(child: Center(child: Text(l10n.noTrustFundsYet))),
                   ],
                 )
               : Column(
@@ -123,7 +129,7 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createTrust,
         icon: const Icon(Icons.add),
-        label: const Text('Create New'),
+        label: Text(l10n.createNew),
       ),
     );
   }
@@ -162,8 +168,9 @@ class _CreateTrustDialogState extends State<_CreateTrustDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Create trust'),
+      title: Text(l10n.createTrust),
       content: Form(
         key: _formKey,
         child: Column(
@@ -171,26 +178,26 @@ class _CreateTrustDialogState extends State<_CreateTrustDialog> {
           children: <Widget>[
             TextFormField(
               controller: _nameCtrl,
-              decoration: InputDecoration(labelText: 'Name'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              decoration: InputDecoration(labelText: l10n.name),
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
             TextFormField(
               controller: _codeCtrl,
-              decoration: InputDecoration(labelText: 'Trust code (unique)'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              decoration: InputDecoration(labelText: l10n.trustCodeUnique),
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
             ),
             const SizedBox(height: 12),
             Row(
               children: <Widget>[
-                const Text('Status:'),
+                Text('${l10n.draft}:'),
                 const SizedBox(width: 12),
                 DropdownButton<TrustStatus>(
                   value: _status,
-                  items: const <DropdownMenuItem<TrustStatus>>[
-                    DropdownMenuItem(value: TrustStatus.draft, child: Text('Draft')),
-                    DropdownMenuItem(value: TrustStatus.submitted, child: Text('Submitted')),
-                    DropdownMenuItem(value: TrustStatus.approved, child: Text('Approved')),
-                    DropdownMenuItem(value: TrustStatus.rejected, child: Text('Rejected')),
+                  items: <DropdownMenuItem<TrustStatus>>[
+                    DropdownMenuItem(value: TrustStatus.draft, child: Text(l10n.draft)),
+                    DropdownMenuItem(value: TrustStatus.submitted, child: Text(l10n.submitted)),
+                    DropdownMenuItem(value: TrustStatus.approved, child: Text(l10n.approved)),
+                    DropdownMenuItem(value: TrustStatus.rejected, child: Text(l10n.rejected)),
                   ],
                   onChanged: (TrustStatus? v) {
                     if (v != null) setState(() => _status = v);
@@ -204,7 +211,7 @@ class _CreateTrustDialogState extends State<_CreateTrustDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -214,7 +221,7 @@ class _CreateTrustDialogState extends State<_CreateTrustDialog> {
               );
             }
           },
-          child: const Text('Create'),
+          child: Text(l10n.createTrust),
         ),
       ],
     );
@@ -228,16 +235,17 @@ class _TrustList extends StatelessWidget {
 
   const _TrustList({required this.trusts, required this.onTap});
 
-  String _statusLabel(TrustStatus s) {
+  String _statusLabel(TrustStatus s, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     switch (s) {
       case TrustStatus.submitted:
-        return 'Submitted';
+        return l10n.submitted;
       case TrustStatus.approved:
-        return 'Approved';
+        return l10n.approved;
       case TrustStatus.rejected:
-        return 'Rejected';
+        return l10n.rejected;
       case TrustStatus.draft:
-        return 'Draft';
+        return l10n.draft;
     }
   }
 
@@ -284,7 +292,7 @@ class _TrustList extends StatelessWidget {
         return _TrustSummaryCard(
           trust: t,
           amountText: _formatAmount(t.estimatedNetWorth),
-          statusText: _statusLabel(t.computedStatus),
+          statusText: _statusLabel(t.computedStatus, context),
           statusColor: _statusColor(context, t.computedStatus),
           onTap: () => onTap(t),
         );
@@ -310,131 +318,125 @@ class _TrustSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final ThemeData theme = Theme.of(context);
     final ColorScheme scheme = theme.colorScheme;
-    final String title = 'Family Account';
+    final String title = l10n.familyAccount;
     final String trustCode = (trust.trustCode ?? '').trim();
     final bool isActive = trust.computedStatus == TrustStatus.approved;
 
     return Card(
-      elevation: 1,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          height: 160,
-          child: Stack(
-            children: <Widget>[
-              // Background gradient (match dashboard trust card)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[
-                      Colors.white,
-                      scheme.primaryContainer.withOpacity(0.1),
-                    ],
-                  ),
-                ),
-              ),
-              // Decorative element
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Container(
-                  width: 120,
-                  height: 120,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 160,
+            child: Stack(
+              children: <Widget>[
+                // Background
+                Container(
                   decoration: BoxDecoration(
-                    color: scheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.grey.shade200,
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 0,
+                    ),
                   ),
-                  transform: Matrix4.rotationZ(0.2),
                 ),
-              ),
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color.fromRGBO(83, 61, 233, 1),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (trustCode.isNotEmpty) ...[
-                                const SizedBox(height: 4),
+                // Decorative image - behind content
+                Positioned(
+                  right: -20,
+                  bottom: -0,
+                  child: Transform.rotate(
+                    angle: 0,
+                    child: Opacity(
+                      opacity: 0.9,
+                      child: Image.asset(
+                        'assets/trust-three-coin.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
                                 Text(
-                                  trustCode,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
+                                  title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color.fromRGBO(83, 61, 233, 1),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                if (trustCode.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    trustCode,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_outward,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          onPressed: onTap,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: 'Open trust',
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      amountText,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: isActive ? Colors.green : statusColor,
-                            shape: BoxShape.circle,
-                          ),
+                      const Spacer(),
+                      Text(
+                        amountText,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isActive ? 'Your plan is active' : statusText,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isActive ? Colors.green.shade700 : statusColor,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: <Widget>[
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isActive ? Colors.green : statusColor,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 6),
+                          Text(
+                            isActive ? l10n.yourPlanIsActive : statusText,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isActive ? Colors.green.shade700 : statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -445,6 +447,7 @@ class _TrustSummaryCard extends StatelessWidget {
 class _TrustInfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final ColorScheme scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () {
@@ -463,8 +466,8 @@ class _TrustInfoBanner extends StatelessWidget {
           children: <Widget>[
             Icon(Icons.info_outline, color: const Color.fromRGBO(83, 61, 233, 1), size: 18),
             const SizedBox(width: 8),
-            const Expanded(child: Text('New to trusts?')),
-            Text('Learn more', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
+            Expanded(child: Text(l10n.newToTrusts)),
+            Text(l10n.learnMore, style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

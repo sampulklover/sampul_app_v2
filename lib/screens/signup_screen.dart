@@ -25,6 +25,80 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isSubmitting = false;
   bool _isGoogleSubmitting = false;
 
+  Future<void> _showEmailVerificationDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        final ThemeData theme = Theme.of(dialogContext);
+        final ColorScheme colorScheme = theme.colorScheme;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.mark_email_read_rounded,
+                    size: 48,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Verify your email',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'We’ve sent a verification link to ${_emailController.text.trim()}. '
+                  'Please check your inbox (and spam folder) to activate your account before logging in.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop(); // Close dialog
+                      Navigator.of(context).pop(); // Go back to login
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Back to login'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -58,16 +132,8 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
 
       if (response.user != null) {
-        // Successfully signed up
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created successfully! Please check your email to verify your account.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // Navigate back to login screen
-        Navigator.of(context).pop();
+        // Successfully signed up – show a proper verification dialog instead of a snackbar
+        await _showEmailVerificationDialog();
       } else {
         // Handle case where user is null
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +212,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
+                  SvgPicture.asset(
+                    'assets/sampul-icon-white.svg',
+                    width: 72,
+                    height: 72,
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     'Create your account',

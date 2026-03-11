@@ -93,7 +93,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hibah'),
+        title: const Text('Property Trust'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -108,7 +108,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
         ),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Hibah',
+            tooltip: 'About Property Trust',
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(
@@ -126,7 +126,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
           ? Column(
               children: <Widget>[
                 if (_tabController.index == 0) _HibahInfoBanner(),
-                const Expanded(child: Center(child: Text('No hibahs yet'))),
+                const Expanded(child: Center(child: Text('No Property Trusts yet'))),
               ],
             )
           : Column(
@@ -174,7 +174,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createHibah,
         icon: const Icon(Icons.add),
-        label: const Text('New hibah'),
+        label: const Text('New Property Trust'),
       ),
     );
   }
@@ -346,7 +346,7 @@ class _HibahInfoBanner extends StatelessWidget {
           children: <Widget>[
             Icon(Icons.info_outline, color: const Color.fromRGBO(83, 61, 233, 1), size: 18),
             const SizedBox(width: 8),
-            const Expanded(child: Text('New to hibah?')),
+            const Expanded(child: Text('New to Property Trust?')),
             Text(
               'Learn more',
               style: TextStyle(

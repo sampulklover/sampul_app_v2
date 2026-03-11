@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
@@ -8,14 +9,23 @@ import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
 import 'onboarding_flow_screen.dart';
+import 'onboarding_goal_selection_screen.dart';
 import '../services/supabase_service.dart';
 import '../services/verification_service.dart';
+import '../services/account_service.dart';
 import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
-import 'billing_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'admin_ai_settings_screen.dart';
+import 'admin_learning_resources_screen.dart';
 import '../utils/admin_utils.dart';
+import '../services/image_upload_service.dart';
+import '../utils/card_decoration_helper.dart';
+
+enum _FeedbackType {
+  bug,
+  feature,
+}
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -134,6 +144,462 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         return StatefulBuilder(
           builder: (context, setModalState) {
             final theme = Theme.of(context);
+            final l10n = AppLocalizations.of(context)!;
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handle bar
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Title
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.lock_outline,
+                              color: theme.colorScheme.onPrimaryContainer,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            l10n.changePasswordTitle,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.enterCurrentPasswordAndChooseNew,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Form
+                      Form(
+                        key: formKey,
+                        child: Column(
+                          children: [
+                            // Current Password Field
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                              ),
+                              child: TextFormField(
+                                controller: currentPasswordController,
+                                obscureText: obscureCurrentPassword,
+                                onChanged: (value) {
+                                  if (errorMessage != null) {
+                                    setModalState(() {
+                                      errorMessage = null;
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.currentPassword,
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      obscureCurrentPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        obscureCurrentPassword = !obscureCurrentPassword;
+                                      });
+                                    },
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.pleaseEnterCurrentPassword;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // New Password Field
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                              ),
+                              child: TextFormField(
+                                controller: newPasswordController,
+                                obscureText: obscureNewPassword,
+                                onChanged: (value) {
+                                  if (errorMessage != null) {
+                                    setModalState(() {
+                                      errorMessage = null;
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.newPassword,
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      obscureNewPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        obscureNewPassword = !obscureNewPassword;
+                                      });
+                                    },
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.pleaseEnterNewPassword;
+                                  }
+                                  if (value.length < 6) {
+                                    return l10n.passwordMinLength;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Confirm Password Field
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                              ),
+                              child: TextFormField(
+                                controller: confirmPasswordController,
+                                obscureText: obscureConfirmPassword,
+                                onChanged: (value) {
+                                  if (errorMessage != null) {
+                                    setModalState(() {
+                                      errorMessage = null;
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.confirmNewPassword,
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      obscureConfirmPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        obscureConfirmPassword = !obscureConfirmPassword;
+                                      });
+                                    },
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.pleaseConfirmNewPassword;
+                                  }
+                                  if (value != newPasswordController.text) {
+                                    return l10n.passwordsDoNotMatch;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Error message
+                      if (errorMessage != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                color: theme.colorScheme.onErrorContainer,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  errorMessage!,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onErrorContainer,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    errorMessage = null;
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.close,
+                                  color: theme.colorScheme.onErrorContainer,
+                                  size: 18,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      
+                      // Success message
+                      if (successMessage != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline,
+                                color: theme.colorScheme.onPrimaryContainer,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  successMessage!,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      
+                      // Loading indicator
+                      if (isLoading) ...[
+                        Center(
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.updatingPassword,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: isLoading ? null : () {
+                                Navigator.of(context).pop();
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(color: theme.colorScheme.outline),
+                              ),
+                              child: Text(
+                                l10n.cancel,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : () async {
+                                if (formKey.currentState!.validate()) {
+                                  setModalState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                    successMessage = null;
+                                  });
+
+                                  // Capture context before async operation
+                                  final navigator = Navigator.of(context);
+
+                                  try {
+                                    await AuthController.instance.changePassword(
+                                      currentPassword: currentPasswordController.text,
+                                      newPassword: newPasswordController.text,
+                                    );
+
+                                    if (mounted) {
+                                      setModalState(() {
+                                        isLoading = false;
+                                        successMessage = l10n.passwordChangedSuccessfully;
+                                      });
+                                      
+                                      // Auto-close modal after 2 seconds
+                                      Future.delayed(const Duration(seconds: 2), () {
+                                        if (mounted) {
+                                          navigator.pop();
+                                        }
+                                      });
+                                    }
+                                  } catch (e) {
+                                    setModalState(() {
+                                      isLoading = false;
+                                      errorMessage = e.toString().replaceFirst('Exception: ', '');
+                                    });
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                l10n.changePasswordTitle,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showFeedbackSheet() async {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final feedbackController = TextEditingController();
+    _FeedbackType selectedType = _FeedbackType.bug;
+    bool isSending = false;
+    String? errorMessage;
+    File? screenshotFile;
+    String? screenshotError;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
             return Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
@@ -160,7 +626,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Handle bar
                     Center(
                       child: Container(
                         width: 40,
@@ -172,8 +637,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
-                    // Title
                     Row(
                       children: [
                         Container(
@@ -183,314 +646,199 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
-                            Icons.lock_outline,
+                            Icons.bug_report_outlined,
                             color: theme.colorScheme.onPrimaryContainer,
                             size: 24,
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'Change Password',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.sendFeedback,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.reportBugsOrRequestFeatures,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 24),
                     Text(
-                      'Enter your current password and choose a new one',
+                      'Type',
                       style: TextStyle(
                         fontSize: 14,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    
-                    // Form
-                    Form(
-                      key: formKey,
-                      child: Column(
-                        children: [
-                          // Current Password Field
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-                            ),
-                            child: TextFormField(
-                              controller: currentPasswordController,
-                              obscureText: obscureCurrentPassword,
-                              onChanged: (value) {
-                                if (errorMessage != null) {
-                                  setModalState(() {
-                                    errorMessage = null;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Current Password',
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureCurrentPassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setModalState(() {
-                                      obscureCurrentPassword = !obscureCurrentPassword;
-                                    });
-                                  },
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your current password';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // New Password Field
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-                            ),
-                            child: TextFormField(
-                              controller: newPasswordController,
-                              obscureText: obscureNewPassword,
-                              onChanged: (value) {
-                                if (errorMessage != null) {
-                                  setModalState(() {
-                                    errorMessage = null;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'New Password',
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureNewPassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setModalState(() {
-                                      obscureNewPassword = !obscureNewPassword;
-                                    });
-                                  },
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a new password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // Confirm Password Field
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-                            ),
-                            child: TextFormField(
-                              controller: confirmPasswordController,
-                              obscureText: obscureConfirmPassword,
-                              onChanged: (value) {
-                                if (errorMessage != null) {
-                                  setModalState(() {
-                                    errorMessage = null;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'Confirm New Password',
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureConfirmPassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setModalState(() {
-                                      obscureConfirmPassword = !obscureConfirmPassword;
-                                    });
-                                  },
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please confirm your new password';
-                                }
-                                if (value != newPasswordController.text) {
-                                  return 'Passwords do not match';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Error message
-                    if (errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Bug report'),
+                          selected: selectedType == _FeedbackType.bug,
+                          onSelected: (selected) {
+                            if (!selected) return;
+                            setModalState(() {
+                              selectedType = _FeedbackType.bug;
+                              errorMessage = null;
+                            });
+                          },
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: theme.colorScheme.onErrorContainer,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                errorMessage!,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onErrorContainer,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
+                        ChoiceChip(
+                          label: const Text('Feature request'),
+                          selected: selectedType == _FeedbackType.feature,
+                          onSelected: (selected) {
+                            if (!selected) return;
+                            setModalState(() {
+                              selectedType = _FeedbackType.feature;
+                              errorMessage = null;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      selectedType == _FeedbackType.bug
+                          ? 'What went wrong?'
+                          : 'What would you like Sampul to do?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: feedbackController,
+                      maxLines: 5,
+                      onChanged: (_) {
+                        if (errorMessage != null) {
+                          setModalState(() {
+                            errorMessage = null;
+                          });
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: selectedType == _FeedbackType.bug
+                            ? 'Describe the issue, what you expected, and any steps to reproduce.'
+                            : 'Describe your idea or feature request in as much detail as possible.',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceVariant.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: isSending
+                          ? null
+                          : () async {
+                              try {
+                                final file = await ImageUploadService().pickImage();
+                                if (file == null) return;
+
+                                if (!ImageUploadService().validateImage(file)) {
+                                  setModalState(() {
+                                    screenshotError = 'Please choose an image under 5MB (JPG, PNG, GIF, WEBP).';
+                                    screenshotFile = null;
+                                  });
+                                  return;
+                                }
+
                                 setModalState(() {
-                                  errorMessage = null;
+                                  screenshotFile = file;
+                                  screenshotError = null;
                                 });
-                              },
-                              icon: Icon(
-                                Icons.close,
-                                color: theme.colorScheme.onErrorContainer,
-                                size: 18,
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 24,
-                                minHeight: 24,
-                              ),
-                            ),
-                          ],
+                              } catch (e) {
+                                setModalState(() {
+                                  screenshotError = 'Could not pick image: $e';
+                                });
+                              }
+                            },
+                      icon: Icon(
+                        screenshotFile == null ? Icons.add_a_photo_outlined : Icons.edit_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      label: Text(
+                        screenshotFile == null
+                            ? 'Add screenshot (optional)'
+                            : 'Change screenshot',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                    
-                    // Success message
-                    if (successMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              color: theme.colorScheme.onPrimaryContainer,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                successMessage!,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
+                    ),
+                    if (screenshotError != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        screenshotError!,
+                        style: TextStyle(
+                          color: theme.colorScheme.error,
+                          fontSize: 12,
                         ),
                       ),
-                      const SizedBox(height: 16),
                     ],
-                    
-                    // Loading indicator
-                    if (isLoading) ...[
-                      Center(
-                        child: Column(
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Updating password...',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                    if (screenshotFile != null) ...[
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          screenshotFile!,
+                          height: 140,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      const SizedBox(height: 24),
                     ],
-                    
-                    // Action Buttons
+                    const SizedBox(height: 8),
+                    if (errorMessage != null) ...[
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          color: theme.colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isLoading ? null : () {
-                              Navigator.of(context).pop();
-                            },
+                            onPressed: isSending
+                                ? null
+                                : () {
+                                    Navigator.of(context).pop();
+                                  },
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              side: BorderSide(color: theme.colorScheme.outline),
                             ),
                             child: Text(
-                              'Cancel',
+                              l10n.cancel,
                               style: TextStyle(
                                 color: theme.colorScheme.onSurface,
                                 fontWeight: FontWeight.w600,
@@ -502,60 +850,92 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         Expanded(
                           flex: 2,
                           child: ElevatedButton(
-                            onPressed: isLoading ? null : () async {
-                              if (formKey.currentState!.validate()) {
-                                setModalState(() {
-                                  isLoading = true;
-                                  errorMessage = null;
-                                  successMessage = null;
-                                });
+                            onPressed: isSending
+                                ? null
+                                : () async {
+                                    if (feedbackController.text.trim().isEmpty) {
+                                      setModalState(() {
+                                        errorMessage = 'Please describe your ${selectedType == _FeedbackType.bug ? 'bug' : 'idea'} first.';
+                                      });
+                                      return;
+                                    }
 
-                                // Capture context before async operation
-                                final navigator = Navigator.of(context);
-
-                                try {
-                                  await AuthController.instance.changePassword(
-                                    currentPassword: currentPasswordController.text,
-                                    newPassword: newPasswordController.text,
-                                  );
-
-                                  if (mounted) {
                                     setModalState(() {
-                                      isLoading = false;
-                                      successMessage = 'Password changed successfully!';
+                                      isSending = true;
+                                      errorMessage = null;
                                     });
-                                    
-                                    // Auto-close modal after 2 seconds
-                                    Future.delayed(const Duration(seconds: 2), () {
-                                      if (mounted) {
-                                        navigator.pop();
+
+                                    final currentUser = AuthController.instance.currentUser;
+                                    try {
+                                      String? screenshotUrl;
+                                      if (screenshotFile != null && currentUser?.id != null) {
+                                        try {
+                                          final storagePath = await ImageUploadService().uploadFeedbackImage(
+                                            imageFile: screenshotFile!,
+                                            userId: currentUser!.id,
+                                          );
+                                          screenshotUrl = ImageUploadService().getPublicUrl(storagePath);
+                                        } catch (e) {
+                                          // If upload fails, continue without screenshot but show a lightweight message
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(this.context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Screenshot upload failed, but your feedback was sent: $e'),
+                                              ),
+                                            );
+                                          }
+                                        }
                                       }
-                                    });
-                                  }
-                                } catch (e) {
-                                  setModalState(() {
-                                    isLoading = false;
-                                    errorMessage = e.toString().replaceFirst('Exception: ', '');
-                                  });
-                                }
-                              }
-                            },
+
+                                      await SupabaseService.instance.client.from('feedback').insert(<String, dynamic>{
+                                        'uuid': currentUser?.id,
+                                        'email': currentUser?.email,
+                                        'type': selectedType == _FeedbackType.bug ? 'bug' : 'feature',
+                                        'description': feedbackController.text.trim(),
+                                        if (screenshotUrl != null) 'screenshot_url': screenshotUrl,
+                                      });
+
+                                      if (mounted) {
+                                        Navigator.of(context).pop();
+                                        ScaffoldMessenger.of(this.context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Thank you for your feedback – we\'ve received it.'),
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      if (mounted) {
+                                        setModalState(() {
+                                          isSending = false;
+                                        });
+                                      }
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: theme.colorScheme.primary,
                               foregroundColor: theme.colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 0,
                             ),
-                            child: Text(
-                              'Change Password',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
+                            child: isSending
+                                ? SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
+                                    ),
+                                  )
+                                : Text(
+                                    'Submit feedback',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -572,9 +952,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l10n.settings),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -586,16 +967,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         child: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          _buildSectionHeader('Account'),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
+          _buildSectionHeader(l10n.account),
+          CardDecorationHelper.styledCard(
+            context: context,
+            padding: EdgeInsets.zero,
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -625,20 +1000,20 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       Expanded(
                         child: Text(
                     _isLoadingProfile
-                        ? 'Loading...'
+                        ? l10n.loading
                         : _userProfile?.displayName ?? 
                           AuthController.instance.currentUser?.email?.split('@')[0] ?? 
-                          'User',
+                          l10n.user,
                         ),
                       ),
                     ],
                   ),
                   subtitle: Text(
                     _isLoadingProfile
-                        ? 'Loading...'
+                        ? l10n.loading
                         : _userProfile?.email ?? 
                           AuthController.instance.currentUser?.email ?? 
-                          'No email',
+                          l10n.noEmail,
                   ),
                   trailing: TextButton(
                     onPressed: () async {
@@ -652,7 +1027,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         _loadUserProfile();
                       }
                     },
-                    child: const Text('Edit'),
+                    child: Text(l10n.edit),
                   ),
                 ),
                 const Divider(height: 1),
@@ -663,19 +1038,19 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         ? Theme.of(context).colorScheme.primary 
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  title: const Text('Identity Verification'),
+                  title: Text(l10n.identityVerification),
                   subtitle: Text(
                     _isLoadingVerification
-                        ? 'Checking status...'
+                        ? l10n.checkingStatus
                         : _isVerified
-                            ? 'Your identity is verified'
+                            ? l10n.yourIdentityIsVerified
                             : _verificationStatus == 'pending'
-                                ? 'Verification in progress'
+                                ? l10n.verificationInProgress
                                 : _verificationStatus == 'declined'
-                                    ? 'Verification was declined'
+                                    ? l10n.verificationWasDeclined
                                     : _verificationStatus == 'rejected'
-                                        ? 'Verification was rejected'
-                                        : 'Verify your identity',
+                                        ? l10n.verificationWasRejected
+                                        : l10n.verifyYourIdentity,
                   ),
                   trailing: _isLoadingVerification
                       ? const SizedBox(
@@ -697,77 +1072,87 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.lock_outline),
-                  title: const Text('Change password'),
+                  title: Text(l10n.changePassword),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: _showChangePasswordDialog,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.logout),
-                  title: const Text('Log out'),
+                  title: Text(l10n.logOut),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () async {
-                    // Capture context before async operation
-                    final navigator = Navigator.of(context);
-                    await AuthController.instance.signOut();
-                    if (!mounted) return;
-                    navigator.pushAndRemoveUntil(
-                      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-                      (Route<dynamic> route) => false,
-                    );
-                  },
+                onTap: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l10n.logOut),
+                      content: Text(l10n.areYouSureYouWantToLogOut),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text(l10n.cancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: Text(l10n.logOut),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed != true) return;
+
+                  // Capture context before async operation
+                  final navigator = Navigator.of(context);
+                  await AuthController.instance.signOut();
+                  if (!mounted) return;
+                  navigator.pushAndRemoveUntil(
+                    MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+                    (Route<dynamic> route) => false,
+                  );
+                },
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
-          _buildSectionHeader('Billing'),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              children: <Widget>[
-                ListTile(
-                  leading: const Icon(Icons.credit_card_outlined),
-                  title: const Text('Plans & subscription'),
-                  subtitle: const Text('Manage your Sampul plan'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const BillingScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+          // Billing / subscription section temporarily hidden
+          // To re-enable, restore the section header and card below.
+          // const SizedBox(height: 16),
+          // _buildSectionHeader(l10n.billing),
+          // CardDecorationHelper.styledCard(
+          //   context: context,
+          //   padding: EdgeInsets.zero,
+          //   child: Column(
+          //     children: <Widget>[
+          //       ListTile(
+          //         leading: const Icon(Icons.credit_card_outlined),
+          //         title: Text(l10n.plansAndSubscription),
+          //         subtitle: Text(l10n.manageYourSampulPlan),
+          //         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          //         onTap: () {
+          //           Navigator.of(context).push(
+          //             MaterialPageRoute<void>(
+          //               builder: (_) => const BillingScreen(),
+          //             ),
+          //           );
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           const SizedBox(height: 16),
-          _buildSectionHeader('Preferences'),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
+          _buildSectionHeader(l10n.preferences),
+          CardDecorationHelper.styledCard(
+            context: context,
+            padding: EdgeInsets.zero,
             child: Column(
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.card_giftcard_outlined),
-                  title: const Text('Referrals'),
-                  subtitle: const Text('Your code and referrals'),
+                  title: Text(l10n.referrals),
+                  subtitle: Text(l10n.yourCodeAndReferrals),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.of(context).push(
@@ -776,17 +1161,31 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   },
                 ),
                 const Divider(height: 1),
-                // Admin AI Settings (only visible to admins)
+                // Admin-only settings
                 if (!_isLoadingAdmin && _isAdmin) ...[
                   ListTile(
                     leading: const Icon(Icons.smart_toy_outlined),
-                    title: const Text('AI Chat Settings'),
-                    subtitle: const Text('Manage Sampul AI responses'),
+                    title: Text(l10n.aiChatSettings),
+                    subtitle: Text(l10n.manageSampulAiResponses),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const AdminAiSettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.menu_book_outlined),
+                    title: const Text('Learning resources'),
+                    subtitle: const Text('Manage podcasts and guides for Learn'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AdminLearningResourcesScreen(),
                         ),
                       );
                     },
@@ -800,7 +1199,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     setState(() {});
                   },
                   secondary: const Icon(Icons.dark_mode_outlined),
-                  title: const Text('Dark mode'),
+                  title: Text(l10n.darkMode),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -813,8 +1212,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.replay_outlined),
-                  title: const Text('Restart onboarding'),
-                  subtitle: const Text('Run the setup flow again'),
+                  title: Text(l10n.restartOnboarding),
+                  subtitle: Text(l10n.runTheSetupFlowAgain),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () async {
                     try {
@@ -831,21 +1230,21 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
 
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Onboarding has been reset')),
+                        SnackBar(content: Text(l10n.onboardingHasBeenReset)),
                       );
 
-                      // Launch onboarding flow screen
+                      // Launch onboarding goal selection screen
                       // Using push to allow user to complete and return
                       await Navigator.of(context).push(
                         MaterialPageRoute<bool>(
-                          builder: (_) => const OnboardingFlowScreen(),
+                          builder: (_) => const OnboardingGoalSelectionScreen(),
                           fullscreenDialog: true,
                         ),
                       );
                     } catch (e) {
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to reset onboarding: $e'), backgroundColor: Colors.red),
+                        SnackBar(content: Text(l10n.failedToResetOnboarding(e.toString())), backgroundColor: Colors.red),
                       );
                     }
                   },
@@ -855,42 +1254,44 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           ),
 
           const SizedBox(height: 16),
-          _buildSectionHeader('About'),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
+          _buildSectionHeader(l10n.about),
+          CardDecorationHelper.styledCard(
+            context: context,
+            padding: EdgeInsets.zero,
             child: Column(
               children: <Widget>[
                 ListTile(
+                  leading: const Icon(Icons.bug_report_outlined),
+                  title: Text(l10n.sendFeedback),
+                  subtitle: Text(l10n.reportBugsOrRequestFeatures),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: _showFeedbackSheet,
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('App version'),
-                  subtitle: const Text('1.0.0 (demo)'),
+                  title: Text(l10n.appVersion),
+                  subtitle: Text(l10n.appVersionDemo),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
-                  title: const Text('Terms of Service'),
+                  title: Text(l10n.termsOfService),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Terms tapped (demo)')),
+                      SnackBar(content: Text(l10n.termsTappedDemo)),
                     );
                   },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
-                  title: const Text('Privacy Policy'),
+                  title: Text(l10n.privacyPolicy),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Privacy tapped (demo)')),
+                      SnackBar(content: Text(l10n.privacyTappedDemo)),
                     );
                   },
                 ),
@@ -903,9 +1304,9 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             child: TextButton.icon(
               onPressed: _showDeleteAccountDialog,
               icon: const Icon(Icons.delete_outline, color: Colors.red),
-              label: const Text(
-                'Delete Account',
-                style: TextStyle(color: Colors.red),
+              label: Text(
+                l10n.deleteAccount,
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           ),
@@ -941,7 +1342,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             ),
             const SizedBox(width: 4),
             Text(
-              'Verified',
+              AppLocalizations.of(context)!.verified,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -968,7 +1369,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             ),
             const SizedBox(width: 4),
             Text(
-              'Pending',
+              AppLocalizations.of(context)!.pending,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -995,7 +1396,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             ),
             const SizedBox(width: 4),
             Text(
-              _verificationStatus == 'declined' ? 'Declined' : 'Rejected',
+              _verificationStatus == 'declined' ? AppLocalizations.of(context)!.declined : AppLocalizations.of(context)!.rejected,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -1015,9 +1416,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     // Check configuration first
     if (!DiditConfig.isConfigured) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Didit is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.'),
+          SnackBar(
+            content: Text(l10n.diditNotConfigured),
             backgroundColor: Colors.red,
           ),
         );
@@ -1060,30 +1462,21 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       context: context,
       barrierDismissible: false,
       builder: (context) => Center(
-        child: Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Creating verification session...',
-                  style: TextStyle(color: theme.colorScheme.onSurface),
-                ),
-              ],
-            ),
+        child: CardDecorationHelper.styledCard(
+          context: context,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context)!.creatingVerificationSession,
+                style: TextStyle(color: theme.colorScheme.onSurface),
+              ),
+            ],
           ),
         ),
       ),
@@ -1135,9 +1528,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         // This will be handled by didChangeAppLifecycleState
       } else {
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not open verification link'),
+            SnackBar(
+              content: Text(l10n.couldNotOpenVerificationLink),
             ),
           );
         }
@@ -1156,9 +1550,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       Navigator.of(context).pop(); // Close loading dialog
       
       print('🔴 [VERIFICATION] Showing error message to user');
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to start verification: ${e.toString().replaceFirst('Exception: ', '')}'),
+          content: Text(l10n.failedToStartVerification(e.toString().replaceFirst('Exception: ', ''))),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
@@ -1182,76 +1577,99 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     );
   }
 
-  void _showDeleteAccountDialog() {
-    final TextEditingController confirmController = TextEditingController();
-    const String confirmText = 'DELETE';
+  Future<void> _showDeleteAccountDialog() async {
+    final l10n = AppLocalizations.of(context)!;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final bool isConfirmed = confirmController.text.trim() == confirmText;
+    try {
+      final bool? shouldDelete = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return const _DeleteAccountDialog();
+        },
+      );
 
-            return AlertDialog(
-              title: const Text('Delete Account'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Are you sure you want to delete your account? This action cannot be undone.',
+      if (shouldDelete != true) {
+        return;
+      }
+
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.noEmail),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Show a simple loading dialog while deleting
+      if (!mounted) return;
+      final rootNavigator = Navigator.of(context, rootNavigator: true);
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    l10n.loading,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'To confirm, please type "DELETE" in the box below:',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: confirmController,
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                    decoration: const InputDecoration(
-                      hintText: 'Type DELETE to confirm',
-                      border: OutlineInputBorder(),
-                    ),
-                    autofocus: true,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    confirmController.dispose();
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: isConfirmed
-                      ? () {
-                          confirmController.dispose();
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Delete account feature coming soon'),
-                            ),
-                          );
-                        }
-                      : null,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
-                  child: const Text('Delete'),
                 ),
               ],
-            );
-          },
+            ),
+          );
+        },
+      );
+
+      try {
+        // Call Supabase Edge Function to delete account (handles subscription checks etc.)
+        await AccountService.instance.deleteAccount();
+
+        // Sign out locally after successful deletion.
+        // If this throws, we still want to take the user back to login.
+        try {
+          await AuthController.instance.signOut();
+        } catch (_) {
+          // Ignore sign-out errors here; session may already be invalidated.
+        }
+
+        // Always close loading dialog.
+        rootNavigator.pop(); // Close loading dialog
+
+        // Explicitly navigate to login screen and clear navigation stack.
+        rootNavigator.pushAndRemoveUntil(
+          MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+          (Route<dynamic> route) => false,
         );
-      },
-    );
+      } catch (e) {
+        // Ensure loading dialog is closed even if this widget was unmounted.
+        rootNavigator.pop(); // Close loading dialog
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to open delete account dialog: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   String _getLanguageName(BuildContext context) {
@@ -1342,6 +1760,7 @@ class _VerificationInfoModal extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Container(
       constraints: BoxConstraints(
@@ -1401,7 +1820,7 @@ class _VerificationInfoModal extends StatelessWidget {
                     
                     // Main text
                     Text(
-                      'Identity verification is required to establish trust and ensure the legal validity of your will.',
+                      l10n.identityVerificationRequired,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurface,
@@ -1416,32 +1835,32 @@ class _VerificationInfoModal extends StatelessWidget {
                       context,
                       theme,
                       Icons.gavel,
-                      'Legal Validity',
-                      'Establishes the legal validity of your will',
+                      l10n.legalValidity,
+                      l10n.establishesLegalValidity,
                     ),
                     const SizedBox(height: 12),
                     _buildRequirementItem(
                       context,
                       theme,
                       Icons.handshake,
-                      'Builds Trust',
-                      'Provides assurance to beneficiaries and executors',
+                      l10n.buildsTrust,
+                      l10n.providesAssurance,
                     ),
                     const SizedBox(height: 12),
                     _buildRequirementItem(
                       context,
                       theme,
                       Icons.verified,
-                      'Regulatory Compliance',
-                      'Ensures compliance with regulatory requirements',
+                      l10n.regulatoryCompliance,
+                      l10n.ensuresCompliance,
                     ),
                     const SizedBox(height: 12),
                     _buildRequirementItem(
                       context,
                       theme,
                       Icons.shield,
-                      'Fraud Protection',
-                      'Protects against fraud and identity theft',
+                      l10n.fraudProtection,
+                      l10n.protectsAgainstFraud,
                     ),
                     
                     const SizedBox(height: 24),
@@ -1457,7 +1876,7 @@ class _VerificationInfoModal extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Your information is encrypted and secure',
+                          l10n.yourInformationIsEncrypted,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -1494,7 +1913,7 @@ class _VerificationInfoModal extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancel),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1511,9 +1930,9 @@ class _VerificationInfoModal extends StatelessWidget {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'Start Verification',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.startVerification,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
                           ),
@@ -1572,6 +1991,95 @@ class _VerificationInfoModal extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  late final TextEditingController _confirmController;
+  static const String _confirmText = 'DELETE';
+
+  @override
+  void initState() {
+    super.initState();
+    print('🔴 [DELETE ACCOUNT] Dialog State initState');
+    _confirmController = TextEditingController();
+    _confirmController.addListener(_onTextChanged);
+    print('🔴 [DELETE ACCOUNT] Controller created and listener added');
+  }
+
+  @override
+  void dispose() {
+    _confirmController.removeListener(_onTextChanged);
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {});
+  }
+
+  bool get _isConfirmed {
+    return _confirmController.text.trim() == _confirmText;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
+    return AlertDialog(
+      title: Text(l10n.deleteAccountTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.areYouSureDeleteAccount,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.toConfirmTypeDelete,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _confirmController,
+              decoration: InputDecoration(
+                hintText: l10n.typeDeleteToConfirm,
+                border: const OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(false);
+          },
+          child: Text(l10n.cancel),
+        ),
+        TextButton(
+          onPressed: _isConfirmed
+              ? () {
+                  Navigator.of(context).pop(true);
+                }
+              : null,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+          ),
+          child: Text(l10n.delete),
         ),
       ],
     );

@@ -1,3 +1,5 @@
+import 'trust_payment.dart';
+
 enum TrustStatus { draft, submitted, approved, rejected }
 
 class Trust {
@@ -33,6 +35,7 @@ class Trust {
   final String? executorType; // 'someone_i_know' or 'sampul_professional'
   final List<int>? executorIds; // IDs of selected family members when executorType is 'someone_i_know'
   final TrustStatus computedStatus;
+  final List<TrustPayment>? trustPayments; // Payment history
 
   Trust({
     this.id,
@@ -67,6 +70,7 @@ class Trust {
     this.executorType,
     this.executorIds,
     this.computedStatus = TrustStatus.draft,
+    this.trustPayments,
   });
 
   factory Trust.fromJson(Map<String, dynamic> json) {
@@ -117,6 +121,11 @@ class Trust {
       executorType: null,
       executorIds: null,
       computedStatus: mapped,
+      trustPayments: json['trust_payments'] != null
+          ? (json['trust_payments'] as List)
+              .map((e) => TrustPayment.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : null,
     );
   }
 
@@ -155,6 +164,28 @@ class Trust {
         'fund_support_configs': fundSupportConfigs,
       // Note: executorType and executorIds are stored in trust_executor table, not here
     };
+  }
+
+  // Calculate total paid amount in cents
+  int get totalPaidInCents {
+    if (trustPayments == null || trustPayments!.isEmpty) return 0;
+    return trustPayments!
+        .where((p) => p.isSuccessful)
+        .fold(0, (sum, payment) => sum + payment.amount);
+  }
+
+  // Calculate remaining amount in cents to reach minimum
+  int get remainingInCents {
+    const int minTrustAmount = 10000000; // RM 100,000 in cents
+    return minTrustAmount - totalPaidInCents;
+  }
+
+  // Calculate progress percentage (0-100)
+  double get progressPercentage {
+    const int minTrustAmount = 10000000; // RM 100,000 in cents
+    if (minTrustAmount == 0) return 0.0;
+    final percentage = (totalPaidInCents / minTrustAmount) * 100;
+    return percentage.clamp(0.0, 100.0);
   }
 }
 
