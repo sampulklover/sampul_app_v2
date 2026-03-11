@@ -14,11 +14,19 @@ class ChecklistScreen extends StatefulWidget {
 class _ChecklistScreenState extends State<ChecklistScreen> {
   bool _loading = true;
   List<AftercareTask> _tasks = <AftercareTask>[];
+  final ScrollController _scrollController = ScrollController();
+  int? _recentlyAddedTaskId;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
   
   Future<void> _load() async {
@@ -71,11 +79,42 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     if (user == null) return;
     try {
       if (existing == null) {
-        await AftercareService.instance.createTask(uuid: user.id, task: controller.text.trim());
+        final AftercareTask newTask = await AftercareService.instance
+            .createTask(uuid: user.id, task: controller.text.trim());
+        if (!mounted) return;
+        setState(() {
+          _tasks.add(newTask);
+          _recentlyAddedTaskId = newTask.id;
+        });
+        // Remove the highlight after a very short delay.
+        Future<void>.delayed(const Duration(milliseconds: 900), () {
+          if (!mounted) return;
+          if (_recentlyAddedTaskId == newTask.id) {
+            setState(() {
+              _recentlyAddedTaskId = null;
+            });
+          }
+        });
+        // Scroll to the newly added item so it is visible to the user.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        if (_scrollController.hasClients) {
+          await _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
       } else {
-        await AftercareService.instance.updateTask(id: existing.id!, task: controller.text.trim());
+        final AftercareTask updated = await AftercareService.instance
+            .updateTask(id: existing.id!, task: controller.text.trim());
+        if (!mounted) return;
+        setState(() {
+          final int index = _tasks.indexWhere((t) => t.id == updated.id);
+          if (index != -1) {
+            _tasks[index] = updated;
+          }
+        });
       }
-      await _load();
     } catch (e) {
       _showErrorMessage();
     }
@@ -183,62 +222,74 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                     await _load();
                   },
                 )
-              : ReorderableListView.builder(
-                  itemCount: _tasks.length,
-                  onReorder: (oldIndex, newIndex) async {
-                    if (newIndex > oldIndex) newIndex -= 1;
-                    setState(() {
-                      final moved = _tasks.removeAt(oldIndex);
-                      _tasks.insert(newIndex, moved);
-                    });
-                    final user = AuthController.instance.currentUser;
-                    if (user != null) {
-                      try {
-                        await AftercareService.instance.updatePositions(
-                          uuid: user.id,
-                          orderedIds: _tasks.map((e) => e.id!).toList(),
-                        );
-                      } catch (e) {
-                        _showErrorMessage();
+              : PrimaryScrollController(
+                  controller: _scrollController,
+                  child: ReorderableListView.builder(
+                    itemCount: _tasks.length,
+                    onReorder: (oldIndex, newIndex) async {
+                      if (newIndex > oldIndex) newIndex -= 1;
+                      setState(() {
+                        final moved = _tasks.removeAt(oldIndex);
+                        _tasks.insert(newIndex, moved);
+                      });
+                      final user = AuthController.instance.currentUser;
+                      if (user != null) {
+                        try {
+                          await AftercareService.instance.updatePositions(
+                            uuid: user.id,
+                            orderedIds: _tasks.map((e) => e.id!).toList(),
+                          );
+                        } catch (e) {
+                          _showErrorMessage();
+                        }
                       }
-                    }
-                  },
-                  itemBuilder: (context, index) {
-                    final t = _tasks[index];
-                    return ListTile(
-                      key: ValueKey(t.id),
-                      onLongPress: () => _showItemActions(t),
-                      leading: ReorderableDragStartListener(
-                        index: index,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {}, // Empty onTap to enable InkWell ripple
-                            child: const _DotsHandle(),
-                          ),
-                        ),
-                      ),
-                      title: Row(
-                        children: <Widget>[
-                          if (t.isPinned)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 6),
-                              child: Icon(Icons.push_pin, size: 16, color: const Color.fromRGBO(49, 24, 211, 1).withOpacity(0.7)),
-                            ),
-                          Expanded(
-                            child: Text(
-                              t.task,
-                              style: TextStyle(
-                                decoration: t.isCompleted ? TextDecoration.lineThrough : null,
+                    },
+                    itemBuilder: (context, index) {
+                      final t = _tasks[index];
+                      final theme = Theme.of(context);
+                      final bool isRecentlyAdded = t.id != null && t.id == _recentlyAddedTaskId;
+                      final Color highlightColor = theme.colorScheme.primary.withOpacity(0.06);
+
+                      return AnimatedContainer(
+                        key: ValueKey(t.id),
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                        color: isRecentlyAdded ? highlightColor : Colors.transparent,
+                        child: ListTile(
+                          onLongPress: () => _showItemActions(t),
+                          leading: ReorderableDragStartListener(
+                            index: index,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () {}, // Empty onTap to enable InkWell ripple
+                                child: const _DotsHandle(),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      trailing: Checkbox(value: t.isCompleted, onChanged: (_) => _toggleComplete(t)),
-                    );
-                  },
+                          title: Row(
+                            children: <Widget>[
+                              if (t.isPinned)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: Icon(Icons.push_pin, size: 16, color: const Color.fromRGBO(49, 24, 211, 1).withOpacity(0.7)),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  t.task,
+                                  style: TextStyle(
+                                    decoration: t.isCompleted ? TextDecoration.lineThrough : null,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: Checkbox(value: t.isCompleted, onChanged: (_) => _toggleComplete(t)),
+                        ),
+                      );
+                    },
+                  ),
                 ),
     );
   }

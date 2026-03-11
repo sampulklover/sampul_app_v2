@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/form_decoration_helper.dart';
 
@@ -35,17 +37,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset email sent! Please check your email.'),
+        SnackBar(
+          content: Text(l10n.passwordResetEmailSent),
           backgroundColor: Colors.green,
         ),
       );
       Navigator.of(context).pop();
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.failedToSendResetEmail(error.message))),
+      );
     } catch (error) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send reset email: $error')),
+        SnackBar(content: Text(l10n.failedToSendResetEmail(error.toString()))),
       );
     } finally {
       if (!mounted) return;
@@ -57,9 +67,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forgot password'),
+        title: Text(l10n.forgotPasswordTitle),
       ),
       body: SafeArea(
         child: Center(
@@ -71,10 +82,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
+                  SvgPicture.asset(
+                    'assets/sampul-icon-white.svg',
+                    width: 72,
+                    height: 72,
+                  ),
                   const SizedBox(height: 24),
                   Text(
-                    'Enter your email and we\'ll send you a reset link.',
+                    l10n.enterEmailForResetLink,
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
@@ -85,15 +101,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     onFieldSubmitted: (_) => _submit(),
                     decoration: FormDecorationHelper.roundedInputDecoration(
                       context: context,
-                      labelText: 'Email',
-                      hintText: 'you@example.com',
+                      labelText: l10n.email,
+                      hintText: l10n.emailHint,
                       prefixIcon: Icons.email_outlined,
                     ),
                     validator: (String? value) {
                       final String v = (value ?? '').trim();
-                      if (v.isEmpty) return 'Email is required';
+                      if (v.isEmpty) return l10n.emailRequired;
                       final RegExp emailRegex = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
-                      if (!emailRegex.hasMatch(v)) return 'Enter a valid email';
+                      if (!emailRegex.hasMatch(v)) return l10n.emailInvalid;
                       return null;
                     },
                   ),
@@ -124,7 +140,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Send reset link',
+                                  l10n.sendResetLink,
                                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: Theme.of(context).colorScheme.onPrimary,

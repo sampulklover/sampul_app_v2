@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import 'edit_family_member_screen.dart';
 import 'family_info_screen.dart';
 import 'add_family_member_screen.dart';
+import '../utils/sampul_icons.dart';
 
 class FamilyListScreen extends StatefulWidget {
   const FamilyListScreen({super.key});
@@ -160,7 +161,7 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
             await _load();
           }
         },
-        child: const Icon(Icons.add),
+        child: SampulIcons.buildIcon(SampulIcons.add, width: 24, height: 24, color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -427,11 +428,17 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (imagePath == null || imagePath!.isEmpty) {
-      return const CircleAvatar(radius: 20, child: Icon(Icons.person));
+      return CircleAvatar(
+        radius: 20,
+        child: SampulIcons.buildIcon(SampulIcons.person, width: 24, height: 24),
+      );
     }
     final String? url = SupabaseService.instance.getFullImageUrl(imagePath);
     if (url == null || url.isEmpty) {
-      return const CircleAvatar(radius: 20, child: Icon(Icons.person));
+      return CircleAvatar(
+        radius: 20,
+        child: SampulIcons.buildIcon(SampulIcons.person, width: 24, height: 24),
+      );
     }
     return CircleAvatar(
       radius: 20,

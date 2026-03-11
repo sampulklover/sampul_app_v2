@@ -198,30 +198,35 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         'title': l10n.education,
         'subtitle': 'Tuition, books, school fees',
         'icon': Icons.school_outlined,
+        'imagePath': 'assets/trust-grap-cap.png',
       },
       {
         'id': 'living',
         'title': l10n.livingExpenses,
         'subtitle': l10n.livingExpensesSubtitle,
         'icon': Icons.home_outlined,
+        'imagePath': 'assets/trust-wallet.png',
       },
       {
         'id': 'healthcare',
         'title': l10n.healthcare,
         'subtitle': l10n.healthcareSubtitle,
         'icon': Icons.medical_services_outlined,
+        'imagePath': 'assets/trust-health.png',
       },
       {
         'id': 'charitable',
         'title': l10n.charitable,
         'subtitle': l10n.charitableSubtitle,
         'icon': Icons.volunteer_activism_outlined,
+        'imagePath': 'assets/trust-gift.png',
       },
       {
         'id': 'debt',
         'title': l10n.debt,
         'subtitle': l10n.debtSubtitle,
         'icon': Icons.receipt_long_outlined,
+        'imagePath': 'assets/trust-gold-coin.png',
       },
     ];
 
@@ -267,23 +272,30 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? colorScheme.primary.withOpacity(0.1)
-                                : colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            category['icon'] as IconData,
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
-                            size: 24,
-                          ),
-                        ),
+                        (category['imagePath'] as String?) != null
+                            ? Image.asset(
+                                category['imagePath'] as String,
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.contain,
+                              )
+                            : Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? colorScheme.primary.withOpacity(0.1)
+                                      : colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  category['icon'] as IconData,
+                                  color: isSelected
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurfaceVariant,
+                                  size: 28,
+                                ),
+                              ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(

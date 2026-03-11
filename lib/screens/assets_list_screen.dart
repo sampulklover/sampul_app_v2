@@ -7,6 +7,7 @@ import '../controllers/auth_controller.dart';
 import 'edit_asset_screen.dart';
 import 'asset_info_screen.dart';
 import 'add_asset_screen.dart';
+import '../utils/sampul_icons.dart';
 
 class AssetsListScreen extends StatefulWidget {
   const AssetsListScreen({super.key});
@@ -197,7 +198,7 @@ class _Logo extends StatelessWidget {
         height: size,
         decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEAEAEA)),
         alignment: Alignment.center,
-        child: const Icon(Icons.apps),
+        child: SampulIcons.buildIcon(SampulIcons.apps, width: size * 0.6, height: size * 0.6),
       );
     }
     final String u = url!;
@@ -207,7 +208,7 @@ class _Logo extends StatelessWidget {
       height: size,
       decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEAEAEA)),
       alignment: Alignment.center,
-      child: const Icon(Icons.image_outlined),
+      child: SampulIcons.buildIcon(SampulIcons.image, width: size * 0.6, height: size * 0.6),
     );
     // Add client ID dynamically if it's a Brandfetch URL
     final String finalUrl = BrandfetchService.instance.addClientIdToUrl(u) ?? u;

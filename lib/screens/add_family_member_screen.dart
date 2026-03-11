@@ -8,6 +8,7 @@ import '../widgets/stepper_footer_controls.dart';
 import '../utils/form_decoration_helper.dart';
 import 'dart:io';
 import 'family_info_screen.dart';
+import '../utils/sampul_icons.dart';
 
 class AddFamilyMemberScreen extends StatefulWidget {
   const AddFamilyMemberScreen({super.key});
@@ -151,7 +152,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
         actions: <Widget>[
           IconButton(
             tooltip: l10n.aboutFamilyMembers,
-            icon: const Icon(Icons.help_outline),
+            icon: SampulIcons.buildIconButtonIcon(SampulIcons.help, size: 24),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const FamilyInfoScreen(fromHelpIcon: true)),
@@ -188,7 +189,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 ? FileImage(_selectedImageFile!)
                                 : null,
                             child: _selectedImageFile == null
-                                ? const Icon(Icons.person, size: 36)
+                                ? SampulIcons.buildIcon(SampulIcons.person, width: 36, height: 36)
                                 : null,
                           ),
                           TextButton.icon(
@@ -216,7 +217,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 );
                               }
                             },
-                            icon: const Icon(Icons.photo_outlined),
+                            icon: SampulIcons.buildIcon(SampulIcons.photo, width: 20, height: 20),
                             label: Text(l10n.addPhoto),
                           ),
                         ],
@@ -258,7 +259,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRelationship,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                       menuMaxHeight: 300, // Limit dropdown height
                       items: Relationship.allRelationships
                           .map((Relationship r) => DropdownMenuItem<String>(
@@ -281,7 +282,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedType,
                       isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                      icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                       items: _typeOptions
                           .map((String t) => DropdownMenuItem<String>(value: t, child: Text(_prettyType(t, l10n))))
                           .toList(),
@@ -296,7 +297,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Icon(Icons.info_outline, size: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
+                        SampulIcons.buildIcon(SampulIcons.info, width: 16, height: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -421,7 +422,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                           child: DropdownButtonFormField<String>(
                             initialValue: _selectedCountry,
                             isExpanded: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                            icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                             items: _countryOptions
                                 .map((String c) => DropdownMenuItem<String>(value: c, child: Text(_prettyCountry(c))))
                                 .toList(),

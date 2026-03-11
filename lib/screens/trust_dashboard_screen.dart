@@ -693,111 +693,114 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Trust info header - matching homepage design
-                    CardDecorationHelper.styledCard(
-                      context: context,
-                      elevation: 1,
-                      padding: EdgeInsets.zero,
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: InkWell(
                         onTap: _copyTrustId,
                         borderRadius: BorderRadius.circular(16),
-                        child: SizedBox(
-                          height: 180,
-                          child: Stack(
-                            children: [
-                              // Background gradient (same as homepage trust card)
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: <Color>[
-                                      Colors.white,
-                                      colorScheme.primaryContainer.withOpacity(0.1),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: SizedBox(
+                            height: 180,
+                            child: Stack(
+                              children: [
+                                // Background
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: Colors.grey.shade200,
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                      width: 0,
+                                    ),
+                                  ),
+                                ),
+                                // Decorative image - behind content
+                                Positioned(
+                                  right: -20,
+                                  bottom: -0,
+                                  child: Transform.rotate(
+                                    angle: 0,
+                                    child: Opacity(
+                                      opacity: 0.9,
+                                      child: Image.asset(
+                                        'assets/trust-three-coin.png',
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Content
+                                Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  l10n.familyAccount,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: const Color.fromRGBO(83, 61, 233, 1),
+                                                  ),
+                                                ),
+                                                if (_trust.trustCode != null) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    _trust.trustCode!,
+                                                    style: theme.textTheme.bodySmall?.copyWith(
+                                                      color: colorScheme.onSurfaceVariant,
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox.shrink(),
+                                        ],
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        _formatEstimatedNetWorth(_trust.estimatedNetWorth),
+                                        style: theme.textTheme.headlineMedium?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: _getStatusColor(_trust.computedStatus, context),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            _getStatusLabel(_trust.computedStatus, context),
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: _getStatusColor(_trust.computedStatus, context),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ),
-                              // Decorative element (same pattern as homepage trust card)
-                              Positioned(
-                                right: -20,
-                                top: -20,
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  transform: Matrix4.rotationZ(0.2),
-                                ),
-                              ),
-                              // Content
-                              Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                l10n.familyAccount,
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                  color: const Color.fromRGBO(83, 61, 233, 1),
-                                                ),
-                                              ),
-                                              if (_trust.trustCode != null) ...[
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  _trust.trustCode!,
-                                                  style: theme.textTheme.bodySmall?.copyWith(
-                                                    color: colorScheme.onSurfaceVariant,
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox.shrink(),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      _formatEstimatedNetWorth(_trust.estimatedNetWorth),
-                                      style: theme.textTheme.headlineMedium?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(_trust.computedStatus, context),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _getStatusLabel(_trust.computedStatus, context),
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: _getStatusColor(_trust.computedStatus, context),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -956,30 +959,35 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                             'id': 'education',
                             'title': l10n.education,
                             'icon': Icons.school_outlined,
+                            'imagePath': 'assets/trust-grap-cap.png',
                             'calculateAmount': () => _calculateEducation(),
                           },
                           {
                             'id': 'living',
                             'title': l10n.livingExpenses,
                             'icon': Icons.home_outlined,
+                            'imagePath': 'assets/trust-wallet.png',
                             'calculateAmount': () => _calculateExpenses(),
                           },
                           {
                             'id': 'healthcare',
                             'title': l10n.healthcare,
                             'icon': Icons.medical_services_outlined,
+                            'imagePath': 'assets/trust-health.png',
                             'calculateAmount': () => _calculateHealthcare(),
                           },
                           {
                             'id': 'charitable',
                             'title': l10n.charitable,
                             'icon': Icons.volunteer_activism_outlined,
+                            'imagePath': 'assets/trust-gift.png',
                             'calculateAmount': () => _calculateCharitable(),
                           },
                           {
                             'id': 'debt',
                             'title': l10n.debt,
                             'icon': Icons.receipt_long_outlined,
+                            'imagePath': 'assets/trust-gold-coin.png',
                             'calculateAmount': () => _calculateDebt(),
                           },
                         ];
@@ -995,7 +1003,8 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                           children: fundSupportCategories.map((category) {
                             final categoryId = category['id'] as String? ?? '';
                             final title = category['title'] as String? ?? 'Unknown';
-                            final icon = category['icon'] as IconData? ?? Icons.category_outlined;
+                            final icon = category['icon'] as IconData?;
+                            final imagePath = category['imagePath'] as String?;
                             final calculateAmount = category['calculateAmount'] as double Function()? ?? () => 0.0;
                             
                             final isSelected = _trust.fundSupportCategories?.contains(categoryId) ?? false;
@@ -1058,6 +1067,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                               title: title,
                               subtitle: isSelected ? _formatAmount(calculateAmount()) : l10n.tapToSetUp,
                               icon: icon,
+                              imagePath: imagePath,
                               iconColor: isSelected 
                                   ? const Color.fromRGBO(49, 24, 211, 1)
                                   : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
@@ -1070,6 +1080,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                                   'id': categoryId,
                                   'title': title,
                                   'icon': icon,
+                                  'imagePath': imagePath,
                                 };
                                 
                                 final updatedConfig = await Navigator.of(context).push<Map<String, dynamic>>(
@@ -1144,7 +1155,8 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
 class _CategoryCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
+  final String? imagePath;
   final VoidCallback? onTap;
   final Color? iconColor;
   /// Muted style for unselected; card stays tappable.
@@ -1155,7 +1167,8 @@ class _CategoryCard extends StatelessWidget {
   const _CategoryCard({
     required this.title,
     required this.subtitle,
-    required this.icon,
+    this.icon,
+    this.imagePath,
     this.onTap,
     this.iconColor,
     this.isUnselected = false,
@@ -1188,20 +1201,29 @@ class _CategoryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Icon in soft container to match other cards
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 22,
-                      color: iconColor ?? const Color.fromRGBO(49, 24, 211, 1),
-                    ),
-                  ),
+                  // 3D Image or Icon in soft container to match other cards
+                  imagePath != null
+                      ? Image.asset(
+                          imagePath!,
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.contain,
+                        )
+                      : Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: icon != null
+                              ? Icon(
+                                  icon,
+                                  size: 28,
+                                  color: iconColor ?? const Color.fromRGBO(49, 24, 211, 1),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                   const SizedBox(height: 12),
                   // Bottom-aligned text block
                   Column(

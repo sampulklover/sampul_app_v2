@@ -326,124 +326,117 @@ class _TrustSummaryCard extends StatelessWidget {
     final bool isActive = trust.computedStatus == TrustStatus.approved;
 
     return Card(
-      elevation: 1,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          height: 160,
-          child: Stack(
-            children: <Widget>[
-              // Background gradient (match dashboard trust card)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[
-                      Colors.white,
-                      scheme.primaryContainer.withOpacity(0.1),
-                    ],
-                  ),
-                ),
-              ),
-              // Decorative element
-              Positioned(
-                right: -20,
-                top: -20,
-                child: Container(
-                  width: 120,
-                  height: 120,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 160,
+            child: Stack(
+              children: <Widget>[
+                // Background
+                Container(
                   decoration: BoxDecoration(
-                    color: scheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.grey.shade200,
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 0,
+                    ),
                   ),
-                  transform: Matrix4.rotationZ(0.2),
                 ),
-              ),
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color.fromRGBO(83, 61, 233, 1),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (trustCode.isNotEmpty) ...[
-                                const SizedBox(height: 4),
+                // Decorative image - behind content
+                Positioned(
+                  right: -20,
+                  bottom: -0,
+                  child: Transform.rotate(
+                    angle: 0,
+                    child: Opacity(
+                      opacity: 0.9,
+                      child: Image.asset(
+                        'assets/trust-three-coin.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
                                 Text(
-                                  trustCode,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
+                                  title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color.fromRGBO(83, 61, 233, 1),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                if (trustCode.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    trustCode,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_outward,
-                            size: 20,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          onPressed: onTap,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: l10n.openTrust,
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      amountText,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: isActive ? Colors.green : statusColor,
-                            shape: BoxShape.circle,
-                          ),
+                      const Spacer(),
+                      Text(
+                        amountText,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isActive ? l10n.yourPlanIsActive : statusText,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isActive ? Colors.green.shade700 : statusColor,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: <Widget>[
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isActive ? Colors.green : statusColor,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 6),
+                          Text(
+                            isActive ? l10n.yourPlanIsActive : statusText,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isActive ? Colors.green.shade700 : statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -92,12 +92,11 @@ class AppLocalizationsMs extends AppLocalizations {
       'Satukan profil, keluarga, aset, dan hasrat anda dalam satu dokumen yang jelas.';
 
   @override
-  String get letsListYourDigitalAssets =>
-      'Mari kita senaraikan aset digital anda';
+  String get letsListYourDigitalAssets => 'Susun aset anda';
 
   @override
   String get assetsDescription =>
-      'Simpan akaun dan platform dalam talian yang penting di satu tempat supaya wasiat anda kekal jelas dan terkini.';
+      'Sertakan aset penting anda—baik akaun digital mahupun barang fizikal—supaya arahan anda jelas dan boleh diakses apabila diperlukan.';
 
   @override
   String get letsSetUpYourFamilyAccount =>
@@ -418,6 +417,15 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get cancel => 'Batal';
+
+  @override
+  String get change => 'Tukar';
+
+  @override
+  String get optional => 'Pilihan';
+
+  @override
+  String get assetAdded => 'Aset ditambah';
 
   @override
   String get copy => 'Salin';
@@ -775,7 +783,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get noAssetsYet =>
-      'Tiada aset lagi. Tambah sekurang-kurangnya satu untuk dimasukkan dalam wasiat anda.';
+      'Tiada aset lagi. Tambah satu apabila anda sudah bersedia.';
 
   @override
   String showMore(int count) {
@@ -870,10 +878,36 @@ class AppLocalizationsMs extends AppLocalizations {
   String get platformService => 'Platform / Perkhidmatan';
 
   @override
+  String get selectPlatform => 'Pilih platform';
+
+  @override
+  String get chooseDigitalAccountToInclude =>
+      'Pilih akaun digital yang anda ingin sertakan.';
+
+  @override
+  String get enterPhysicalAssetName => 'Masukkan nama aset fizikal anda';
+
+  @override
+  String get physicalAssetName => 'Nama aset';
+
+  @override
+  String get assetInfo => 'Maklumat aset';
+
+  @override
+  String get physicalAssetNameHint =>
+      'cth., Rumah Saya, Kereta, Koleksi Barang Kemas';
+
+  @override
   String get details => 'Butiran';
 
   @override
   String get review => 'Semak';
+
+  @override
+  String get reviewThisDigitalAsset => 'Semak aset digital ini';
+
+  @override
+  String get reviewThisAsset => 'Semak aset ini';
 
   @override
   String get searchForPlatformOrService => 'Cari platform atau perkhidmatan';
@@ -929,6 +963,37 @@ class AppLocalizationsMs extends AppLocalizations {
   String get instructionsAfterDeath => 'Arahan Selepas Kematian';
 
   @override
+  String get instructionUponActivation => 'Arahan semasa pengaktifan';
+
+  @override
+  String get whatShouldHappenToThisAccount =>
+      'Apa yang harus berlaku pada akaun ini?';
+
+  @override
+  String get defineHowThisAccountShouldBeHandled =>
+      'Tentukan bagaimana akaun ini harus dikendalikan.';
+
+  @override
+  String get closeThisAccount => 'Tutup akaun ini';
+
+  @override
+  String get transferAccessToExecutor =>
+      'Pindahkan akses kepada pelaksana saya';
+
+  @override
+  String get memorialiseIfApplicable => 'Peringati (jika berkenaan)';
+
+  @override
+  String get leaveSpecificInstructions => 'Tinggalkan arahan khusus';
+
+  @override
+  String get provideDetailsBelow => 'Berikan butiran di bawah.';
+
+  @override
+  String get thisInformationOnlyAccessible =>
+      'Maklumat ini hanya boleh diakses mengikut arahan harta pusaka anda.';
+
+  @override
   String get loadingRecipients => 'Memuatkan penerima...';
 
   @override
@@ -938,14 +1003,58 @@ class AppLocalizationsMs extends AppLocalizations {
   String get giftRecipientRequired => 'Penerima Hadiah diperlukan';
 
   @override
-  String get remarksOptional => 'Catatan (pilihan)';
+  String get estimatedValue => 'Nilai anggaran';
 
   @override
-  String get remarksHint => 'Sebarang arahan atau nota tambahan';
+  String get estimatedValueDescription =>
+      'Nilai anggaran membantu pelaksana anda memahami nilai aset.';
+
+  @override
+  String get enterEstimatedValue => 'Masukkan nilai anggaran';
+
+  @override
+  String get estimatedValueHint => 'cth., 5000.00';
+
+  @override
+  String get remarksOptional => 'Catatan tambahan';
+
+  @override
+  String get remarksHint =>
+      'cth., Lokasi akaun, arahan khas, atau butiran penting';
+
+  @override
+  String get additionalNotes => 'Catatan tambahan';
+
+  @override
+  String get additionalNotesDescription =>
+      'Tambah sebarang butiran tambahan yang akan membantu pelaksana anda menguruskan aset ini.';
+
+  @override
+  String get youMightWantToInclude => 'Anda mungkin ingin sertakan:';
+
+  @override
+  String get remarksSuggestion1 =>
+      'Lokasi akaun atau di mana untuk mencari butiran log masuk';
+
+  @override
+  String get remarksSuggestion2 => 'Arahan khas atau butiran penting';
+
+  @override
+  String get remarksSuggestion3 => 'Maklumat hubungan untuk pemulihan akaun';
+
+  @override
+  String get remarksSuggestionPhysical1 => 'Lokasi atau di mana aset disimpan';
+
+  @override
+  String get remarksSuggestionPhysical2 => 'Arahan khas atau butiran penting';
+
+  @override
+  String get remarksSuggestionPhysical3 =>
+      'Lokasi dokumentasi atau kertas pemilikan';
 
   @override
   String get assetWillBeIncludedInWill =>
-      'Aset ini akan dimasukkan dalam wasiat anda. Sebarang perubahan yang anda buat akan disegerakkan secara automatik ke wasiat anda.';
+      'Aset ini akan dimasukkan dalam wasiat anda. Sebarang perubahan yang anda buat akan disegerakkan secara automatik.';
 
   @override
   String get website => 'Laman Web';
@@ -960,17 +1069,20 @@ class AppLocalizationsMs extends AppLocalizations {
   String get pleaseSelectPlatformService => 'Sila pilih platform/perkhidmatan';
 
   @override
+  String get pleaseSelectAssetType => 'Sila pilih jenis aset';
+
+  @override
   String get pleaseSelectInstruction => 'Sila pilih arahan';
 
   @override
   String get pleaseSelectGiftRecipient => 'Sila pilih penerima hadiah';
 
   @override
-  String get assetAddedSuccessfully => 'Aset berjaya ditambah';
+  String get assetAddedSuccessfully => 'Aset ditambah';
 
   @override
   String failedToAddAsset(String error) {
-    return 'Gagal menambah aset: $error';
+    return 'Sesuatu tidak kena. Sila cuba lagi.';
   }
 
   @override
@@ -1015,26 +1127,192 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
-  String get whyAddYourAssets => 'Mengapa tambah aset anda?';
+  String get whyAddYourAssets => 'Mengapa ini penting';
 
   @override
   String get digitalAssetsInclude =>
-      'Aset digital termasuk aplikasi bank, dompet elektronik, langganan, media sosial, dan akaun dalam talian lain.';
+      'Aset digital mungkin termasuk:\n• Akaun media sosial\n• E-mel dan storan awan\n• Perbankan dan pelaburan dalam talian\n• Langganan dan keahlian\n• Dompet kripto dan harta digital';
 
   @override
-  String get makeItEasyForExecutors =>
-      'Memudahkan pelaksana anda mengetahui akaun yang anda miliki.';
+  String get physicalAssetsInclude =>
+      'Aset fizikal mungkin termasuk:\n• Harta dan hartanah\n• Kenderaan\n• Barang kemas dan barang berharga\n• Seni dan koleksi\n• Barang ketara lain';
+
+  @override
+  String get assetType => 'Jenis aset';
+
+  @override
+  String get digitalAsset => 'Aset digital';
+
+  @override
+  String get physicalAsset => 'Aset fizikal';
+
+  @override
+  String get selectAssetType => 'Pilih jenis aset';
+
+  @override
+  String get selectAssetCategory => 'Apakah jenis aset ini?';
+
+  @override
+  String get whatTypeOfPhysicalAsset => 'Apakah jenis aset fizikal ini?';
+
+  @override
+  String get land => 'Tanah (hakmilik individu atau bersama)';
+
+  @override
+  String get housesBuildings => 'Rumah / bangunan';
+
+  @override
+  String get farmsPlantations => 'Ladang, estet';
+
+  @override
+  String get cash => 'Wang tunai';
+
+  @override
+  String get vehicles => 'Kenderaan (kereta, motosikal)';
+
+  @override
+  String get jewellery => 'Barang kemas';
+
+  @override
+  String get furnitureHousehold => 'Perabot & barangan rumah';
+
+  @override
+  String get financialInstruments =>
+      'Instrumen kewangan (KWSP, ASNB, Tabung Haji)';
+
+  @override
+  String get propertyOrLand => 'Harta atau tanah';
+
+  @override
+  String get propertyOrLandDescription =>
+      'Tanah, rumah, bangunan, ladang, estet';
+
+  @override
+  String get vehicle => 'Kenderaan';
+
+  @override
+  String get vehicleDescription => 'Kereta, motosikal, bot, kenderaan lain';
+
+  @override
+  String get jewelleryOrValuables => 'Barang kemas atau berharga';
+
+  @override
+  String get jewelleryOrValuablesDescription =>
+      'Barang kemas, jam tangan, seni, koleksi, perabot, barangan rumah';
+
+  @override
+  String get cashOrInvestments => 'Wang tunai atau pelaburan';
+
+  @override
+  String get cashOrInvestmentsDescription =>
+      'Wang tunai, KWSP, ASNB, Tabung Haji, saham, bon, instrumen kewangan lain';
+
+  @override
+  String get otherPhysicalAsset => 'Aset fizikal lain';
+
+  @override
+  String get otherPhysicalAssetDescription => 'Mana-mana aset ketara lain';
+
+  @override
+  String get immovableAssetNote => 'Jenis aset: Harta (Harta tak alih)';
+
+  @override
+  String get selectLegalClassification =>
+      'Adakah ini harta alih atau harta tak alih?';
+
+  @override
+  String get pleaseSelectLegalClassification =>
+      'Sila pilih sama ada ini harta alih atau harta tak alih';
+
+  @override
+  String get legalClassificationExplanation =>
+      'Ini membantu kami memproses aset anda mengikut undang-undang pusaka Malaysia.';
+
+  @override
+  String get movableAsset => 'Harta alih';
+
+  @override
+  String get movableAssetExplanation =>
+      'Barang yang boleh dipindahkan dengan mudah, seperti kenderaan, wang tunai, barang kemas, perabot, atau instrumen kewangan.';
+
+  @override
+  String get immovableAsset => 'Harta tak alih';
+
+  @override
+  String get immovableAssetExplanation =>
+      'Harta yang kekal di tempat, seperti tanah, rumah, bangunan, ladang, atau estet.';
+
+  @override
+  String get movableAssetDescription =>
+      'Barang yang boleh dipindahkan\n• Kenderaan\n• Barang kemas dan berharga\n• Wang tunai dan pelaburan\n• Seni dan koleksi';
+
+  @override
+  String get immovableAssetDescription =>
+      'Harta yang kekal di tempat\n• Tanah dan harta\n• Bangunan dan struktur\n• Hartanah';
+
+  @override
+  String get pleaseSelectAssetCategory => 'Sila pilih jenis aset';
+
+  @override
+  String get makeItEasyForExecutors => 'Elakkan akaun daripada hilang';
 
   @override
   String get linkEachAssetToInstructions =>
-      'Pautkan setiap aset dengan arahan yang jelas (Faraid, tamatkan, pindahkan sebagai hadiah, selesaikan hutang).';
+      'Pastikan penutupan atau pemindahan yang betul';
 
   @override
-  String get keepWillUpToDate =>
-      'Kekalkan wasiat dan perancangan anda terkini apabila kehidupan dalam talian anda berubah.';
+  String get keepWillUpToDate => 'Elakkan langganan yang tidak dibayar';
+
+  @override
+  String get provideClearInstructionsToExecutor =>
+      'Berikan arahan yang jelas kepada pelaksana anda';
+
+  @override
+  String get weDoNotStorePasswords =>
+      'Kami tidak menyimpan kata laluan atau kelayakan log masuk.';
 
   @override
   String get addAssetButton => 'Tambah aset';
+
+  @override
+  String get saveDigitalAsset => 'Simpan aset digital';
+
+  @override
+  String get saveAsset => 'Simpan aset';
+
+  @override
+  String get savePhysicalAsset => 'Simpan aset fizikal';
+
+  @override
+  String get returnToDashboard => 'Kembali ke papan pemuka';
+
+  @override
+  String get addAnotherDigitalAsset => 'Tambah aset digital lain';
+
+  @override
+  String get addAnotherAsset => 'Tambah aset lain';
+
+  @override
+  String get yourInstructionRecordedSecurely =>
+      'Arahan anda telah direkodkan dengan selamat.';
+
+  @override
+  String get youCanReviewOrUpdateAnytime =>
+      'Anda boleh menyemak atau mengemas kini pada bila-bila masa.';
+
+  @override
+  String get passwordsNotStoredInSampul =>
+      'Kata laluan tidak disimpan dalam Sampul.';
+
+  @override
+  String get cantFindYourPlatform => 'Tidak jumpa platform anda?';
+
+  @override
+  String get addCustomPlatform => 'Tambah platform tersuai';
+
+  @override
+  String get youllProvideInstructionsNextStep =>
+      'Anda akan memberikan arahan dalam langkah seterusnya. Kami tidak menyimpan kata laluan';
 
   @override
   String get aboutFamilyMembers => 'Mengenai Ahli Keluarga';
@@ -1290,11 +1568,10 @@ class AppLocalizationsMs extends AppLocalizations {
       'Tambah seseorang yang penting dalam wasiat anda';
 
   @override
-  String get addYourFirstAsset => 'Tambah Aset Pertama Anda';
+  String get addYourFirstAsset => 'Tambah aset pertama anda';
 
   @override
-  String get startTrackingYourDigitalAssets =>
-      'Mula menjejaki aset digital anda';
+  String get startTrackingYourDigitalAssets => 'Senaraikan aset digital anda';
 
   @override
   String get createYourWill => 'Cipta Wasiat Anda';
@@ -1975,4 +2252,160 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get addCharity => 'Tambah Amal/Derma';
+
+  @override
+  String get updatePassword => 'Kemas Kini Kata Laluan';
+
+  @override
+  String get setYourNewPassword => 'Tetapkan kata laluan baru anda';
+
+  @override
+  String get enterNewPasswordBelow =>
+      'Masukkan kata laluan baru anda di bawah untuk melengkapkan proses tetapan semula.';
+
+  @override
+  String get passwordUpdatedSuccessfully => 'Kata laluan berjaya dikemas kini!';
+
+  @override
+  String failedToUpdatePasswordWithError(String error) {
+    return 'Gagal mengemas kini kata laluan: $error';
+  }
+
+  @override
+  String get forgotPasswordTitle => 'Lupa kata laluan';
+
+  @override
+  String get enterEmailForResetLink =>
+      'Masukkan e-mel anda dan kami akan hantar pautan tetapan semula.';
+
+  @override
+  String get sendResetLink => 'Hantar pautan tetapan semula';
+
+  @override
+  String get passwordResetEmailSent =>
+      'E-mel tetapan semula kata laluan dihantar! Sila semak e-mel anda.';
+
+  @override
+  String failedToSendResetEmail(String error) {
+    return 'Gagal menghantar e-mel tetapan semula: $error';
+  }
+
+  @override
+  String get resetLinkExpired => 'Pautan tetapan semula tamat tempoh';
+
+  @override
+  String get resetLinkExpiredDescription =>
+      'Pautan tetapan semula kata laluan ini telah tamat tempoh atau telah digunakan. Sila minta pautan tetapan semula yang baru.';
+
+  @override
+  String get backToLogin => 'Kembali ke log masuk';
+
+  @override
+  String get whatWouldYouLikeToOrganise =>
+      'Apa yang anda ingin uruskan hari ini?';
+
+  @override
+  String get chooseWhatToTakeCareFirst =>
+      'Pilih apa yang anda ingin uruskan dahulu.';
+
+  @override
+  String get openFamilyAccount => 'Buka Akaun Keluarga';
+
+  @override
+  String get openFamilyAccountDescription =>
+      'Susun keluarga, aset, dan arahan anda di satu tempat.';
+
+  @override
+  String get protectProperty => 'Lindungi Hartanah';
+
+  @override
+  String get protectPropertyDescription =>
+      'Sediakan arahan untuk melindungi hartanah anda.';
+
+  @override
+  String get managePusaka => 'Urus Pusaka';
+
+  @override
+  String get managePusakaDescription =>
+      'Panduan untuk menguruskan hal-hal pusaka.';
+
+  @override
+  String get writeWasiat => 'Tulis Wasiat';
+
+  @override
+  String get writeWasiatDescription =>
+      'Dokumentasikan bagaimana aset anda harus diagihkan.';
+
+  @override
+  String get getGuidanceTitle => 'Dapatkan panduan';
+
+  @override
+  String get getGuidanceDescription =>
+      'Tanya Sampul AI atau bercakap dengan perunding profesional.';
+
+  @override
+  String get notSureWhereToStart => 'Tidak pasti dari mana nak mula?';
+
+  @override
+  String get notSureDescription =>
+      'Kami akan membimbing anda melalui beberapa soalan mudah.';
+
+  @override
+  String get setUpPropertyTrustHibah => 'Sediakan Amanah Hartanah';
+
+  @override
+  String get setUpHibahInstructionsForProperty =>
+      'Lindungi hartanah anda dengan amanah';
+
+  @override
+  String get setUpExecution => 'Sediakan Pelaksanaan';
+
+  @override
+  String get setUpExecutionDescription =>
+      'Lantik seseorang untuk menguruskan harta pusaka anda';
+
+  @override
+  String get readyForGuidance => 'Sedia untuk panduan!';
+
+  @override
+  String get profileSetUpChatReady =>
+      'Profil anda telah ditetapkan. Anda kini boleh berbual dengan Sampul AI atau bercakap dengan perunding profesional.';
+
+  @override
+  String get chatWithSampulAI => 'Berbual dengan Sampul AI';
+
+  @override
+  String get sampulAIDescription =>
+      'Dapatkan panduan peribadi dari pembantu Sampul AI';
+
+  @override
+  String get setUpAftercare => 'Tetapkan Penjagaan Selepas';
+
+  @override
+  String get aftercareDescription =>
+      'Teroka sumber sokongan dan perkhidmatan pasukan penjagaan';
+
+  @override
+  String get completeStepsFamilyAccount =>
+      'Lengkapkan langkah-langkah ini untuk menyediakan akaun keluarga anda.';
+
+  @override
+  String get completeStepsProtectProperty =>
+      'Lengkapkan langkah-langkah ini untuk melindungi hartanah anda.';
+
+  @override
+  String get completeStepsManagePusaka =>
+      'Lengkapkan langkah-langkah ini untuk menguruskan hal pusaka anda.';
+
+  @override
+  String get completeStepsWriteWasiat =>
+      'Lengkapkan langkah-langkah ini untuk mencipta wasiat anda.';
+
+  @override
+  String get completeStepsGetGuidance =>
+      'Lengkapkan langkah ini untuk mendapatkan panduan peribadi.';
+
+  @override
+  String get completeStepsNotSure =>
+      'Lengkapkan langkah-langkah ini untuk menyediakan akaun Sampul anda.';
 }

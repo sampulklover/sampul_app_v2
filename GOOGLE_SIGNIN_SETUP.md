@@ -4,7 +4,7 @@ Complete step-by-step guide to configure Google Sign-In with Supabase authentica
 
 ## 📱 Your App Configuration
 
-- **Android Package Name**: `com.example.sampul_app_v2`
+- **Android Package Name**: `com.sampul.app`
 - **iOS Bundle ID**: `com.sampul.app`
 - **Supabase Project URL**: `https://rfzblaianldrfwdqdijl.supabase.co`
 - **Supabase Project Reference**: `rfzblaianldrfwdqdijl`
@@ -69,7 +69,9 @@ You need to create **three** OAuth clients: Web (for Supabase), Android, and iOS
 1. Click **Create Credentials** → **OAuth 2.0 Client ID** again
 2. Choose **Android**
 3. **Name**: `Sampul App Android`
-4. **Package name**: `com.example.sampul_app_v2`
+4. **Package name**: `com.sampul.app`
+4. **Package name**: `com.sampul.app`
+4. **Package name**: `com.sampul.app`
 5. **SHA-1 certificate fingerprint**: 
    
    Get your SHA-1 fingerprint by running:

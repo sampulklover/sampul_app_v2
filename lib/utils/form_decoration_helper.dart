@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sampul_icons.dart';
 
 /// Global helper for creating consistent rounded form field decorations
 /// 
@@ -21,7 +22,8 @@ class FormDecorationHelper {
   /// - [context]: BuildContext to access theme
   /// - [labelText]: Required label text for the field
   /// - [hintText]: Optional hint text
-  /// - [prefixIcon]: Optional icon to show before the input
+  /// - [prefixIcon]: Optional Material icon to show before the input (deprecated, use prefixIconPath)
+  /// - [prefixIconPath]: Optional SVG icon path to show before the input
   /// - [helperText]: Optional helper text below the field
   /// 
   /// Returns an InputDecoration with:
@@ -33,6 +35,7 @@ class FormDecorationHelper {
     required String labelText,
     String? hintText,
     IconData? prefixIcon,
+    String? prefixIconPath,
     String? helperText,
   }) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
@@ -43,11 +46,22 @@ class FormDecorationHelper {
         width: defaultBorderWidth,
       ),
     );
+    
+    Widget? prefixWidget;
+    if (prefixIconPath != null) {
+      prefixWidget = Padding(
+        padding: const EdgeInsets.all(12),
+        child: SampulIcons.buildIcon(prefixIconPath, width: 24, height: 24),
+      );
+    } else if (prefixIcon != null) {
+      prefixWidget = Icon(prefixIcon);
+    }
+    
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
       helperText: helperText,
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+      prefixIcon: prefixWidget,
       border: roundedBorder,
       enabledBorder: roundedBorder,
       focusedBorder: roundedBorder.copyWith(

@@ -9,6 +9,7 @@ import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
 import 'onboarding_flow_screen.dart';
+import 'onboarding_goal_selection_screen.dart';
 import '../services/supabase_service.dart';
 import '../services/verification_service.dart';
 import '../services/account_service.dart';
@@ -16,6 +17,7 @@ import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'admin_ai_settings_screen.dart';
+import 'admin_learning_resources_screen.dart';
 import '../utils/admin_utils.dart';
 import '../services/image_upload_service.dart';
 import '../utils/card_decoration_helper.dart';
@@ -165,411 +167,413 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   top: 24,
                   bottom: MediaQuery.of(context).viewInsets.bottom + 24,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Handle bar
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Title
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Handle bar
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.lock_outline,
-                            color: theme.colorScheme.onPrimaryContainer,
-                            size: 24,
+                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          l10n.changePasswordTitle,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.enterCurrentPasswordAndChooseNew,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Form
-                    Form(
-                      key: formKey,
-                      child: Column(
+                      const SizedBox(height: 24),
+                      
+                      // Title
+                      Row(
                         children: [
-                          // Current Password Field
                           Container(
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            child: TextFormField(
-                              controller: currentPasswordController,
-                              obscureText: obscureCurrentPassword,
-                              onChanged: (value) {
-                                if (errorMessage != null) {
-                                  setModalState(() {
-                                    errorMessage = null;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: l10n.currentPassword,
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureCurrentPassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setModalState(() {
-                                      obscureCurrentPassword = !obscureCurrentPassword;
-                                    });
-                                  },
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return l10n.pleaseEnterCurrentPassword;
-                                }
-                                return null;
-                              },
+                            child: Icon(
+                              Icons.lock_outline,
+                              color: theme.colorScheme.onPrimaryContainer,
+                              size: 24,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          
-                          // New Password Field
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-                            ),
-                            child: TextFormField(
-                              controller: newPasswordController,
-                              obscureText: obscureNewPassword,
-                              onChanged: (value) {
-                                if (errorMessage != null) {
-                                  setModalState(() {
-                                    errorMessage = null;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: l10n.newPassword,
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureNewPassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setModalState(() {
-                                      obscureNewPassword = !obscureNewPassword;
-                                    });
-                                  },
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return l10n.pleaseEnterNewPassword;
-                                }
-                                if (value.length < 6) {
-                                  return l10n.passwordMinLength;
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          // Confirm Password Field
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
-                            ),
-                            child: TextFormField(
-                              controller: confirmPasswordController,
-                              obscureText: obscureConfirmPassword,
-                              onChanged: (value) {
-                                if (errorMessage != null) {
-                                  setModalState(() {
-                                    errorMessage = null;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                labelText: l10n.confirmNewPassword,
-                                labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureConfirmPassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setModalState(() {
-                                      obscureConfirmPassword = !obscureConfirmPassword;
-                                    });
-                                  },
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return l10n.pleaseConfirmNewPassword;
-                                }
-                                if (value != newPasswordController.text) {
-                                  return l10n.passwordsDoNotMatch;
-                                }
-                                return null;
-                              },
+                          const SizedBox(width: 12),
+                          Text(
+                            l10n.changePasswordTitle,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Error message
-                    if (errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: theme.colorScheme.onErrorContainer,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                errorMessage!,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onErrorContainer,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                setModalState(() {
-                                  errorMessage = null;
-                                });
-                              },
-                              icon: Icon(
-                                Icons.close,
-                                color: theme.colorScheme.onErrorContainer,
-                                size: 18,
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 24,
-                                minHeight: 24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    
-                    // Success message
-                    if (successMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              color: theme.colorScheme.onPrimaryContainer,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                successMessage!,
-                                style: TextStyle(
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    
-                    // Loading indicator
-                    if (isLoading) ...[
-                      Center(
-                        child: Column(
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              l10n.updatingPassword,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.enterCurrentPasswordAndChooseNew,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 24),
-                    ],
-                    
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: isLoading ? null : () {
-                              Navigator.of(context).pop();
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
+                      
+                      // Form
+                      Form(
+                        key: formKey,
+                        child: Column(
+                          children: [
+                            // Current Password Field
+                            Container(
+                              decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
                               ),
-                              side: BorderSide(color: theme.colorScheme.outline),
-                            ),
-                            child: Text(
-                              l10n.cancel,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: isLoading ? null : () async {
-                              if (formKey.currentState!.validate()) {
-                                setModalState(() {
-                                  isLoading = true;
-                                  errorMessage = null;
-                                  successMessage = null;
-                                });
-
-                                // Capture context before async operation
-                                final navigator = Navigator.of(context);
-
-                                try {
-                                  await AuthController.instance.changePassword(
-                                    currentPassword: currentPasswordController.text,
-                                    newPassword: newPasswordController.text,
-                                  );
-
-                                  if (mounted) {
+                              child: TextFormField(
+                                controller: currentPasswordController,
+                                obscureText: obscureCurrentPassword,
+                                onChanged: (value) {
+                                  if (errorMessage != null) {
                                     setModalState(() {
-                                      isLoading = false;
-                                      successMessage = l10n.passwordChangedSuccessfully;
-                                    });
-                                    
-                                    // Auto-close modal after 2 seconds
-                                    Future.delayed(const Duration(seconds: 2), () {
-                                      if (mounted) {
-                                        navigator.pop();
-                                      }
+                                      errorMessage = null;
                                     });
                                   }
-                                } catch (e) {
-                                  setModalState(() {
-                                    isLoading = false;
-                                    errorMessage = e.toString().replaceFirst('Exception: ', '');
-                                  });
-                                }
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.currentPassword,
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      obscureCurrentPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        obscureCurrentPassword = !obscureCurrentPassword;
+                                      });
+                                    },
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.pleaseEnterCurrentPassword;
+                                  }
+                                  return null;
+                                },
                               ),
-                              elevation: 0,
                             ),
-                            child: Text(
-                              l10n.changePasswordTitle,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+                            const SizedBox(height: 16),
+                            
+                            // New Password Field
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                              ),
+                              child: TextFormField(
+                                controller: newPasswordController,
+                                obscureText: obscureNewPassword,
+                                onChanged: (value) {
+                                  if (errorMessage != null) {
+                                    setModalState(() {
+                                      errorMessage = null;
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.newPassword,
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      obscureNewPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        obscureNewPassword = !obscureNewPassword;
+                                      });
+                                    },
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.pleaseEnterNewPassword;
+                                  }
+                                  if (value.length < 6) {
+                                    return l10n.passwordMinLength;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Confirm Password Field
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+                              ),
+                              child: TextFormField(
+                                controller: confirmPasswordController,
+                                obscureText: obscureConfirmPassword,
+                                onChanged: (value) {
+                                  if (errorMessage != null) {
+                                    setModalState(() {
+                                      errorMessage = null;
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  labelText: l10n.confirmNewPassword,
+                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  prefixIcon: Icon(Icons.lock_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      obscureConfirmPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    onPressed: () {
+                                      setModalState(() {
+                                        obscureConfirmPassword = !obscureConfirmPassword;
+                                      });
+                                    },
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.pleaseConfirmNewPassword;
+                                  }
+                                  if (value != newPasswordController.text) {
+                                    return l10n.passwordsDoNotMatch;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Error message
+                      if (errorMessage != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                color: theme.colorScheme.onErrorContainer,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  errorMessage!,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onErrorContainer,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    errorMessage = null;
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.close,
+                                  color: theme.colorScheme.onErrorContainer,
+                                  size: 18,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      
+                      // Success message
+                      if (successMessage != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline,
+                                color: theme.colorScheme.onPrimaryContainer,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  successMessage!,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      
+                      // Loading indicator
+                      if (isLoading) ...[
+                        Center(
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.updatingPassword,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: isLoading ? null : () {
+                                Navigator.of(context).pop();
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(color: theme.colorScheme.outline),
+                              ),
+                              child: Text(
+                                l10n.cancel,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : () async {
+                                if (formKey.currentState!.validate()) {
+                                  setModalState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                    successMessage = null;
+                                  });
+
+                                  // Capture context before async operation
+                                  final navigator = Navigator.of(context);
+
+                                  try {
+                                    await AuthController.instance.changePassword(
+                                      currentPassword: currentPasswordController.text,
+                                      newPassword: newPasswordController.text,
+                                    );
+
+                                    if (mounted) {
+                                      setModalState(() {
+                                        isLoading = false;
+                                        successMessage = l10n.passwordChangedSuccessfully;
+                                      });
+                                      
+                                      // Auto-close modal after 2 seconds
+                                      Future.delayed(const Duration(seconds: 2), () {
+                                        if (mounted) {
+                                          navigator.pop();
+                                        }
+                                      });
+                                    }
+                                  } catch (e) {
+                                    setModalState(() {
+                                      isLoading = false;
+                                      errorMessage = e.toString().replaceFirst('Exception: ', '');
+                                    });
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                l10n.changePasswordTitle,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -1157,7 +1161,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   },
                 ),
                 const Divider(height: 1),
-                // Admin AI Settings (only visible to admins)
+                // Admin-only settings
                 if (!_isLoadingAdmin && _isAdmin) ...[
                   ListTile(
                     leading: const Icon(Icons.smart_toy_outlined),
@@ -1168,6 +1172,20 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const AdminAiSettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.menu_book_outlined),
+                    title: const Text('Learning resources'),
+                    subtitle: const Text('Manage podcasts and guides for Learn'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AdminLearningResourcesScreen(),
                         ),
                       );
                     },
@@ -1215,11 +1233,11 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                         SnackBar(content: Text(l10n.onboardingHasBeenReset)),
                       );
 
-                      // Launch onboarding flow screen
+                      // Launch onboarding goal selection screen
                       // Using push to allow user to complete and return
                       await Navigator.of(context).push(
                         MaterialPageRoute<bool>(
-                          builder: (_) => const OnboardingFlowScreen(),
+                          builder: (_) => const OnboardingGoalSelectionScreen(),
                           fullscreenDialog: true,
                         ),
                       );

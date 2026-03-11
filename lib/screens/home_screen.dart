@@ -22,18 +22,21 @@ import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
 import 'will_management_screen.dart';
 import 'onboarding_flow_screen.dart';
+import 'onboarding_goal_selection_screen.dart';
 import 'aftercare_screen.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
 import '../services/hibah_service.dart';
 import '../services/executor_service.dart';
+import '../services/will_service.dart';
 import 'hibah_info_screen.dart';
 import 'executor_info_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'notification_screen.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../utils/card_decoration_helper.dart';
+import '../utils/sampul_icons.dart';
 
 const Color _trustAccentColor = Color.fromRGBO(83, 61, 233, 1);
 
@@ -84,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showOnboardingModal() async {
     final bool? result = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => const OnboardingFlowScreen(),
+        builder: (_) => const OnboardingGoalSelectionScreen(),
         fullscreenDialog: true,
       ),
     );
@@ -188,7 +191,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
                       );
                     },
-                    icon: const Icon(Icons.card_giftcard_outlined, color: Colors.white),
+                    icon: SampulIcons.buildIcon(
+                      SampulIcons.gift,
+                      width: 24,
+                      height: 24,
+                      color: Colors.white,
+                    ),
                   );
                 },
               ),
@@ -198,7 +206,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute<void>(builder: (_) => const NotificationScreen()),
                   );
                 },
-                icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                icon: SampulIcons.buildIcon(
+                  SampulIcons.notifications,
+                  width: 24,
+                  height: 24,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 8),
             ],
@@ -261,6 +274,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: _ActionsGrid(
+                    trusts: _trusts,
+                    onRefresh: _refreshData,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _EstatePlanningProgressCard(
                     trusts: _trusts,
                     onRefresh: _refreshData,
                   ),
@@ -648,7 +669,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
               return SizedBox(
                 width: mainCardWidth,
                 child: Card(
-                  elevation: 1,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: InkWell(
                     onTap: () {
@@ -663,19 +684,35 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                       });
                     },
                     borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      children: <Widget>[
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        children: <Widget>[
                         // Background gradient
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: <Color>[
-                                Colors.white,
-                                theme.colorScheme.primaryContainer.withOpacity(0.1),
-                              ],
+                            color: Colors.grey.shade200,
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                              width: 0,
+                            ),
+                          ),
+                        ),
+                        // Decorative image (book-like graphic) - behind content
+                        Positioned(
+                          right: -20,
+                          bottom: -0,
+                          child: Transform.rotate(
+                            angle: 0,
+                            child: Opacity(
+                              opacity: 0.9,
+                              child: Image.asset(
+                                'assets/trust-three-coin.png',
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),
@@ -708,10 +745,16 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                           trustCode,
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: theme.colorScheme.onSurfaceVariant,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ],
                                     ),
+                                  ),
+                                  Icon(
+                                    Icons.north_east,
+                                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                                    size: 20,
                                   ),
                                 ],
                               ),
@@ -750,21 +793,8 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                             ],
                           ),
                         ),
-                        // Decorative element (purple cube-like graphic)
-                        Positioned(
-                          right: -20,
-                          top: -20,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            transform: Matrix4.rotationZ(0.2),
-                          ),
-                        ),
                       ],
+                      ),
                     ),
                   ),
                 ),
@@ -778,6 +808,364 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
   }
 }
 
+class _EstatePlanningProgressCard extends StatefulWidget {
+  final List<Trust> trusts;
+  final VoidCallback? onRefresh;
+
+  const _EstatePlanningProgressCard({
+    required this.trusts,
+    this.onRefresh,
+  });
+
+  @override
+  State<_EstatePlanningProgressCard> createState() => _EstatePlanningProgressCardState();
+}
+
+class _FeatureStatus {
+  final String name;
+  final bool isComplete;
+  final IconData icon;
+  const _FeatureStatus(this.name, this.isComplete, this.icon);
+}
+
+class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard> {
+  bool _isLoading = true;
+  bool _isDismissed = false;
+  bool _hasProfile = false;
+  bool _hasAssets = false;
+  bool _hasFamily = false;
+  bool _hasWill = false;
+  bool _hasExecutors = false;
+  bool _hasTrusts = false;
+  bool _hasHibah = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateProgress();
+  }
+
+  @override
+  void didUpdateWidget(_EstatePlanningProgressCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Recalculate if trusts list changed
+    if (oldWidget.trusts.length != widget.trusts.length) {
+      _calculateProgress();
+    }
+  }
+
+  Future<void> _calculateProgress() async {
+    try {
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Check profile
+      final profile = await AuthController.instance.getUserProfile();
+      _hasProfile = profile != null && 
+          ((profile.username != null && profile.username!.isNotEmpty) ||
+           (profile.nricName != null && profile.nricName!.isNotEmpty));
+
+      // Check assets
+      final assetsResponse = await SupabaseService.instance.client
+          .from('digital_assets')
+          .select('id')
+          .eq('uuid', user.id)
+          .limit(1);
+      _hasAssets = assetsResponse.isNotEmpty;
+
+      // Check family members
+      final familyResponse = await SupabaseService.instance.client
+          .from('beloved')
+          .select('id')
+          .eq('uuid', user.id)
+          .limit(1);
+      _hasFamily = familyResponse.isNotEmpty;
+
+      // Check will
+      try {
+        final will = await WillService.instance.getUserWill(user.id);
+        _hasWill = will != null;
+      } catch (_) {
+        _hasWill = false;
+      }
+
+      // Check executors
+      try {
+        final executors = await ExecutorService.instance.listUserExecutors();
+        _hasExecutors = executors.isNotEmpty;
+      } catch (_) {
+        _hasExecutors = false;
+      }
+
+      // Check trusts
+      _hasTrusts = widget.trusts.isNotEmpty;
+
+      // Check hibah
+      try {
+        final hibahResponse = await SupabaseService.instance.client
+            .from('hibah')
+            .select('id')
+            .eq('uuid', user.id)
+            .limit(1);
+        _hasHibah = hibahResponse.isNotEmpty;
+      } catch (_) {
+        _hasHibah = false;
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _getProgressMessage() {
+    if (_completedCount == 0) {
+      return "Let’s get started setting up your Sampul account.";
+    } else if (_completedCount < 3) {
+      return "You’re making good progress with your account setup.";
+    } else if (_completedCount < _totalCount) {
+      return "You’re almost done setting up your account.";
+    } else {
+      return "Excellent! Your Sampul account setup is complete.";
+    }
+  }
+
+  List<_FeatureStatus> get _features => [
+    _FeatureStatus('Profile', _hasProfile, Icons.person_outline),
+    _FeatureStatus('Family', _hasFamily, Icons.family_restroom),
+    _FeatureStatus('Assets', _hasAssets, Icons.account_balance_wallet_outlined),
+    _FeatureStatus('Wasiat', _hasWill, Icons.description_outlined),
+    _FeatureStatus('Executors', _hasExecutors, Icons.assignment_turned_in_outlined),
+    _FeatureStatus('Trust', _hasTrusts, Icons.account_balance_outlined),
+    _FeatureStatus('Hibah', _hasHibah, Icons.home_outlined),
+  ];
+
+  int get _completedCount => _features.where((f) => f.isComplete).length;
+  int get _totalCount => _features.length;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isDismissed) {
+      return const SizedBox.shrink();
+    }
+
+    final ThemeData theme = Theme.of(context);
+    final percentage = _isLoading ? 0.0 : (_completedCount / _totalCount);
+    final percentageText = (percentage * 100).round();
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: <Widget>[
+            InkWell(
+              onTap: () {
+                Navigator.of(context)
+                    .push<bool>(
+                  MaterialPageRoute<bool>(
+                    builder: (_) => const OnboardingGoalSelectionScreen(),
+                    fullscreenDialog: true,
+                  ),
+                )
+                    .then((bool? completed) {
+                  // Refresh progress when returning from onboarding flow
+                  _calculateProgress();
+                  widget.onRefresh?.call();
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _trustAccentColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.check_circle_outline,
+                            color: _trustAccentColor,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                'Account Setup Progress',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              if (_isLoading)
+                                Text(
+                                  'Calculating...',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  _getProgressMessage(),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_isLoading)
+                      LinearProgressIndicator(
+                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        valueColor: AlwaysStoppedAnimation<Color>(_trustAccentColor),
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                '$percentageText% Complete',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: _trustAccentColor,
+                                ),
+                              ),
+                              Text(
+                                '$_completedCount of $_totalCount features',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: percentage,
+                              minHeight: 8,
+                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                              valueColor: AlwaysStoppedAnimation<Color>(_trustAccentColor),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: _features.map((feature) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: feature.isComplete 
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: feature.isComplete 
+                                      ? Colors.green.withValues(alpha: 0.3)
+                                      : theme.colorScheme.outline.withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    feature.isComplete ? Icons.check_circle : feature.icon,
+                                    size: 14,
+                                    color: feature.isComplete 
+                                        ? Colors.green 
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    feature.name,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: feature.isComplete 
+                                          ? Colors.green 
+                                          : theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: feature.isComplete ? FontWeight.w600 : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )).toList(),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            // Close button - top right
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isDismissed = true;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.8),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ActionsGrid extends StatelessWidget {
   final List<Trust> trusts;
 
@@ -785,11 +1173,11 @@ class _ActionsGrid extends StatelessWidget {
   List<_ActionItem> _getItems(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return <_ActionItem>[
-      _ActionItem(Icons.description_outlined, l10n.will),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/file-01.svg', l10n.will),
       // Property (formerly Hibah) – use a house icon to better reflect real estate
-      _ActionItem(Icons.home_work_outlined, l10n.hibah),
-      _ActionItem(Icons.gavel_outlined, l10n.trust),
-      _ActionItem(Icons.more_horiz, l10n.others),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/home-01.svg', l10n.hibah),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/scales-01.svg', l10n.trust),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/dots-horizontal.svg', l10n.others),
     ];
   }
 
@@ -797,11 +1185,11 @@ class _ActionsGrid extends StatelessWidget {
   List<_ActionItem> _getOthersItems(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return <_ActionItem>[
-      _ActionItem(Icons.account_balance_wallet_outlined, l10n.assets),
-      _ActionItem(Icons.family_restroom, l10n.family),
-      _ActionItem(Icons.checklist_outlined, l10n.checklist),
-      _ActionItem(Icons.task_alt_outlined, l10n.execution),
-      _ActionItem(Icons.medical_services_outlined, l10n.aftercare),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/wallet-01.svg', l10n.assets),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/users-01.svg', l10n.family),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/clipboard-check.svg', l10n.checklist),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/check-done-01.svg', l10n.execution),
+      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/medical-cross.svg', l10n.aftercare),
     ];
   }
 
@@ -1021,33 +1409,40 @@ class _ActionsGrid extends StatelessWidget {
                           ),
                           itemBuilder: (BuildContext context, int index) {
                             final _ActionItem item = othersItems[index];
-                        return GestureDetector(
-                          onTap: () => _handleOthersItemTap(item.label, rootContext),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
-                                  shape: BoxShape.circle,
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () => _handleOthersItemTap(item.label, rootContext),
+                                splashColor: theme.colorScheme.primary.withOpacity(0.08),
+                                highlightColor: theme.colorScheme.primary.withOpacity(0.04),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      SizedBox(
+                                        width: 56,
+                                        height: 56,
+                                        child: Center(
+                                          child: SampulIcons.buildIcon(item.iconAssetPath, width: 24, height: 24),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Flexible(
+                                        child: Text(
+                                          item.label,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                child: Icon(item.icon, color: const Color.fromRGBO(83, 61, 233, 1)),
                               ),
-                              const SizedBox(height: 8),
-                              Flexible(
-                                child: Text(
-                                  item.label,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
+                            );
                           },
                         );
                       },
@@ -1063,9 +1458,9 @@ class _ActionsGrid extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     final items = _getItems(context);
     return GridView.builder(
       itemCount: items.length,
@@ -1079,23 +1474,30 @@ class _ActionsGrid extends StatelessWidget {
       ),
       itemBuilder: (BuildContext context, int index) {
         final _ActionItem item = items[index];
-        return GestureDetector(
-          onTap: () => _handleItemTap(item.label, context),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(item.icon, color: const Color.fromRGBO(83, 61, 233, 1)),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _handleItemTap(item.label, context),
+            splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.04),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: Center(
+                      child: SampulIcons.buildIcon(item.iconAssetPath, width: 24, height: 24),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(item.label, style: const TextStyle(fontSize: 12)),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(item.label, style: const TextStyle(fontSize: 12)),
-            ],
+            ),
           ),
         );
       },
@@ -1104,9 +1506,9 @@ class _ActionsGrid extends StatelessWidget {
 }
 
 class _ActionItem {
-  final IconData icon;
+  final String iconAssetPath;
   final String label;
-  const _ActionItem(this.icon, this.label);
+  const _ActionItem(this.iconAssetPath, this.label);
 }
 
 class _SectionHeader extends StatelessWidget {

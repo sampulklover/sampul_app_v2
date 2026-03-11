@@ -134,7 +134,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  SvgPicture.asset('assets/sampul-icon-white.svg', width: 72, height: 72),
+                  SvgPicture.asset(
+                    'assets/sampul-icon-white.svg',
+                    width: 72,
+                    height: 72,
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     l10n.welcomeBack,

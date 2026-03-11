@@ -153,59 +153,51 @@ class WillService {
   /// Get user's assets for will assignment
   Future<List<Map<String, dynamic>>> getUserAssets(String uuid) async {
     try {
-      // Get physical assets with detailed information
-      final physicalAssets = await _supabase.client
-          .from('physical_assets')
-          .select('id, asset_name, declared_value_myr, account_type, institution, account_no, loan_category, rate, tenure_start_date, tenure_end_date, remarks, instructions_after_death, beloved_id')
-          .eq('uuid', uuid);
-
-      // Get digital assets with detailed information
-      final digitalAssets = await _supabase.client
+      // Get all assets from digital_assets table (both digital and physical)
+      final allAssetsData = await _supabase.client
           .from('digital_assets')
-          .select('id, new_service_platform_name, declared_value_myr, account_type, new_service_platform_url, new_service_platform_logo_url, username, email, frequency, protection, remarks, instructions_after_death, beloved_id')
+          .select('id, asset_type, new_service_platform_name, declared_value_myr, account_type, new_service_platform_url, new_service_platform_logo_url, username, email, frequency, protection, remarks, instructions_after_death, beloved_id, is_custom')
           .eq('uuid', uuid);
 
       final List<Map<String, dynamic>> allAssets = [];
       
-      // Add physical assets
-      for (final asset in physicalAssets) {
-        allAssets.add({
-          'id': asset['id'],
-          'name': asset['asset_name'] ?? 'Unknown Asset',
-          'type': 'physical',
-          'value': _parseDeclaredValue(asset['declared_value_myr']),
-          'account_type': asset['account_type'],
-          'institution': asset['institution'],
-          'account_no': asset['account_no'],
-          'loan_category': asset['loan_category'],
-          'rate': asset['rate'],
-          'tenure_start_date': asset['tenure_start_date'],
-          'tenure_end_date': asset['tenure_end_date'],
-          'remarks': asset['remarks'],
-          'instructions_after_death': asset['instructions_after_death'],
-          'beloved_id': asset['beloved_id'],
-        });
-      }
-
-      // Add digital assets
-      for (final asset in digitalAssets) {
-        final String? logoUrlRaw = asset['new_service_platform_logo_url'] as String?;
-        allAssets.add({
-          'id': asset['id'],
-          'name': asset['new_service_platform_name'] ?? 'Unknown Asset',
-          'type': 'digital',
-          'value': _parseDeclaredValue(asset['declared_value_myr']),
-          'account_type': asset['account_type'],
-          'url': asset['new_service_platform_url'],
-          'logo_url': BrandfetchService.instance.addClientIdToUrl(logoUrlRaw),
-          'username': asset['username'],
-          'email': asset['email'],
-          'frequency': asset['frequency'],
-          'protection': asset['protection'],
-          'remarks': asset['remarks'],
-          'instructions_after_death': asset['instructions_after_death'],
-          'beloved_id': asset['beloved_id'],
-        });
+      // Process all assets (both digital and physical)
+      for (final asset in allAssetsData) {
+        final String assetType = asset['asset_type'] ?? 'digital'; // Default to 'digital' for backward compatibility
+        final String assetName = asset['new_service_platform_name'] ?? 'Unknown Asset';
+        
+        if (assetType == 'physical') {
+          // Physical asset structure
+          allAssets.add({
+            'id': asset['id'],
+            'name': assetName,
+            'type': 'physical',
+            'value': _parseDeclaredValue(asset['declared_value_myr']),
+            'account_type': asset['account_type'],
+            'remarks': asset['remarks'],
+            'instructions_after_death': asset['instructions_after_death'],
+            'beloved_id': asset['beloved_id'],
+          });
+        } else {
+          // Digital asset structure
+          final String? logoUrlRaw = asset['new_service_platform_logo_url'] as String?;
+          allAssets.add({
+            'id': asset['id'],
+            'name': assetName,
+            'type': 'digital',
+            'value': _parseDeclaredValue(asset['declared_value_myr']),
+            'account_type': asset['account_type'],
+            'url': asset['new_service_platform_url'],
+            'logo_url': BrandfetchService.instance.addClientIdToUrl(logoUrlRaw),
+            'username': asset['username'],
+            'email': asset['email'],
+            'frequency': asset['frequency'],
+            'protection': asset['protection'],
+            'remarks': asset['remarks'],
+            'instructions_after_death': asset['instructions_after_death'],
+            'beloved_id': asset['beloved_id'],
+          });
+        }
       }
 
       return allAssets;

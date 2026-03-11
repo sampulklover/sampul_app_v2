@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
-import 'settings_screen.dart';
+import 'resources_insights_screen.dart';
 import 'will_management_screen.dart';
+import 'settings_screen.dart';
 import 'enhanced_chat_conversation_screen.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../services/affiliate_service.dart';
 import '../services/ai_chat_settings_service.dart';
-import '../l10n/app_localizations.dart';
+import '../utils/sampul_icons.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -19,81 +20,19 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> with SingleTickerProviderStateMixin {
+class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-  final GlobalKey<WillManagementScreenState> _willTabKey = GlobalKey<WillManagementScreenState>();
   late final List<Widget> _tabs;
-  late AnimationController _animationController;
-  late Animation<double> _widthAnimation;
-  late Animation<double> _textOpacityAnimation;
 
   @override
   void initState() {
     super.initState();
     _tabs = <Widget>[
       const HomeScreen(),
-      WillManagementScreen(key: _willTabKey),
-      const SettingsScreen(),
+      const ResourcesInsightsScreen(),   // Learn
+      const WillManagementScreen(),      // Wasiat
+      const SettingsScreen(),            // Settings
     ];
-    
-    // Initialize animation controller with better performance settings
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 2500),
-      vsync: this,
-    );
-    
-    // Width animation: expands to show text, then contracts with smooth curves
-    _widthAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 56.0, end: 140.0)
-            .chain(CurveTween(curve: Curves.easeOutCubic)),
-        weight: 0.35,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 140.0, end: 140.0),
-        weight: 0.15,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 140.0, end: 56.0)
-            .chain(CurveTween(curve: Curves.easeInCubic)),
-        weight: 0.5,
-      ),
-    ]).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.linear,
-      ),
-    );
-    
-    // Text opacity animation: fades in and out smoothly
-    _textOpacityAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 0.25,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.0),
-        weight: 0.15,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 0.6,
-      ),
-    ]).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.linear,
-      ),
-    );
-    
-    // Start animation after a short delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _animationController.forward();
-      }
-    });
 
     // If user entered a referral code during onboarding (or earlier), try to claim it now.
     // Safe to call repeatedly; server enforces constraints.
@@ -104,12 +43,6 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         // Silent fail; user can re-enter in onboarding.
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _openSampulAI() async {
@@ -198,103 +131,160 @@ class _MainShellState extends State<MainShell> with SingleTickerProviderStateMix
         index: _currentIndex,
         children: _tabs,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (int index) {
-          setState(() => _currentIndex = index);
-          if (index == 1) {
-            // Will tab became active; ensure it refreshes its data
-            _willTabKey.currentState?.reload();
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-        items: <BottomNavigationBarItem>[
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.description_outlined),
-            label: AppLocalizations.of(context)!.will,
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings_outlined),
-            label: AppLocalizations.of(context)!.settings,
+      bottomNavigationBar: _buildCustomBottomNavBar(context, theme),
+    );
+  }
+
+  Widget _buildCustomBottomNavBar(BuildContext context, ThemeData theme) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final safeAreaBottom = MediaQuery.of(context).padding.bottom;
+    
+    return Container(
+      padding: EdgeInsets.only(bottom: safeAreaBottom),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      floatingActionButton: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            final width = _widthAnimation.value;
-            final showText = width > 80;
-            final textOpacity = _textOpacityAnimation.value;
-            
-            return PhysicalModel(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildNavItem(
+                  context: context,
+                  theme: theme,
+                  icon: SampulIcons.home,
+                  label: 'Home',
+                  index: 0,
+                  onTap: () => setState(() => _currentIndex = 0),
+                ),
+                _buildNavItem(
+                  context: context,
+                  theme: theme,
+                  icon: SampulIcons.learn,
+                  label: 'Learn',
+                  index: 1,
+                  onTap: () => setState(() => _currentIndex = 1),
+                ),
+                // Invisible spacer for center button
+                const SizedBox(width: 60),
+                _buildNavItem(
+                  context: context,
+                  theme: theme,
+                  icon: SampulIcons.wasiat,
+                  label: 'Wasiat',
+                  index: 2,
+                  onTap: () => setState(() => _currentIndex = 2),
+                ),
+                _buildNavItem(
+                  context: context,
+                  theme: theme,
+                  icon: SampulIcons.settings,
+                  label: 'Settings',
+                  index: 3,
+                  onTap: () => setState(() => _currentIndex = 3),
+                ),
+              ],
+            ),
+          ),
+          // Center AI Chat Button
+          Positioned(
+            left: screenWidth / 2 - 30,
+            top: -20,
+            child: Material(
               color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(28),
-              elevation: 4,
-              shadowColor: Colors.black.withOpacity(0.2),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _openSampulAI,
-                  borderRadius: BorderRadius.circular(28),
-                  child: Container(
-                    width: width,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(width: 14),
-                          SvgPicture.asset(
-                            'assets/sampul-icon-white.svg',
-                            width: 28,
-                            height: 28,
-                            cacheColorFilter: true,
-                          ),
-                          if (showText)
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8, right: 14),
-                                child: Opacity(
-                                  opacity: textOpacity,
-                                  child: const Text(
-                                    'Sampul AI',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            const SizedBox(width: 14),
-                        ],
+              shape: const CircleBorder(),
+              elevation: 0,
+              child: InkWell(
+                onTap: _openSampulAI,
+                customBorder: const CircleBorder(),
+                splashColor: Colors.white.withOpacity(0.3),
+                highlightColor: Colors.white.withOpacity(0.2),
+                radius: 30,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
+                    ],
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/sampul-icon-all-white.svg',
+                      width: 32,
+                      height: 32,
+                      cacheColorFilter: true,
                     ),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required BuildContext context,
+    required ThemeData theme,
+    required String icon,
+    required String label,
+    required int index,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _currentIndex == index;
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkResponse(
+          onTap: onTap,
+          splashColor: Colors.grey.withOpacity(0.12),
+          highlightColor: Colors.grey.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(12),
+          containedInkWell: true,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SampulIcons.buildBottomNavIcon(
+                icon,
+                isSelected: isSelected,
+                size: 24,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
-
-

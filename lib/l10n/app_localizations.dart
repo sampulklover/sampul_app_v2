@@ -251,13 +251,13 @@ abstract class AppLocalizations {
   /// No description provided for @letsListYourDigitalAssets.
   ///
   /// In en, this message translates to:
-  /// **'Let\'s list your digital assets'**
+  /// **'Organise your assets'**
   String get letsListYourDigitalAssets;
 
   /// No description provided for @assetsDescription.
   ///
   /// In en, this message translates to:
-  /// **'Keep important online accounts and platforms in one place so your will stays clear and up to date.'**
+  /// **'Include your important assets—both digital accounts and physical items—so your instructions are clear and accessible when needed.'**
   String get assetsDescription;
 
   /// No description provided for @letsSetUpYourFamilyAccount.
@@ -871,6 +871,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @assetAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset added'**
+  String get assetAdded;
 
   /// No description provided for @copy.
   ///
@@ -1499,7 +1517,7 @@ abstract class AppLocalizations {
   /// No description provided for @noAssetsYet.
   ///
   /// In en, this message translates to:
-  /// **'No assets yet. Add at least one to include in your will.'**
+  /// **'No assets yet. Add one when you\'re ready.'**
   String get noAssetsYet;
 
   /// No description provided for @showMore.
@@ -1658,6 +1676,42 @@ abstract class AppLocalizations {
   /// **'Platform / Service'**
   String get platformService;
 
+  /// No description provided for @selectPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a platform'**
+  String get selectPlatform;
+
+  /// No description provided for @chooseDigitalAccountToInclude.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the digital account you would like to include.'**
+  String get chooseDigitalAccountToInclude;
+
+  /// No description provided for @enterPhysicalAssetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the name of your physical asset'**
+  String get enterPhysicalAssetName;
+
+  /// No description provided for @physicalAssetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset name'**
+  String get physicalAssetName;
+
+  /// No description provided for @assetInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset info'**
+  String get assetInfo;
+
+  /// No description provided for @physicalAssetNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., My House, Car, Jewelry Collection'**
+  String get physicalAssetNameHint;
+
   /// No description provided for @details.
   ///
   /// In en, this message translates to:
@@ -1669,6 +1723,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review'**
   String get review;
+
+  /// No description provided for @reviewThisDigitalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Review this digital asset'**
+  String get reviewThisDigitalAsset;
+
+  /// No description provided for @reviewThisAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Review this asset'**
+  String get reviewThisAsset;
 
   /// No description provided for @searchForPlatformOrService.
   ///
@@ -1766,6 +1832,60 @@ abstract class AppLocalizations {
   /// **'Instructions After Death'**
   String get instructionsAfterDeath;
 
+  /// No description provided for @instructionUponActivation.
+  ///
+  /// In en, this message translates to:
+  /// **'Instruction upon activation'**
+  String get instructionUponActivation;
+
+  /// No description provided for @whatShouldHappenToThisAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'What should happen to this account?'**
+  String get whatShouldHappenToThisAccount;
+
+  /// No description provided for @defineHowThisAccountShouldBeHandled.
+  ///
+  /// In en, this message translates to:
+  /// **'Define how this account should be handled.'**
+  String get defineHowThisAccountShouldBeHandled;
+
+  /// No description provided for @closeThisAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Close this account'**
+  String get closeThisAccount;
+
+  /// No description provided for @transferAccessToExecutor.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer access to my executor'**
+  String get transferAccessToExecutor;
+
+  /// No description provided for @memorialiseIfApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'Memorialise (if applicable)'**
+  String get memorialiseIfApplicable;
+
+  /// No description provided for @leaveSpecificInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave specific instructions'**
+  String get leaveSpecificInstructions;
+
+  /// No description provided for @provideDetailsBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide details below.'**
+  String get provideDetailsBelow;
+
+  /// No description provided for @thisInformationOnlyAccessible.
+  ///
+  /// In en, this message translates to:
+  /// **'This information will only be accessible according to your estate instructions.'**
+  String get thisInformationOnlyAccessible;
+
   /// No description provided for @loadingRecipients.
   ///
   /// In en, this message translates to:
@@ -1784,22 +1904,100 @@ abstract class AppLocalizations {
   /// **'Gift Recipient is required'**
   String get giftRecipientRequired;
 
+  /// No description provided for @estimatedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated value'**
+  String get estimatedValue;
+
+  /// No description provided for @estimatedValueDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An approximate value helps your executor understand the asset\'s worth.'**
+  String get estimatedValueDescription;
+
+  /// No description provided for @enterEstimatedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter estimated value'**
+  String get enterEstimatedValue;
+
+  /// No description provided for @estimatedValueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., 5000.00'**
+  String get estimatedValueHint;
+
   /// No description provided for @remarksOptional.
   ///
   /// In en, this message translates to:
-  /// **'Remarks (optional)'**
+  /// **'Additional notes'**
   String get remarksOptional;
 
   /// No description provided for @remarksHint.
   ///
   /// In en, this message translates to:
-  /// **'Any additional instructions or notes'**
+  /// **'e.g., Account location, special instructions, or important details'**
   String get remarksHint;
+
+  /// No description provided for @additionalNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional notes'**
+  String get additionalNotes;
+
+  /// No description provided for @additionalNotesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add any extra details that will help your executor handle this asset.'**
+  String get additionalNotesDescription;
+
+  /// No description provided for @youMightWantToInclude.
+  ///
+  /// In en, this message translates to:
+  /// **'You might want to include:'**
+  String get youMightWantToInclude;
+
+  /// No description provided for @remarksSuggestion1.
+  ///
+  /// In en, this message translates to:
+  /// **'Account location or where to find login details'**
+  String get remarksSuggestion1;
+
+  /// No description provided for @remarksSuggestion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Special instructions or important details'**
+  String get remarksSuggestion2;
+
+  /// No description provided for @remarksSuggestion3.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact information for account recovery'**
+  String get remarksSuggestion3;
+
+  /// No description provided for @remarksSuggestionPhysical1.
+  ///
+  /// In en, this message translates to:
+  /// **'Location or where the asset is kept'**
+  String get remarksSuggestionPhysical1;
+
+  /// No description provided for @remarksSuggestionPhysical2.
+  ///
+  /// In en, this message translates to:
+  /// **'Special instructions or important details'**
+  String get remarksSuggestionPhysical2;
+
+  /// No description provided for @remarksSuggestionPhysical3.
+  ///
+  /// In en, this message translates to:
+  /// **'Documentation or ownership papers location'**
+  String get remarksSuggestionPhysical3;
 
   /// No description provided for @assetWillBeIncludedInWill.
   ///
   /// In en, this message translates to:
-  /// **'This asset will be included in your will. Any changes you make will automatically sync to your will.'**
+  /// **'This asset will be included in your will. Any changes you make will sync automatically.'**
   String get assetWillBeIncludedInWill;
 
   /// No description provided for @website.
@@ -1826,6 +2024,12 @@ abstract class AppLocalizations {
   /// **'Please select a platform/service'**
   String get pleaseSelectPlatformService;
 
+  /// No description provided for @pleaseSelectAssetType.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select an asset type'**
+  String get pleaseSelectAssetType;
+
   /// No description provided for @pleaseSelectInstruction.
   ///
   /// In en, this message translates to:
@@ -1841,13 +2045,13 @@ abstract class AppLocalizations {
   /// No description provided for @assetAddedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Asset added successfully'**
+  /// **'Asset added'**
   String get assetAddedSuccessfully;
 
   /// No description provided for @failedToAddAsset.
   ///
   /// In en, this message translates to:
-  /// **'Failed to add asset: {error}'**
+  /// **'Something went wrong. Please try again.'**
   String failedToAddAsset(String error);
 
   /// No description provided for @searchFailed.
@@ -1901,7 +2105,7 @@ abstract class AppLocalizations {
   /// No description provided for @areYouSureDeleteAsset.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this asset? This action cannot be undone.'**
+  /// **'Are you sure you want to delete this asset? This can\'t be undone.'**
   String get areYouSureDeleteAsset;
 
   /// No description provided for @assetDeleted.
@@ -1919,38 +2123,338 @@ abstract class AppLocalizations {
   /// No description provided for @whyAddYourAssets.
   ///
   /// In en, this message translates to:
-  /// **'Why add your assets?'**
+  /// **'Why this matters'**
   String get whyAddYourAssets;
 
   /// No description provided for @digitalAssetsInclude.
   ///
   /// In en, this message translates to:
-  /// **'Digital assets include bank apps, e‑wallets, subscriptions, social media, and other online accounts.'**
+  /// **'Digital assets may include:\n• Social media accounts\n• Email and cloud storage\n• Online banking and investments\n• Subscriptions and memberships\n• Crypto wallets and digital property'**
   String get digitalAssetsInclude;
+
+  /// No description provided for @physicalAssetsInclude.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical assets may include:\n• Property and real estate\n• Vehicles\n• Jewelry and valuables\n• Art and collectibles\n• Other tangible items'**
+  String get physicalAssetsInclude;
+
+  /// No description provided for @assetType.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset type'**
+  String get assetType;
+
+  /// No description provided for @digitalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital asset'**
+  String get digitalAsset;
+
+  /// No description provided for @physicalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical asset'**
+  String get physicalAsset;
+
+  /// No description provided for @selectAssetType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select asset type'**
+  String get selectAssetType;
+
+  /// No description provided for @selectAssetCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'What type of asset is this?'**
+  String get selectAssetCategory;
+
+  /// No description provided for @whatTypeOfPhysicalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'What type of physical asset is this?'**
+  String get whatTypeOfPhysicalAsset;
+
+  /// No description provided for @land.
+  ///
+  /// In en, this message translates to:
+  /// **'Land (individual or joint title)'**
+  String get land;
+
+  /// No description provided for @housesBuildings.
+  ///
+  /// In en, this message translates to:
+  /// **'Houses / buildings'**
+  String get housesBuildings;
+
+  /// No description provided for @farmsPlantations.
+  ///
+  /// In en, this message translates to:
+  /// **'Farms, plantations'**
+  String get farmsPlantations;
+
+  /// No description provided for @cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get cash;
+
+  /// No description provided for @vehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicles (car, motorcycle)'**
+  String get vehicles;
+
+  /// No description provided for @jewellery.
+  ///
+  /// In en, this message translates to:
+  /// **'Jewellery'**
+  String get jewellery;
+
+  /// No description provided for @furnitureHousehold.
+  ///
+  /// In en, this message translates to:
+  /// **'Furniture & household items'**
+  String get furnitureHousehold;
+
+  /// No description provided for @financialInstruments.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial instruments (EPF, ASNB, Tabung Haji)'**
+  String get financialInstruments;
+
+  /// No description provided for @propertyOrLand.
+  ///
+  /// In en, this message translates to:
+  /// **'Property or land'**
+  String get propertyOrLand;
+
+  /// No description provided for @propertyOrLandDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Land, houses, buildings, farms, plantations'**
+  String get propertyOrLandDescription;
+
+  /// No description provided for @vehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get vehicle;
+
+  /// No description provided for @vehicleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Cars, motorcycles, boats, other vehicles'**
+  String get vehicleDescription;
+
+  /// No description provided for @jewelleryOrValuables.
+  ///
+  /// In en, this message translates to:
+  /// **'Jewellery or valuables'**
+  String get jewelleryOrValuables;
+
+  /// No description provided for @jewelleryOrValuablesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Jewelry, watches, art, collectibles, furniture, household items'**
+  String get jewelleryOrValuablesDescription;
+
+  /// No description provided for @cashOrInvestments.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash or investments'**
+  String get cashOrInvestments;
+
+  /// No description provided for @cashOrInvestmentsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash, EPF, ASNB, Tabung Haji, stocks, bonds, other financial instruments'**
+  String get cashOrInvestmentsDescription;
+
+  /// No description provided for @otherPhysicalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Other physical asset'**
+  String get otherPhysicalAsset;
+
+  /// No description provided for @otherPhysicalAssetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Any other tangible asset'**
+  String get otherPhysicalAssetDescription;
+
+  /// No description provided for @immovableAssetNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset type: Property (Immovable asset)'**
+  String get immovableAssetNote;
+
+  /// No description provided for @selectLegalClassification.
+  ///
+  /// In en, this message translates to:
+  /// **'Is this a movable or immovable asset?'**
+  String get selectLegalClassification;
+
+  /// No description provided for @pleaseSelectLegalClassification.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select whether this is a movable or immovable asset'**
+  String get pleaseSelectLegalClassification;
+
+  /// No description provided for @legalClassificationExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This helps us process your asset according to Malaysian inheritance law.'**
+  String get legalClassificationExplanation;
+
+  /// No description provided for @movableAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Movable asset'**
+  String get movableAsset;
+
+  /// No description provided for @movableAssetExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Items you can move or transfer easily, such as vehicles, cash, jewellery, furniture, or financial instruments.'**
+  String get movableAssetExplanation;
+
+  /// No description provided for @immovableAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Immovable asset'**
+  String get immovableAsset;
+
+  /// No description provided for @immovableAssetExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Property that stays in place, such as land, houses, buildings, farms, or plantations.'**
+  String get immovableAssetExplanation;
+
+  /// No description provided for @movableAssetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Items you can move or transfer\n• Vehicles\n• Jewelry and valuables\n• Cash and investments\n• Art and collectibles'**
+  String get movableAssetDescription;
+
+  /// No description provided for @immovableAssetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Property that stays in place\n• Land and property\n• Buildings and structures\n• Real estate'**
+  String get immovableAssetDescription;
+
+  /// No description provided for @pleaseSelectAssetCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select an asset type'**
+  String get pleaseSelectAssetCategory;
 
   /// No description provided for @makeItEasyForExecutors.
   ///
   /// In en, this message translates to:
-  /// **'Make it easy for your executors to know which accounts you have.'**
+  /// **'Prevent accounts from being lost'**
   String get makeItEasyForExecutors;
 
   /// No description provided for @linkEachAssetToInstructions.
   ///
   /// In en, this message translates to:
-  /// **'Link each asset to clear instructions (Faraid, terminate, transfer as gift, settle debts).'**
+  /// **'Ensure proper closure or transfer'**
   String get linkEachAssetToInstructions;
 
   /// No description provided for @keepWillUpToDate.
   ///
   /// In en, this message translates to:
-  /// **'Keep your will and planning up to date as your online life changes.'**
+  /// **'Avoid unpaid subscriptions'**
   String get keepWillUpToDate;
+
+  /// No description provided for @provideClearInstructionsToExecutor.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide clear instructions to your executor'**
+  String get provideClearInstructionsToExecutor;
+
+  /// No description provided for @weDoNotStorePasswords.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not store passwords or login credentials.'**
+  String get weDoNotStorePasswords;
 
   /// No description provided for @addAssetButton.
   ///
   /// In en, this message translates to:
   /// **'Add asset'**
   String get addAssetButton;
+
+  /// No description provided for @saveDigitalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Save digital asset'**
+  String get saveDigitalAsset;
+
+  /// No description provided for @saveAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Save asset'**
+  String get saveAsset;
+
+  /// No description provided for @savePhysicalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Save physical asset'**
+  String get savePhysicalAsset;
+
+  /// No description provided for @returnToDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to dashboard'**
+  String get returnToDashboard;
+
+  /// No description provided for @addAnotherDigitalAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another digital asset'**
+  String get addAnotherDigitalAsset;
+
+  /// No description provided for @addAnotherAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another asset'**
+  String get addAnotherAsset;
+
+  /// No description provided for @yourInstructionRecordedSecurely.
+  ///
+  /// In en, this message translates to:
+  /// **'Your instruction has been recorded securely.'**
+  String get yourInstructionRecordedSecurely;
+
+  /// No description provided for @youCanReviewOrUpdateAnytime.
+  ///
+  /// In en, this message translates to:
+  /// **'You can review or update it anytime.'**
+  String get youCanReviewOrUpdateAnytime;
+
+  /// No description provided for @passwordsNotStoredInSampul.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords are not stored in Sampul.'**
+  String get passwordsNotStoredInSampul;
+
+  /// No description provided for @cantFindYourPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t find your platform?'**
+  String get cantFindYourPlatform;
+
+  /// No description provided for @addCustomPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Add custom platform'**
+  String get addCustomPlatform;
+
+  /// No description provided for @youllProvideInstructionsNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll provide instructions in the next step. We do not store passwords'**
+  String get youllProvideInstructionsNextStep;
 
   /// No description provided for @aboutFamilyMembers.
   ///
@@ -2399,13 +2903,13 @@ abstract class AppLocalizations {
   /// No description provided for @addYourFirstAsset.
   ///
   /// In en, this message translates to:
-  /// **'Add Your First Asset'**
+  /// **'Add your first asset'**
   String get addYourFirstAsset;
 
   /// No description provided for @startTrackingYourDigitalAssets.
   ///
   /// In en, this message translates to:
-  /// **'Start tracking your digital assets'**
+  /// **'List your digital assets'**
   String get startTrackingYourDigitalAssets;
 
   /// No description provided for @createYourWill.
@@ -3589,6 +4093,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Charity/Donation'**
   String get addCharity;
+
+  /// No description provided for @updatePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Password'**
+  String get updatePassword;
+
+  /// No description provided for @setYourNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your new password'**
+  String get setYourNewPassword;
+
+  /// No description provided for @enterNewPasswordBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your new password below to complete the reset process.'**
+  String get enterNewPasswordBelow;
+
+  /// No description provided for @passwordUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated successfully!'**
+  String get passwordUpdatedSuccessfully;
+
+  /// No description provided for @failedToUpdatePasswordWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update password: {error}'**
+  String failedToUpdatePasswordWithError(String error);
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @enterEmailForResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we\'ll send you a reset link.'**
+  String get enterEmailForResetLink;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get sendResetLink;
+
+  /// No description provided for @passwordResetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent! Please check your email.'**
+  String get passwordResetEmailSent;
+
+  /// No description provided for @failedToSendResetEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reset email: {error}'**
+  String failedToSendResetEmail(String error);
+
+  /// No description provided for @resetLinkExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset link expired'**
+  String get resetLinkExpired;
+
+  /// No description provided for @resetLinkExpiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This password reset link has expired or has already been used. Please request a new reset link.'**
+  String get resetLinkExpiredDescription;
+
+  /// No description provided for @backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to login'**
+  String get backToLogin;
+
+  /// No description provided for @whatWouldYouLikeToOrganise.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to organise today?'**
+  String get whatWouldYouLikeToOrganise;
+
+  /// No description provided for @chooseWhatToTakeCareFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what you\'d like to take care of first.'**
+  String get chooseWhatToTakeCareFirst;
+
+  /// No description provided for @openFamilyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Family Account'**
+  String get openFamilyAccount;
+
+  /// No description provided for @openFamilyAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Organise your family, assets, and instructions in one place.'**
+  String get openFamilyAccountDescription;
+
+  /// No description provided for @protectProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect Property'**
+  String get protectProperty;
+
+  /// No description provided for @protectPropertyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up instructions to protect your property.'**
+  String get protectPropertyDescription;
+
+  /// No description provided for @managePusaka.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Pusaka'**
+  String get managePusaka;
+
+  /// No description provided for @managePusakaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Guidance for managing inheritance matters.'**
+  String get managePusakaDescription;
+
+  /// No description provided for @writeWasiat.
+  ///
+  /// In en, this message translates to:
+  /// **'Write Wasiat'**
+  String get writeWasiat;
+
+  /// No description provided for @writeWasiatDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Document how your assets should be distributed.'**
+  String get writeWasiatDescription;
+
+  /// No description provided for @getGuidanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get guidance'**
+  String get getGuidanceTitle;
+
+  /// No description provided for @getGuidanceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Sampul AI or speak with a professional consultant.'**
+  String get getGuidanceDescription;
+
+  /// No description provided for @notSureWhereToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure where to start?'**
+  String get notSureWhereToStart;
+
+  /// No description provided for @notSureDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll guide you through a few simple questions.'**
+  String get notSureDescription;
+
+  /// No description provided for @setUpPropertyTrustHibah.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up Property Trust'**
+  String get setUpPropertyTrustHibah;
+
+  /// No description provided for @setUpHibahInstructionsForProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect your property with a trust'**
+  String get setUpHibahInstructionsForProperty;
+
+  /// No description provided for @setUpExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up Execution'**
+  String get setUpExecution;
+
+  /// No description provided for @setUpExecutionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Appoint someone to manage your estate'**
+  String get setUpExecutionDescription;
+
+  /// No description provided for @readyForGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for guidance!'**
+  String get readyForGuidance;
+
+  /// No description provided for @profileSetUpChatReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is set up. You can now chat with Sampul AI or speak with a professional consultant.'**
+  String get profileSetUpChatReady;
+
+  /// No description provided for @chatWithSampulAI.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with Sampul AI'**
+  String get chatWithSampulAI;
+
+  /// No description provided for @sampulAIDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized guidance from Sampul AI assistant'**
+  String get sampulAIDescription;
+
+  /// No description provided for @setUpAftercare.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up Aftercare'**
+  String get setUpAftercare;
+
+  /// No description provided for @aftercareDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore support resources and care team services'**
+  String get aftercareDescription;
+
+  /// No description provided for @completeStepsFamilyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete these steps to set up your family account.'**
+  String get completeStepsFamilyAccount;
+
+  /// No description provided for @completeStepsProtectProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete these steps to protect your property.'**
+  String get completeStepsProtectProperty;
+
+  /// No description provided for @completeStepsManagePusaka.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete these steps to manage your inheritance matters.'**
+  String get completeStepsManagePusaka;
+
+  /// No description provided for @completeStepsWriteWasiat.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete these steps to create your wasiat.'**
+  String get completeStepsWriteWasiat;
+
+  /// No description provided for @completeStepsGetGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete this step to get personalized guidance.'**
+  String get completeStepsGetGuidance;
+
+  /// No description provided for @completeStepsNotSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete these steps to set up your Sampul account.'**
+  String get completeStepsNotSure;
 }
 
 class _AppLocalizationsDelegate

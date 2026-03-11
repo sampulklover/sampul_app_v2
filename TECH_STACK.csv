@@ -1,0 +1,39 @@
+Technology/Service,Category,Package/Version,Purpose/Why We Use It
+Dart,Core Language,SDK ^3.9.2,"Primary programming language with sound null-safety, excellent performance, and seamless Flutter integration"
+Flutter,Core Framework,flutter SDK,"Cross-platform UI framework enabling single codebase for Android, iOS, Web, Windows, macOS, Linux"
+Material 3,UI Framework,Built-in,"Modern Material Design 3 theming system for consistent, beautiful UI across platforms"
+Cupertino Icons,UI Components,cupertino_icons ^1.0.8,iOS-style icons for native iOS appearance
+Supabase,Backend/BaaS,supabase_flutter ^2.8.0,"Complete backend solution providing PostgreSQL database, authentication, file storage, and edge functions"
+PostgreSQL,Database,Part of Supabase,"Relational database management system for storing all application data (wills, trusts, users, payments, etc.)"
+Google Sign-In,Authentication,google_sign_in ^6.2.1,OAuth authentication for seamless user login with Google accounts
+Supabase Edge Functions,Backend Services,TypeScript (supabase/functions/),"Server-side functions for CHIP payments and Didit webhooks, keeping sensitive logic secure"
+TypeScript,Backend Language,Used in Edge Functions,"Type-safe JavaScript for writing Supabase Edge Functions with better developer experience"
+Deno,Backend Runtime,Deno runtime,"JavaScript/TypeScript runtime for Supabase Edge Functions, providing secure serverless execution"
+Resend,Email Service,Custom HTTP integration,"Email delivery service for transactional emails (invitations, notifications, password resets)"
+Didit,Identity Verification,Custom HTTP integration,"KYC/identity verification service for legal compliance in wills and trusts"
+Stripe,Payment Processing,flutter_stripe ^10.1.1,"Payment gateway for card payments and subscriptions"
+CHIP Payment Gateway,Payment Processing,Custom integration via Edge Functions,"Localized payment gateway for trust payments and bank-compatible transactions"
+OneSignal,Push Notifications,onesignal_flutter ^5.0.0,Cross-platform push notification service for user engagement
+OpenRouter,AI/LLM Service,Custom HTTP integration,"AI chat backend providing access to multiple LLM models for intelligent assistant features"
+Brandfetch,Brand Data API,Custom HTTP integration,"Company branding API to fetch logos and brand information from domains"
+Image Picker,Media Handling,image_picker ^1.0.7,Native image selection from device gallery/camera
+File Picker,File Handling,file_picker ^8.1.2,File selection for documents and attachments
+HTTP Client,Networking,http ^1.2.2,"HTTP requests for third-party API integrations (OpenRouter, Didit, Brandfetch)"
+MIME,File Type Detection,mime ^1.0.5,Content type detection for file uploads and handling
+SVG Rendering,Graphics,flutter_svg ^2.0.10+1,"Vector graphics rendering for scalable illustrations and icons"
+Share Plus,Native Sharing,share_plus ^10.1.2,Native share sheet integration for iOS/Android
+Google Fonts,Typography,google_fonts ^6.2.1,Inter font family for modern readable typography
+Markdown Rendering,Content Display,flutter_markdown ^0.7.4,"Rich text formatting for FAQs, AI responses, and documentation"
+Text-to-Speech,Accessibility,flutter_tts ^3.8.5,"Audio/TTS capabilities for accessibility and user preference"
+URL Launcher,External Links,url_launcher ^6.3.1,Opening external URLs in browser/system apps
+Shared Preferences,Local Storage,shared_preferences ^2.3.2,"Lightweight local storage for onboarding flags and user preferences"
+Path Provider,File System,path_provider ^2.1.2,"Access to device directories (documents, temp, cache)"
+Flutter Dotenv,Configuration,flutter_dotenv ^5.1.0,"Environment variable management for secrets and configuration"
+Flutter Localizations,i18n,flutter_localizations (SDK),Official localization system for multi-language support
+Internationalization (i18n),Localization,intl ^0.20.2,Date formatting and internationalization utilities
+Flutter Lints,Code Quality,flutter_lints ^5.0.0,Static analysis and linting rules for code quality
+GitHub,Version Control,github.com,Version control and code repository hosting for collaboration and project management
+Controller Pattern,Architecture,Custom implementation,"State management pattern using controllers (AuthController, ThemeController, LocaleController)"
+Service Pattern,Architecture,Custom implementation,Service layer for API integrations and business logic separation
+ValueNotifier/ValueListenableBuilder,State Management,Built-in,Reactive state management for theme and locale changes
+Models Layer,Data Layer,Custom Dart classes,"Type-safe data models representing database entities and domain objects"

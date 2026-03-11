@@ -91,11 +91,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bring your profile, family, assets, and wishes together in one clear wasiat document.';
 
   @override
-  String get letsListYourDigitalAssets => 'Let\'s list your digital assets';
+  String get letsListYourDigitalAssets => 'Organise your assets';
 
   @override
   String get assetsDescription =>
-      'Keep important online accounts and platforms in one place so your will stays clear and up to date.';
+      'Include your important assets—both digital accounts and physical items—so your instructions are clear and accessible when needed.';
 
   @override
   String get letsSetUpYourFamilyAccount => 'Let\'s set up your family account';
@@ -412,6 +412,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
+  String get assetAdded => 'Asset added';
 
   @override
   String get copy => 'Copy';
@@ -765,8 +774,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageAll => 'Manage All';
 
   @override
-  String get noAssetsYet =>
-      'No assets yet. Add at least one to include in your will.';
+  String get noAssetsYet => 'No assets yet. Add one when you\'re ready.';
 
   @override
   String showMore(int count) {
@@ -861,10 +869,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get platformService => 'Platform / Service';
 
   @override
+  String get selectPlatform => 'Select a platform';
+
+  @override
+  String get chooseDigitalAccountToInclude =>
+      'Choose the digital account you would like to include.';
+
+  @override
+  String get enterPhysicalAssetName => 'Enter the name of your physical asset';
+
+  @override
+  String get physicalAssetName => 'Asset name';
+
+  @override
+  String get assetInfo => 'Asset info';
+
+  @override
+  String get physicalAssetNameHint => 'e.g., My House, Car, Jewelry Collection';
+
+  @override
   String get details => 'Details';
 
   @override
   String get review => 'Review';
+
+  @override
+  String get reviewThisDigitalAsset => 'Review this digital asset';
+
+  @override
+  String get reviewThisAsset => 'Review this asset';
 
   @override
   String get searchForPlatformOrService => 'Search for a platform or service';
@@ -920,6 +953,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get instructionsAfterDeath => 'Instructions After Death';
 
   @override
+  String get instructionUponActivation => 'Instruction upon activation';
+
+  @override
+  String get whatShouldHappenToThisAccount =>
+      'What should happen to this account?';
+
+  @override
+  String get defineHowThisAccountShouldBeHandled =>
+      'Define how this account should be handled.';
+
+  @override
+  String get closeThisAccount => 'Close this account';
+
+  @override
+  String get transferAccessToExecutor => 'Transfer access to my executor';
+
+  @override
+  String get memorialiseIfApplicable => 'Memorialise (if applicable)';
+
+  @override
+  String get leaveSpecificInstructions => 'Leave specific instructions';
+
+  @override
+  String get provideDetailsBelow => 'Provide details below.';
+
+  @override
+  String get thisInformationOnlyAccessible =>
+      'This information will only be accessible according to your estate instructions.';
+
+  @override
   String get loadingRecipients => 'Loading recipients...';
 
   @override
@@ -929,14 +992,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get giftRecipientRequired => 'Gift Recipient is required';
 
   @override
-  String get remarksOptional => 'Remarks (optional)';
+  String get estimatedValue => 'Estimated value';
 
   @override
-  String get remarksHint => 'Any additional instructions or notes';
+  String get estimatedValueDescription =>
+      'An approximate value helps your executor understand the asset\'s worth.';
+
+  @override
+  String get enterEstimatedValue => 'Enter estimated value';
+
+  @override
+  String get estimatedValueHint => 'e.g., 5000.00';
+
+  @override
+  String get remarksOptional => 'Additional notes';
+
+  @override
+  String get remarksHint =>
+      'e.g., Account location, special instructions, or important details';
+
+  @override
+  String get additionalNotes => 'Additional notes';
+
+  @override
+  String get additionalNotesDescription =>
+      'Add any extra details that will help your executor handle this asset.';
+
+  @override
+  String get youMightWantToInclude => 'You might want to include:';
+
+  @override
+  String get remarksSuggestion1 =>
+      'Account location or where to find login details';
+
+  @override
+  String get remarksSuggestion2 => 'Special instructions or important details';
+
+  @override
+  String get remarksSuggestion3 => 'Contact information for account recovery';
+
+  @override
+  String get remarksSuggestionPhysical1 =>
+      'Location or where the asset is kept';
+
+  @override
+  String get remarksSuggestionPhysical2 =>
+      'Special instructions or important details';
+
+  @override
+  String get remarksSuggestionPhysical3 =>
+      'Documentation or ownership papers location';
 
   @override
   String get assetWillBeIncludedInWill =>
-      'This asset will be included in your will. Any changes you make will automatically sync to your will.';
+      'This asset will be included in your will. Any changes you make will sync automatically.';
 
   @override
   String get website => 'Website';
@@ -951,17 +1060,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelectPlatformService => 'Please select a platform/service';
 
   @override
+  String get pleaseSelectAssetType => 'Please select an asset type';
+
+  @override
   String get pleaseSelectInstruction => 'Please select an instruction';
 
   @override
   String get pleaseSelectGiftRecipient => 'Please select a gift recipient';
 
   @override
-  String get assetAddedSuccessfully => 'Asset added successfully';
+  String get assetAddedSuccessfully => 'Asset added';
 
   @override
   String failedToAddAsset(String error) {
-    return 'Failed to add asset: $error';
+    return 'Something went wrong. Please try again.';
   }
 
   @override
@@ -995,7 +1107,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get areYouSureDeleteAsset =>
-      'Are you sure you want to delete this asset? This action cannot be undone.';
+      'Are you sure you want to delete this asset? This can\'t be undone.';
 
   @override
   String get assetDeleted => 'Asset deleted';
@@ -1006,26 +1118,191 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get whyAddYourAssets => 'Why add your assets?';
+  String get whyAddYourAssets => 'Why this matters';
 
   @override
   String get digitalAssetsInclude =>
-      'Digital assets include bank apps, e‑wallets, subscriptions, social media, and other online accounts.';
+      'Digital assets may include:\n• Social media accounts\n• Email and cloud storage\n• Online banking and investments\n• Subscriptions and memberships\n• Crypto wallets and digital property';
 
   @override
-  String get makeItEasyForExecutors =>
-      'Make it easy for your executors to know which accounts you have.';
+  String get physicalAssetsInclude =>
+      'Physical assets may include:\n• Property and real estate\n• Vehicles\n• Jewelry and valuables\n• Art and collectibles\n• Other tangible items';
 
   @override
-  String get linkEachAssetToInstructions =>
-      'Link each asset to clear instructions (Faraid, terminate, transfer as gift, settle debts).';
+  String get assetType => 'Asset type';
 
   @override
-  String get keepWillUpToDate =>
-      'Keep your will and planning up to date as your online life changes.';
+  String get digitalAsset => 'Digital asset';
+
+  @override
+  String get physicalAsset => 'Physical asset';
+
+  @override
+  String get selectAssetType => 'Select asset type';
+
+  @override
+  String get selectAssetCategory => 'What type of asset is this?';
+
+  @override
+  String get whatTypeOfPhysicalAsset => 'What type of physical asset is this?';
+
+  @override
+  String get land => 'Land (individual or joint title)';
+
+  @override
+  String get housesBuildings => 'Houses / buildings';
+
+  @override
+  String get farmsPlantations => 'Farms, plantations';
+
+  @override
+  String get cash => 'Cash';
+
+  @override
+  String get vehicles => 'Vehicles (car, motorcycle)';
+
+  @override
+  String get jewellery => 'Jewellery';
+
+  @override
+  String get furnitureHousehold => 'Furniture & household items';
+
+  @override
+  String get financialInstruments =>
+      'Financial instruments (EPF, ASNB, Tabung Haji)';
+
+  @override
+  String get propertyOrLand => 'Property or land';
+
+  @override
+  String get propertyOrLandDescription =>
+      'Land, houses, buildings, farms, plantations';
+
+  @override
+  String get vehicle => 'Vehicle';
+
+  @override
+  String get vehicleDescription => 'Cars, motorcycles, boats, other vehicles';
+
+  @override
+  String get jewelleryOrValuables => 'Jewellery or valuables';
+
+  @override
+  String get jewelleryOrValuablesDescription =>
+      'Jewelry, watches, art, collectibles, furniture, household items';
+
+  @override
+  String get cashOrInvestments => 'Cash or investments';
+
+  @override
+  String get cashOrInvestmentsDescription =>
+      'Cash, EPF, ASNB, Tabung Haji, stocks, bonds, other financial instruments';
+
+  @override
+  String get otherPhysicalAsset => 'Other physical asset';
+
+  @override
+  String get otherPhysicalAssetDescription => 'Any other tangible asset';
+
+  @override
+  String get immovableAssetNote => 'Asset type: Property (Immovable asset)';
+
+  @override
+  String get selectLegalClassification =>
+      'Is this a movable or immovable asset?';
+
+  @override
+  String get pleaseSelectLegalClassification =>
+      'Please select whether this is a movable or immovable asset';
+
+  @override
+  String get legalClassificationExplanation =>
+      'This helps us process your asset according to Malaysian inheritance law.';
+
+  @override
+  String get movableAsset => 'Movable asset';
+
+  @override
+  String get movableAssetExplanation =>
+      'Items you can move or transfer easily, such as vehicles, cash, jewellery, furniture, or financial instruments.';
+
+  @override
+  String get immovableAsset => 'Immovable asset';
+
+  @override
+  String get immovableAssetExplanation =>
+      'Property that stays in place, such as land, houses, buildings, farms, or plantations.';
+
+  @override
+  String get movableAssetDescription =>
+      'Items you can move or transfer\n• Vehicles\n• Jewelry and valuables\n• Cash and investments\n• Art and collectibles';
+
+  @override
+  String get immovableAssetDescription =>
+      'Property that stays in place\n• Land and property\n• Buildings and structures\n• Real estate';
+
+  @override
+  String get pleaseSelectAssetCategory => 'Please select an asset type';
+
+  @override
+  String get makeItEasyForExecutors => 'Prevent accounts from being lost';
+
+  @override
+  String get linkEachAssetToInstructions => 'Ensure proper closure or transfer';
+
+  @override
+  String get keepWillUpToDate => 'Avoid unpaid subscriptions';
+
+  @override
+  String get provideClearInstructionsToExecutor =>
+      'Provide clear instructions to your executor';
+
+  @override
+  String get weDoNotStorePasswords =>
+      'We do not store passwords or login credentials.';
 
   @override
   String get addAssetButton => 'Add asset';
+
+  @override
+  String get saveDigitalAsset => 'Save digital asset';
+
+  @override
+  String get saveAsset => 'Save asset';
+
+  @override
+  String get savePhysicalAsset => 'Save physical asset';
+
+  @override
+  String get returnToDashboard => 'Return to dashboard';
+
+  @override
+  String get addAnotherDigitalAsset => 'Add another digital asset';
+
+  @override
+  String get addAnotherAsset => 'Add another asset';
+
+  @override
+  String get yourInstructionRecordedSecurely =>
+      'Your instruction has been recorded securely.';
+
+  @override
+  String get youCanReviewOrUpdateAnytime =>
+      'You can review or update it anytime.';
+
+  @override
+  String get passwordsNotStoredInSampul =>
+      'Passwords are not stored in Sampul.';
+
+  @override
+  String get cantFindYourPlatform => 'Can\'t find your platform?';
+
+  @override
+  String get addCustomPlatform => 'Add custom platform';
+
+  @override
+  String get youllProvideInstructionsNextStep =>
+      'You\'ll provide instructions in the next step. We do not store passwords';
 
   @override
   String get aboutFamilyMembers => 'About Family Members';
@@ -1280,11 +1557,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add someone important to your wasiat';
 
   @override
-  String get addYourFirstAsset => 'Add Your First Asset';
+  String get addYourFirstAsset => 'Add your first asset';
 
   @override
-  String get startTrackingYourDigitalAssets =>
-      'Start tracking your digital assets';
+  String get startTrackingYourDigitalAssets => 'List your digital assets';
 
   @override
   String get createYourWill => 'Create Your Wasiat';
@@ -1959,4 +2235,160 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addCharity => 'Add Charity/Donation';
+
+  @override
+  String get updatePassword => 'Update Password';
+
+  @override
+  String get setYourNewPassword => 'Set your new password';
+
+  @override
+  String get enterNewPasswordBelow =>
+      'Enter your new password below to complete the reset process.';
+
+  @override
+  String get passwordUpdatedSuccessfully => 'Password updated successfully!';
+
+  @override
+  String failedToUpdatePasswordWithError(String error) {
+    return 'Failed to update password: $error';
+  }
+
+  @override
+  String get forgotPasswordTitle => 'Forgot password';
+
+  @override
+  String get enterEmailForResetLink =>
+      'Enter your email and we\'ll send you a reset link.';
+
+  @override
+  String get sendResetLink => 'Send reset link';
+
+  @override
+  String get passwordResetEmailSent =>
+      'Password reset email sent! Please check your email.';
+
+  @override
+  String failedToSendResetEmail(String error) {
+    return 'Failed to send reset email: $error';
+  }
+
+  @override
+  String get resetLinkExpired => 'Reset link expired';
+
+  @override
+  String get resetLinkExpiredDescription =>
+      'This password reset link has expired or has already been used. Please request a new reset link.';
+
+  @override
+  String get backToLogin => 'Back to login';
+
+  @override
+  String get whatWouldYouLikeToOrganise =>
+      'What would you like to organise today?';
+
+  @override
+  String get chooseWhatToTakeCareFirst =>
+      'Choose what you\'d like to take care of first.';
+
+  @override
+  String get openFamilyAccount => 'Open Family Account';
+
+  @override
+  String get openFamilyAccountDescription =>
+      'Organise your family, assets, and instructions in one place.';
+
+  @override
+  String get protectProperty => 'Protect Property';
+
+  @override
+  String get protectPropertyDescription =>
+      'Set up instructions to protect your property.';
+
+  @override
+  String get managePusaka => 'Manage Pusaka';
+
+  @override
+  String get managePusakaDescription =>
+      'Guidance for managing inheritance matters.';
+
+  @override
+  String get writeWasiat => 'Write Wasiat';
+
+  @override
+  String get writeWasiatDescription =>
+      'Document how your assets should be distributed.';
+
+  @override
+  String get getGuidanceTitle => 'Get guidance';
+
+  @override
+  String get getGuidanceDescription =>
+      'Ask Sampul AI or speak with a professional consultant.';
+
+  @override
+  String get notSureWhereToStart => 'Not sure where to start?';
+
+  @override
+  String get notSureDescription =>
+      'We\'ll guide you through a few simple questions.';
+
+  @override
+  String get setUpPropertyTrustHibah => 'Set Up Property Trust';
+
+  @override
+  String get setUpHibahInstructionsForProperty =>
+      'Protect your property with a trust';
+
+  @override
+  String get setUpExecution => 'Set Up Execution';
+
+  @override
+  String get setUpExecutionDescription =>
+      'Appoint someone to manage your estate';
+
+  @override
+  String get readyForGuidance => 'Ready for guidance!';
+
+  @override
+  String get profileSetUpChatReady =>
+      'Your profile is set up. You can now chat with Sampul AI or speak with a professional consultant.';
+
+  @override
+  String get chatWithSampulAI => 'Chat with Sampul AI';
+
+  @override
+  String get sampulAIDescription =>
+      'Get personalized guidance from Sampul AI assistant';
+
+  @override
+  String get setUpAftercare => 'Set Up Aftercare';
+
+  @override
+  String get aftercareDescription =>
+      'Explore support resources and care team services';
+
+  @override
+  String get completeStepsFamilyAccount =>
+      'Complete these steps to set up your family account.';
+
+  @override
+  String get completeStepsProtectProperty =>
+      'Complete these steps to protect your property.';
+
+  @override
+  String get completeStepsManagePusaka =>
+      'Complete these steps to manage your inheritance matters.';
+
+  @override
+  String get completeStepsWriteWasiat =>
+      'Complete these steps to create your wasiat.';
+
+  @override
+  String get completeStepsGetGuidance =>
+      'Complete this step to get personalized guidance.';
+
+  @override
+  String get completeStepsNotSure =>
+      'Complete these steps to set up your Sampul account.';
 }

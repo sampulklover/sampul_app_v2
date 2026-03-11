@@ -528,19 +528,26 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    widget.category['icon'] as IconData? ?? Icons.category_outlined,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
+                (widget.category['imagePath'] as String?) != null
+                    ? Image.asset(
+                        widget.category['imagePath'] as String,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.contain,
+                      )
+                    : Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.category['icon'] as IconData? ?? Icons.category_outlined,
+                          color: colorScheme.primary,
+                          size: 28,
+                        ),
+                      ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -920,19 +927,26 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    widget.category['icon'] as IconData? ?? Icons.category_outlined,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
+                (widget.category['imagePath'] as String?) != null
+                    ? Image.asset(
+                        widget.category['imagePath'] as String,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.contain,
+                      )
+                    : Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.category['icon'] as IconData? ?? Icons.category_outlined,
+                          color: colorScheme.primary,
+                          size: 28,
+                        ),
+                      ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -1563,19 +1577,26 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    widget.category['icon'] as IconData? ?? Icons.category_outlined,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
+                (widget.category['imagePath'] as String?) != null
+                    ? Image.asset(
+                        widget.category['imagePath'] as String,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.contain,
+                      )
+                    : Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.category['icon'] as IconData? ?? Icons.category_outlined,
+                          color: colorScheme.primary,
+                          size: 28,
+                        ),
+                      ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -1736,19 +1757,26 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    widget.category['icon'] as IconData? ?? Icons.category_outlined,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
+                (widget.category['imagePath'] as String?) != null
+                    ? Image.asset(
+                        widget.category['imagePath'] as String,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.contain,
+                      )
+                    : Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.category['icon'] as IconData? ?? Icons.category_outlined,
+                          color: colorScheme.primary,
+                          size: 28,
+                        ),
+                      ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(

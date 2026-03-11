@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/sampul_icons.dart';
 import 'package:flutter/services.dart';
 import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
@@ -159,7 +160,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
         actions: <Widget>[
           IconButton(
             onPressed: _isSubmitting ? null : _onDeletePressed,
-            icon: const Icon(Icons.delete_outline),
+            icon: SampulIcons.buildIconButtonIcon(SampulIcons.delete, size: 24),
             tooltip: l10n.delete,
           ),
           TextButton(
@@ -186,7 +187,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       clipBehavior: Clip.antiAlias,
                       child: (_logoUrl != null && _logoUrl!.isNotEmpty)
                           ? Image.network(BrandfetchService.instance.addClientIdToUrl(_logoUrl) ?? _logoUrl!, fit: BoxFit.cover)
-                          : const Icon(Icons.apps, size: 36),
+                          : SampulIcons.buildIcon(SampulIcons.apps, width: 36, height: 36),
                     ),
                     const SizedBox(height: 8),
                     Text(_name, style: Theme.of(context).textTheme.titleMedium),
@@ -241,7 +242,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       DropdownButtonFormField<String>(
                         initialValue: _instruction,
                         isExpanded: true,
-                        icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                        icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                         items: _getInstructions(context)
                             .map((Map<String, String> c) => DropdownMenuItem<String>(
                                   value: c['id'],
@@ -271,7 +272,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                         DropdownButtonFormField<int>(
                           initialValue: _selectedBelovedId,
                           isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                          icon: SampulIcons.buildIcon(SampulIcons.chevronDown, width: 24, height: 24),
                           items: _belovedOptions
                               .map((Map<String, dynamic> b) => DropdownMenuItem<int>(
                                     value: (b['id'] as num).toInt(),

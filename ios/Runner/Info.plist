@@ -17,7 +17,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>sampul_app_v2</string>
+	<string>Sampul</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -40,6 +40,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>sampul</string>
+				<string>com.sampul.app</string>
 			</array>
 		</dict>
 	</array>
