@@ -999,7 +999,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                           crossAxisCount: 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
-                          childAspectRatio: 1.1,
+                          childAspectRatio: 0.95,
                           children: fundSupportCategories.map((category) {
                             final categoryId = category['id'] as String? ?? '';
                             final title = category['title'] as String? ?? 'Unknown';
@@ -1199,7 +1199,6 @@ class _CategoryCard extends StatelessWidget {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // 3D Image or Icon in soft container to match other cards
                   imagePath != null
@@ -1224,33 +1223,31 @@ class _CategoryCard extends StatelessWidget {
                                 )
                               : const SizedBox.shrink(),
                         ),
-                  const SizedBox(height: 12),
+                  const Spacer(),
                   // Bottom-aligned text block
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isUnselected
-                              ? colorScheme.onSurface
-                              : colorScheme.onPrimaryContainer,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isUnselected
-                              ? colorScheme.onSurfaceVariant.withOpacity(0.9)
-                              : colorScheme.onPrimaryContainer.withOpacity(0.85),
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ],
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isUnselected
+                          ? colorScheme.onSurface
+                          : colorScheme.onPrimaryContainer,
+                    ),
+                    textAlign: TextAlign.left,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isUnselected
+                          ? colorScheme.onSurfaceVariant.withOpacity(0.9)
+                          : colorScheme.onPrimaryContainer.withOpacity(0.85),
+                    ),
+                    textAlign: TextAlign.left,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

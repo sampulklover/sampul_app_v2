@@ -1121,12 +1121,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whyAddYourAssets => 'Why this matters';
 
   @override
-  String get digitalAssetsInclude =>
-      'Digital assets may include:\n• Social media accounts\n• Email and cloud storage\n• Online banking and investments\n• Subscriptions and memberships\n• Crypto wallets and digital property';
-
-  @override
-  String get physicalAssetsInclude =>
-      'Physical assets may include:\n• Property and real estate\n• Vehicles\n• Jewelry and valuables\n• Art and collectibles\n• Other tangible items';
+  String get assetListConnectsToWill =>
+      'Your asset list connects to your will and estate planning. Add both digital and physical assets so your executor knows exactly what to handle.';
 
   @override
   String get assetType => 'Asset type';
@@ -2391,4 +2387,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get completeStepsNotSure =>
       'Complete these steps to set up your Sampul account.';
+
+  @override
+  String get accountSetup => 'Account Setup';
+
+  @override
+  String continueWithFeature(String feature) {
+    return 'Continue with $feature';
+  }
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get propertyTrust => 'Property Trust';
 }

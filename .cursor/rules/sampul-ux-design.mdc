@@ -1,0 +1,1125 @@
+---
+description: Sampul UX/UI Design System - Comprehensive design principles, journey patterns, and UI guidelines for the Sampul estate planning app
+globs: lib/screens/**/*.dart, lib/widgets/**/*.dart, lib/components/**/*.dart
+alwaysApply: false
+---
+
+# Sampul UX/UI Design System
+
+## Strategic Context
+
+Digital Assets flow is strategically powerful for Sampul because digital assets are:
+- **Modern** — Appeals to Gen Y/Z
+- **Overlooked** — Low competition in Malaysia
+- **High emotional + practical impact** — Real consequence
+- **Differentiation lever** — Sets Sampul apart from traditional estate planners
+
+This flow must feel: Modern, Clean, Secure, Structured, Not technical, Not overwhelming.
+
+Users entering this flow are thinking:
+- "What counts as a digital asset?"
+- "Is this safe?"
+- "Are my passwords stored?"
+- "Will my executor access this?"
+- "What happens to my subscriptions?"
+
+We must answer these through design.
+
+---
+
+# DIGITAL ASSET FLOW — PAGE BY PAGE ANALYSIS
+
+---
+
+## PAGE 1 — Intro: "Organise your digital accounts"
+
+### 🎯 UX Analysis
+
+**What This Screen Must Do:**
+- Define what "digital assets" actually means
+- Reduce security fear immediately
+- Clarify why this matters
+- Encourage action without pressure
+- Position Sampul as modern and structured
+
+**Users Are Thinking:**
+- "Is this about passwords?"
+- "Is this safe?"
+- "Do I need to list everything?"
+- "Is this really necessary?"
+- "Is this like a password manager?"
+
+If we don't answer these clearly in 10 seconds → hesitation.
+
+**Core UX Objective:** Turn uncertainty into controlled clarity
+
+---
+
+### 🎨 UIUX Structure Improvements
+
+**1. Reframe the Headline**
+```
+❌ "Let's list your digital assets"
+✅ "Organise your digital accounts"
+```
+Less intimidating. More practical.
+
+**2. Define Digital Assets Clearly**
+Add a short definition block:
+```
+Digital assets include:
+• Social media accounts
+• Email and cloud storage
+• Online banking and investments
+• Subscriptions and memberships
+• Crypto wallets and digital property
+```
+Users need clarity before action.
+
+**3. Add Immediate Security Reassurance (Critical)**
+This must appear early:
+```
+We do not store passwords or login credentials.
+```
+Without this line → hesitation.
+
+**4. Make Benefits Outcome-Based**
+```
+❌ "Why add assets?"
+✅ "Why this matters"
+
+• Prevent accounts from being lost
+• Ensure proper closure or transfer
+• Avoid unpaid subscriptions
+• Provide clear instructions to your executor
+```
+Less feature. More consequence.
+
+**5. Reduce Cognitive Load**
+- One clear CTA: `Add digital asset`
+- No secondary actions
+
+---
+
+### 🧠 Emotional Psychology
+
+Digital assets trigger:
+- Privacy fear
+- Identity vulnerability
+- Security instinct
+- Modern responsibility
+
+**Tone must feel:**
+- Secure
+- Competent
+- Calm
+- Technically capable
+
+**NOT:** Casual. NOT playful. NOT emotional.
+
+This is trust territory.
+
+---
+
+### 🔥 Advanced Upgrades
+
+**1. Modern Risk Insight Block**
+Small grey box:
+```
+Many digital accounts are permanently inaccessible after 
+death without clear instructions.
+```
+This is subtle urgency without fear.
+
+**2. Visual Security Signal**
+Add small shield icon near reassurance text.
+Symbolism matters psychologically.
+
+**3. Progress Integration**
+Show: `Step 1 of 3`
+This signals structure.
+
+**4. Future Value Positioning**
+Add small line:
+```
+Digital assets are part of your estate.
+```
+This elevates importance.
+
+---
+
+### 🚫 What to Avoid
+
+- ❌ Mentioning "password storage"
+- ❌ Technical jargon (2FA, encryption protocols, etc.)
+- ❌ Fear messaging
+- ❌ Over-detailed legal disclaimers
+- ❌ Casual tone
+- ❌ Long paragraphs
+
+**Clarity > complexity**
+
+---
+
+### 📈 Strategic Outcome
+
+If done correctly:
+- Higher digital asset adoption
+- Increased perceived modernity
+- Stronger differentiation vs traditional estate planning
+- Higher long-term engagement
+- Stronger Gen Y / Gen Z appeal
+- Higher cross-sell into Trust
+
+**Digital assets are Sampul's innovation edge.**
+
+---
+
+### 🟣 Sampul Tone — Page Rewrite
+
+**Headline:**
+```
+Organise your digital accounts
+```
+
+**Subtext:**
+```
+Include your important online accounts and platforms so
+your instructions are clear and accessible when needed.
+```
+
+**Definition:**
+```
+Digital assets may include:
+• Social media accounts
+• Email and cloud storage
+• Online banking and investments
+• Subscriptions and memberships
+• Crypto wallets and digital property
+```
+
+**Why this matters:**
+```
+• Prevent accounts from being lost
+• Ensure proper closure or transfer
+• Avoid unpaid subscriptions
+• Provide clear instructions to your executor
+```
+
+**Security:**
+```
+We do not store passwords or login credentials.
+```
+
+**CTA:**
+```
+[Add digital asset]
+```
+
+---
+
+### ✍ Clean Copy
+
+```
+Organise your digital accounts
+
+Include your important online accounts and platforms so
+your instructions are clear and accessible when needed.
+
+Digital assets may include:
+• Social media accounts
+• Email and cloud storage
+• Online banking and investments
+• Subscriptions and memberships
+• Crypto wallets and digital property
+
+Why this matters:
+• Prevent accounts from being lost
+• Ensure proper closure or transfer
+• Avoid unpaid subscriptions
+• Provide clear instructions to your executor
+
+🛡️ We do not store passwords or login credentials.
+
+[Add digital asset]
+```
+
+---
+
+## PAGE 2 — Platform Selection (Decision & Momentum Screen)
+
+This is the most critical behavioural screen in Digital Assets flow.
+This page determines whether users:
+- Continue confidently
+- Get overwhelmed
+- Drop off
+
+This is where friction must be minimal.
+
+### 🎯 UX Analysis
+
+**What This Screen Must Do:**
+- Let users quickly find their platform
+- Reduce scroll fatigue
+- Encourage momentum
+- Avoid cognitive overload
+- Support "custom" entry
+
+**Users Are Thinking:**
+- "Is my platform here?"
+- "What if I don't see it?"
+- "Do I need to be exact?"
+- "What if it's not listed?"
+
+This must feel fast and modern.
+
+**Core UX Objective:** Speed + clarity + confidence
+
+---
+
+### 🎨 UIUX Structure Improvements
+
+**1. Search First (Top Priority)**
+Search bar at top with placeholder:
+```
+Search for a platform or service
+```
+- Typing should instantly filter
+- No need to press search
+
+**2. Category Tabs (Reduce Overload)**
+Instead of long list, segment by:
+- Social
+- Finance
+- Subscriptions
+- Cloud
+- Crypto
+- Other
+
+Tabs reduce scroll fatigue and improve clarity.
+
+**3. Popular Platforms Section**
+Show 6–8 common ones:
+- Apple
+- Google
+- Facebook
+- Instagram
+- Maybank
+- Binance
+
+Visual icons help recognition.
+
+**4. Clear Custom Option**
+At bottom:
+```
+Can't find your platform?
+Add custom platform
+```
+This removes fear of incompleteness.
+
+**5. Remove Unnecessary Steps**
+Do NOT require:
+- URL input at this stage
+- Value input
+- Instruction input
+
+Keep this page purely selection.
+
+---
+
+### 🧠 Emotional Psychology
+
+This page must feel:
+- Familiar
+- Fast
+- Controlled
+
+**Users should feel:**
+✅ "Oh this is easy."
+
+**NOT:**
+❌ "I need to think."
+
+Momentum is key here.
+
+---
+
+### 🔥 Advanced Upgrades
+
+**1. Smart Suggestions**
+After user selects Apple:
+Automatically suggest:
+- iCloud
+- Apple Music
+- App Store
+
+Shows intelligence.
+
+**2. Recent Assets**
+If user already added Google:
+Show: `Recently added`
+
+Encourages batching.
+
+**3. Value Indicator (Optional, subtle)**
+Small text:
+```
+You can estimate value later.
+```
+Reduces mental pressure.
+
+**4. Micro Security Reminder**
+At footer:
+```
+You'll provide instructions in the next step. We do not store passwords.
+```
+Subtle reinforcement.
+
+---
+
+### 🚫 What to Avoid
+
+- ❌ Long unfiltered list
+- ❌ Too many obscure platforms
+- ❌ Required URL fields here
+- ❌ Multi-step confirmation
+- ❌ Over-explaining
+- ❌ Too many UI colors
+
+**This is a quick action screen.**
+
+---
+
+### 📈 Strategic Outcome
+
+If done correctly:
+- Higher digital asset completion rate
+- Lower drop-off
+- Stronger perception of modern UX
+- Increased cross-sell potential
+- Higher session continuation
+
+**This page drives behavioural momentum.**
+
+---
+
+### 🟣 Sampul Tone — Page Rewrite
+
+**Header:**
+```
+Select a platform
+```
+
+**Subtext:**
+```
+Choose the digital account you would like to include.
+```
+
+**Search:**
+```
+Search for a platform or service
+```
+
+**Popular Platforms:**
+```
+Apple | Google | Facebook | Instagram | Maybank | Binance
+```
+
+**Custom Option:**
+```
+Can't find your platform?
+Add custom platform
+```
+
+**Footer Note:**
+```
+You'll provide instructions in the next step. We do not store passwords.
+```
+
+---
+
+### ✍ Clean Copy
+
+```
+Select a platform
+
+Choose the digital account you would like to include.
+
+🔍 Search for a platform or service
+
+Popular platforms:
+[Apple] [Google] [Facebook] [Instagram] [Maybank] [Binance]
+
+Can't find your platform? Add custom platform
+
+ℹ️ You'll provide instructions in the next step. We do not store passwords.
+```
+
+---
+
+## PAGE 3 — Platform Details & Instructions (Security + Intent Screen)
+
+This is where users decide: What should happen to this account?
+
+Security anxiety peaks here.
+
+If this page feels:
+- Too technical → distrust
+- Too vague → confusion
+- Too invasive → drop-off
+
+This page must feel: Clear, Structured, Safe, Minimal, Controlled.
+
+### 🎯 UX Analysis
+
+**What This Screen Must Do:**
+- Confirm selected platform
+- Collect minimal structured details
+- Allow user to define instruction
+- Reassure about security
+- Avoid storing sensitive credentials
+
+**Users Are Thinking:**
+- "Am I entering private info?"
+- "Will this be encrypted?"
+- "Will someone access this before activation?"
+- "What happens to my data?"
+
+We must address this without over-explaining.
+
+**Core UX Objective:** Clarity without vulnerability
+
+---
+
+### 🎨 UIUX Structure Improvements
+
+**1. Clear Platform Confirmation (Top)**
+```
+[Icon] Apple
+apple.com
+[Change platform]
+```
+This anchors context.
+
+**2. Divide Screen into 3 Clear Sections**
+
+**A) Estimated Value (Optional)**
+```
+Estimated value (optional)
+[________________]
+```
+- Keep optional. Never required.
+- Digital accounts often have no direct monetary value.
+
+**B) What should happen to this account?**
+Structured options instead of open text:
+```
+○ Close this account
+○ Transfer access to my executor
+○ Memorialise (if applicable)
+○ Leave specific instructions
+```
+If "Leave specific instructions" → open text field appears.
+This reduces cognitive load massively.
+
+**C) Additional Notes (Optional)**
+- For clarification only.
+- Keep secondary.
+
+**3. Security Reassurance (Must Include)**
+Small shield icon + line:
+```
+🛡️ We do not store passwords or login credentials.
+This information will only be accessible according to your estate instructions.
+```
+Short. Clear.
+
+**4. Remove "Instructions After Death" phrasing**
+Too heavy.
+Use: `Instruction upon activation.`
+Softer language.
+
+---
+
+### 🧠 Emotional Psychology
+
+This page activates:
+- Privacy fear
+- Loss of control
+- Trust sensitivity
+
+**Tone must feel:**
+- Confident
+- Secure
+- Calm
+- Professional
+
+NOT emotional. NOT technical.
+Avoid encryption jargon.
+
+---
+
+### 🔥 Advanced Upgrades
+
+**1. Platform-Specific Smart Defaults**
+```dart
+If Facebook selected → Suggest: "Memorialise account"
+If Apple selected → Suggest: "Close subscription"
+If Crypto selected → Show: "High-value digital asset" badge
+```
+This makes UX feel intelligent.
+
+**2. Access Risk Prompt (Subtle)**
+If user selects "Transfer access":
+Add small guidance:
+```
+Ensure your executor knows how to access this account securely.
+```
+Not intrusive — but responsible.
+
+**3. High-Risk Category Trigger**
+If Crypto selected:
+Add subtle badge: `High-value digital asset.`
+Encourages seriousness.
+
+**4. Lock Icon on Sensitive Sections**
+Symbolic security reinforcement.
+
+---
+
+### 🚫 What to Avoid
+
+- ❌ Asking for usernames
+- ❌ Asking for passwords
+- ❌ Mandatory value fields
+- ❌ Long paragraphs
+- ❌ Legal disclaimers
+- ❌ Aggressive warnings
+
+**Minimalism builds trust.**
+
+---
+
+### 📈 Strategic Outcome
+
+If done correctly:
+- Higher completion rate
+- Lower abandonment
+- Increased perception of digital competence
+- Stronger trust positioning
+- Differentiation vs traditional estate planners
+
+**This page defines Sampul's modern capability.**
+
+---
+
+### 🟣 Sampul Tone — Page Rewrite
+
+**Header:**
+```
+[Icon] Apple
+```
+
+**Subtext:**
+```
+Define how this account should be handled.
+```
+
+**Estimated value (optional):**
+```
+Enter estimated value (if applicable)
+```
+
+**Instruction upon activation:**
+```
+What should happen to this account?
+○ Close this account
+○ Transfer access to my executor
+○ Memorialise (if applicable)
+○ Leave specific instructions
+```
+
+If specific instructions selected:
+```
+Provide details below.
+[________________]
+```
+
+**Security Note:**
+```
+🛡️ We do not store passwords or login credentials.
+This information will only be accessible according to your estate instructions.
+```
+
+**CTA:**
+```
+[Save asset]
+```
+
+---
+
+### ✍ Clean Copy
+
+```
+[Icon] Apple
+
+Define how this account should be handled.
+
+Estimated value (optional)
+[________________]
+
+What should happen to this account?
+○ Close this account
+○ Transfer access to my executor
+○ Memorialise (if applicable)
+○ Leave specific instructions
+
+🛡️ We do not store passwords or login credentials.
+   This information will only be accessible according to your estate instructions.
+
+[Save asset]
+```
+
+---
+
+## PAGE 4 — Review Digital Asset (Quick Confirmation Before Save)
+
+This page must be short, calm, and decisive.
+
+It is NOT a legal review screen.
+It is NOT a heavy summary.
+It IS a confidence checkpoint before saving.
+
+If this page is too detailed → friction.
+If too light → doubt.
+
+### 🎯 UX Analysis
+
+**What This Screen Must Do:**
+- Confirm platform
+- Confirm instruction
+- Confirm value (if added)
+- Allow quick edit
+- Encourage confident save
+
+**Users Are Thinking:**
+- "Did I choose the right instruction?"
+- "Did I accidentally expose something?"
+- "Can I still change this?"
+- "Is this saved securely?"
+
+So the screen must feel: Controlled, Minimal, Reversible.
+
+**Core UX Objective:** Reassure without slowing momentum
+
+---
+
+### 🎨 UIUX Structure Improvements
+
+**1. Card-Based Summary (Clean)**
+Instead of long list, use one structured card:
+```
+┌─────────────────────────────┐
+│ Platform        Apple       │
+│ Estimated value RM 5,000    │
+│ Instruction     Close       │
+│ Additional notes —          │
+└─────────────────────────────┘
+```
+Each section should have small "Edit" link.
+
+**2. Security Reminder (Short, Non-Repetitive)**
+Single line only:
+```
+Passwords are not stored in Sampul.
+```
+Do not repeat long explanations again.
+
+**3. CTA Hierarchy**
+```
+Primary: [Save digital asset]
+Secondary: [Back]
+```
+
+**Avoid:**
+- ❌ Confirm
+- ❌ Submit
+- ❌ Finalise
+
+Keep it light.
+
+**4. Success State Must Be Calm**
+After save: `Digital asset added`
+NOT: "Success!"
+No celebration.
+
+---
+
+### 🧠 Emotional Psychology
+
+This is a micro-commitment moment.
+
+**Users need:**
+- Control
+- Safety
+- Clarity
+
+**NOT:**
+- Drama
+- Complexity
+
+This page must feel smooth and professional.
+
+---
+
+### 🔥 Advanced Upgrades
+
+**1. Mini Impact Reminder**
+Small subtle line:
+```
+Your executor will follow this instruction when your estate is activated.
+```
+Reinforces importance without fear.
+
+**2. Lock Icon on Sensitive Sections**
+Symbolic security reinforcement.
+
+---
+
+### 🚫 What to Avoid
+
+- ❌ Re-explaining everything
+- ❌ Legal disclaimers
+- ❌ Overloaded summary
+- ❌ Too many buttons
+- ❌ Emotional tone
+
+**Keep it clean.**
+
+---
+
+### 📈 Strategic Outcome
+
+If done properly:
+- Higher completion rate
+- Lower friction
+- Higher trust perception
+- Stronger digital credibility
+- Encourages multiple asset addition
+
+**This screen controls momentum.**
+
+---
+
+### 🟣 Sampul Tone — Page Rewrite
+
+**Header:**
+```
+Review this digital asset
+```
+
+**Summary Card:**
+```
+Platform         Apple
+Estimated value  RM 5,000
+Instruction      Close this account
+Additional notes —
+```
+
+**Security:**
+```
+Passwords are not stored in Sampul.
+```
+
+**CTA:**
+```
+[Save digital asset]  [Back]
+```
+
+---
+
+### ✍ Clean Copy
+
+```
+Review this digital asset
+
+┌─────────────────────────────┐
+│ Platform        Apple       │
+│ Estimated value RM 5,000    │
+│ Instruction     Close       │
+│ Additional notes —          │
+└─────────────────────────────┘
+
+ℹ️ Passwords are not stored in Sampul.
+
+[Save digital asset]   Back
+```
+
+---
+
+## 🟣 SUCCESS STATE — Digital Asset Added (Return to Dashboard)
+
+This is the closure moment of the Digital Asset micro-journey.
+
+It must feel:
+- Calm
+- Complete
+- Secure
+- Professional
+- NOT celebratory
+
+This is NOT "achievement unlocked."
+It IS structured documentation completed.
+
+### 🎯 UX Analysis
+
+**What This Screen Must Do:**
+- Confirm asset was saved
+- Reinforce security confidence
+- Offer clear next action
+- Encourage additional assets (subtly)
+- Transition user back to control center
+
+**Users Are Thinking:**
+- "Did it save?"
+- "Where can I see it?"
+- "Is it secure?"
+- "Should I add more?"
+
+This screen must answer those quickly.
+
+**Core UX Objective:** Close the loop and restore control
+
+---
+
+### 🎨 UIUX Structure Improvements
+
+**1. Clear Status Indicator**
+Use: `✓ Digital asset added`
+- No confetti
+- No big celebration
+- Professional confirmation
+
+**2. Short Reinforcement Line**
+```
+Your instruction has been recorded securely.
+```
+This reinforces trust.
+
+**3. Primary CTA**
+```
+[Return to dashboard]
+```
+Clear next step.
+
+**4. Secondary CTA (Subtle)**
+```
+Add another digital asset
+```
+Encourages batching without pressure.
+
+**5. No Overload**
+- Do NOT show full asset summary again
+- Do NOT show legal disclaimers
+- Do NOT show too many buttons
+
+This is a transition screen.
+
+---
+
+### 🧠 Emotional Psychology
+
+**Users feel:**
+- Small relief
+- Slight vulnerability (digital topic)
+- Desire for confirmation
+
+**Tone must feel:**
+- Secure
+- Controlled
+- Professional
+
+Avoid cheerfulness.
+Avoid intensity.
+
+---
+
+### 🔥 Advanced Upgrades
+
+**1. Add Another Asset Suggestion**
+After save:
+```
+Would you like to add another account?
+```
+Encourages batching behaviour.
+
+**2. Visual Confirmation Animation (Subtle)**
+Small checkmark fade-in.
+Not confetti.
+Professional micro-feedback.
+
+**3. Dashboard Preview Snippet**
+Optional small preview:
+```
+You now have 1 digital asset recorded.
+```
+Encourages momentum.
+
+**4. Security Badge Line**
+```
+Your information is encrypted and accessible only 
+according to your estate instructions.
+```
+Strong trust reinforcement.
+
+**5. Micro-Animation**
+- Subtle checkmark fade-in
+- No sound. No flash.
+- Professional UX.
+
+---
+
+### 🚫 What to Avoid
+
+- ❌ "Success!"
+- ❌ Celebration graphics
+- ❌ Upsell prompts
+- ❌ Too many navigation choices
+- ❌ Emotional messaging
+- ❌ Technical explanations
+
+**Keep it mature.**
+
+---
+
+### 📈 Strategic Outcome
+
+If done properly:
+- Higher trust retention
+- Increased likelihood of adding more assets
+- Strong perception of security
+- Smooth return to ecosystem
+- Strong modern brand positioning
+
+**This is a confidence reinforcement screen.**
+
+---
+
+### 🟣 Sampul Tone — Page Rewrite
+
+**Header:**
+```
+Digital asset added
+```
+
+**Subtext:**
+```
+Your instruction has been recorded securely.
+```
+
+**Primary CTA:**
+```
+[Return to dashboard]
+```
+
+**Secondary:**
+```
+Add another digital asset
+```
+
+---
+
+### ✍ Clean Copy
+
+```
+✓ Digital asset added
+
+Your instruction has been recorded securely.
+You can review or update it anytime.
+
+[Return to dashboard]
+
+Add another digital asset
+```
+
+---
+
+# COMPLETE DIGITAL ASSET JOURNEY STRUCTURE
+
+```
+1. Intro              → Define & reassure
+2. Platform selection → Speed & momentum  
+3. Instruction setup  → Clarity & security
+4. Review             → Confidence checkpoint
+5. Success            → Closure & control
+6. Dashboard          → Integration
+```
+
+---
+
+# UI COMPONENT PATTERNS
+
+## Headlines
+```
+❌ "Let's list your digital assets"
+✅ "Organise your digital accounts"
+
+❌ "Why add assets?"
+✅ "Why this matters"
+
+❌ "Instructions after death"
+✅ "Instruction upon activation"
+```
+
+## Security Reassurance Block
+```
+🛡️ We do not store passwords or login credentials.
+This information will only be accessible according to your estate instructions.
+```
+
+## CTA Hierarchy
+```
+Primary: Action-oriented, specific
+  ✅ "Add digital asset"
+  ✅ "Save asset"
+  ✅ "Return to dashboard"
+  
+Secondary: Subtle, non-competing
+  ✅ "Back"
+  ✅ "Add another digital asset"
+  
+Avoid:
+  ❌ "Confirm"
+  ❌ "Submit"
+  ❌ "Finalise"
+```
+
+## Platform-Specific Smart Defaults
+```dart
+switch (platformCategory) {
+  case 'social': return 'Memorialise account';
+  case 'subscription': return 'Close subscription';
+  case 'finance': return 'Transfer access to executor';
+  case 'crypto': return 'Transfer access to executor';
+}
+```
+
+---
+
+# EMOTIONAL PSYCHOLOGY REFERENCE
+
+## Digital Assets Trigger:
+- Privacy fear
+- Identity vulnerability
+- Security instinct
+- Modern responsibility
+
+## Desired User Feeling:
+- ✅ "Oh this is easy"
+- ❌ NOT "I need to think"
+
+## Success State Feeling:
+- Small relief
+- Controlled
+- Confirmed
+- Ready to continue

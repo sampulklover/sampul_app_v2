@@ -155,9 +155,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: CustomScrollView(
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _refreshData,
+            child: CustomScrollView(
           slivers: <Widget>[
           SliverAppBar(
             automaticallyImplyLeading: false,
@@ -279,14 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _EstatePlanningProgressCard(
-                    trusts: _trusts,
-                    onRefresh: _refreshData,
-                  ),
-                ),
-                const SizedBox(height: 16),
                 Builder(
                   builder: (BuildContext context) {
                     final l10n = AppLocalizations.of(context)!;
@@ -330,12 +324,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 _FamilyList(key: _familyListKey, onRefresh: _refreshData),
-                const SizedBox(height: 24),
+                const SizedBox(height: 100), // Extra padding for floating card
               ],
             ),
           ),
         ],
-        ),
+            ),
+          ),
+          // Floating progress card at bottom
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: _EstatePlanningProgressCard(
+              trusts: _trusts,
+              onRefresh: _refreshData,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -489,58 +495,82 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                     }
                   },
                   borderRadius: BorderRadius.circular(16),
-                  child: CustomPaint(
-                    painter: _DashedBorderPainter(
-                      color: theme.colorScheme.outlineVariant.withOpacity(0.5),
-                      strokeWidth: 2,
-                      borderRadius: 16,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      children: <Widget>[
+                        // Background with dashed border
+                        CustomPaint(
+                          painter: _DashedBorderPainter(
+                            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                            strokeWidth: 2,
+                            borderRadius: 16,
+                          ),
+                          child: Container(),
+                        ),
+                        // Decorative coin image (matching trust cards)
+                        Positioned(
+                          right: -20,
+                          bottom: 0,
+                          child: Opacity(
+                            opacity: 0.5,
+                            child: Image.asset(
+                              'assets/trust-three-coin.png',
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        // Content
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: _trustAccentColor.withOpacity(0.4),
-                                    width: 1.5,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: _trustAccentColor.withOpacity(0.4),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.add,
+                                      color: _trustAccentColor,
+                                      size: 24,
+                                    ),
                                   ),
-                                ),
-                                child: Icon(
-                                  Icons.add,
-                                  color: _trustAccentColor,
-                                  size: 24,
-                                ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    AppLocalizations.of(context)!.add,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: _trustAccentColor,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
+                              const Spacer(),
                               Text(
-                                AppLocalizations.of(context)!.add,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: _trustAccentColor,
+                                AppLocalizations.of(context)!.createYourFirstTrustFund,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 11,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
-                          const Spacer(),
-                          Text(
-                            AppLocalizations.of(context)!.createYourFirstTrustFund,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 11,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -931,17 +961,6 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
     }
   }
 
-  String _getProgressMessage() {
-    if (_completedCount == 0) {
-      return "Let’s get started setting up your Sampul account.";
-    } else if (_completedCount < 3) {
-      return "You’re making good progress with your account setup.";
-    } else if (_completedCount < _totalCount) {
-      return "You’re almost done setting up your account.";
-    } else {
-      return "Excellent! Your Sampul account setup is complete.";
-    }
-  }
 
   List<_FeatureStatus> get _features => [
     _FeatureStatus('Profile', _hasProfile, Icons.person_outline),
@@ -953,6 +972,27 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
     _FeatureStatus('Hibah', _hasHibah, Icons.home_outlined),
   ];
 
+  String _getLocalizedFeatureName(AppLocalizations l10n, String featureName) {
+    switch (featureName) {
+      case 'Profile':
+        return l10n.profile;
+      case 'Family':
+        return l10n.family;
+      case 'Assets':
+        return l10n.assets;
+      case 'Wasiat':
+        return l10n.will;
+      case 'Executors':
+        return l10n.executors;
+      case 'Trust':
+        return l10n.trust;
+      case 'Hibah':
+        return l10n.propertyTrust;
+      default:
+        return featureName;
+    }
+  }
+
   int get _completedCount => _features.where((f) => f.isComplete).length;
   int get _totalCount => _features.length;
 
@@ -962,204 +1002,134 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
       return const SizedBox.shrink();
     }
 
+    // Hide when 100% complete
+    if (!_isLoading && _completedCount == _totalCount) {
+      return const SizedBox.shrink();
+    }
+
     final ThemeData theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final percentage = _isLoading ? 0.0 : (_completedCount / _totalCount);
     final percentageText = (percentage * 100).round();
+    
+    // Get the next incomplete feature for the CTA
+    final nextFeature = _features.where((f) => !f.isComplete).firstOrNull;
+    final ctaText = nextFeature != null 
+        ? l10n.continueWithFeature(_getLocalizedFeatureName(l10n, nextFeature.name))
+        : l10n.completeSetup;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _trustAccentColor.withValues(alpha: 0.3),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: <Widget>[
-            InkWell(
-              onTap: () {
-                Navigator.of(context)
-                    .push<bool>(
-                  MaterialPageRoute<bool>(
-                    builder: (_) => const OnboardingGoalSelectionScreen(),
-                    fullscreenDialog: true,
-                  ),
-                )
-                    .then((bool? completed) {
-                  // Refresh progress when returning from onboarding flow
-                  _calculateProgress();
-                  widget.onRefresh?.call();
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context)
+                .push<bool>(
+              MaterialPageRoute<bool>(
+                builder: (_) => const OnboardingGoalSelectionScreen(),
+                fullscreenDialog: true,
+              ),
+            )
+                .then((bool? completed) {
+              _calculateProgress();
+              widget.onRefresh?.call();
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: <Widget>[
+              // Circular progress indicator
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _trustAccentColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.check_circle_outline,
-                            color: _trustAccentColor,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                'Account Setup Progress',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              if (_isLoading)
-                                Text(
-                                  'Calculating...',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                )
-                              else
-                                Text(
-                                  _getProgressMessage(),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    CircularProgressIndicator(
+                      value: _isLoading ? null : percentage,
+                      strokeWidth: 4,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(_trustAccentColor),
                     ),
-                    const SizedBox(height: 16),
-                    if (_isLoading)
-                      LinearProgressIndicator(
-                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation<Color>(_trustAccentColor),
-                      )
-                    else
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                '$percentageText% Complete',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: _trustAccentColor,
-                                ),
-                              ),
-                              Text(
-                                '$_completedCount of $_totalCount features',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: percentage,
-                              minHeight: 8,
-                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                              valueColor: AlwaysStoppedAnimation<Color>(_trustAccentColor),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: _features.map((feature) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: feature.isComplete 
-                                    ? Colors.green.withValues(alpha: 0.1)
-                                    : theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: feature.isComplete 
-                                      ? Colors.green.withValues(alpha: 0.3)
-                                      : theme.colorScheme.outline.withValues(alpha: 0.2),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    feature.isComplete ? Icons.check_circle : feature.icon,
-                                    size: 14,
-                                    color: feature.isComplete 
-                                        ? Colors.green 
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    feature.name,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: feature.isComplete 
-                                          ? Colors.green 
-                                          : theme.colorScheme.onSurfaceVariant,
-                                      fontWeight: feature.isComplete ? FontWeight.w600 : FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )).toList(),
-                          ),
-                        ],
+                    if (!_isLoading)
+                      Text(
+                        '$percentageText%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
                       ),
                   ],
                 ),
               ),
-            ),
-            // Close button - top right
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _isDismissed = true;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.8),
-                      shape: BoxShape.circle,
+              const SizedBox(width: 14),
+              // Text content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      l10n.accountSetup,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _isLoading ? l10n.loading : ctaText,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: _trustAccentColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Arrow and dismiss
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isDismissed = true;
+                      });
+                    },
                     child: Icon(
                       Icons.close,
                       size: 18,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
                     ),
                   ),
-                ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
         ),
       ),
     );
@@ -1405,7 +1375,7 @@ class _ActionsGrid extends StatelessWidget {
                             crossAxisCount: 4,
                             mainAxisSpacing: 16,
                             crossAxisSpacing: 16,
-                            childAspectRatio: 0.9,
+                            childAspectRatio: 0.7,
                           ),
                           itemBuilder: (BuildContext context, int index) {
                             final _ActionItem item = othersItems[index];
@@ -1465,6 +1435,7 @@ class _ActionsGrid extends StatelessWidget {
     return GridView.builder(
       itemCount: items.length,
       shrinkWrap: true,
+      padding: const EdgeInsets.only(top: 8),
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,

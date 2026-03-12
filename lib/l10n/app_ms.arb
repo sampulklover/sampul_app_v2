@@ -549,8 +549,7 @@
   },
   
   "whyAddYourAssets": "Mengapa ini penting",
-  "digitalAssetsInclude": "Aset digital mungkin termasuk:\n• Akaun media sosial\n• E-mel dan storan awan\n• Perbankan dan pelaburan dalam talian\n• Langganan dan keahlian\n• Dompet kripto dan harta digital",
-  "physicalAssetsInclude": "Aset fizikal mungkin termasuk:\n• Harta dan hartanah\n• Kenderaan\n• Barang kemas dan barang berharga\n• Seni dan koleksi\n• Barang ketara lain",
+  "assetListConnectsToWill": "Senarai aset anda bersambung dengan wasiat dan perancangan harta pusaka. Tambah aset digital dan fizikal supaya pelaksana anda tahu apa yang perlu diuruskan.",
   "assetType": "Jenis aset",
   "digitalAsset": "Aset digital",
   "physicalAsset": "Aset fizikal",
@@ -1119,5 +1118,17 @@
   "completeStepsManagePusaka": "Lengkapkan langkah-langkah ini untuk menguruskan hal pusaka anda.",
   "completeStepsWriteWasiat": "Lengkapkan langkah-langkah ini untuk mencipta wasiat anda.",
   "completeStepsGetGuidance": "Lengkapkan langkah ini untuk mendapatkan panduan peribadi.",
-  "completeStepsNotSure": "Lengkapkan langkah-langkah ini untuk menyediakan akaun Sampul anda."
+  "completeStepsNotSure": "Lengkapkan langkah-langkah ini untuk menyediakan akaun Sampul anda.",
+  
+  "accountSetup": "Persediaan Akaun",
+  "continueWithFeature": "Teruskan dengan {feature}",
+  "@continueWithFeature": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
+  "profile": "Profil",
+  "propertyTrust": "Amanah Hartanah"
 }

@@ -2126,17 +2126,11 @@ abstract class AppLocalizations {
   /// **'Why this matters'**
   String get whyAddYourAssets;
 
-  /// No description provided for @digitalAssetsInclude.
+  /// No description provided for @assetListConnectsToWill.
   ///
   /// In en, this message translates to:
-  /// **'Digital assets may include:\n• Social media accounts\n• Email and cloud storage\n• Online banking and investments\n• Subscriptions and memberships\n• Crypto wallets and digital property'**
-  String get digitalAssetsInclude;
-
-  /// No description provided for @physicalAssetsInclude.
-  ///
-  /// In en, this message translates to:
-  /// **'Physical assets may include:\n• Property and real estate\n• Vehicles\n• Jewelry and valuables\n• Art and collectibles\n• Other tangible items'**
-  String get physicalAssetsInclude;
+  /// **'Your asset list connects to your will and estate planning. Add both digital and physical assets so your executor knows exactly what to handle.'**
+  String get assetListConnectsToWill;
 
   /// No description provided for @assetType.
   ///
@@ -4351,6 +4345,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete these steps to set up your Sampul account.'**
   String get completeStepsNotSure;
+
+  /// No description provided for @accountSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Setup'**
+  String get accountSetup;
+
+  /// No description provided for @continueWithFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {feature}'**
+  String continueWithFeature(String feature);
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @propertyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Property Trust'**
+  String get propertyTrust;
 }
 
 class _AppLocalizationsDelegate
