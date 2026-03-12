@@ -7,10 +7,8 @@ import 'will_management_screen.dart';
 import 'settings_screen.dart';
 import 'enhanced_chat_conversation_screen.dart';
 import '../models/chat_conversation.dart';
-import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../services/affiliate_service.dart';
-import '../services/ai_chat_settings_service.dart';
 import '../utils/sampul_icons.dart';
 
 class MainShell extends StatefulWidget {
@@ -23,6 +21,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   late final List<Widget> _tabs;
+  bool _isOpeningAI = false;
 
   @override
   void initState() {
@@ -46,25 +45,51 @@ class _MainShellState extends State<MainShell> {
   }
 
   Future<void> _openSampulAI() async {
+    if (_isOpeningAI) return;
+    
+    setState(() {
+      _isOpeningAI = true;
+    });
+
     try {
       final currentUser = Supabase.instance.client.auth.currentUser;
-      if (currentUser == null) return;
+      if (currentUser == null) {
+        if (mounted) setState(() => _isOpeningAI = false);
+        return;
+      }
 
-      // Get or create Sampul AI conversation
-      final conversations = await ChatService.getUserConversations(currentUser.id);
-      ChatConversation aiConversation;
+      ChatConversation? aiConversation;
       
+      // Try to find existing AI conversation quickly
       try {
+        final conversations = await ChatService.getUserConversations(currentUser.id);
         aiConversation = conversations.firstWhere(
           (conv) => conv.conversationType == ConversationType.ai,
         );
       } catch (_) {
-        // AI conversation not found, create it
+        // AI conversation not found - will create in background
+      }
+
+      if (!mounted) return;
+
+      if (aiConversation != null) {
+        // Navigate immediately with existing conversation
+        setState(() => _isOpeningAI = false);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => EnhancedChatConversationScreen(
+              conversation: aiConversation!,
+            ),
+          ),
+        );
+      } else {
+        // Create new AI conversation
         final response = await Supabase.instance.client
             .from('chat_conversations')
             .insert({
               'name': 'Sampul AI',
-              'last_message': (await AiChatSettingsService.instance.getActiveSettings()).welcomeMessage,
+              'last_message': '',
               'last_message_time': DateTime.now().toIso8601String(),
               'avatar_url': '',
               'unread_count': 0,
@@ -77,35 +102,27 @@ class _MainShellState extends State<MainShell> {
 
         aiConversation = ChatConversation.fromJson(response);
         
-        // Add welcome message to the conversation (get from settings)
-        final settings = await AiChatSettingsService.instance.getActiveSettings();
-        final welcomeMessage = ChatMessage(
-          id: '',
-          content: settings.welcomeMessage,
-          isFromUser: false,
-          timestamp: DateTime.now(),
-        );
+        if (!mounted) return;
         
-        await ChatService.saveMessage(welcomeMessage, aiConversation.id);
-      }
-
-      if (!mounted) return;
-
-      // Navigate to AI chat
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => EnhancedChatConversationScreen(
-            conversation: aiConversation,
+        setState(() => _isOpeningAI = false);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => EnhancedChatConversationScreen(
+              conversation: aiConversation!,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
-      // If error, try to create a temporary conversation
       if (!mounted) return;
+      setState(() => _isOpeningAI = false);
+      
+      // Create temporary conversation as fallback
       final tempConversation = ChatConversation(
         id: 'temp_ai_${DateTime.now().millisecondsSinceEpoch}',
         name: 'Sampul AI',
-        lastMessage: 'Hello! I\'m your estate planning assistant. How can I help you today?',
+        lastMessage: '',
         lastMessageTime: DateTime.now(),
         avatarUrl: '',
         unreadCount: 0,
@@ -115,6 +132,7 @@ class _MainShellState extends State<MainShell> {
 
       Navigator.of(context).push(
         MaterialPageRoute(
+          fullscreenDialog: true,
           builder: (context) => EnhancedChatConversationScreen(
             conversation: tempConversation,
           ),
@@ -206,12 +224,13 @@ class _MainShellState extends State<MainShell> {
               shape: const CircleBorder(),
               elevation: 0,
               child: InkWell(
-                onTap: _openSampulAI,
+                onTap: _isOpeningAI ? null : _openSampulAI,
                 customBorder: const CircleBorder(),
                 splashColor: Colors.white.withOpacity(0.3),
                 highlightColor: Colors.white.withOpacity(0.2),
                 radius: 30,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
@@ -225,12 +244,21 @@ class _MainShellState extends State<MainShell> {
                     ],
                   ),
                   child: Center(
-                    child: SvgPicture.asset(
-                      'assets/sampul-icon-all-white.svg',
-                      width: 32,
-                      height: 32,
-                      cacheColorFilter: true,
-                    ),
+                    child: _isOpeningAI
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : SvgPicture.asset(
+                            'assets/sampul-icon-all-white.svg',
+                            width: 32,
+                            height: 32,
+                            cacheColorFilter: true,
+                          ),
                   ),
                 ),
               ),

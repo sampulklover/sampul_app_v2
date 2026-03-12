@@ -52,6 +52,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
+  bool _isInitialLoading = true;
   String _streamingContent = '';
   UserProfile? _userProfile;
   bool _isUploading = false;
@@ -71,8 +72,12 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   void initState() {
     super.initState();
     _initializeAnimations();
-    _initializeChat();
-    _loadUserProfile();
+    _scrollController.addListener(_onScroll);
+    // Defer heavy initialization to after first frame renders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeChat();
+      _loadUserProfile();
+    });
   }
 
   Future<void> _pickAndSendAttachments() async {
@@ -365,12 +370,16 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   }
 
   void _initializeChat() async {
-    // Set up scroll listener for pagination
-    _scrollController.addListener(_onScroll);
-    // Load existing messages from Supabase first
+    // Load existing messages from Supabase
     await _loadMessages();
     // Set up real-time subscription
     _setupRealtimeSubscription();
+    // Mark initial loading as complete
+    if (mounted) {
+      setState(() {
+        _isInitialLoading = false;
+      });
+    }
   }
   
   void _onScroll() {
@@ -898,7 +907,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -967,54 +976,56 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.fromLTRB(
-                16,
-                (_hasMoreMessages && _isLoadingMore) ? 60 : 16,
-                16,
-                16 + MediaQuery.of(context).viewPadding.bottom + 80,
-              ),
-              itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
-              itemBuilder: (context, index) {
-                // Show loading indicator at the top if loading more
-                if (index == 0 && _hasMoreMessages) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Center(
-                      child: _isLoadingMore
-                          ? const SizedBox(
-                              height: 40,
-                              child: CircularProgressIndicator(),
-                            )
-                          : const SizedBox.shrink(),
+            child: _isInitialLoading
+                ? _buildInitialLoadingState()
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      (_hasMoreMessages && _isLoadingMore) ? 60 : 16,
+                      16,
+                      16 + MediaQuery.of(context).viewPadding.bottom + 80,
                     ),
-                  );
-                }
-                
-                final messageIndex = _hasMoreMessages ? index - 1 : index;
-                final message = _messages[messageIndex];
-                final showDateSeparator = messageIndex == 0 || 
-                    _shouldShowDateSeparator(_messages[messageIndex - 1].timestamp, message.timestamp);
-                
-                return Column(
-                  children: [
-                    if (showDateSeparator)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          _formatDate(message.timestamp),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    itemCount: _messages.length + (_hasMoreMessages ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      // Show loading indicator at the top if loading more
+                      if (index == 0 && _hasMoreMessages) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Center(
+                            child: _isLoadingMore
+                                ? const SizedBox(
+                                    height: 40,
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : const SizedBox.shrink(),
                           ),
-                        ),
-                      ),
-                    _buildMessageBubble(message, _messageAnimation),
-                  ],
-                );
-              },
-            ),
+                        );
+                      }
+                      
+                      final messageIndex = _hasMoreMessages ? index - 1 : index;
+                      final message = _messages[messageIndex];
+                      final showDateSeparator = messageIndex == 0 || 
+                          _shouldShowDateSeparator(_messages[messageIndex - 1].timestamp, message.timestamp);
+                      
+                      return Column(
+                        children: [
+                          if (showDateSeparator)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                _formatDate(message.timestamp),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                ),
+                              ),
+                            ),
+                          _buildMessageBubble(message, _messageAnimation),
+                        ],
+                      );
+                    },
+                  ),
           ),
           SafeArea(top: false, bottom: false, child: _buildQuickSuggestions()),
           SafeArea(top: false, child: _buildMessageInput()),
@@ -1663,7 +1674,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                   ),
                   child: TextField(
                     controller: _messageController,
-                    enabled: !_isLoading,
+                    enabled: !_isLoading && !_isInitialLoading,
                     maxLines: null,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
@@ -1679,11 +1690,11 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: _isLoading ? null : _sendMessage,
+                onTap: (_isLoading || _isInitialLoading) ? null : _sendMessage,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _isLoading 
+                    color: (_isLoading || _isInitialLoading)
                         ? theme.colorScheme.outline.withOpacity(0.3)
                         : theme.colorScheme.primary,
                     shape: BoxShape.circle,
@@ -1721,10 +1732,38 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     );
   }
 
+  Widget _buildInitialLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 32,
+            height: 32,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading conversation...',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuickSuggestions() {
     // Only show suggestions if there are no user messages yet
     final hasUserMessages = _messages.any((msg) => msg.isFromUser);
-    if (hasUserMessages || _isLoading) {
+    if (hasUserMessages || _isLoading || _isInitialLoading) {
       return const SizedBox.shrink();
     }
     

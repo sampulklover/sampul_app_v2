@@ -103,6 +103,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             data.image,
                             height: 260,
                             fit: BoxFit.contain,
+                            cacheWidth: 520,
+                            cacheHeight: 520,
                             errorBuilder: (context, _, __) => Icon(Icons.image_outlined, size: 140, color: primary),
                           ),
                         ),

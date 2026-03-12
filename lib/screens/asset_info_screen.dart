@@ -3,9 +3,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'add_asset_screen.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 
-class AssetInfoScreen extends StatelessWidget {
+class AssetInfoScreen extends StatefulWidget {
   final bool fromHelpIcon;
   const AssetInfoScreen({super.key, this.fromHelpIcon = false});
+
+  @override
+  State<AssetInfoScreen> createState() => _AssetInfoScreenState();
+}
+
+class _AssetInfoScreenState extends State<AssetInfoScreen> {
+  Future<void> _handleContinue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('assets_about_seen', true);
+
+    if (!mounted) return;
+
+    if (widget.fromHelpIcon) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final bool? added = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const AddAssetScreen(),
+      ),
+    );
+    
+    if (!mounted) return;
+    if (added == true) {
+      Navigator.of(context).pop(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +86,8 @@ class AssetInfoScreen extends StatelessWidget {
                           width: 180,
                           height: 180,
                           fit: BoxFit.contain,
+                          cacheWidth: 360,
+                          cacheHeight: 360,
                         ),
                       ),
                     ),
@@ -66,7 +96,7 @@ class AssetInfoScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -116,7 +146,7 @@ class AssetInfoScreen extends StatelessWidget {
                 color: colorScheme.surface,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -128,24 +158,7 @@ class AssetInfoScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      final SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('assets_about_seen', true);
-
-                      if (fromHelpIcon) {
-                        Navigator.of(context).pop();
-                        return;
-                      }
-
-                      final bool? added = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute<bool>(
-                          builder: (_) => const AddAssetScreen(),
-                        ),
-                      );
-                      if (added == true) {
-                        Navigator.of(context).pop(true);
-                      }
-                    },
+                    onPressed: _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,

@@ -2,8 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'will_generation_screen.dart';
 
-class WillInfoScreen extends StatelessWidget {
+class WillInfoScreen extends StatefulWidget {
   const WillInfoScreen({super.key});
+
+  @override
+  State<WillInfoScreen> createState() => _WillInfoScreenState();
+}
+
+class _WillInfoScreenState extends State<WillInfoScreen> {
+  Future<void> _handleContinue() async {
+    final bool? created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const WillGenerationScreen(),
+      ),
+    );
+    
+    if (!mounted) return;
+    if (created == true) {
+      Navigator.of(context).pop(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +78,8 @@ class WillInfoScreen extends StatelessWidget {
                           width: 180,
                           height: 180,
                           fit: BoxFit.contain,
+                          cacheWidth: 360,
+                          cacheHeight: 360,
                         ),
                       ),
                     ),
@@ -70,7 +90,7 @@ class WillInfoScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -122,7 +142,7 @@ class WillInfoScreen extends StatelessWidget {
                 color: colorScheme.surface,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -134,19 +154,7 @@ class WillInfoScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      // Start the will generation flow. When the user successfully
-                      // creates or saves a will, pop this screen with true so
-                      // callers (management / onboarding) can refresh.
-                      final bool? created = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute<bool>(
-                          builder: (_) => const WillGenerationScreen(),
-                        ),
-                      );
-                      if (created == true) {
-                        Navigator.of(context).pop(true);
-                      }
-                    },
+                    onPressed: _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -224,4 +232,3 @@ class _WillFeatureItem extends StatelessWidget {
     );
   }
 }
-

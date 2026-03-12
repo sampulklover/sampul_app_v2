@@ -4,95 +4,28 @@ import '../l10n/app_localizations.dart';
 import 'onboarding_flow_screen.dart';
 import '../controllers/locale_controller.dart';
 
-class OnboardingGoalSelectionScreen extends StatelessWidget {
+class OnboardingGoalSelectionScreen extends StatefulWidget {
   const OnboardingGoalSelectionScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
+  State<OnboardingGoalSelectionScreen> createState() => _OnboardingGoalSelectionScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.getStartedTitle),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.translate),
-            tooltip: l10n.language,
-            onPressed: () => _showLanguageSelector(context, l10n),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.whatWouldYouLikeToOrganise,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.chooseWhatToTakeCareFirst,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Goal Cards
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: OnboardingGoal.values.map((goal) => _GoalCard(
-                    goal: goal,
-                    onTap: () => _navigateToOnboardingFlow(context, goal),
-                  )).toList(),
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToOnboardingFlow(BuildContext context, OnboardingGoal goal) async {
+class _OnboardingGoalSelectionScreenState extends State<OnboardingGoalSelectionScreen> {
+  Future<void> _navigateToOnboardingFlow(OnboardingGoal goal) async {
     final completed = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => OnboardingFlowScreen(goal: goal),
       ),
     );
     
-    // If onboarding was completed, also pop the goal selection screen
-    if (completed == true && context.mounted) {
+    if (!mounted) return;
+    if (completed == true) {
       Navigator.of(context).pop(true);
     }
   }
 
-  Future<void> _showLanguageSelector(BuildContext context, AppLocalizations l10n) async {
+  Future<void> _showLanguageSelector(AppLocalizations l10n) async {
     final currentLocale = LocaleController.instance.locale;
     
     final selectedLanguage = await showModalBottomSheet<String>(
@@ -193,6 +126,7 @@ class OnboardingGoalSelectionScreen extends StatelessWidget {
       },
     );
 
+    if (!mounted) return;
     if (selectedLanguage != null && selectedLanguage != currentLocale.languageCode) {
       await LocaleController.instance.setLocale(Locale(selectedLanguage));
     }
@@ -257,6 +191,78 @@ class OnboardingGoalSelectionScreen extends StatelessWidget {
                   color: theme.colorScheme.primary,
                   size: 24,
                 ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text(l10n.getStartedTitle),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.translate),
+            tooltip: l10n.language,
+            onPressed: () => _showLanguageSelector(l10n),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.whatWouldYouLikeToOrganise,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.chooseWhatToTakeCareFirst,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Goal Cards
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: OnboardingGoal.values.map((goal) => _GoalCard(
+                    goal: goal,
+                    onTap: () => _navigateToOnboardingFlow(goal),
+                  )).toList(),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -341,6 +347,8 @@ class _GoalCard extends StatelessWidget {
                     width: 100,
                     height: 100,
                     fit: BoxFit.cover,
+                    cacheWidth: 200,
+                    cacheHeight: 200,
                       errorBuilder: (context, error, stackTrace) {
                       return Container(
                         width: 100,

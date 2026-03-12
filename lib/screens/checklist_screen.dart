@@ -423,6 +423,8 @@ class _EmptyState extends StatelessWidget {
                       width: 180,
                       height: 180,
                       fit: BoxFit.contain,
+                      cacheWidth: 360,
+                      cacheHeight: 360,
                     ),
                   ),
                   const SizedBox(height: 24),
