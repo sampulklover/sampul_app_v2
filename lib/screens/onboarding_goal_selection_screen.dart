@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/onboarding_goal.dart';
 import '../l10n/app_localizations.dart';
 import 'onboarding_flow_screen.dart';
-import '../controllers/auth_controller.dart';
 import '../controllers/locale_controller.dart';
-import 'login_screen.dart';
 
 class OnboardingGoalSelectionScreen extends StatelessWidget {
   const OnboardingGoalSelectionScreen({super.key});
@@ -20,37 +18,8 @@ class OnboardingGoalSelectionScreen extends StatelessWidget {
         title: Text(l10n.getStartedTitle),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.logout),
-          tooltip: l10n.logOut,
-          onPressed: () async {
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text(l10n.logOut),
-                content: Text(l10n.areYouSureYouWantToLogOut),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text(l10n.cancel),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text(l10n.logOut),
-                  ),
-                ],
-              ),
-            );
-
-            if (confirmed != true) return;
-
-            final navigator = Navigator.of(context);
-            await AuthController.instance.signOut();
-            if (!context.mounted) return;
-            navigator.pushAndRemoveUntil(
-              MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-              (Route<dynamic> route) => false,
-            );
-          },
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(

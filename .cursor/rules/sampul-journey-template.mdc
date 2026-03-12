@@ -1,0 +1,285 @@
+---
+description: Sampul Journey Template - Reusable pattern for multi-step user flows
+globs: lib/screens/**/*.dart
+alwaysApply: false
+---
+
+# Sampul Journey Template
+
+Use this template when building any multi-step journey in Sampul.
+
+## Journey Structure (5 Steps)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ INTRO → SELECTION → DETAILS → REVIEW → SUCCESS → DASHBOARD │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Page 1: Intro Screen
+
+### Required Elements
+```dart
+Column(
+  children: [
+    // 1. Clear headline (non-intimidating)
+    Text("Organise your [items]"),
+    
+    // 2. Short subtext (context)
+    Text("Include your [items] so your instructions are clear..."),
+    
+    // 3. Definition block (clarity)
+    DefinitionCard(
+      title: "[Items] may include:",
+      items: ["Item type 1", "Item type 2", "Item type 3"],
+    ),
+    
+    // 4. Benefits block (outcome-based)
+    BenefitsCard(
+      title: "Why this matters:",
+      items: ["Prevent X from being lost", "Ensure proper Y"],
+    ),
+    
+    // 5. Security reassurance
+    SecurityNote("We do not store [sensitive data]."),
+    
+    // 6. Single CTA
+    PrimaryButton("Add [item]"),
+  ],
+)
+```
+
+### Checklist
+- [ ] Headline is action-oriented, non-scary
+- [ ] Definition block clarifies scope
+- [ ] Benefits are consequence-based
+- [ ] Security reassurance present
+- [ ] Single primary CTA
+
+---
+
+## Page 2: Selection Screen
+
+### Required Elements
+```dart
+Column(
+  children: [
+    // 1. Clear header
+    Text("Select a [item type]"),
+    
+    // 2. Search bar (instant filter)
+    SearchBar(
+      hint: "Search for a [item] or [category]",
+      onChanged: (query) => filterResults(query),
+    ),
+    
+    // 3. Category tabs (reduce scroll)
+    CategoryTabs([
+      Tab("Popular"),
+      Tab("Category 1"),
+      Tab("Category 2"),
+    ]),
+    
+    // 4. Popular items grid (6-8 items)
+    PopularGrid(items: popularItems),
+    
+    // 5. Custom option
+    CustomOptionLink("Can't find your [item]? Add custom"),
+    
+    // 6. Footer note
+    FooterNote("You'll provide instructions in the next step."),
+  ],
+)
+```
+
+### Checklist
+- [ ] Search filters instantly (no submit)
+- [ ] Categories reduce cognitive load
+- [ ] Popular items have visual icons
+- [ ] Custom option is visible
+- [ ] No details collected here (selection only)
+
+---
+
+## Page 3: Details Screen
+
+### Required Elements
+```dart
+Column(
+  children: [
+    // 1. Selection confirmation
+    SelectionHeader(
+      item: selectedItem,
+      onChangePressed: () => navigateBack(),
+    ),
+    
+    // 2. Section A: Optional fields
+    OptionalSection(
+      label: "Estimated value (optional)",
+      child: TextField(),
+    ),
+    
+    // 3. Section B: Structured choices
+    InstructionSection(
+      label: "What should happen to this [item]?",
+      options: [
+        Option("Close this [item]"),
+        Option("Transfer access to my executor"),
+        Option("Leave specific instructions"),
+      ],
+    ),
+    
+    // 4. Section C: Additional notes (optional)
+    OptionalSection(
+      label: "Additional notes (optional)",
+      child: TextField(maxLines: 3),
+    ),
+    
+    // 5. Security reassurance with icon
+    SecurityNoteWithIcon(
+      "We do not store [sensitive data]. "
+      "This information will only be accessible "
+      "according to your estate instructions."
+    ),
+    
+    // 6. CTA
+    PrimaryButton("Save [item]"),
+  ],
+)
+```
+
+### Checklist
+- [ ] Selection confirmed at top
+- [ ] Structured options (not open text)
+- [ ] Optional fields clearly marked
+- [ ] Security reassurance with shield icon
+- [ ] Single primary CTA
+
+---
+
+## Page 4: Review Screen
+
+### Required Elements
+```dart
+Column(
+  children: [
+    // 1. Header
+    Text("Review this [item]"),
+    
+    // 2. Summary card
+    SummaryCard(
+      rows: [
+        SummaryRow("Label", value, onEdit: () {}),
+        SummaryRow("Label", value, onEdit: () {}),
+      ],
+    ),
+    
+    // 3. Short security reminder (one line)
+    SecurityNote("[Sensitive data] is not stored in Sampul."),
+    
+    // 4. CTAs
+    Row(
+      children: [
+        SecondaryButton("Back"),
+        PrimaryButton("Save [item]"),
+      ],
+    ),
+  ],
+)
+```
+
+### Checklist
+- [ ] Card-based summary (clean)
+- [ ] Each row has edit option
+- [ ] Security reminder is short
+- [ ] NOT a legal review screen
+- [ ] Two CTAs only (Back + Save)
+
+---
+
+## Page 5: Success Screen
+
+### Required Elements
+```dart
+Column(
+  children: [
+    // 1. Status indicator
+    SuccessIcon(), // Checkmark, no confetti
+    Text("✓ [Item] added"),
+    
+    // 2. Reinforcement line
+    Text("Your instruction has been recorded securely."),
+    
+    // 3. Primary CTA
+    PrimaryButton("Return to dashboard"),
+    
+    // 4. Subtle secondary
+    TextButton("Add another [item]"),
+  ],
+)
+```
+
+### Checklist
+- [ ] No celebration/confetti
+- [ ] Professional confirmation
+- [ ] Short reinforcement line
+- [ ] Clear primary CTA
+- [ ] Subtle secondary option
+
+---
+
+## Animation Guidelines
+
+### Allowed
+- Subtle checkmark fade-in
+- Smooth transitions between screens
+- Progress indicator updates
+
+### Not Allowed
+- Confetti
+- Bounce effects
+- Sound effects
+- Flash animations
+- Particle effects
+
+---
+
+## Copy Pattern Templates
+
+### Intro Headlines
+```
+"Organise your [items]"
+"Add your [items]"
+"Record your [items]"
+```
+
+### Selection Headers
+```
+"Select a [item type]"
+"Choose a [item type]"
+```
+
+### Detail Headers
+```
+"[Item Name]"
+"Define how this [item] should be handled."
+```
+
+### Review Headers
+```
+"Review this [item]"
+"Confirm your [item]"
+```
+
+### Success Headers
+```
+"✓ [Item] added"
+"[Item] recorded"
+```
+
+### Security Reassurance
+```
+"We do not store [sensitive data]."
+"This information will only be accessible according to your estate instructions."
+"[Sensitive data] is not stored in Sampul."
+```

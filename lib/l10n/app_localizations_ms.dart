@@ -1130,12 +1130,8 @@ class AppLocalizationsMs extends AppLocalizations {
   String get whyAddYourAssets => 'Mengapa ini penting';
 
   @override
-  String get digitalAssetsInclude =>
-      'Aset digital mungkin termasuk:\n• Akaun media sosial\n• E-mel dan storan awan\n• Perbankan dan pelaburan dalam talian\n• Langganan dan keahlian\n• Dompet kripto dan harta digital';
-
-  @override
-  String get physicalAssetsInclude =>
-      'Aset fizikal mungkin termasuk:\n• Harta dan hartanah\n• Kenderaan\n• Barang kemas dan barang berharga\n• Seni dan koleksi\n• Barang ketara lain';
+  String get assetListConnectsToWill =>
+      'Senarai aset anda bersambung dengan wasiat dan perancangan harta pusaka. Tambah aset digital dan fizikal supaya pelaksana anda tahu apa yang perlu diuruskan.';
 
   @override
   String get assetType => 'Jenis aset';
@@ -2408,4 +2404,18 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get completeStepsNotSure =>
       'Lengkapkan langkah-langkah ini untuk menyediakan akaun Sampul anda.';
+
+  @override
+  String get accountSetup => 'Persediaan Akaun';
+
+  @override
+  String continueWithFeature(String feature) {
+    return 'Teruskan dengan $feature';
+  }
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get propertyTrust => 'Amanah Hartanah';
 }
