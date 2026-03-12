@@ -5,9 +5,44 @@ import '../models/trust.dart';
 import 'trust_create_screen.dart';
 import 'trust_dashboard_screen.dart';
 
-class TrustInfoScreen extends StatelessWidget {
+class TrustInfoScreen extends StatefulWidget {
   final bool fromHelpIcon;
   const TrustInfoScreen({super.key, this.fromHelpIcon = false});
+
+  @override
+  State<TrustInfoScreen> createState() => _TrustInfoScreenState();
+}
+
+class _TrustInfoScreenState extends State<TrustInfoScreen> {
+  Future<void> _handleContinue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('trust_about_seen', true);
+    
+    if (!mounted) return;
+    
+    if (widget.fromHelpIcon) {
+      Navigator.of(context).pop();
+      return;
+    }
+    
+    final Trust? createdTrust = await Navigator.of(context).push<Trust>(
+      MaterialPageRoute<Trust>(
+        builder: (context) => const TrustCreateScreen(),
+      ),
+    );
+    
+    if (!mounted) return;
+    if (createdTrust != null) {
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (context) => TrustDashboardScreen(
+            trust: createdTrust,
+            showWelcome: true,
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +102,7 @@ class TrustInfoScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -168,7 +203,6 @@ class TrustInfoScreen extends StatelessWidget {
                                   WidgetSpan(
                                     child: GestureDetector(
                                       onTap: () {
-                                        // TODO: Navigate to learn more page or open URL
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text(l10n.learnMoreAboutPartners),
@@ -204,7 +238,7 @@ class TrustInfoScreen extends StatelessWidget {
                 color: colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -215,36 +249,8 @@ class TrustInfoScreen extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
-                    child: ElevatedButton(
-                    onPressed: () async {
-                      // Mark that user has seen the about page
-                      final SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('trust_about_seen', true);
-                      
-                      // If user came from help icon, just pop back to the previous screen
-                      if (fromHelpIcon) {
-                        Navigator.of(context).pop();
-                        return;
-                      }
-                      
-                      final Trust? createdTrust = await Navigator.of(context).push<Trust>(
-                        MaterialPageRoute<Trust>(
-                          builder: (context) => const TrustCreateScreen(),
-                        ),
-                      );
-                      if (createdTrust != null) {
-                        // Replace this info screen with the dashboard so the user
-                        // doesn't briefly see the trust list in between.
-                        await Navigator.of(context).pushReplacement(
-                          MaterialPageRoute<void>(
-                            builder: (context) => TrustDashboardScreen(
-                              trust: createdTrust,
-                              showWelcome: true,
-                            ),
-                          ),
-                        );
-                      }
-                    },
+                  child: ElevatedButton(
+                    onPressed: _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -287,6 +293,8 @@ class TrustInfoScreen extends StatelessWidget {
         width: 180,
         height: 180,
         fit: BoxFit.contain,
+        cacheWidth: 360,
+        cacheHeight: 360,
       ),
     );
   }

@@ -96,6 +96,8 @@ class _AftercareScreenState extends State<AftercareScreen> {
                                 width: 160,
                                 height: 160,
                                 fit: BoxFit.contain,
+                                cacheWidth: 320,
+                                cacheHeight: 320,
                               ),
                             ),
                           ),
@@ -106,7 +108,7 @@ class _AftercareScreenState extends State<AftercareScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
@@ -180,7 +182,7 @@ class _AftercareScreenState extends State<AftercareScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -201,7 +203,7 @@ class _AftercareScreenState extends State<AftercareScreen> {
                                 Text(
                                   'Check back later for available support',
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],

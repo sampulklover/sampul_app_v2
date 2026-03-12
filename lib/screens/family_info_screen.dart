@@ -3,9 +3,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import 'add_family_member_screen.dart';
 
-class FamilyInfoScreen extends StatelessWidget {
+class FamilyInfoScreen extends StatefulWidget {
   final bool fromHelpIcon;
   const FamilyInfoScreen({super.key, this.fromHelpIcon = false});
+
+  @override
+  State<FamilyInfoScreen> createState() => _FamilyInfoScreenState();
+}
+
+class _FamilyInfoScreenState extends State<FamilyInfoScreen> {
+  Future<void> _handleContinue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('family_about_seen', true);
+    
+    if (!mounted) return;
+    
+    if (widget.fromHelpIcon) {
+      Navigator.of(context).pop();
+      return;
+    }
+    
+    final bool? added = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const AddFamilyMemberScreen(),
+      ),
+    );
+    
+    if (!mounted) return;
+    if (added == true) {
+      Navigator.of(context).pop(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +86,8 @@ class FamilyInfoScreen extends StatelessWidget {
                           width: 180,
                           height: 180,
                           fit: BoxFit.contain,
+                          cacheWidth: 360,
+                          cacheHeight: 360,
                         ),
                       ),
                     ),
@@ -66,7 +96,7 @@ class FamilyInfoScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -116,7 +146,7 @@ class FamilyInfoScreen extends StatelessWidget {
                 color: colorScheme.surface,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -127,27 +157,8 @@ class FamilyInfoScreen extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
-                    child: ElevatedButton(
-                    onPressed: () async {
-                      // Mark that user has seen the about page
-                      final SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('family_about_seen', true);
-                      
-                      // If user came from help icon, just pop back to the previous screen
-                      if (fromHelpIcon) {
-                        Navigator.of(context).pop();
-                        return;
-                      }
-                      
-                      final bool? added = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute<bool>(
-                          builder: (_) => const AddFamilyMemberScreen(),
-                        ),
-                      );
-                      if (added == true) {
-                        Navigator.of(context).pop(true);
-                      }
-                    },
+                  child: ElevatedButton(
+                    onPressed: _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,

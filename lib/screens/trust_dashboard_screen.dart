@@ -729,6 +729,8 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                                         width: 120,
                                         height: 120,
                                         fit: BoxFit.contain,
+                                        cacheWidth: 240,
+                                        cacheHeight: 240,
                                       ),
                                     ),
                                   ),

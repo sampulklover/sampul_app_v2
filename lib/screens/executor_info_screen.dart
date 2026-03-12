@@ -2,9 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'executor_create_screen.dart';
 
-class ExecutorInfoScreen extends StatelessWidget {
+class ExecutorInfoScreen extends StatefulWidget {
   final bool fromHelpIcon;
   const ExecutorInfoScreen({super.key, this.fromHelpIcon = false});
+
+  @override
+  State<ExecutorInfoScreen> createState() => _ExecutorInfoScreenState();
+}
+
+class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
+  Future<void> _handleContinue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('executor_about_seen', true);
+    
+    if (!mounted) return;
+    
+    if (widget.fromHelpIcon) {
+      Navigator.of(context).pop();
+      return;
+    }
+    
+    final bool? created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const ExecutorCreateScreen(),
+      ),
+    );
+    
+    if (!mounted) return;
+    if (created == true) {
+      Navigator.of(context).pop(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +84,8 @@ class ExecutorInfoScreen extends StatelessWidget {
                           width: 180,
                           height: 180,
                           fit: BoxFit.contain,
+                          cacheWidth: 360,
+                          cacheHeight: 360,
                         ),
                       ),
                     ),
@@ -64,7 +94,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -114,7 +144,7 @@ class ExecutorInfoScreen extends StatelessWidget {
                 color: colorScheme.surface,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -125,27 +155,8 @@ class ExecutorInfoScreen extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   height: 56,
-                    child: ElevatedButton(
-                    onPressed: () async {
-                      // Mark that user has seen the about page
-                      final SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('executor_about_seen', true);
-                      
-                      // If user came from help icon, just pop back to the previous screen
-                      if (fromHelpIcon) {
-                        Navigator.of(context).pop();
-                        return;
-                      }
-                      
-                      final bool? created = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute<bool>(
-                          builder: (_) => const ExecutorCreateScreen(),
-                        ),
-                      );
-                      if (created == true) {
-                        Navigator.of(context).pop(true);
-                      }
-                    },
+                  child: ElevatedButton(
+                    onPressed: _handleContinue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,

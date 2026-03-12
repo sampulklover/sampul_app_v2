@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned(
             left: 16,
             right: 16,
-            bottom: 16,
+            bottom: 24,
             child: _EstatePlanningProgressCard(
               trusts: _trusts,
               onRefresh: _refreshData,
@@ -519,6 +519,8 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                               width: 120,
                               height: 120,
                               fit: BoxFit.contain,
+                              cacheWidth: 240,
+                              cacheHeight: 240,
                             ),
                           ),
                         ),
@@ -742,6 +744,8 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                 width: 120,
                                 height: 120,
                                 fit: BoxFit.contain,
+                                cacheWidth: 240,
+                                cacheHeight: 240,
                               ),
                             ),
                           ),
@@ -1895,6 +1899,8 @@ class _FamilyListState extends State<_FamilyList> {
                         width: 56,
                         height: 56,
                         fit: BoxFit.cover,
+                        cacheWidth: 112,
+                        cacheHeight: 112,
                         errorBuilder: (_, __, ___) => const Icon(Icons.person),
                       )
                     : const Icon(Icons.person),
@@ -1991,6 +1997,8 @@ class _Logo extends StatelessWidget {
       width: size,
       height: size,
       fit: fit,
+      cacheWidth: (size * 2).toInt(),
+      cacheHeight: (size * 2).toInt(),
       errorBuilder: (_, __, ___) => fallback,
     );
   }
