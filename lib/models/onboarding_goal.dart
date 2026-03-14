@@ -52,9 +52,9 @@ extension OnboardingGoalExtension on OnboardingGoal {
       case OnboardingGoal.familyAccount:
         return 'assets/trust-family-card.png';
       case OnboardingGoal.protectProperty:
-        return 'assets/hibah-house-key.png';
+        return 'assets/property-colour-key.png';
       case OnboardingGoal.managePusaka:
-        return 'assets/pusaka-color-box.png';
+        return 'assets/pusaka-transfer.png';
       case OnboardingGoal.writeWasiat:
         return 'assets/will-certificate-scroll.png';
       case OnboardingGoal.getGuidance:

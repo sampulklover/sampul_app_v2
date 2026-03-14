@@ -18,6 +18,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeBack => 'Welcome back';
 
   @override
+  String get welcomeToSampul => 'Welcome to Sampul';
+
+  @override
   String get signInToContinue => 'Sign in to continue to Sampul';
 
   @override
@@ -98,17 +101,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'Include your important assets—both digital accounts and physical items—so your instructions are clear and accessible when needed.';
 
   @override
-  String get letsSetUpYourFamilyAccount => 'Let\'s set up your family account';
+  String get letsSetUpYourFamilyAccount => 'Set up your family account';
 
   @override
-  String get trustDescription => 'Clear wishes, for the people you love.';
+  String get trustDescription =>
+      'Your wishes, clearly set out for the people you love.';
 
   @override
-  String get letsPlanYourHibahGifts => 'Let\'s plan your Property Trust';
+  String get letsPlanYourHibahGifts => 'Plan your Property Trust';
 
   @override
   String get hibahDescription =>
-      'Decide clearly who should receive your Property Trust assets.';
+      'Decide who receives what—your home, savings, or investments—in one clear place.';
+
+  @override
+  String get aboutPropertyTrust => 'About Property Trust';
+
+  @override
+  String get propertyTrustWhatIs => 'What is a Property Trust?';
+
+  @override
+  String get propertyTrustAboutCopy =>
+      'A Property Trust lets you name who receives specific assets during your lifetime. It\'s based on hibah and works alongside your will and estate plan.';
+
+  @override
+  String get propertyTrustBenefit1 =>
+      'Choose who receives which assets—for example, a home, savings, or investments.';
+
+  @override
+  String get propertyTrustBenefit2 =>
+      'Document your wishes clearly so everyone knows your intentions.';
+
+  @override
+  String get propertyTrustBenefit3 =>
+      'Works alongside your will and estate plan—lifetime gifts and future plans together.';
+
+  @override
+  String get startPropertyTrust => 'Start setting up';
 
   @override
   String get onboardingTitle1 => 'Put your wealth in\nwriting';
@@ -129,7 +158,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSubtitle3 =>
-      'A professional executor ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.';
+      'A professional Pusaka ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.';
 
   @override
   String get next => 'Next';
@@ -227,7 +256,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklist => 'Checklist';
 
   @override
-  String get execution => 'Execution';
+  String get execution => 'Pusaka';
+
+  @override
+  String get pusaka => 'Pusaka';
 
   @override
   String get aftercare => 'Aftercare';
@@ -483,7 +515,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providesAssurance =>
-      'Provides assurance to beneficiaries and executors';
+      'Provides assurance to beneficiaries and Pusaka';
 
   @override
   String get regulatoryCompliance => 'Regulatory Compliance';
@@ -656,7 +688,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String publishWillConfirmation(String url) {
-    return 'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n$url\n\nMake sure you only share this link with trusted family members or executors.';
+    return 'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n$url\n\nMake sure you only share this link with trusted family members or Pusaka.';
   }
 
   @override
@@ -721,7 +753,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateWill => 'Update Wasiat';
 
   @override
-  String get executors => 'Executors';
+  String get executors => 'Pusaka';
+
+  @override
+  String get aboutPusaka => 'About Pusaka';
+
+  @override
+  String get noPusakaYet => 'No Pusaka yet';
+
+  @override
+  String get newToPusaka => 'New to Pusaka?';
+
+  @override
+  String get submitPusaka => 'Submit Pusaka';
 
   @override
   String get guardians => 'Guardians';
@@ -733,17 +777,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewSave => 'Review & Save';
 
   @override
-  String get primaryExecutor => 'Primary Executor';
+  String get primaryExecutor => 'Primary Pusaka';
 
   @override
   String get selectPrimaryExecutor =>
-      'Select the primary person to execute your will';
+      'Select the primary Pusaka to carry out your will';
 
   @override
-  String get secondaryExecutor => 'Secondary Executor';
+  String get secondaryExecutor => 'Secondary Pusaka';
 
   @override
-  String get selectSecondaryExecutor => 'Optional: Select a secondary executor';
+  String get selectSecondaryExecutor => 'Optional: Select a secondary Pusaka';
 
   @override
   String get primaryGuardian => 'Primary Guardian';
@@ -957,17 +1001,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatShouldHappenToThisAccount =>
-      'What should happen to this account?';
+      'What should happen to this asset?';
 
   @override
   String get defineHowThisAccountShouldBeHandled =>
-      'Define how this account should be handled.';
+      'Define how this asset should be handled.';
 
   @override
   String get closeThisAccount => 'Close this account';
 
   @override
-  String get transferAccessToExecutor => 'Transfer access to my executor';
+  String get transferAccessToExecutor => 'Transfer access to my Pusaka';
 
   @override
   String get memorialiseIfApplicable => 'Memorialise (if applicable)';
@@ -992,14 +1036,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get giftRecipientRequired => 'Gift Recipient is required';
 
   @override
-  String get estimatedValue => 'Estimated value';
+  String get estimatedValue => 'Estimated value (RM)';
 
   @override
   String get estimatedValueDescription =>
-      'An approximate value helps your executor understand the asset\'s worth.';
+      'An approximate value helps your Pusaka understand the asset\'s worth.';
 
   @override
-  String get enterEstimatedValue => 'Enter estimated value';
+  String get enterEstimatedValue => 'Enter estimated value (RM)';
 
   @override
   String get estimatedValueHint => 'e.g., 5000.00';
@@ -1016,7 +1060,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get additionalNotesDescription =>
-      'Add any extra details that will help your executor handle this asset.';
+      'Add any extra details that will help your Pusaka handle this asset.';
 
   @override
   String get youMightWantToInclude => 'You might want to include:';
@@ -1122,7 +1166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assetListConnectsToWill =>
-      'Your asset list connects to your will and estate planning. Add both digital and physical assets so your executor knows exactly what to handle.';
+      'Your asset list connects to your will and estate planning. Add both digital and physical assets so your Pusaka knows exactly what to handle.';
 
   @override
   String get assetType => 'Asset type';
@@ -1251,7 +1295,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get provideClearInstructionsToExecutor =>
-      'Provide clear instructions to your executor';
+      'Provide clear instructions to your Pusaka';
 
   @override
   String get weDoNotStorePasswords =>
@@ -1308,18 +1352,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addPeopleWhoMatterMost =>
-      'Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.';
+      'Add the people who matter most — Pusaka, beneficiaries, and guardians — so your will stays clear and connected.';
 
   @override
   String get whyAddFamilyMembers => 'Why add family members?';
 
   @override
   String get familyListConnectsToWill =>
-      'Your family list connects to your will, trust, and Property Trust planning. Add executors (Co-Sampul), beneficiaries, and guardians.';
+      'Your family list connects to your will, trust, and Property Trust planning. Add Pusaka (Co-Sampul), beneficiaries, and guardians.';
 
   @override
   String get assignExecutorsCoSampul =>
-      'Assign executors (Co-Sampul) who will carry out your will.';
+      'Assign Pusaka (Co-Sampul) who will carry out your will.';
 
   @override
   String get listBeneficiariesWhoReceive =>
@@ -1369,11 +1413,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get category => 'Category';
 
   @override
-  String get coSampulExecutor => 'Co-sampul (Executor)';
+  String get coSampulExecutor => 'Co-sampul (Pusaka)';
 
   @override
   String get coSampulExecutorHelp =>
-      'Co-sampul (Executor): A trusted person who executes your will together with you.';
+      'Co-sampul (Pusaka): A trusted person who carries out your will together with you.';
 
   @override
   String get beneficiaryHelp =>
@@ -1653,26 +1697,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startSettingUp => 'Start setting up';
 
   @override
-  String get whySetUpFamilyTrustFund => 'Why set up a Family Trust Fund?';
+  String get whySetUpFamilyTrustFund => 'What a Family Trust Fund does for you';
 
   @override
   String get familyTrustFundDescription =>
-      'A Family Trust Fund lets you decide how your money is used for your family, even when you\'re not around.';
+      'A Family Trust Fund lets you decide how your money supports your family—healthcare, education, living expenses. You can update it whenever you want.';
 
   @override
   String get chooseHowMoneySpent =>
-      'Choose how your money is spent (healthcare, school fees, donations)';
+      'You choose how the fund is used—healthcare, education, donations, and more';
 
   @override
-  String get changePlansAnytime => 'Change your plans anytime you want';
+  String get changePlansAnytime => 'Update your plans anytime';
 
   @override
   String get familyKnowsExactly =>
-      'Your family knows exactly what to do — no confusion';
+      'Your family has clear guidance when they need it';
 
   @override
   String get sampulPartnerWithRakyat =>
-      'Sampul partner with Rakyat Trustee and Halogen Capital to process your fund. ';
+      'Sampul works with Rakyat Trustee and Halogen Capital to manage your fund. ';
 
   @override
   String get learnMoreAboutPartners => 'Learn more about our partners';
@@ -1807,7 +1851,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fundSupport => 'Fund Support';
 
   @override
-  String get executorSelection => 'Executor Selection';
+  String get executorSelection => 'Pusaka Selection';
 
   @override
   String get financialInformation => 'Financial Information';
@@ -1891,7 +1935,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No family members found. Add family members in your profile.';
 
   @override
-  String get sampulsProfessionalExecutor => 'Sampul\'s Professional Executor';
+  String get sampulsProfessionalExecutor => 'Sampul\'s Professional Pusaka';
 
   @override
   String get expertManagement => 'Expert management';
@@ -1904,7 +1948,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get executorGoodToKnow =>
-      'Your executor acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. At least 2 joint Executors are necessary when one of the beneficiaries is a minor. If one of your beneficiaries is under 18, you\'ll need at least two executors working together. We\'ll remind you about this later.';
+      'Your Pusaka acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. At least 2 joint Pusaka are necessary when one of the beneficiaries is a minor. If one of your beneficiaries is under 18, you\'ll need at least two Pusaka working together. We\'ll remind you about this later.';
 
   @override
   String get estimatedNetWorth => 'Estimated Net Worth';
@@ -1972,10 +2016,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lumpSumAtTheEnd => 'Lump sum at the end';
 
   @override
-  String get executorType => 'Executor Type';
+  String get executorType => 'Pusaka Type';
 
   @override
-  String get selectedExecutors => 'Selected Executors';
+  String get selectedExecutors => 'Selected Pusaka';
 
   @override
   String familyMembersSelected(int count) {
@@ -2005,7 +2049,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectAtLeastOneExecutor =>
-      'Please select at least one executor';
+      'Please select at least one Pusaka';
 
   @override
   String get pleaseCompleteYourProfileFirst =>
@@ -2223,7 +2267,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisIsAGuide =>
-      'This is a guide. Your executor can adjust based on real needs.';
+      'This is a guide. Your Pusaka can adjust based on real needs.';
 
   @override
   String get addCharitableOrganizationsDonate =>
@@ -2337,7 +2381,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Protect your property with a trust';
 
   @override
-  String get setUpExecution => 'Set Up Execution';
+  String get setUpExecution => 'Set Up Pusaka';
 
   @override
   String get setUpExecutionDescription =>

@@ -8,7 +8,6 @@ import '../services/supabase_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'assets_list_screen.dart';
 import '../services/brandfetch_service.dart';
-import 'edit_asset_screen.dart';
 import 'add_asset_screen.dart';
 import 'family_list_screen.dart';
 import 'edit_family_member_screen.dart';
@@ -21,7 +20,6 @@ import 'hibah_management_screen.dart';
 import 'executor_management_screen.dart';
 import 'checklist_screen.dart';
 import 'will_management_screen.dart';
-import 'onboarding_flow_screen.dart';
 import 'onboarding_goal_selection_screen.dart';
 import 'aftercare_screen.dart';
 import '../models/trust.dart';
@@ -34,9 +32,10 @@ import 'hibah_info_screen.dart';
 import 'executor_info_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'notification_screen.dart';
+import 'edit_profile_screen.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
-import '../utils/card_decoration_helper.dart';
 import '../utils/sampul_icons.dart';
+import 'asset_preview_screen.dart';
 
 const Color _trustAccentColor = Color.fromRGBO(83, 61, 233, 1);
 
@@ -161,126 +160,135 @@ class _HomeScreenState extends State<HomeScreen> {
             onRefresh: _refreshData,
             child: CustomScrollView(
           slivers: <Widget>[
-          SliverAppBar(
-            automaticallyImplyLeading: false,
+          // Custom pinned header: exact height with no extra bottom spacing
+          SliverPersistentHeader(
             pinned: true,
-            expandedHeight: 110,
-            backgroundColor: const Color.fromRGBO(83, 61, 233, 1),
-            foregroundColor: Colors.white,
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                SvgPicture.asset(
-                  'assets/sampul-icon-all-white.svg',
-                  width: 22,
-                  height: 22,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Sampul',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
-            actions: <Widget>[
-              Builder(
+            delegate: _HomeHeaderDelegate(
+              paddingTop: MediaQuery.of(context).padding.top,
+              backgroundColor: theme.scaffoldBackgroundColor,
+              headerContentKey: _isLoadingProfile ? 'loading' : (_userProfile?.fullImageUrl ?? ''),
+              child: Builder(
                 builder: (BuildContext context) {
                   final l10n = AppLocalizations.of(context)!;
-                  return IconButton(
-                    tooltip: l10n.referrals,
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
-                      );
-                    },
-                    icon: SampulIcons.buildIcon(
-                      SampulIcons.gift,
-                      width: 24,
-                      height: 24,
-                      color: Colors.white,
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const NotificationScreen()),
-                  );
-                },
-                icon: SampulIcons.buildIcon(
-                  SampulIcons.notifications,
-                  width: 24,
-                  height: 24,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            // Keep the app bar standard (no rounded bottom) for a clean Material look
-            flexibleSpace: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                const double expanded = 140;
-                final double t = ((constraints.maxHeight - kToolbarHeight) / (expanded - kToolbarHeight)).clamp(0.0, 1.0);
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: <Color>[
-                        const Color.fromRGBO(83, 61, 233, 1),
-                        const Color.fromRGBO(60, 45, 170, 1),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8, top: 48),
-                  child: Builder(
-                    builder: (BuildContext context) {
-                      final l10n = AppLocalizations.of(context)!;
-                      return Offstage(
-                        offstage: t < 0.15,
-                        child: Opacity(
-                          opacity: t,
-                          child: Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Text(
-                              _isLoadingProfile
-                                  ? l10n.assalamualaikum
-                                  : l10n.assalamualaikumWithName(_userProfile?.displayName ?? AuthController.instance.currentUser?.email?.split('@')[0] ?? l10n.unknown),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                  return Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
+                        onTap: _isLoadingProfile
+                            ? null
+                            : () async {
+                                final result = await Navigator.of(context).push<bool>(
+                                  MaterialPageRoute<bool>(
+                                    builder: (_) => const EditProfileScreen(),
+                                  ),
+                                );
+                                // Refresh profile if user saved changes
+                                if (result == true) {
+                                  await _loadUserProfile();
+                                }
+                              },
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                child: _isLoadingProfile
+                                    ? SizedBox(
+                                        width: 32,
+                                        height: 32,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: _trustAccentColor,
+                                        ),
+                                      )
+                                    : _userProfile?.fullImageUrl != null &&
+                                            _userProfile!.fullImageUrl!.isNotEmpty
+                                        ? ClipOval(
+                                            child: Image.network(
+                                              _userProfile!.fullImageUrl!,
+                                              width: 40,
+                                              height: 40,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => Icon(
+                                                Icons.person_outline,
+                                                color: theme.colorScheme.onSurfaceVariant,
+                                              ),
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.person_outline,
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Hi, ${_userProfile?.displayName ?? AuthController.instance.currentUser?.email?.split('@')[0] ?? 'there'}',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
+                      ),
+                      IconButton(
+                        tooltip: l10n.referrals,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+                          );
+                        },
+                        icon: SampulIcons.buildIcon(
+                          SampulIcons.gift,
+                          width: 24,
+                          height: 24,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(builder: (_) => const NotificationScreen()),
+                          );
+                        },
+                        icon: SampulIcons.buildIcon(
+                          SampulIcons.notifications,
+                          width: 24,
+                          height: 24,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
           SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const SizedBox(height: 12),
+                // Adjust this value to change spacing between "Welcome to Sampul" and trust cards
+                const SizedBox(height: 24),
                 _TrustCardsCarousel(
                   isLoading: _isLoadingTrusts,
                   trusts: _trusts,
                   onRefresh: _refreshData,
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 24),
                   child: _ActionsGrid(
                     trusts: _trusts,
                     onRefresh: _refreshData,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Builder(
                   builder: (BuildContext context) {
                     final l10n = AppLocalizations.of(context)!;
@@ -302,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 _AssetsList(key: _assetsListKey, onRefresh: _refreshData),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Builder(
                   builder: (BuildContext context) {
                     final l10n = AppLocalizations.of(context)!;
@@ -344,6 +352,47 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+}
+
+class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double paddingTop;
+  final Color backgroundColor;
+  /// Key that changes when header content (e.g. profile image) should update,
+  /// so the sliver rebuilds when profile loads.
+  final String headerContentKey;
+  final Widget child;
+
+  _HomeHeaderDelegate({
+    required this.paddingTop,
+    required this.backgroundColor,
+    required this.headerContentKey,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => paddingTop + kToolbarHeight;
+
+  @override
+  double get maxExtent => paddingTop + kToolbarHeight;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: backgroundColor,
+      padding: EdgeInsets.only(top: paddingTop, left: 16, right: 8, bottom: 0),
+      child: SizedBox(
+        height: kToolbarHeight,
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _HomeHeaderDelegate oldDelegate) {
+    return oldDelegate.paddingTop != paddingTop ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.headerContentKey != headerContentKey;
   }
 }
 
@@ -971,7 +1020,7 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
     _FeatureStatus('Family', _hasFamily, Icons.family_restroom),
     _FeatureStatus('Assets', _hasAssets, Icons.account_balance_wallet_outlined),
     _FeatureStatus('Wasiat', _hasWill, Icons.description_outlined),
-    _FeatureStatus('Executors', _hasExecutors, Icons.assignment_turned_in_outlined),
+    _FeatureStatus('Pusaka', _hasExecutors, Icons.assignment_turned_in_outlined),
     _FeatureStatus('Trust', _hasTrusts, Icons.account_balance_outlined),
     _FeatureStatus('Hibah', _hasHibah, Icons.home_outlined),
   ];
@@ -986,8 +1035,8 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
         return l10n.assets;
       case 'Wasiat':
         return l10n.will;
-      case 'Executors':
-        return l10n.executors;
+      case 'Pusaka':
+        return l10n.pusaka;
       case 'Trust':
         return l10n.trust;
       case 'Hibah':
@@ -1143,27 +1192,29 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
 class _ActionsGrid extends StatelessWidget {
   final List<Trust> trusts;
 
-  // Main menu items: Will, Property, Trust, Others
+  // Main menu items: Will, Property, Pusaka (execution), Others
   List<_ActionItem> _getItems(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return <_ActionItem>[
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/file-01.svg', l10n.will),
-      // Property (formerly Hibah) – use a house icon to better reflect real estate
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/home-01.svg', l10n.hibah),
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/scales-01.svg', l10n.trust),
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/dots-horizontal.svg', l10n.others),
+      // Wasiat (Will) – same 3D picture as About Your Will page
+      _ActionItem('assets/will-certificate-scroll.png', l10n.will),
+      // Property (Hibah) – same 3D picture as About Property Trust page
+      _ActionItem('assets/property-colour-key.png', l10n.hibah),
+      // Pusaka – same 3D picture as About Pusaka/Executor page
+      _ActionItem('assets/pusaka-transfer.png', l10n.pusaka),
+      _ActionItem('assets/more-button-three.png', l10n.others),
     ];
   }
 
-  // Items that go inside "Others" menu
+  // Items that go inside "Others" menu – use same 3D pictures as their about/feature screens
   List<_ActionItem> _getOthersItems(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return <_ActionItem>[
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/wallet-01.svg', l10n.assets),
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/users-01.svg', l10n.family),
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/clipboard-check.svg', l10n.checklist),
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/check-done-01.svg', l10n.execution),
-      _ActionItem('assets/sampul-icons/sampul-icons-purple-brand500/medical-cross.svg', l10n.aftercare),
+      _ActionItem('assets/assets-vault.png', l10n.assets),
+      _ActionItem('assets/family-relationship.png', l10n.family),
+      _ActionItem('assets/checklist-tick.png', l10n.checklist),
+      _ActionItem('assets/trust-family-card.png', l10n.trust),
+      _ActionItem('assets/onboard-emotion.png', l10n.aftercare),
     ];
   }
 
@@ -1217,28 +1268,40 @@ class _ActionsGrid extends StatelessWidget {
         );
         onRefresh?.call();
       }
-    } else if (label == l10n.trust) {
-      // When user taps Property Trust from home:
-      // - If they have no trusts yet, go to the About Trust page first
-      //   so they can immediately start creating a trust from there.
-      // - If they already have trusts, go to the Trust Management screen.
-      if (trusts.isEmpty) {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) => const TrustInfoScreen(),
-          ),
-        ).then((_) {
-          // After returning from the about/creation flow, refresh home data
+    } else if (label == l10n.pusaka) {
+      // Pusaka (execution): executor flow — About Executors first if none, else management screen.
+      try {
+        final executors = await ExecutorService.instance.listUserExecutors();
+        if (!context.mounted) return;
+        if (executors.isEmpty) {
+          final bool? created = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (context) => const ExecutorInfoScreen(),
+            ),
+          );
+          if (created == true) {
+            onRefresh?.call();
+            await Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const ExecutorManagementScreen(),
+              ),
+            );
+          }
+        } else {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => const ExecutorManagementScreen(),
+            ),
+          );
           onRefresh?.call();
-        });
-      } else {
-        Navigator.of(context).push(
+        }
+      } catch (_) {
+        await Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (context) => const TrustManagementScreen(),
+            builder: (context) => const ExecutorManagementScreen(),
           ),
-        ).then((_) {
-          onRefresh?.call();
-        });
+        );
+        onRefresh?.call();
       }
     } else if (label == l10n.others) {
       _showOthersMenu(context);
@@ -1271,45 +1334,24 @@ class _ActionsGrid extends StatelessWidget {
           builder: (context) => const ChecklistScreen(),
         ),
       );
-    } else if (label == l10n.execution) {
-      // Standardized behavior for Execution (Executors):
-      // - If user has no executors yet, show About Executors first so they can start
-      //   creating from there.
-      // - If they already have executors, go straight to the management screen.
-      try {
-        final executors = await ExecutorService.instance.listUserExecutors();
-
-        if (executors.isEmpty) {
-          final bool? created = await Navigator.of(rootContext).push<bool>(
-            MaterialPageRoute<bool>(
-              builder: (context) => const ExecutorInfoScreen(),
-            ),
-          );
-          if (created == true) {
-            // Refresh home data and then show the executors list page
-            onRefresh?.call();
-            await Navigator.of(rootContext).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const ExecutorManagementScreen(),
-              ),
-            );
-          }
-        } else {
-          await Navigator.of(rootContext).push(
-            MaterialPageRoute<void>(
-              builder: (context) => const ExecutorManagementScreen(),
-            ),
-          );
-          onRefresh?.call();
-        }
-      } catch (_) {
-        // Fallback: if loading executors fails, keep previous simple behavior
-        await Navigator.of(rootContext).push(
+    } else if (label == l10n.trust) {
+      // Trust is in Others modal: same flow as before (About Trust first if no trusts, else Management).
+      if (trusts.isEmpty) {
+        Navigator.of(rootContext).push(
           MaterialPageRoute<void>(
-            builder: (context) => const ExecutorManagementScreen(),
+            builder: (context) => const TrustInfoScreen(),
           ),
-        );
-        onRefresh?.call();
+        ).then((_) {
+          onRefresh?.call();
+        });
+      } else {
+        Navigator.of(rootContext).push(
+          MaterialPageRoute<void>(
+            builder: (context) => const TrustManagementScreen(),
+          ),
+        ).then((_) {
+          onRefresh?.call();
+        });
       }
     } else if (label == l10n.aftercare) {
       Navigator.of(rootContext).push(
@@ -1396,10 +1438,19 @@ class _ActionsGrid extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
                                       SizedBox(
-                                        width: 56,
-                                        height: 56,
+                                        width: 32,
+                                        height: 32,
                                         child: Center(
-                                          child: SampulIcons.buildIcon(item.iconAssetPath, width: 24, height: 24),
+                                          child: item.iconAssetPath.endsWith('.png')
+                                              ? Image.asset(
+                                                  item.iconAssetPath,
+                                                  width: 44,
+                                                  height: 44,
+                                                  fit: BoxFit.contain,
+                                                  cacheWidth: 88,
+                                                  cacheHeight: 88,
+                                                )
+                                              : SampulIcons.buildIcon(item.iconAssetPath, width: 24, height: 24),
                                         ),
                                       ),
                                       const SizedBox(height: 8),
@@ -1409,7 +1460,7 @@ class _ActionsGrid extends StatelessWidget {
                                           textAlign: TextAlign.center,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 12),
+                                          style: const TextStyle(fontSize: 13),
                                         ),
                                       ),
                                     ],
@@ -1458,14 +1509,23 @@ class _ActionsGrid extends StatelessWidget {
             highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.04),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-              child: Column(
+                  child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   SizedBox(
                     width: 56,
                     height: 56,
                     child: Center(
-                      child: SampulIcons.buildIcon(item.iconAssetPath, width: 24, height: 24),
+                      child: item.iconAssetPath.endsWith('.png')
+                          ? Image.asset(
+                              item.iconAssetPath,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.contain,
+                              cacheWidth: 88,
+                              cacheHeight: 88,
+                            )
+                          : SampulIcons.buildIcon(item.iconAssetPath, width: 24, height: 24),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1500,7 +1560,13 @@ class _SectionHeader extends StatelessWidget {
         Text(title, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
         const Spacer(),
         if (actionText != null)
-          TextButton(onPressed: onAction, child: Text(actionText!)),
+          TextButton(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              foregroundColor: const Color.fromRGBO(83, 61, 233, 1),
+            ),
+            child: Text(actionText!),
+          ),
       ],
     );
   }
@@ -1583,7 +1649,7 @@ class _AssetsListState extends State<_AssetsList> {
       }
       final List<dynamic> rows = await SupabaseService.instance.client
           .from('digital_assets')
-          .select('id,new_service_platform_name,new_service_platform_logo_url,instructions_after_death')
+          .select('id,new_service_platform_name,new_service_platform_logo_url,instructions_after_death,asset_type,physical_asset_category')
           .eq('uuid', user.id)
           .order('created_at', ascending: false)
           .limit(20);
@@ -1662,15 +1728,19 @@ class _AssetsListState extends State<_AssetsList> {
           final int id = (asset['id'] as num).toInt();
           final l10n = AppLocalizations.of(context)!;
           final String name = (asset['new_service_platform_name'] as String?) ?? l10n.unknown;
+          final String assetType = (asset['asset_type'] as String?) ?? 'digital';
+          final String? physicalCategory = asset['physical_asset_category'] as String?;
           final String? logoUrl = asset['new_service_platform_logo_url'] as String?;
           final String? category = asset['instructions_after_death'] as String?;
           final String categoryText = _prettyInstruction(category, context);
           return GestureDetector(
             onTap: () async {
-              final bool? updated = await Navigator.of(context).push(
-                MaterialPageRoute<bool>(builder: (_) => EditAssetScreen(assetId: id)),
+              final bool? changed = await Navigator.of(context).push<bool>(
+                MaterialPageRoute<bool>(
+                  builder: (_) => AssetPreviewScreen(assetId: id),
+                ),
               );
-              if (updated == true) {
+              if (changed == true) {
                 await _loadAssets();
                 widget.onRefresh?.call();
               }
@@ -1680,14 +1750,22 @@ class _AssetsListState extends State<_AssetsList> {
                 Container(
                   width: 56,
                   height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEAEAEA),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  child: (logoUrl != null && logoUrl.isNotEmpty)
-                      ? ClipOval(child: _Logo(url: BrandfetchService.instance.addClientIdToUrl(logoUrl) ?? logoUrl, size: 56, fit: BoxFit.cover))
-                      : const Icon(Icons.apps),
+                  child: assetType == 'physical'
+                      ? _PhysicalAssetIconHome(category: physicalCategory, size: 32)
+                      : (logoUrl != null && logoUrl.isNotEmpty)
+                          ? ClipOval(
+                              child: _Logo(
+                                url: BrandfetchService.instance.addClientIdToUrl(logoUrl) ?? logoUrl,
+                                size: 56,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.apps),
                 ),
                 const SizedBox(height: 6),
                 SizedBox(
@@ -2004,19 +2082,56 @@ class _Logo extends StatelessWidget {
   }
 }
 
+class _PhysicalAssetIconHome extends StatelessWidget {
+  final String? category;
+  final double size;
+
+  const _PhysicalAssetIconHome({required this.category, required this.size});
+
+  String _iconPathForCategory() {
+    switch (category) {
+      case 'land':
+        return SampulIcons.land;
+      case 'houses_buildings':
+        return SampulIcons.home;
+      case 'farms_plantations':
+        return SampulIcons.farm;
+      case 'cash':
+        return SampulIcons.payment;
+      case 'vehicles':
+        return SampulIcons.car;
+      case 'jewellery':
+        return SampulIcons.diamond;
+      case 'furniture_household':
+        return SampulIcons.furniture;
+      case 'financial_instruments':
+        return SampulIcons.assets;
+      case 'other':
+        return SampulIcons.category;
+      default:
+        return SampulIcons.home;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SampulIcons.buildIcon(
+      _iconPathForCategory(),
+      width: size,
+      height: size,
+    );
+  }
+}
+
 class _DashedBorderPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
   final double borderRadius;
-  final double dashWidth;
-  final double dashSpace;
 
   _DashedBorderPainter({
     required this.color,
     required this.strokeWidth,
     required this.borderRadius,
-    this.dashWidth = 5.0,
-    this.dashSpace = 3.0,
   });
 
   @override
@@ -2045,6 +2160,8 @@ class _DashedBorderPainter extends CustomPainter {
     final ui.PathMetrics pathMetrics = path.computeMetrics();
     for (final ui.PathMetric pathMetric in pathMetrics) {
       double distance = 0;
+      const double dashWidth = 5.0;
+      const double dashSpace = 3.0;
       while (distance < pathMetric.length) {
         final double end = (distance + dashWidth).clamp(0.0, pathMetric.length);
         final Path extractPath = pathMetric.extractPath(distance, end);

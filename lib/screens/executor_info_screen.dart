@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'executor_create_screen.dart';
 
 class ExecutorInfoScreen extends StatefulWidget {
@@ -38,10 +39,11 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Executors'),
+        title: Text(l10n.aboutPusaka),
         elevation: 0,
       ),
       body: SafeArea(
@@ -80,7 +82,7 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: Center(
                         child: Image.asset(
-                          'assets/executor-assets-transition.png',
+                          'assets/pusaka-transfer.png',
                           width: 180,
                           height: 180,
                           fit: BoxFit.contain,

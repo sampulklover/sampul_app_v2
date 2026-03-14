@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/executor.dart';
 import '../services/executor_service.dart';
 import 'executor_edit_screen.dart';
@@ -68,9 +69,10 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
     final List<Executor> approved = _executors.where((e) => e.computedStatus == ExecutorStatus.approved).toList();
     final List<Executor> rejected = _executors.where((e) => e.computedStatus == ExecutorStatus.rejected).toList();
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Executors'),
+        title: Text(l10n.executors),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -84,7 +86,7 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
         ),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Executors',
+            tooltip: l10n.aboutPusaka,
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen(fromHelpIcon: true)));
@@ -112,11 +114,12 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
                       ),
                     ),
                   ],
-                ),
-      floatingActionButton: FloatingActionButton.extended(
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         onPressed: _createExecutor,
-        icon: const Icon(Icons.add),
-        label: const Text('New Executor'),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -141,13 +144,14 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: <Widget>[
         if (_tabController.index == 0) _ExecutorInfoBanner(),
         Expanded(
           child: Center(
             child: Text(
-              'No executors yet',
+              l10n.noPusakaYet,
               style: theme.textTheme.bodyMedium,
             ),
           ),
@@ -306,6 +310,7 @@ class _ExecutorInfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ExecutorInfoScreen(fromHelpIcon: true)));
@@ -323,7 +328,7 @@ class _ExecutorInfoBanner extends StatelessWidget {
           children: <Widget>[
             Icon(Icons.info_outline, color: const Color.fromRGBO(49, 24, 211, 1), size: 18),
             const SizedBox(width: 8),
-            const Expanded(child: Text('New to executors?')),
+            Expanded(child: Text(l10n.newToPusaka)),
             Text('Learn more', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w600)),
           ],
         ),

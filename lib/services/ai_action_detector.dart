@@ -81,7 +81,7 @@ class AiActionDetector {
       case 'family_list':
         return 'View Family';
       case 'executor_management':
-        return 'Manage Executors';
+        return 'Manage Pusaka';
       case 'checklist':
         return 'View Checklist';
       case 'extra_wishes':

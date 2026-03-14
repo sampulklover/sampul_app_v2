@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../config/executor_constants.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
@@ -1017,12 +1018,13 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Submit Executor'),
+        title: Text(l10n.submitPusaka),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Executors',
+            tooltip: l10n.aboutPusaka,
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(

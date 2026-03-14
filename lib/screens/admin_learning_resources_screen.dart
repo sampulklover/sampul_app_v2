@@ -649,10 +649,11 @@ class _AdminLearningResourcesScreenState
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         onPressed: _isSaving ? null : () => _openEditor(),
-        icon: const Icon(Icons.add),
-        label: const Text('Add resource'),
+        child: const Icon(Icons.add),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

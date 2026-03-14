@@ -192,12 +192,13 @@ class _BillingScreenState extends State<BillingScreen> with WidgetsBindingObserv
                     ),
                 ],
               ),
-            ),
+      ),
       floatingActionButton: _status.isSubscribed
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
               onPressed: _processing ? null : _openPortal,
-              icon: const Icon(Icons.manage_accounts_outlined),
-              label: const Text('Manage subscription'),
+              child: const Icon(Icons.add),
             )
           : null,
     );

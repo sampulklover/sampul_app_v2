@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/trust.dart';
 import '../config/trust_constants.dart';
 import '../services/trust_payment_service.dart';
@@ -407,7 +408,7 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
                           context: context,
                           theme: theme,
                           colorScheme: colorScheme,
-                          label: 'Execution',
+                          label: AppLocalizations.of(context)!.pusaka,
                           amount: 'RM 25',
                           frequency: 'Per post-demise instruction',
                         ),

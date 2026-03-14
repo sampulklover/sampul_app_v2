@@ -143,6 +143,8 @@ class _FamilyListScreenState extends State<FamilyListScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.myFamily)),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         onPressed: () async {
           // Check if user has seen the about page before
           final SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -26,6 +26,8 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
   String _name = '';
   String? _logoUrl;
   String? _url;
+  String? _assetType;
+  String? _physicalCategory;
 
   // Beloved (gift recipient)
   final List<Map<String, dynamic>> _belovedOptions = <Map<String, dynamic>>[];
@@ -74,7 +76,7 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
     try {
       final List<dynamic> rows = await SupabaseService.instance.client
           .from('digital_assets')
-          .select('id,new_service_platform_name,new_service_platform_logo_url,new_service_platform_url,declared_value_myr,instructions_after_death,remarks,beloved_id')
+          .select('id,new_service_platform_name,new_service_platform_logo_url,new_service_platform_url,declared_value_myr,instructions_after_death,remarks,beloved_id,asset_type,physical_asset_category')
           .eq('id', widget.assetId)
           .limit(1);
       if (!mounted) return;
@@ -86,6 +88,8 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
       _name = (a['new_service_platform_name'] as String?) ?? '';
       _logoUrl = a['new_service_platform_logo_url'] as String?;
       _url = a['new_service_platform_url'] as String?;
+      _assetType = a['asset_type'] as String?;
+      _physicalCategory = a['physical_asset_category'] as String?;
       final double? value = (a['declared_value_myr'] as num?)?.toDouble();
       _declaredValueController.text = value != null ? value.toStringAsFixed(2) : '';
       _instruction = a['instructions_after_death'] as String?;
@@ -185,9 +189,15 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
                       height: 72,
                       decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFEAEAEA)),
                       clipBehavior: Clip.antiAlias,
-                      child: (_logoUrl != null && _logoUrl!.isNotEmpty)
-                          ? Image.network(BrandfetchService.instance.addClientIdToUrl(_logoUrl) ?? _logoUrl!, fit: BoxFit.cover)
-                          : SampulIcons.buildIcon(SampulIcons.apps, width: 36, height: 36),
+                      alignment: Alignment.center,
+                      child: (_assetType == 'physical')
+                          ? _PhysicalAssetIconEdit(category: _physicalCategory, size: 36)
+                          : (_logoUrl != null && _logoUrl!.isNotEmpty)
+                              ? Image.network(
+                                  BrandfetchService.instance.addClientIdToUrl(_logoUrl) ?? _logoUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                              : SampulIcons.buildIcon(SampulIcons.apps, width: 36, height: 36),
                     ),
                     const SizedBox(height: 8),
                     Text(_name, style: Theme.of(context).textTheme.titleMedium),
@@ -374,5 +384,46 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+}
+
+class _PhysicalAssetIconEdit extends StatelessWidget {
+  final String? category;
+  final double size;
+
+  const _PhysicalAssetIconEdit({required this.category, required this.size});
+
+  String _iconPathForCategory() {
+    switch (category) {
+      case 'land':
+        return SampulIcons.land;
+      case 'houses_buildings':
+        return SampulIcons.home;
+      case 'farms_plantations':
+        return SampulIcons.farm;
+      case 'cash':
+        return SampulIcons.payment;
+      case 'vehicles':
+        return SampulIcons.car;
+      case 'jewellery':
+        return SampulIcons.diamond;
+      case 'furniture_household':
+        return SampulIcons.furniture;
+      case 'financial_instruments':
+        return SampulIcons.assets;
+      case 'other':
+        return SampulIcons.category;
+      default:
+        return SampulIcons.home;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SampulIcons.buildIcon(
+      _iconPathForCategory(),
+      width: size,
+      height: size,
+    );
   }
 }

@@ -170,11 +170,12 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
                   ),
                 ),
               ],
-            ),
-      floatingActionButton: FloatingActionButton.extended(
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         onPressed: _createHibah,
-        icon: const Icon(Icons.add),
-        label: const Text('New Property Trust'),
+        child: const Icon(Icons.add),
       ),
     );
   }

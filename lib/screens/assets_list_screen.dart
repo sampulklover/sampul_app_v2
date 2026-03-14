@@ -4,9 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/supabase_service.dart';
 import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
-import 'edit_asset_screen.dart';
 import 'asset_info_screen.dart';
 import 'add_asset_screen.dart';
+import 'asset_preview_screen.dart';
 import '../utils/sampul_icons.dart';
 
 class AssetsListScreen extends StatefulWidget {
@@ -67,6 +67,36 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
     }
   }
 
+  String _assetTypeLabel(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'physical':
+        return 'Physical';
+      case 'digital':
+      default:
+        return 'Digital';
+    }
+  }
+
+  Color _assetTypeBg(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'physical':
+        return Colors.green.shade50;
+      case 'digital':
+      default:
+        return Colors.blue.shade50;
+    }
+  }
+
+  Color _assetTypeFg(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'physical':
+        return Colors.green.shade700;
+      case 'digital':
+      default:
+        return Colors.blue.shade700;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +114,7 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
       }
       final List<dynamic> rows = await SupabaseService.instance.client
           .from('digital_assets')
-          .select('id,new_service_platform_name,new_service_platform_logo_url,new_service_platform_url,declared_value_myr,created_at,instructions_after_death')
+          .select('id,new_service_platform_name,new_service_platform_logo_url,new_service_platform_url,declared_value_myr,created_at,instructions_after_death,asset_type,physical_asset_category')
           .eq('uuid', user.id)
           .order('created_at', ascending: false);
       if (!mounted) return;
@@ -105,6 +135,8 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('My Assets')),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         onPressed: () async {
           // Check if user has seen the about page before
           final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -144,6 +176,8 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
                         final Map<String, dynamic> a = _assets[index - 1];
                         final int id = (a['id'] as num).toInt();
                         final String name = (a['new_service_platform_name'] as String?) ?? 'Unknown';
+                        final String assetType = (a['asset_type'] as String?) ?? 'digital';
+                        final String? physicalCategory = a['physical_asset_category'] as String?;
                         final String? logo = a['new_service_platform_logo_url'] as String?;
                         final String? url = a['new_service_platform_url'] as String?;
                         final double? value = (a['declared_value_myr'] as num?)?.toDouble();
@@ -151,29 +185,61 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
                         final String categoryText = _prettyInstruction(category);
                         return ListTile(
                           onTap: () async {
-                            final bool? updated = await Navigator.of(context).push(
-                              MaterialPageRoute<bool>(builder: (_) => EditAssetScreen(assetId: id)),
+                            final bool? changed = await Navigator.of(context).push<bool>(
+                              MaterialPageRoute<bool>(
+                                builder: (_) => AssetPreviewScreen(assetId: id),
+                              ),
                             );
-                            if (updated == true) {
+                            if (changed == true) {
                               await _loadAssets();
                             }
                           },
-                          leading: _Logo(url: BrandfetchService.instance.addClientIdToUrl(logo), size: 40),
+                          leading: assetType == 'physical'
+                              ? _PhysicalAssetIcon(category: physicalCategory, size: 40)
+                              : _Logo(url: BrandfetchService.instance.addClientIdToUrl(logo), size: 40),
                           title: Text(name),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               if (url != null && url.isNotEmpty) Text(url),
-                              if (categoryText.isNotEmpty)
-                                Container(
-                                  margin: const EdgeInsets.only(top: 4),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: _badgeBg(category),
-                                    borderRadius: BorderRadius.circular(999),
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: <Widget>[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: _assetTypeBg(assetType),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      _assetTypeLabel(assetType),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: _assetTypeFg(assetType),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
-                                  child: Text(categoryText, style: TextStyle(fontSize: 11, color: _badgeFg(category), fontWeight: FontWeight.w600)),
-                                ),
+                                  if (categoryText.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: _badgeBg(category),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        categoryText,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: _badgeFg(category),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ],
                           ),
                           trailing: value != null ? Text('RM ${value.toStringAsFixed(2)}') : null,
@@ -229,6 +295,56 @@ class _Logo extends StatelessWidget {
         height: size,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => fallback,
+      ),
+    );
+  }
+}
+
+class _PhysicalAssetIcon extends StatelessWidget {
+  final String? category;
+  final double size;
+
+  const _PhysicalAssetIcon({required this.category, required this.size});
+
+  String _iconPathForCategory() {
+    switch (category) {
+      case 'land':
+        return SampulIcons.land;
+      case 'houses_buildings':
+        return SampulIcons.home;
+      case 'farms_plantations':
+        return SampulIcons.farm;
+      case 'cash':
+        return SampulIcons.payment;
+      case 'vehicles':
+        return SampulIcons.car;
+      case 'jewellery':
+        return SampulIcons.diamond;
+      case 'furniture_household':
+        return SampulIcons.furniture;
+      case 'financial_instruments':
+        return SampulIcons.assets;
+      case 'other':
+        return SampulIcons.category;
+      default:
+        return SampulIcons.home;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color(0xFFEAEAEA),
+      ),
+      alignment: Alignment.center,
+      child: SampulIcons.buildIcon(
+        _iconPathForCategory(),
+        width: size * 0.6,
+        height: size * 0.6,
       ),
     );
   }
