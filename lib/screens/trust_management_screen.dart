@@ -125,11 +125,12 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
                       ),
                     ),
                   ],
-                ),
-      floatingActionButton: FloatingActionButton.extended(
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         onPressed: _createTrust,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.createNew),
+        child: const Icon(Icons.add),
       ),
     );
   }

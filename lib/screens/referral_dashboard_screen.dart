@@ -203,7 +203,7 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 2,
-                                  color: colorScheme.primary,
+                                  color: const Color.fromRGBO(83, 61, 233, 1),
                                 ),
                               ),
                             ),
@@ -218,6 +218,8 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                 label: const Text('Copy Code'),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 12),
+                                  foregroundColor: const Color.fromRGBO(83, 61, 233, 1),
+                                  side: const BorderSide(color: Color.fromRGBO(83, 61, 233, 1)),
                                 ),
                               ),
                             ),
@@ -228,7 +230,7 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                 icon: const Icon(Icons.share, size: 18),
                                 label: const Text('Share'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: colorScheme.primary,
+                                  backgroundColor: const Color.fromRGBO(83, 61, 233, 1),
                                   foregroundColor: colorScheme.onPrimary,
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
@@ -260,7 +262,7 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                 children: [
                                   Icon(
                                     Icons.people_outline,
-                                    color: colorScheme.primary,
+                                    color: const Color.fromRGBO(83, 61, 233, 1),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -277,7 +279,7 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                 _isLoading ? '—' : '$_referralsCount',
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
+                                  color: const Color.fromRGBO(83, 61, 233, 1),
                                 ),
                               ),
                             ],
@@ -299,7 +301,7 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                 children: [
                                   Icon(
                                     Icons.stars_outlined,
-                                    color: colorScheme.primary,
+                                    color: const Color.fromRGBO(83, 61, 233, 1),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -433,7 +435,7 @@ class _ReferralDashboardScreenState extends State<ReferralDashboardScreen> {
                                           backgroundColor: colorScheme.primaryContainer,
                                           child: Icon(
                                             Icons.person_add,
-                                            color: colorScheme.primary,
+                                            color: const Color.fromRGBO(83, 61, 233, 1),
                                             size: 20,
                                           ),
                                         ),
@@ -492,8 +494,8 @@ class _HowItWorksItem extends StatelessWidget {
         Container(
           width: 32,
           height: 32,
-          decoration: BoxDecoration(
-            color: colorScheme.primary,
+          decoration: const BoxDecoration(
+            color: Color.fromRGBO(83, 61, 233, 1),
             shape: BoxShape.circle,
           ),
           child: Center(

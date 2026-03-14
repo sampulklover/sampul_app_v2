@@ -205,6 +205,8 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
       ),
       floatingActionButton: _tasks.isNotEmpty
           ? FloatingActionButton(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
               onPressed: () => _addOrEdit(),
               child: const Icon(Icons.add),
             )

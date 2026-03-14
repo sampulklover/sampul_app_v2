@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'hibah_create_screen.dart';
 
 class HibahInfoScreen extends StatefulWidget {
@@ -36,12 +37,13 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About Property Trust'),
+        title: Text(l10n.aboutPropertyTrust),
         elevation: 0,
       ),
       body: SafeArea(
@@ -60,7 +62,7 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's plan your Property Trust",
+                            l10n.letsPlanYourHibahGifts,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -69,7 +71,7 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Decide clearly who should receive your Property Trust assets.",
+                            l10n.hibahDescription,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -98,7 +100,7 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "What is Property Trust?",
+                              l10n.propertyTrustWhatIs,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -106,7 +108,7 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Property Trust is a Shariah-compliant, hibah-based way to transfer ownership of your assets to someone you choose while you are still alive.",
+                              l10n.propertyTrustAboutCopy,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -114,17 +116,17 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
                             ),
                             const SizedBox(height: 20),
                             _FeatureItem(
-                              text: "Choose specific people to receive certain assets (e.g. a home, savings, or investments).",
+                              text: l10n.propertyTrustBenefit1,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _FeatureItem(
-                              text: "Reduce future disputes by documenting your intention clearly.",
+                              text: l10n.propertyTrustBenefit2,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _FeatureItem(
-                              text: "Complement your will and faraid planning with lifetime gifts.",
+                              text: l10n.propertyTrustBenefit3,
                               colorScheme: colorScheme,
                             ),
                           ],
@@ -168,7 +170,7 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Start Property Trust",
+                          l10n.startPropertyTrust,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,
@@ -194,7 +196,7 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
   Widget _buildIllustration(BuildContext context, ColorScheme colorScheme) {
     return Center(
       child: Image.asset(
-        'assets/hibah-property-stone.png',
+        'assets/property-colour-key.png',
         width: 180,
         height: 180,
         fit: BoxFit.contain,

@@ -334,6 +334,9 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           throw Exception('Please select an asset category.');
         }
 
+        // Persist the physical asset category so we can show the right icon later
+        payload['physical_asset_category'] = _physicalAssetCategory;
+
         // Get asset display name
         final String assetDisplayName = _getAssetTypeDisplayName(_physicalAssetCategory);
         final String assetName = _assetNameController.text.trim();
@@ -346,18 +349,14 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         // Set is_custom to true for physical assets (they're always custom/manual entries)
         payload['is_custom'] = true;
 
-        // Map user-friendly category to legal classification
+        // Map user-friendly category to legal classification and store it explicitly
         final String legalCategory = _getLegalCategoryFromUserSelection(_physicalAssetCategory);
-        
-        // Store legal classification and remarks
+        payload['physical_legal_classification'] = legalCategory; // 'movable' or 'immovable'
+
+        // Store user remarks as-is (without encoding legal classification into the text)
         final String remarks = _remarksController.text.trim();
-        final String categoryPrefix = legalCategory == 'movable' 
-            ? '[Movable Asset] ' 
-            : '[Immovable Asset] ';
         if (remarks.isNotEmpty) {
-          payload['remarks'] = '$categoryPrefix$remarks';
-        } else {
-          payload['remarks'] = categoryPrefix.trim();
+          payload['remarks'] = remarks;
         }
 
         // Set beloved_id if instruction requires it
@@ -1452,8 +1451,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         // Estimated value section
         Row(
           children: <Widget>[
-            SampulIcons.buildIcon(SampulIcons.payment, width: 20, height: 20, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 8),
             Text(
               l10n.estimatedValue,
               style: theme.textTheme.titleSmall?.copyWith(
@@ -1568,8 +1565,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         const SizedBox(height: 24),
         Row(
           children: <Widget>[
-            SampulIcons.buildIcon(SampulIcons.note, width: 20, height: 20, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 8),
             Text(
               l10n.additionalNotes,
               style: theme.textTheme.titleSmall?.copyWith(
