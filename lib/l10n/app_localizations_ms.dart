@@ -57,10 +57,21 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get appleSignInCancelled => 'Log masuk Apple dibatalkan atau gagal';
+
+  @override
+  String appleSignInFailed(String error) {
+    return 'Log masuk Apple gagal: $error';
+  }
+
+  @override
   String get signingIn => 'Sedang log masuk…';
 
   @override
   String get continueWithGoogle => 'Teruskan dengan Google';
+
+  @override
+  String get continueWithApple => 'Teruskan dengan Apple';
 
   @override
   String get dontHaveAccount => 'Tiada akaun?';
@@ -264,6 +275,138 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get aftercare => 'Penjagaan Selepas';
+
+  @override
+  String get informDeathTitle => 'Maklumkan Kematian';
+
+  @override
+  String get informDeathStartCta => 'Mula Maklumkan Kematian';
+
+  @override
+  String get informDeathMenuLabel => 'Maklumkan Kematian';
+
+  @override
+  String get informDeathDeleteDialogTitle => 'Padam rekod Maklumkan Kematian';
+
+  @override
+  String get informDeathDeleteSuccess => 'Rekod Maklumkan Kematian dipadam';
+
+  @override
+  String get informDeathHeroTitle => 'Maklumkan Sampul tentang kematian';
+
+  @override
+  String get informDeathHeroBody =>
+      'Jika seseorang pengguna Sampul telah meninggal dunia, halaman ini membantu anda memaklumkan kami dengan cara yang tenang dan teratur.';
+
+  @override
+  String get informDeathWhatYoullShareTitle => 'Maklumat yang akan dikongsi';
+
+  @override
+  String get informDeathWhatYoullShareBody =>
+      'Kami akan meminta butiran pemilik Sampul dan salinan sijil kematian. Ini membantu kami mengesahkan orang yang betul dan menyokong keluarga mereka dengan sewajarnya.';
+
+  @override
+  String get informDeathFeatureOwner =>
+      'Nama penuh dan nombor NRIC pemilik (seperti dalam NRIC).';
+
+  @override
+  String get informDeathFeatureCertNumber =>
+      'Nombor sijil kematian supaya kami boleh memadankan dokumen.';
+
+  @override
+  String get informDeathFeatureCertImage =>
+      'Gambar atau imbasan yang jelas bagi sijil kematian.';
+
+  @override
+  String get informDeathOwnerSectionTitle => 'Butiran pemilik Sampul';
+
+  @override
+  String get informDeathOwnerNameLabel => 'Nama penuh (seperti dalam NRIC)';
+
+  @override
+  String get informDeathOwnerNricLabel => 'Nombor NRIC';
+
+  @override
+  String get informDeathSupportingDocsSectionTitle => 'Dokumen sokongan';
+
+  @override
+  String get informDeathSupportingDocsBody =>
+      'Lampirkan sijil kematian supaya pasukan kami boleh mengesahkan maklumat.';
+
+  @override
+  String get informDeathNoFileChosen => 'Tiada fail dipilih';
+
+  @override
+  String get informDeathUploadHint =>
+      'Muat naik gambar atau imbasan yang jelas bagi sijil kematian.';
+
+  @override
+  String get informDeathChooseFile => 'Pilih fail';
+
+  @override
+  String get informDeathCertificateIdLabel => 'ID sijil kematian';
+
+  @override
+  String get informDeathRequiredField => 'Wajib diisi';
+
+  @override
+  String get informDeathSubmitCta => 'Hantar kepada Sampul';
+
+  @override
+  String get informDeathStatusDraft => 'Draf';
+
+  @override
+  String get informDeathStatusSubmitted => 'Dihantar';
+
+  @override
+  String get informDeathStatusUnderReview => 'Sedang disemak';
+
+  @override
+  String get informDeathStatusApproved => 'Diluluskan';
+
+  @override
+  String get informDeathStatusRejected => 'Ditolak';
+
+  @override
+  String get informDeathStatusUnknown => 'Dihantar';
+
+  @override
+  String informDeathListNric(String nric) {
+    return 'NRIC: $nric';
+  }
+
+  @override
+  String informDeathListCertificateId(String certId) {
+    return 'ID sijil: $certId';
+  }
+
+  @override
+  String informDeathListSubmittedOn(String date) {
+    return 'Dihantar pada: $date';
+  }
+
+  @override
+  String get informDeathInfoBannerBody =>
+      'Perlu maklumkan Sampul tentang kematian?';
+
+  @override
+  String get informDeathInfoBannerCta => 'Permintaan baharu';
+
+  @override
+  String get informDeathOpenFile => 'Buka fail';
+
+  @override
+  String get informDeathUnableToOpenFile => 'Tidak dapat membuka fail';
+
+  @override
+  String get informDeathRemoveFile => 'Buang fail';
+
+  @override
+  String get informDeathRemoveFileTitle => 'Buang fail yang dimuat naik?';
+
+  @override
+  String get informDeathRemoveFileBody =>
+      'Ini akan memadam fail yang dimuat naik daripada permintaan ini.';
 
   @override
   String get add => 'Tambah';
@@ -542,6 +685,28 @@ class AppLocalizationsMs extends AppLocalizations {
   String get startVerification => 'Mula Pengesahan';
 
   @override
+  String get notificationsTitle => 'Notifikasi';
+
+  @override
+  String get noNotifications => 'Tiada notifikasi';
+
+  @override
+  String get youAreAllCaughtUp => 'Semua sudah dikemas kini.';
+
+  @override
+  String get markAllAsRead => 'Tanda semua sebagai dibaca';
+
+  @override
+  String get clearAll => 'Buang semua';
+
+  @override
+  String get removeNotificationTitle => 'Buang notifikasi?';
+
+  @override
+  String get removeNotificationDescription =>
+      'Ini akan membuang notifikasi daripada senarai anda.';
+
+  @override
   String get editProfile => 'Edit Profil';
 
   @override
@@ -606,6 +771,9 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get gender => 'Jantina';
+
+  @override
+  String get religion => 'Agama';
 
   @override
   String get enterYourEmail => 'Masukkan e-mel anda';

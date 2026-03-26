@@ -10,6 +10,7 @@ class UserProfile {
   final String? gender;
   final String? phoneNo;
   final String? imagePath;
+  final String? religion;
   final String? address1;
   final String? address2;
   final String? city;
@@ -30,6 +31,7 @@ class UserProfile {
     this.gender,
     this.phoneNo,
     this.imagePath,
+    this.religion,
     this.address1,
     this.address2,
     this.city,
@@ -52,6 +54,7 @@ class UserProfile {
       gender: json['gender'] as String?,
       phoneNo: json['phone_no'] as String?,
       imagePath: json['image_path'] as String?,
+      religion: json['religion'] as String?,
       address1: json['address_1'] as String?,
       address2: json['address_2'] as String?,
       city: json['city'] as String?,
@@ -75,6 +78,7 @@ class UserProfile {
       'gender': gender,
       'phone_no': phoneNo,
       'image_path': imagePath,
+      'religion': religion,
       'address_1': address1,
       'address_2': address2,
       'city': city,

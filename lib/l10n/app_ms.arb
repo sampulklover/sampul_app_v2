@@ -36,8 +36,18 @@
       }
     }
   },
+  "appleSignInCancelled": "Log masuk Apple dibatalkan atau gagal",
+  "appleSignInFailed": "Log masuk Apple gagal: {error}",
+  "@appleSignInFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "signingIn": "Sedang log masuk…",
   "continueWithGoogle": "Teruskan dengan Google",
+  "continueWithApple": "Teruskan dengan Apple",
   "dontHaveAccount": "Tiada akaun?",
   "signUp": "Daftar",
   "or": "ATAU",
@@ -116,6 +126,66 @@
   "execution": "Pusaka",
   "pusaka": "Pusaka",
   "aftercare": "Penjagaan Selepas",
+  "informDeathTitle": "Maklumkan Kematian",
+  "informDeathStartCta": "Mula Maklumkan Kematian",
+  "informDeathMenuLabel": "Maklumkan Kematian",
+  "informDeathDeleteDialogTitle": "Padam rekod Maklumkan Kematian",
+  "informDeathDeleteSuccess": "Rekod Maklumkan Kematian dipadam",
+  "informDeathHeroTitle": "Maklumkan Sampul tentang kematian",
+  "informDeathHeroBody": "Jika seseorang pengguna Sampul telah meninggal dunia, halaman ini membantu anda memaklumkan kami dengan cara yang tenang dan teratur.",
+  "informDeathWhatYoullShareTitle": "Maklumat yang akan dikongsi",
+  "informDeathWhatYoullShareBody": "Kami akan meminta butiran pemilik Sampul dan salinan sijil kematian. Ini membantu kami mengesahkan orang yang betul dan menyokong keluarga mereka dengan sewajarnya.",
+  "informDeathFeatureOwner": "Nama penuh dan nombor NRIC pemilik (seperti dalam NRIC).",
+  "informDeathFeatureCertNumber": "Nombor sijil kematian supaya kami boleh memadankan dokumen.",
+  "informDeathFeatureCertImage": "Gambar atau imbasan yang jelas bagi sijil kematian.",
+  "informDeathOwnerSectionTitle": "Butiran pemilik Sampul",
+  "informDeathOwnerNameLabel": "Nama penuh (seperti dalam NRIC)",
+  "informDeathOwnerNricLabel": "Nombor NRIC",
+  "informDeathSupportingDocsSectionTitle": "Dokumen sokongan",
+  "informDeathSupportingDocsBody": "Lampirkan sijil kematian supaya pasukan kami boleh mengesahkan maklumat.",
+  "informDeathNoFileChosen": "Tiada fail dipilih",
+  "informDeathUploadHint": "Muat naik gambar atau imbasan yang jelas bagi sijil kematian.",
+  "informDeathChooseFile": "Pilih fail",
+  "informDeathCertificateIdLabel": "ID sijil kematian",
+  "informDeathRequiredField": "Wajib diisi",
+  "informDeathSubmitCta": "Hantar kepada Sampul",
+  "informDeathStatusDraft": "Draf",
+  "informDeathStatusSubmitted": "Dihantar",
+  "informDeathStatusUnderReview": "Sedang disemak",
+  "informDeathStatusApproved": "Diluluskan",
+  "informDeathStatusRejected": "Ditolak",
+  "informDeathStatusUnknown": "Dihantar",
+  "informDeathListNric": "NRIC: {nric}",
+  "@informDeathListNric": {
+    "placeholders": {
+      "nric": {
+        "type": "String"
+      }
+    }
+  },
+  "informDeathListCertificateId": "ID sijil: {certId}",
+  "@informDeathListCertificateId": {
+    "placeholders": {
+      "certId": {
+        "type": "String"
+      }
+    }
+  },
+  "informDeathListSubmittedOn": "Dihantar pada: {date}",
+  "@informDeathListSubmittedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "informDeathInfoBannerBody": "Perlu maklumkan Sampul tentang kematian?",
+  "informDeathInfoBannerCta": "Permintaan baharu",
+  "informDeathOpenFile": "Buka fail",
+  "informDeathUnableToOpenFile": "Tidak dapat membuka fail",
+  "informDeathRemoveFile": "Buang fail",
+  "informDeathRemoveFileTitle": "Buang fail yang dimuat naik?",
+  "informDeathRemoveFileBody": "Ini akan memadam fail yang dimuat naik daripada permintaan ini.",
   "add": "Tambah",
   "loading": "Memuatkan...",
   "unknown": "Tidak diketahui",
@@ -218,6 +288,14 @@
   "protectsAgainstFraud": "Melindungi daripada penipuan dan kecurian identiti",
   "yourInformationIsEncrypted": "Maklumat anda disulitkan dan selamat",
   "startVerification": "Mula Pengesahan",
+
+  "notificationsTitle": "Notifikasi",
+  "noNotifications": "Tiada notifikasi",
+  "youAreAllCaughtUp": "Semua sudah dikemas kini.",
+  "markAllAsRead": "Tanda semua sebagai dibaca",
+  "clearAll": "Buang semua",
+  "removeNotificationTitle": "Buang notifikasi?",
+  "removeNotificationDescription": "Ini akan membuang notifikasi daripada senarai anda.",
   
   "editProfile": "Edit Profil",
   "save": "Simpan",
@@ -253,6 +331,7 @@
   "phoneNumber": "Nombor Telefon",
   "enterYourPhoneNumber": "Masukkan nombor telefon anda",
   "gender": "Jantina",
+  "religion": "Agama",
   "enterYourEmail": "Masukkan e-mel anda",
   "emailCannotBeChanged": "E-mel tidak boleh ditukar",
   "addressInformation": "Maklumat Alamat",

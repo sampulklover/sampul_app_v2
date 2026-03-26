@@ -6,6 +6,7 @@ import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
 import '../services/will_service.dart';
+import '../services/notification_service.dart';
 import '../models/extra_wishes.dart';
 import '../services/extra_wishes_service.dart';
 import '../controllers/auth_controller.dart';
@@ -267,6 +268,14 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       await _loadWillData();
       final l10n = AppLocalizations.of(context)!;
       _showSuccessSnackBar(l10n.willPublishedSuccessfully);
+      await NotificationService.instance.createNotification(
+        title: l10n.myWill,
+        body: l10n.willPublishedSuccessfully,
+        type: 'will_published',
+        data: _will != null && _will!.id != null
+            ? <String, dynamic>{'will_id': _will!.id}
+            : null,
+      );
     } catch (e) {
       final l10n = AppLocalizations.of(context)!;
       _showErrorSnackBar(l10n.failedToPublishWill(e.toString()));

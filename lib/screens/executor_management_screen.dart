@@ -77,11 +77,11 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
           controller: _tabController,
           isScrollable: true,
           tabs: <Widget>[
-            Tab(text: 'All (${_executors.length})'),
-            Tab(text: 'Draft (${drafts.length})'),
-            Tab(text: 'Submitted (${submitted.length})'),
-            Tab(text: 'Approved (${approved.length})'),
-            Tab(text: 'Rejected (${rejected.length})'),
+            Tab(text: '${l10n.all} (${_executors.length})'),
+            Tab(text: '${l10n.draft} (${drafts.length})'),
+            Tab(text: '${l10n.submitted} (${submitted.length})'),
+            Tab(text: '${l10n.approved} (${approved.length})'),
+            Tab(text: '${l10n.rejected} (${rejected.length})'),
           ],
         ),
         actions: <Widget>[
@@ -210,23 +210,24 @@ class _ExecutorList extends StatelessWidget {
 
   const _ExecutorList({required this.executors, required this.onDelete, required this.onTap});
 
-  String _statusLabel(ExecutorStatus s) {
+  String _statusLabel(BuildContext context, ExecutorStatus s) {
+    final l10n = AppLocalizations.of(context)!;
     switch (s) {
       case ExecutorStatus.submitted:
-        return 'Submitted';
+        return l10n.submitted;
       case ExecutorStatus.approved:
-        return 'Approved';
+        return l10n.approved;
       case ExecutorStatus.rejected:
-        return 'Rejected';
+        return l10n.rejected;
       case ExecutorStatus.draft:
-        return 'Draft';
+        return l10n.draft;
     }
   }
 
   Color _statusColor(BuildContext context, ExecutorStatus s) {
     switch (s) {
       case ExecutorStatus.submitted:
-        return Colors.blue.shade600;
+        return Colors.orange.shade700;
       case ExecutorStatus.approved:
         return Colors.green.shade700;
       case ExecutorStatus.rejected:
@@ -262,7 +263,7 @@ class _ExecutorList extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      _statusLabel(e.computedStatus),
+                      _statusLabel(context, e.computedStatus),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

@@ -22,6 +22,8 @@ import 'checklist_screen.dart';
 import 'will_management_screen.dart';
 import 'onboarding_goal_selection_screen.dart';
 import 'aftercare_screen.dart';
+import 'inform_death_management_screen.dart';
+import 'inform_death_screen.dart';
 import '../models/trust.dart';
 import '../services/trust_service.dart';
 import 'trust_info_screen.dart';
@@ -460,16 +462,16 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
     }
   }
 
-  Color _statusColor(TrustStatus s) {
+  Color _statusColor(BuildContext context, TrustStatus s) {
     switch (s) {
       case TrustStatus.submitted:
-        return Colors.blue.shade600;
+        return Colors.orange.shade700;
       case TrustStatus.approved:
         return Colors.green.shade700;
       case TrustStatus.rejected:
         return Colors.red.shade700;
       case TrustStatus.draft:
-        return Colors.grey.shade600;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
     }
   }
 
@@ -743,7 +745,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
               // Show trust card
               final Trust trust = widget.trusts[index];
               final String trustCode = trust.trustCode ?? 'N/A';
-              final String amount = _formatAmount(trust.estimatedNetWorth);
+              final String amount = _formatAmount((trust.totalPaidInCents / 100).toString());
               final TrustStatus status = trust.computedStatus;
               final bool isActive = status == TrustStatus.approved;
               
@@ -855,7 +857,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                     width: 8,
                                     height: 8,
                                     decoration: BoxDecoration(
-                                      color: isActive ? Colors.green : _statusColor(status),
+                                      color: isActive ? Colors.green : _statusColor(context, status),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -866,7 +868,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                       return Text(
                                         isActive ? l10n.yourPlanIsActive : _statusLabel(status, context),
                                         style: theme.textTheme.bodySmall?.copyWith(
-                                          color: isActive ? Colors.green.shade700 : _statusColor(status),
+                                          color: isActive ? Colors.green.shade700 : _statusColor(context, status),
                                         ),
                                       );
                                     },
@@ -1215,6 +1217,7 @@ class _ActionsGrid extends StatelessWidget {
       _ActionItem('assets/checklist-tick.png', l10n.checklist),
       _ActionItem('assets/trust-family-card.png', l10n.trust),
       _ActionItem('assets/onboard-emotion.png', l10n.aftercare),
+      _ActionItem('assets/inform-death.png', l10n.informDeathMenuLabel),
     ];
   }
 
@@ -1359,6 +1362,62 @@ class _ActionsGrid extends StatelessWidget {
           builder: (context) => const AftercareScreen(),
         ),
       );
+    } else if (label == l10n.informDeathMenuLabel) {
+      // Follow the same pattern as Trust/Hibah:
+      // - If user has no Inform Death records yet, show the info page first.
+      // - Otherwise, go straight to the management screen.
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        final bool? created = await Navigator.of(rootContext).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (context) => const InformDeathScreen(),
+          ),
+        );
+        if (created == true && rootContext.mounted) {
+          await Navigator.of(rootContext).push(
+            MaterialPageRoute<void>(
+              builder: (context) => const InformDeathManagementScreen(),
+            ),
+          );
+        }
+        return;
+      }
+      try {
+        final rows = await SupabaseService.instance.client
+            .from('inform_death')
+            .select('id')
+            .eq('uuid', user.id)
+            .limit(1);
+        if (!rootContext.mounted) return;
+
+        if (rows.isEmpty) {
+          final bool? created = await Navigator.of(rootContext).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (context) => const InformDeathScreen(),
+            ),
+          );
+          if (created == true && rootContext.mounted) {
+            await Navigator.of(rootContext).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const InformDeathManagementScreen(),
+              ),
+            );
+          }
+        } else {
+          await Navigator.of(rootContext).push(
+            MaterialPageRoute<void>(
+              builder: (context) => const InformDeathManagementScreen(),
+            ),
+          );
+        }
+      } catch (_) {
+        if (!rootContext.mounted) return;
+        await Navigator.of(rootContext).push(
+          MaterialPageRoute<void>(
+            builder: (context) => const InformDeathManagementScreen(),
+          ),
+        );
+      }
     }
   }
 

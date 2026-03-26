@@ -260,24 +260,6 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
     }
   }
 
-  String _formatEstimatedNetWorth(String? estimatedNetWorth) {
-    if (estimatedNetWorth == null || estimatedNetWorth.isEmpty) {
-      return 'RM0.00';
-    }
-    // Try to parse as number, if it's a range string, just return it formatted
-    try {
-      final num = double.tryParse(estimatedNetWorth);
-      if (num != null) {
-        return 'RM${num.toStringAsFixed(2)}';
-      }
-    } catch (_) {}
-    // If it's a string like "below_rm_50k", format it nicely
-    return estimatedNetWorth.replaceAll('_', ' ').replaceAllMapped(
-      RegExp(r'\brm\b', caseSensitive: false),
-      (match) => 'RM',
-    );
-  }
-
   String _getStatusLabel(TrustStatus status, BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     switch (status) {
@@ -773,7 +755,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                                       ),
                                       const Spacer(),
                                       Text(
-                                        _formatEstimatedNetWorth(_trust.estimatedNetWorth),
+                                        _formatAmount(_trust.totalPaidInCents / 100),
                                         style: theme.textTheme.headlineMedium?.copyWith(
                                           fontWeight: FontWeight.w700,
                                         ),

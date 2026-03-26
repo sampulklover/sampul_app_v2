@@ -10,6 +10,7 @@ HibahStatus hibahStatusFromDb(String? value) {
       return HibahStatus.approved;
     case 'rejected':
       return HibahStatus.rejected;
+    case 'submitted':
     case 'pending_review':
     default:
       return HibahStatus.pendingReview;
@@ -21,7 +22,7 @@ String hibahStatusToDb(HibahStatus status) {
     case HibahStatus.draft:
       return 'draft';
     case HibahStatus.pendingReview:
-      return 'pending_review';
+      return 'submitted';
     case HibahStatus.underReview:
       return 'under_review';
     case HibahStatus.approved:
@@ -79,7 +80,9 @@ class Hibah {
       id: json['id'] as String,
       userId: json['user_id'] as String? ?? json['uuid'] as String? ?? '',
       certificateId: json['certificate_id'] as String? ?? '',
-      status: hibahStatusFromDb(json['submission_status'] as String?),
+      status: hibahStatusFromDb(
+        (json['status'] ?? json['submission_status']) as String?,
+      ),
       totalSubmissions: (json['total_submissions'] as num?)?.toInt() ?? 0,
       createdAt:
           DateTime.tryParse(json['created_at'] as String? ?? '') ??
@@ -96,7 +99,7 @@ class Hibah {
       'id': id,
       'user_id': userId,
       'certificate_id': certificateId,
-      'submission_status': hibahStatusToDb(status),
+      'status': hibahStatusToDb(status),
       'total_submissions': totalSubmissions,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),

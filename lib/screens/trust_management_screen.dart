@@ -71,10 +71,14 @@ class _TrustManagementScreenState extends State<TrustManagementScreen> with Sing
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final List<Trust> drafts = _trusts.where((t) => t.computedStatus == TrustStatus.draft).toList();
-    final List<Trust> submitted = _trusts.where((t) => t.computedStatus == TrustStatus.submitted).toList();
-    final List<Trust> approved = _trusts.where((t) => t.computedStatus == TrustStatus.approved).toList();
-    final List<Trust> rejected = _trusts.where((t) => t.computedStatus == TrustStatus.rejected).toList();
+    final List<Trust> drafts =
+        _trusts.where((t) => t.computedStatus == TrustStatus.draft).toList();
+    final List<Trust> submitted =
+        _trusts.where((t) => t.computedStatus == TrustStatus.submitted).toList();
+    final List<Trust> approved =
+        _trusts.where((t) => t.computedStatus == TrustStatus.approved).toList();
+    final List<Trust> rejected =
+        _trusts.where((t) => t.computedStatus == TrustStatus.rejected).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -253,7 +257,9 @@ class _TrustList extends StatelessWidget {
   Color _statusColor(BuildContext context, TrustStatus s) {
     switch (s) {
       case TrustStatus.submitted:
-        return Colors.blue.shade600;
+        // Align with Hibah: submitted = orange, draft = neutral grey,
+        // approved = green, rejected = red.
+        return Colors.orange.shade700;
       case TrustStatus.approved:
         return Colors.green.shade700;
       case TrustStatus.rejected:
@@ -292,7 +298,7 @@ class _TrustList extends StatelessWidget {
         final Trust t = trusts[index];
         return _TrustSummaryCard(
           trust: t,
-          amountText: _formatAmount(t.estimatedNetWorth),
+          amountText: _formatAmount((t.totalPaidInCents / 100).toString()),
           statusText: _statusLabel(t.computedStatus, context),
           statusColor: _statusColor(context, t.computedStatus),
           onTap: () => onTap(t),

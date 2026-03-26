@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/hibah.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../services/hibah_service.dart';
 import 'hibah_detail_screen.dart';
 import 'hibah_info_screen.dart';
@@ -75,35 +76,31 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
 
   @override
   Widget build(BuildContext context) {
-    final List<Hibah> drafts = _hibahs
-        .where((t) => t.status == HibahStatus.draft)
-        .toList();
-    final List<Hibah> pending = _hibahs
-        .where((t) => t.status == HibahStatus.pendingReview)
-        .toList();
-    final List<Hibah> underReview = _hibahs
-        .where((t) => t.status == HibahStatus.underReview)
-        .toList();
-    final List<Hibah> approved = _hibahs
-        .where((t) => t.status == HibahStatus.approved)
-        .toList();
-    final List<Hibah> rejected = _hibahs
-        .where((t) => t.status == HibahStatus.rejected)
-        .toList();
+    final l10n = AppLocalizations.of(context)!;
+    final List<Hibah> drafts =
+        _hibahs.where((t) => t.status == HibahStatus.draft).toList();
+    final List<Hibah> submitted =
+        _hibahs.where((t) => t.status == HibahStatus.pendingReview).toList();
+    final List<Hibah> underReview =
+        _hibahs.where((t) => t.status == HibahStatus.underReview).toList();
+    final List<Hibah> approved =
+        _hibahs.where((t) => t.status == HibahStatus.approved).toList();
+    final List<Hibah> rejected =
+        _hibahs.where((t) => t.status == HibahStatus.rejected).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Property Trust'),
+        title: Text(l10n.hibah),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: <Widget>[
-            Tab(text: 'All (${_hibahs.length})'),
-            Tab(text: 'Draft (${drafts.length})'),
-            Tab(text: 'Pending (${pending.length})'),
-            Tab(text: 'Under review (${underReview.length})'),
-            Tab(text: 'Approved (${approved.length})'),
-            Tab(text: 'Rejected (${rejected.length})'),
+            Tab(text: '${l10n.all} (${_hibahs.length})'),
+            Tab(text: '${l10n.draft} (${drafts.length})'),
+            Tab(text: '${l10n.submitted} (${submitted.length})'),
+            Tab(text: '${l10n.informDeathStatusUnderReview} (${underReview.length})'),
+            Tab(text: '${l10n.approved} (${approved.length})'),
+            Tab(text: '${l10n.rejected} (${rejected.length})'),
           ],
         ),
         actions: <Widget>[
@@ -126,7 +123,11 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
           ? Column(
               children: <Widget>[
                 if (_tabController.index == 0) _HibahInfoBanner(),
-                const Expanded(child: Center(child: Text('No Property Trusts yet'))),
+                const Expanded(
+                  child: Center(
+                    child: Text('No Property Trusts yet'),
+                  ),
+                ),
               ],
             )
           : Column(
@@ -147,7 +148,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
                         onTap: _showSubmissionDetails,
                       ),
                       _HibahList(
-                        hibahs: pending,
+                        hibahs: submitted,
                         onDelete: _handleDelete,
                         onTap: _showSubmissionDetails,
                       ),
@@ -220,18 +221,19 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
   }
 }
 
-String _statusLabel(HibahStatus status) {
+String _statusLabel(BuildContext context, HibahStatus status) {
+  final l10n = AppLocalizations.of(context)!;
   switch (status) {
     case HibahStatus.draft:
-      return 'Draft';
+      return l10n.draft;
     case HibahStatus.pendingReview:
-      return 'Pending review';
+      return l10n.submitted;
     case HibahStatus.underReview:
-      return 'Under review';
+      return l10n.informDeathStatusUnderReview;
     case HibahStatus.approved:
-      return 'Approved';
+      return l10n.approved;
     case HibahStatus.rejected:
-      return 'Rejected';
+      return l10n.rejected;
   }
 }
 
@@ -303,7 +305,7 @@ class _HibahList extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    _statusLabel(submission.status),
+                    _statusLabel(context, submission.status),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

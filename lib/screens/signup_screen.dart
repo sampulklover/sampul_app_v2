@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'login_screen.dart';
 import 'main_shell.dart';
 import '../controllers/auth_controller.dart';
@@ -24,6 +26,26 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _isSubmitting = false;
   bool _isGoogleSubmitting = false;
+  bool _isAppleSubmitting = false;
+  bool _isAppleAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAppleAvailability();
+  }
+
+  Future<void> _checkAppleAvailability() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS &&
+        defaultTargetPlatform != TargetPlatform.macOS) {
+      return;
+    }
+    final available = await SignInWithApple.isAvailable();
+    if (!mounted) return;
+    setState(() {
+      _isAppleAvailable = available;
+    });
+  }
 
   Future<void> _showEmailVerificationDialog() async {
     await showDialog<void>(
@@ -192,6 +214,44 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       setState(() {
         _isGoogleSubmitting = false;
+      });
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    if (_isAppleSubmitting) return;
+    setState(() {
+      _isAppleSubmitting = true;
+    });
+
+    try {
+      final AuthResponse? response = await AuthController.instance.signInWithApple();
+
+      if (!mounted) return;
+
+      if (response?.user != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const MainShell()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Apple sign-in was cancelled or failed')),
+        );
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Apple sign-in failed: ${error.message}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Apple sign-in failed: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isAppleSubmitting = false;
       });
     }
   }
@@ -401,6 +461,39 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                   ),
+                  if (_isAppleAvailable) ...<Widget>[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: Stack(
+                        children: <Widget>[
+                          Positioned.fill(
+                            child: SignInWithAppleButton(
+                              onPressed: _isAppleSubmitting ? null : _signInWithApple,
+                              style: SignInWithAppleButtonStyle.black,
+                              borderRadius: const BorderRadius.all(Radius.circular(16)),
+                            ),
+                          ),
+                          if (_isAppleSubmitting)
+                            const Positioned.fill(
+                              child: IgnorePointer(
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
