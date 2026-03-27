@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../controllers/auth_controller.dart';
 import '../models/hibah.dart';
 import 'supabase_service.dart';
+import 'notification_service.dart';
 
 class HibahService {
   HibahService._();
@@ -43,7 +44,7 @@ class HibahService {
         final Map<String, dynamic> payload = <String, dynamic>{
           'user_id': user.id,
           'certificate_id': certificateId,
-          'submission_status': hibahStatusToDb(HibahStatus.pendingReview),
+          'status': hibahStatusToDb(HibahStatus.pendingReview),
           'total_submissions': groups.length,
         };
         final Map<String, dynamic> inserted = await _client
@@ -53,6 +54,13 @@ class HibahService {
             .single();
         final Hibah created = Hibah.fromJson(inserted);
         await _insertGroupsAndDocuments(created, groups, documents);
+        // Create in-app notification for new hibah submission
+        await NotificationService.instance.createNotification(
+          title: 'Property Trust submission created',
+          body: 'Your Property Trust submission ($certificateId) has been received.',
+          type: 'hibah_submitted',
+          data: <String, dynamic>{'hibah_id': created.id},
+        );
         return created.copyWith(totalSubmissions: groups.length);
       } catch (e) {
         final String msg = e.toString().toLowerCase();

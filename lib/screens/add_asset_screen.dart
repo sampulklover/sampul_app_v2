@@ -51,12 +51,16 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
   List<Map<String, String>> _getInstructions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return <Map<String, String>>[
+    final List<Map<String, String>> list = <Map<String, String>>[
       {'id': 'faraid', 'name': l10n.faraid},
-      {'id': 'terminate', 'name': l10n.terminateSubscriptions},
       {'id': 'transfer_as_gift', 'name': l10n.transferAsGift},
       {'id': 'settle', 'name': l10n.settleDebts},
     ];
+    // Terminate subscription only applies to digital assets; physical assets do not need it.
+    if (_assetType != 'physical') {
+      list.insert(1, {'id': 'terminate', 'name': l10n.terminateSubscriptions});
+    }
+    return list;
   }
 
   @override

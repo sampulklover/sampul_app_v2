@@ -732,18 +732,14 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
   final TextEditingController _bankNameCtrl = TextEditingController();
   final TextEditingController _loanAmountCtrl = TextEditingController();
 
-  String? _assetType;
   String? _loanStatus;
   List<String> _landCategories = <String>[];
   List<HibahBeneficiaryRequest> _beneficiaries = <HibahBeneficiaryRequest>[];
-
-  static const List<String> _assetTypes = <String>[
-    'Real estate',
-    'Investment',
-    'Savings',
-    'Vehicle',
-    'Others',
-  ];
+  /// Existing physical assets (land, houses, farms) from digital_assets for pre-fill.
+  List<Map<String, dynamic>> _existingPhysicalAssets = <Map<String, dynamic>>[];
+  bool _loadingExistingAssets = false;
+  /// Selected existing asset id; null means "add new" or no selection.
+  String? _selectedExistingAssetId;
 
   static const List<String> _loanStatuses = <String>[
     'fully_paid',
@@ -770,12 +766,46 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
       _estimatedValueCtrl.text = initial.estimatedValue ?? '';
       _bankNameCtrl.text = initial.bankName ?? '';
       _loanAmountCtrl.text = initial.outstandingLoanAmount ?? '';
-      _assetType = initial.assetType;
       _loanStatus = initial.loanStatus;
       _landCategories = List<String>.from(initial.landCategories);
       _beneficiaries = List<HibahBeneficiaryRequest>.from(
         initial.beneficiaries,
       );
+    } else {
+      _loadExistingPhysicalAssets();
+    }
+  }
+
+  /// Physical asset categories allowed for property trust: land, houses, farm.
+  static const List<String> _propertyTrustPhysicalCategories = <String>[
+    'land',
+    'houses_buildings',
+    'farms_plantations',
+  ];
+
+  Future<void> _loadExistingPhysicalAssets() async {
+    final user = AuthController.instance.currentUser;
+    if (user == null) return;
+    setState(() => _loadingExistingAssets = true);
+    try {
+      final List<dynamic> rows = await SupabaseService.instance.client
+          .from('digital_assets')
+          .select('id, new_service_platform_name, declared_value_myr')
+          .eq('uuid', user.id)
+          .eq('asset_type', 'physical')
+          .inFilter('physical_asset_category', _propertyTrustPhysicalCategories)
+          .order('created_at', ascending: false);
+      if (!mounted) return;
+      setState(() {
+        _existingPhysicalAssets = rows.cast<Map<String, dynamic>>();
+        _loadingExistingAssets = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _existingPhysicalAssets = <Map<String, dynamic>>[];
+        _loadingExistingAssets = false;
+      });
     }
   }
 
@@ -845,7 +875,7 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
     final HibahGroupRequest result = HibahGroupRequest(
       tempId: widget.initial?.tempId ?? _generateTempId(),
       propertyName: _propertyNameCtrl.text.trim(),
-      assetType: _assetType,
+      assetType: null,
       registeredTitleNumber: _registeredTitleCtrl.text.trim().isEmpty
           ? null
           : _registeredTitleCtrl.text.trim(),
@@ -1001,27 +1031,61 @@ class _HibahAssetFormScreenState extends State<_HibahAssetFormScreen> {
               color: scheme.primary,
               title: 'Asset details',
               children: <Widget>[
+                if (_existingPhysicalAssets.isNotEmpty) ...[
+                  Text(
+                    'Use an asset you\'ve already added',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String?>(
+                    value: _selectedExistingAssetId,
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                    decoration: _fieldDecoration('Select existing asset (optional)'),
+                    items: <DropdownMenuItem<String?>>[
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('Add new asset'),
+                      ),
+                      ..._existingPhysicalAssets.map((Map<String, dynamic> a) {
+                        final String id = (a['id'] as Object?).toString();
+                        final String name = (a['new_service_platform_name'] as String?)?.trim() ?? 'Unnamed';
+                        return DropdownMenuItem<String?>(
+                          value: id,
+                          child: Text(name, overflow: TextOverflow.ellipsis),
+                        );
+                      }),
+                    ],
+                    onChanged: (String? v) {
+                      setState(() {
+                        _selectedExistingAssetId = v;
+                        if (v != null) {
+                          for (final Map<String, dynamic> a in _existingPhysicalAssets) {
+                            if ((a['id'] as Object?).toString() == v) {
+                              _propertyNameCtrl.text = (a['new_service_platform_name'] as String?)?.trim() ?? '';
+                              final num? val = a['declared_value_myr'] as num?;
+                              _estimatedValueCtrl.text = val != null && val > 0 ? val.toStringAsFixed(0) : '';
+                              break;
+                            }
+                          }
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ] else if (_loadingExistingAssets)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: LinearProgressIndicator(),
+                  ),
+                if (_loadingExistingAssets) const SizedBox(height: 12),
                 TextFormField(
                   controller: _propertyNameCtrl,
                   decoration: _fieldDecoration('Property / asset name *'),
                   validator: (String? v) =>
                       (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _assetType,
-                  isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                  decoration: _fieldDecoration('Asset type'),
-                  items: _assetTypes
-                      .map(
-                        (String type) => DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (String? v) => setState(() => _assetType = v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

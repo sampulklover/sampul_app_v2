@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../controllers/auth_controller.dart';
 import '../models/executor.dart';
 import 'supabase_service.dart';
+import 'notification_service.dart';
 
 class ExecutorService {
   ExecutorService._();
@@ -40,8 +41,22 @@ class ExecutorService {
           'executor_code': code,
           'uuid': user.id,
         };
-        final List<dynamic> inserted = await _client.from('executor').insert(payload).select().limit(1);
-        return Executor.fromJson(inserted.first as Map<String, dynamic>);
+        final List<dynamic> inserted = await _client
+            .from('executor')
+            .insert(payload)
+            .select()
+            .limit(1);
+        final Executor created =
+            Executor.fromJson(inserted.first as Map<String, dynamic>);
+
+        await NotificationService.instance.createNotification(
+          title: 'Executor added',
+          body: 'Your executor ${created.name} has been added.',
+          type: 'executor_created',
+          data: <String, dynamic>{'executor_id': created.id},
+        );
+
+        return created;
       } catch (e) {
         // Retry on unique violation by generating a new code
         final String msg = e.toString().toLowerCase();

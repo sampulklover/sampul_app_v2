@@ -1,5 +1,9 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
+import 'dart:math';
 import '../services/supabase_service.dart';
 import '../models/user_profile.dart';
 import '../config/supabase_config.dart';
@@ -81,6 +85,57 @@ class AuthController {
     }
   }
 
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List<String>.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  // Sign in with Apple
+  Future<AuthResponse?> signInWithApple() async {
+    try {
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) return null;
+
+      final rawNonce = _generateNonce();
+      final hashedNonce = _sha256ofString(rawNonce);
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: <AppleIDAuthorizationScopes>[
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw Exception('Apple authentication failed');
+      }
+
+      final response = await _supabaseService.client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+
+      // Set OneSignal user ID after successful login
+      if (response.user != null) {
+        await OneSignalService.instance.setUserId(response.user!.id);
+      }
+
+      return response;
+    } catch (e) {
+      throw Exception('Apple sign in failed: $e');
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     try {
@@ -149,6 +204,7 @@ class AuthController {
     String? phoneNo,
     String? gender,
     String? imagePath,
+    String? religion,
     String? address1,
     String? address2,
     String? city,
@@ -169,6 +225,7 @@ class AuthController {
     if (phoneNo != null) data['phone_no'] = phoneNo;
     if (gender != null) data['gender'] = gender;
     if (imagePath != null) data['image_path'] = imagePath;
+    if (religion != null) data['religion'] = religion;
     if (address1 != null) data['address_1'] = address1;
     if (address2 != null) data['address_2'] = address2;
     if (city != null) data['city'] = city;

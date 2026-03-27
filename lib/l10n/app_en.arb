@@ -42,8 +42,18 @@
       }
     }
   },
+  "appleSignInCancelled": "Apple sign-in was cancelled or failed",
+  "appleSignInFailed": "Apple sign-in failed: {error}",
+  "@appleSignInFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "signingIn": "Signing in…",
   "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
   "dontHaveAccount": "Don't have an account?",
   "signUp": "Sign up",
   "or": "OR",
@@ -122,6 +132,66 @@
   "execution": "Pusaka",
   "pusaka": "Pusaka",
   "aftercare": "Aftercare",
+  "informDeathTitle": "Inform Death",
+  "informDeathStartCta": "Start Inform Death",
+  "informDeathMenuLabel": "Inform Death",
+  "informDeathDeleteDialogTitle": "Delete Inform Death record",
+  "informDeathDeleteSuccess": "Inform Death record deleted",
+  "informDeathHeroTitle": "Inform Sampul of a death",
+  "informDeathHeroBody": "If someone who uses Sampul has passed away, this page helps you let us know in a calm, structured way.",
+  "informDeathWhatYoullShareTitle": "What you’ll share",
+  "informDeathWhatYoullShareBody": "We’ll ask for the Sampul owner’s details and a copy of the death certificate. This helps us confirm the right person and support their family appropriately.",
+  "informDeathFeatureOwner": "Owner’s full name and NRIC (as per NRIC).",
+  "informDeathFeatureCertNumber": "Death certificate number so we can match the document.",
+  "informDeathFeatureCertImage": "A clear photo or scan of the death certificate.",
+  "informDeathOwnerSectionTitle": "Sampul owner’s details",
+  "informDeathOwnerNameLabel": "Full name (as per NRIC)",
+  "informDeathOwnerNricLabel": "NRIC number",
+  "informDeathSupportingDocsSectionTitle": "Supporting documents",
+  "informDeathSupportingDocsBody": "Attach the death certificate so our team can verify the information.",
+  "informDeathNoFileChosen": "No file chosen",
+  "informDeathUploadHint": "Upload a clear photo or scan of the death certificate.",
+  "informDeathChooseFile": "Choose file",
+  "informDeathCertificateIdLabel": "Death certificate ID",
+  "informDeathRequiredField": "Required",
+  "informDeathSubmitCta": "Submit to Sampul",
+  "informDeathStatusDraft": "Draft",
+  "informDeathStatusSubmitted": "Submitted",
+  "informDeathStatusUnderReview": "Under review",
+  "informDeathStatusApproved": "Approved",
+  "informDeathStatusRejected": "Rejected",
+  "informDeathStatusUnknown": "Submitted",
+  "informDeathListNric": "NRIC: {nric}",
+  "@informDeathListNric": {
+    "placeholders": {
+      "nric": {
+        "type": "String"
+      }
+    }
+  },
+  "informDeathListCertificateId": "Certificate ID: {certId}",
+  "@informDeathListCertificateId": {
+    "placeholders": {
+      "certId": {
+        "type": "String"
+      }
+    }
+  },
+  "informDeathListSubmittedOn": "Submitted on: {date}",
+  "@informDeathListSubmittedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "informDeathInfoBannerBody": "Need to inform Sampul of a death?",
+  "informDeathInfoBannerCta": "New request",
+  "informDeathOpenFile": "Open file",
+  "informDeathUnableToOpenFile": "Unable to open file",
+  "informDeathRemoveFile": "Remove file",
+  "informDeathRemoveFileTitle": "Remove uploaded file?",
+  "informDeathRemoveFileBody": "This will delete the uploaded file from this request.",
   "add": "Add",
   "loading": "Loading...",
   "unknown": "Unknown",
@@ -157,6 +227,45 @@
   "yourCodeAndReferrals": "Your code and referrals",
   "aiChatSettings": "AI Chat Settings",
   "manageSampulAiResponses": "Manage Sampul AI responses",
+  "teamAccess": "Team access",
+  "teamAccessListSubtitle": "Assign Marketing or Admin access",
+  "teamAccessDescription": "Set Marketing or Admin for each person with a Sampul account.",
+  "teamAccessRoleLabel": "Access level",
+  "teamAccessSearchHint": "Search by email or name",
+  "teamAccessEmptySearch": "No one matches that search. Try a different name or email.",
+  "teamAccessTryAgain": "Try again",
+  "teamAccessRefreshTooltip": "Refresh list",
+  "teamAccessInfoTooltip": "Role guide",
+  "teamAccessInfoTitle": "Role guide",
+  "teamAccessInfoStandard": "Standard: regular app use. No access to Team access or content admin tools.",
+  "teamAccessInfoMarketing": "Marketing: can manage AI and learning content. Cannot assign roles.",
+  "teamAccessInfoAdmin": "Admin: full access to Team access, role assignment, and content admin tools.",
+  "teamAccessFilterLabel": "Role",
+  "teamAccessFilterAll": "All",
+  "teamAccessLoadFailed": "We couldn’t load the team list. {error}",
+  "@teamAccessLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "roleStandardUser": "Standard",
+  "roleMarketing": "Marketing",
+  "roleAdmin": "Admin",
+  "teamRoleSaved": "Access updated.",
+  "teamRoleSaveFailed": "We couldn’t update access. {error}",
+  "@teamRoleSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "workspaceAccessNotAvailable": "That area isn’t available with your current sign-in.",
+  "changeYourAccess": "Change your access?",
+  "changeYourAccessAdminHint": "You’re removing admin access from your own account. You’ll return to Settings after this saves.",
+  "continueLabel": "Continue",
   "darkMode": "Dark mode",
   "restartOnboarding": "Restart onboarding",
   "runTheSetupFlowAgain": "Run the setup flow again",
@@ -224,6 +333,14 @@
   "protectsAgainstFraud": "Protects against fraud and identity theft",
   "yourInformationIsEncrypted": "Your information is encrypted and secure",
   "startVerification": "Start Verification",
+
+  "notificationsTitle": "Notifications",
+  "noNotifications": "No notifications",
+  "youAreAllCaughtUp": "You're all caught up.",
+  "markAllAsRead": "Mark all as read",
+  "clearAll": "Clear all",
+  "removeNotificationTitle": "Remove notification?",
+  "removeNotificationDescription": "This removes the notification from your list.",
   
   "editProfile": "Edit Profile",
   "save": "Save",
@@ -259,6 +376,7 @@
   "phoneNumber": "Phone Number",
   "enterYourPhoneNumber": "Enter your phone number",
   "gender": "Gender",
+  "religion": "Religion",
   "enterYourEmail": "Enter your email",
   "emailCannotBeChanged": "Email cannot be changed",
   "addressInformation": "Address Information",

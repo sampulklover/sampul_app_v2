@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/ai_chat_settings.dart';
 import '../services/ai_chat_settings_service.dart';
 import '../utils/admin_utils.dart';
@@ -11,7 +12,7 @@ class AdminAiResourcesScreen extends StatefulWidget {
 }
 
 class _AdminAiResourcesScreenState extends State<AdminAiResourcesScreen> {
-  bool _isAdmin = false;
+  bool _hasContentAccess = false;
   bool _isLoading = true;
   bool _isSaving = false;
   AiChatSettings? _activeSettings;
@@ -20,23 +21,21 @@ class _AdminAiResourcesScreenState extends State<AdminAiResourcesScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAdminAndLoad();
+    _checkAccessAndLoad();
   }
 
-  Future<void> _checkAdminAndLoad() async {
-    final isAdmin = await AdminUtils.isAdmin();
+  Future<void> _checkAccessAndLoad() async {
+    final bool allowed = await AdminUtils.canManageAppContent();
     if (!mounted) return;
 
     setState(() {
-      _isAdmin = isAdmin;
+      _hasContentAccess = allowed;
     });
 
-    if (!isAdmin) {
+    if (!allowed) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Access denied. Admin privileges required.'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(l10n.workspaceAccessNotAvailable)),
       );
       Navigator.of(context).pop();
       return;
@@ -114,7 +113,7 @@ class _AdminAiResourcesScreenState extends State<AdminAiResourcesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isAdmin) {
+    if (!_hasContentAccess) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );

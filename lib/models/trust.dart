@@ -74,8 +74,10 @@ class Trust {
   });
 
   factory Trust.fromJson(Map<String, dynamic> json) {
-    final String? docStatus = json['doc_status'] as String?;
-    final TrustStatus mapped = _mapDocStatus(docStatus);
+    // Prefer new status column, fall back to legacy doc_status
+    final String? rawStatus =
+        (json['status'] ?? json['doc_status']) as String?;
+    final TrustStatus mapped = _mapDocStatus(rawStatus);
     return Trust(
       id: (json['id'] as num?)?.toInt(),
       trustCode: json['trust_code'] as String?,

@@ -207,22 +207,33 @@ class WillService {
   }
 
   /// Generate will document content
-  String generateWillDocument(Will will, UserProfile userProfile, List<Map<String, dynamic>> familyMembers, List<Map<String, dynamic>> assets) {
+  String generateWillDocument(
+    Will will,
+    UserProfile userProfile,
+    List<Map<String, dynamic>> familyMembers,
+    List<Map<String, dynamic>> assets, {
+    bool? isMuslim,
+  }) {
     final buffer = StringBuffer();
+    final bool muslim = isMuslim ?? userProfile.isMuslim;
     
     // Header
-    buffer.writeln('WILL AND TESTAMENT');
+    buffer.writeln(muslim ? 'WASIAT' : 'WILL AND TESTAMENT');
     buffer.writeln('==================');
     buffer.writeln();
     
     // Personal Information
-    buffer.writeln('I, ${will.nricName ?? userProfile.displayName},');
+    buffer.writeln(muslim ? 'Saya, ${will.nricName ?? userProfile.displayName},' : 'I, ${will.nricName ?? userProfile.displayName},');
     buffer.writeln('NRIC: ${userProfile.nricNo ?? 'Not provided'}');
     buffer.writeln('Address: ${_formatAddress(userProfile)}');
     buffer.writeln();
     
     // Declaration
-    buffer.writeln('Being of sound mind and memory, do hereby make, publish and declare this to be my Last Will and Testament, hereby revoking all former wills and codicils made by me.');
+    buffer.writeln(
+      muslim
+          ? 'Dengan ini, saya mengisytiharkan dokumen ini sebagai wasiat terakhir saya, dan membatalkan semua wasiat terdahulu yang pernah saya buat.'
+          : 'Being of sound mind and memory, do hereby make, publish and declare this to be my Last Will and Testament, hereby revoking all former wills and codicils made by me.',
+    );
     buffer.writeln();
     
     // Executors
@@ -294,7 +305,11 @@ class WillService {
     }
     
     // Closing
-    buffer.writeln('IN WITNESS WHEREOF, I have hereunto set my hand this ${DateTime.now().day} day of ${_getMonthName(DateTime.now().month)} ${DateTime.now().year}.');
+    buffer.writeln(
+      muslim
+          ? 'Sebagai tanda persetujuan, saya menurunkan tandatangan saya pada ${DateTime.now().day} ${_getMonthName(DateTime.now().month)} ${DateTime.now().year}.'
+          : 'IN WITNESS WHEREOF, I have hereunto set my hand this ${DateTime.now().day} day of ${_getMonthName(DateTime.now().month)} ${DateTime.now().year}.',
+    );
     buffer.writeln();
     buffer.writeln('Testator: ${will.nricName ?? userProfile.displayName}');
     buffer.writeln();

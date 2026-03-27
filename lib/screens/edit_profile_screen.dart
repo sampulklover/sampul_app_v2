@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../config/trust_constants.dart';
+import '../config/executor_constants.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import '../services/image_upload_service.dart';
@@ -29,6 +30,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _postcodeController = TextEditingController();
   String? _selectedGender;
   String? _selectedCountry;
+  String? _selectedReligion;
   
   bool _isLoading = false;
   bool _isLoadingProfile = true;
@@ -77,6 +79,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _imagePath = _userProfile!.imagePath;
       _selectedGender = _userProfile!.gender;
       _selectedCountry = _userProfile!.country;
+      _selectedReligion = _userProfile!.religion;
     } else {
       // Fallback to auth user data
       final user = AuthController.instance.currentUser;
@@ -211,6 +214,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         state: _stateController.text.trim().isNotEmpty ? _stateController.text.trim() : null,
         postcode: _postcodeController.text.trim().isNotEmpty ? _postcodeController.text.trim() : null,
         country: _selectedCountry,
+        religion: _selectedReligion,
       );
 
       if (!mounted) return;
@@ -432,6 +436,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         )
                         .toList(),
                     onChanged: (String? value) => setState(() => _selectedGender = value),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  DropdownButtonFormField<String>(
+                    value: _selectedReligion,
+                    isExpanded: true,
+                    icon: const Icon(Icons.keyboard_arrow_down_outlined),
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: l10n.religion,
+                      prefixIcon: Icons.menu_book_outlined,
+                    ),
+                    items: ExecutorConstants.religions
+                        .map(
+                          (Map<String, String> item) => DropdownMenuItem<String>(
+                            value: item['value'],
+                            child: Text(item['name']!),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (String? value) => setState(() => _selectedReligion = value),
                   ),
                   
                   const SizedBox(height: 16),

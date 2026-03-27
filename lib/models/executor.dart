@@ -50,8 +50,8 @@ class Executor {
   });
 
   factory Executor.fromJson(Map<String, dynamic> json) {
-    final String? docStatus = json['doc_status'] as String?;
-    final ExecutorStatus mapped = _mapDocStatus(docStatus);
+    final String? rawStatus = (json['status'] ?? json['doc_status']) as String?;
+    final ExecutorStatus mapped = _mapStatus(rawStatus);
     return Executor(
       id: (json['id'] as num?)?.toInt(),
       executorCode: json['executor_code'] as String?,
@@ -111,7 +111,7 @@ class Executor {
   }
 }
 
-ExecutorStatus _mapDocStatus(String? s) {
+ExecutorStatus _mapStatus(String? s) {
   switch ((s ?? '').toLowerCase()) {
     case 'submitted':
       return ExecutorStatus.submitted;

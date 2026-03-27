@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 
 import '../models/learning_resource.dart';
 import '../services/learning_resources_service.dart';
@@ -18,7 +19,7 @@ class AdminLearningResourcesScreen extends StatefulWidget {
 
 class _AdminLearningResourcesScreenState
     extends State<AdminLearningResourcesScreen> {
-  bool _isAdmin = false;
+  bool _hasContentAccess = false;
   bool _isLoading = true;
   bool _isSaving = false;
   List<LearningResource> _resources = <LearningResource>[];
@@ -26,20 +27,18 @@ class _AdminLearningResourcesScreenState
   @override
   void initState() {
     super.initState();
-    _checkAdminAndLoad();
+    _checkAccessAndLoad();
   }
 
-  Future<void> _checkAdminAndLoad() async {
-    final bool isAdmin = await AdminUtils.isAdmin();
+  Future<void> _checkAccessAndLoad() async {
+    final bool allowed = await AdminUtils.canManageAppContent();
     if (!mounted) return;
-    setState(() => _isAdmin = isAdmin);
+    setState(() => _hasContentAccess = allowed);
 
-    if (!isAdmin) {
+    if (!allowed) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Access denied. Admin privileges required.'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(l10n.workspaceAccessNotAvailable)),
       );
       Navigator.of(context).pop();
       return;
@@ -626,7 +625,7 @@ class _AdminLearningResourcesScreenState
 
   @override
   Widget build(BuildContext context) {
-    if (!_isAdmin) {
+    if (!_hasContentAccess) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );

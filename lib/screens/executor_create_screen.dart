@@ -11,6 +11,7 @@ import 'executor_guardian_form_screen.dart';
 import 'executor_assets_form_screen.dart';
 import 'executor_info_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../services/notification_service.dart';
 
 class ExecutorCreateScreen extends StatefulWidget {
   const ExecutorCreateScreen({super.key});
@@ -933,10 +934,28 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
         'is_same_address': _isSameAddress,
         'executor_code': executorCode,
         'uuid': user.id,
+        // Mark as submitted once the full Pusaka application is completed
+        'status': 'submitted',
           };
 
-          final executorResult = await client.from('executor').insert(executorData).select().limit(1);
-          executorId = executorResult.first['id'] as int;
+          final executorResult = await client
+              .from('executor')
+              .insert(executorData)
+              .select()
+              .limit(1);
+          final Map<String, dynamic> createdExecutor =
+              executorResult.first as Map<String, dynamic>;
+          executorId = createdExecutor['id'] as int;
+
+          // Create an in-app notification so user can see their Pusaka
+          // application in the notifications list.
+          await NotificationService.instance.createNotification(
+            title: 'Pusaka application submitted',
+            body:
+                'Your Pusaka application has been submitted. Our team will review your information.',
+            type: 'executor_created',
+            data: <String, dynamic>{'executor_id': executorId},
+          );
         } catch (e) {
           // Retry on unique violation by generating a new code
           final String msg = e.toString().toLowerCase();

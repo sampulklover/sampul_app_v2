@@ -182,6 +182,18 @@ abstract class AppLocalizations {
   /// **'Google sign-in failed: {error}'**
   String googleSignInFailed(String error);
 
+  /// No description provided for @appleSignInCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple sign-in was cancelled or failed'**
+  String get appleSignInCancelled;
+
+  /// No description provided for @appleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple sign-in failed: {error}'**
+  String appleSignInFailed(String error);
+
   /// No description provided for @signingIn.
   ///
   /// In en, this message translates to:
@@ -193,6 +205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue with Google'**
   String get continueWithGoogle;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
 
   /// No description provided for @dontHaveAccount.
   ///
@@ -572,6 +590,240 @@ abstract class AppLocalizations {
   /// **'Aftercare'**
   String get aftercare;
 
+  /// No description provided for @informDeathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inform Death'**
+  String get informDeathTitle;
+
+  /// No description provided for @informDeathStartCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Inform Death'**
+  String get informDeathStartCta;
+
+  /// No description provided for @informDeathMenuLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inform Death'**
+  String get informDeathMenuLabel;
+
+  /// No description provided for @informDeathDeleteDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Inform Death record'**
+  String get informDeathDeleteDialogTitle;
+
+  /// No description provided for @informDeathDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Inform Death record deleted'**
+  String get informDeathDeleteSuccess;
+
+  /// No description provided for @informDeathHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inform Sampul of a death'**
+  String get informDeathHeroTitle;
+
+  /// No description provided for @informDeathHeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If someone who uses Sampul has passed away, this page helps you let us know in a calm, structured way.'**
+  String get informDeathHeroBody;
+
+  /// No description provided for @informDeathWhatYoullShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you’ll share'**
+  String get informDeathWhatYoullShareTitle;
+
+  /// No description provided for @informDeathWhatYoullShareBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We’ll ask for the Sampul owner’s details and a copy of the death certificate. This helps us confirm the right person and support their family appropriately.'**
+  String get informDeathWhatYoullShareBody;
+
+  /// No description provided for @informDeathFeatureOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner’s full name and NRIC (as per NRIC).'**
+  String get informDeathFeatureOwner;
+
+  /// No description provided for @informDeathFeatureCertNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Death certificate number so we can match the document.'**
+  String get informDeathFeatureCertNumber;
+
+  /// No description provided for @informDeathFeatureCertImage.
+  ///
+  /// In en, this message translates to:
+  /// **'A clear photo or scan of the death certificate.'**
+  String get informDeathFeatureCertImage;
+
+  /// No description provided for @informDeathOwnerSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sampul owner’s details'**
+  String get informDeathOwnerSectionTitle;
+
+  /// No description provided for @informDeathOwnerNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name (as per NRIC)'**
+  String get informDeathOwnerNameLabel;
+
+  /// No description provided for @informDeathOwnerNricLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NRIC number'**
+  String get informDeathOwnerNricLabel;
+
+  /// No description provided for @informDeathSupportingDocsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporting documents'**
+  String get informDeathSupportingDocsSectionTitle;
+
+  /// No description provided for @informDeathSupportingDocsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach the death certificate so our team can verify the information.'**
+  String get informDeathSupportingDocsBody;
+
+  /// No description provided for @informDeathNoFileChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'No file chosen'**
+  String get informDeathNoFileChosen;
+
+  /// No description provided for @informDeathUploadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a clear photo or scan of the death certificate.'**
+  String get informDeathUploadHint;
+
+  /// No description provided for @informDeathChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get informDeathChooseFile;
+
+  /// No description provided for @informDeathCertificateIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Death certificate ID'**
+  String get informDeathCertificateIdLabel;
+
+  /// No description provided for @informDeathRequiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get informDeathRequiredField;
+
+  /// No description provided for @informDeathSubmitCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit to Sampul'**
+  String get informDeathSubmitCta;
+
+  /// No description provided for @informDeathStatusDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get informDeathStatusDraft;
+
+  /// No description provided for @informDeathStatusSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted'**
+  String get informDeathStatusSubmitted;
+
+  /// No description provided for @informDeathStatusUnderReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Under review'**
+  String get informDeathStatusUnderReview;
+
+  /// No description provided for @informDeathStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get informDeathStatusApproved;
+
+  /// No description provided for @informDeathStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get informDeathStatusRejected;
+
+  /// No description provided for @informDeathStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted'**
+  String get informDeathStatusUnknown;
+
+  /// No description provided for @informDeathListNric.
+  ///
+  /// In en, this message translates to:
+  /// **'NRIC: {nric}'**
+  String informDeathListNric(String nric);
+
+  /// No description provided for @informDeathListCertificateId.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate ID: {certId}'**
+  String informDeathListCertificateId(String certId);
+
+  /// No description provided for @informDeathListSubmittedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted on: {date}'**
+  String informDeathListSubmittedOn(String date);
+
+  /// No description provided for @informDeathInfoBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Need to inform Sampul of a death?'**
+  String get informDeathInfoBannerBody;
+
+  /// No description provided for @informDeathInfoBannerCta.
+  ///
+  /// In en, this message translates to:
+  /// **'New request'**
+  String get informDeathInfoBannerCta;
+
+  /// No description provided for @informDeathOpenFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open file'**
+  String get informDeathOpenFile;
+
+  /// No description provided for @informDeathUnableToOpenFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open file'**
+  String get informDeathUnableToOpenFile;
+
+  /// No description provided for @informDeathRemoveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove file'**
+  String get informDeathRemoveFile;
+
+  /// No description provided for @informDeathRemoveFileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove uploaded file?'**
+  String get informDeathRemoveFileTitle;
+
+  /// No description provided for @informDeathRemoveFileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete the uploaded file from this request.'**
+  String get informDeathRemoveFileBody;
+
   /// No description provided for @add.
   ///
   /// In en, this message translates to:
@@ -769,6 +1021,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage Sampul AI responses'**
   String get manageSampulAiResponses;
+
+  /// No description provided for @teamAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Team access'**
+  String get teamAccess;
+
+  /// No description provided for @teamAccessListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign Marketing or Admin access'**
+  String get teamAccessListSubtitle;
+
+  /// No description provided for @teamAccessDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Marketing or Admin for each person with a Sampul account.'**
+  String get teamAccessDescription;
+
+  /// No description provided for @teamAccessRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Access level'**
+  String get teamAccessRoleLabel;
+
+  /// No description provided for @teamAccessSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by email or name'**
+  String get teamAccessSearchHint;
+
+  /// No description provided for @teamAccessEmptySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No one matches that search. Try a different name or email.'**
+  String get teamAccessEmptySearch;
+
+  /// No description provided for @teamAccessTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get teamAccessTryAgain;
+
+  /// No description provided for @teamAccessRefreshTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh list'**
+  String get teamAccessRefreshTooltip;
+
+  /// No description provided for @teamAccessInfoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Role guide'**
+  String get teamAccessInfoTooltip;
+
+  /// No description provided for @teamAccessInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Role guide'**
+  String get teamAccessInfoTitle;
+
+  /// No description provided for @teamAccessInfoStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard: regular app use. No access to Team access or content admin tools.'**
+  String get teamAccessInfoStandard;
+
+  /// No description provided for @teamAccessInfoMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing: can manage AI and learning content. Cannot assign roles.'**
+  String get teamAccessInfoMarketing;
+
+  /// No description provided for @teamAccessInfoAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin: full access to Team access, role assignment, and content admin tools.'**
+  String get teamAccessInfoAdmin;
+
+  /// No description provided for @teamAccessFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get teamAccessFilterLabel;
+
+  /// No description provided for @teamAccessFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get teamAccessFilterAll;
+
+  /// No description provided for @teamAccessLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load the team list. {error}'**
+  String teamAccessLoadFailed(String error);
+
+  /// No description provided for @roleStandardUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get roleStandardUser;
+
+  /// No description provided for @roleMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing'**
+  String get roleMarketing;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @teamRoleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Access updated.'**
+  String get teamRoleSaved;
+
+  /// No description provided for @teamRoleSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t update access. {error}'**
+  String teamRoleSaveFailed(String error);
+
+  /// No description provided for @workspaceAccessNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'That area isn’t available with your current sign-in.'**
+  String get workspaceAccessNotAvailable;
+
+  /// No description provided for @changeYourAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Change your access?'**
+  String get changeYourAccess;
+
+  /// No description provided for @changeYourAccessAdminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re removing admin access from your own account. You’ll return to Settings after this saves.'**
+  String get changeYourAccessAdminHint;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
 
   /// No description provided for @darkMode.
   ///
@@ -1088,6 +1490,48 @@ abstract class AppLocalizations {
   /// **'Start Verification'**
   String get startVerification;
 
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get noNotifications;
+
+  /// No description provided for @youAreAllCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up.'**
+  String get youAreAllCaughtUp;
+
+  /// No description provided for @markAllAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllAsRead;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @removeNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove notification?'**
+  String get removeNotificationTitle;
+
+  /// No description provided for @removeNotificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the notification from your list.'**
+  String get removeNotificationDescription;
+
   /// No description provided for @editProfile.
   ///
   /// In en, this message translates to:
@@ -1207,6 +1651,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gender'**
   String get gender;
+
+  /// No description provided for @religion.
+  ///
+  /// In en, this message translates to:
+  /// **'Religion'**
+  String get religion;
 
   /// No description provided for @enterYourEmail.
   ///

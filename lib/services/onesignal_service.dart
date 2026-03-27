@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../config/onesignal_config.dart';
+import '../models/app_notification.dart';
 import 'supabase_service.dart';
 
 /// OneSignal Service
@@ -16,15 +21,29 @@ class OneSignalService {
   static OneSignalService get instance => _instance ??= OneSignalService._();
   
   OneSignalService._();
-  
+
+  static const String _notificationsStorageKey = 'in_app_notifications';
+  static const int _maxStoredNotifications = 50;
+
   bool _initialized = false;
   String? _playerId;
+  final List<AppNotification> _notifications = <AppNotification>[];
+  final StreamController<List<AppNotification>> _notificationsController =
+      StreamController<List<AppNotification>>.broadcast();
   
   /// Check if OneSignal is initialized
   bool get isInitialized => _initialized;
   
   /// Get the current player ID (device token)
   String? get playerId => _playerId;
+
+  /// Current in-app notification list (most recent first).
+  List<AppNotification> get notifications =>
+      List<AppNotification>.unmodifiable(_notifications);
+
+  /// Stream of notifications to allow UI to react to changes.
+  Stream<List<AppNotification>> get notificationsStream =>
+      _notificationsController.stream;
   
   /// Initialize OneSignal SDK
   /// 
@@ -48,6 +67,9 @@ class OneSignalService {
       
       // Set up notification handlers
       _setupNotificationHandlers();
+
+      // Load any previously stored notifications
+      await service._loadStoredNotifications();
       
       // Get initial player ID
       await service._getPlayerId();
@@ -64,14 +86,17 @@ class OneSignalService {
     // Handle notification received while app is in foreground
     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
       debugPrint('OneSignal: Notification received in foreground: ${event.notification.notificationId}');
-      // You can modify the notification here before it's displayed
-      // event.notification.additionalData = {'custom_key': 'custom_value'};
+      // Store as unread notification for in-app history
+      instance._captureNotification(event.notification, markAsRead: false);
     });
     
     // Handle notification clicked/opened
     OneSignal.Notifications.addClickListener((event) {
       debugPrint('OneSignal: Notification clicked: ${event.notification.notificationId}');
       final notification = event.notification;
+
+      // Store as read notification in history (or mark existing as read)
+      instance._captureNotification(notification, markAsRead: true);
       
       // Handle notification data
       if (notification.additionalData != null) {
@@ -100,6 +125,125 @@ class OneSignalService {
       //   // Navigate to will screen
       // }
     }
+  }
+
+  Future<void> _loadStoredNotifications() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String raw = prefs.getString(_notificationsStorageKey) ?? '';
+      final List<AppNotification> stored = AppNotification.decodeList(raw);
+      _notifications
+        ..clear()
+        ..addAll(stored);
+      _emitNotifications();
+    } catch (e) {
+      debugPrint('OneSignal: Failed to load stored notifications: $e');
+    }
+  }
+
+  Future<void> _saveNotifications() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _notificationsStorageKey,
+        AppNotification.encodeList(_notifications),
+      );
+    } catch (e) {
+      debugPrint('OneSignal: Failed to save notifications: $e');
+    }
+  }
+
+  void _emitNotifications() {
+    if (_notificationsController.isClosed) return;
+    _notificationsController.add(List<AppNotification>.unmodifiable(_notifications));
+  }
+
+  /// Capture a notification from OneSignal and store it locally for the
+  /// in-app notifications list.
+  void _captureNotification(
+    OSNotification notification, {
+    required bool markAsRead,
+  }) {
+    try {
+      final String id = notification.notificationId;
+      final String title = notification.title ?? '';
+      final String body = notification.body ?? '';
+      // SDK does not expose a sent time field directly; use "now" as
+      // a reasonable approximation for when the device received it.
+      final DateTime receivedAt = DateTime.now().toLocal();
+      final Map<String, dynamic>? data =
+          notification.additionalData?.cast<String, dynamic>();
+
+      // If we already have this notification, just update read status.
+      final int existingIndex =
+          _notifications.indexWhere((n) => n.id == id && n.body == body);
+      if (existingIndex != -1) {
+        final existing = _notifications[existingIndex];
+        final updated = existing.copyWith(
+          isRead: existing.isRead || markAsRead,
+        );
+        _notifications[existingIndex] = updated;
+      } else {
+        final AppNotification item = AppNotification(
+          id: id,
+          title: title,
+          body: body,
+          receivedAt: receivedAt,
+          isRead: markAsRead,
+          data: data,
+        );
+
+        _notifications.insert(0, item);
+        if (_notifications.length > _maxStoredNotifications) {
+          _notifications.removeRange(
+              _maxStoredNotifications, _notifications.length);
+        }
+      }
+
+      _emitNotifications();
+      // Persist in background (no need to await)
+      _saveNotifications();
+    } catch (e) {
+      debugPrint('OneSignal: Failed to capture notification: $e');
+    }
+  }
+
+  /// Mark a single notification as read.
+  Future<void> markAsRead(String id) async {
+    bool changed = false;
+    for (int i = 0; i < _notifications.length; i++) {
+      final n = _notifications[i];
+      if (n.id == id && !n.isRead) {
+        _notifications[i] = n.copyWith(isRead: true);
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    _emitNotifications();
+    await _saveNotifications();
+  }
+
+  /// Mark all notifications as read.
+  Future<void> markAllAsRead() async {
+    bool changed = false;
+    for (int i = 0; i < _notifications.length; i++) {
+      final n = _notifications[i];
+      if (!n.isRead) {
+        _notifications[i] = n.copyWith(isRead: true);
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    _emitNotifications();
+    await _saveNotifications();
+  }
+
+  /// Clear the in-app notification history.
+  Future<void> clearAllNotifications() async {
+    if (_notifications.isEmpty) return;
+    _notifications.clear();
+    _emitNotifications();
+    await _saveNotifications();
   }
   
   /// Get the current player ID (device token)

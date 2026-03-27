@@ -4,6 +4,7 @@ import '../models/trust.dart';
 import '../models/trust_beneficiary.dart';
 import '../models/trust_charity.dart';
 import 'supabase_service.dart';
+import 'notification_service.dart';
 
 class TrustService {
   TrustService._();
@@ -24,7 +25,9 @@ class TrustService {
     return rows.map((e) => Trust.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<Trust> createTrust(Trust trust, {List<TrustBeneficiary>? beneficiaries, List<TrustCharity>? charities}) async {
+  Future<Trust> createTrust(Trust trust,
+      {List<TrustBeneficiary>? beneficiaries,
+      List<TrustCharity>? charities}) async {
     final user = AuthController.instance.currentUser;
     if (user == null) {
       throw Exception('No authenticated user');
@@ -43,7 +46,11 @@ class TrustService {
           'trust_code': code,
           'uuid': user.id,
         };
-        final List<dynamic> inserted = await _client.from('trust').insert(payload).select().limit(1);
+        final List<dynamic> inserted = await _client
+            .from('trust')
+            .insert(payload)
+            .select()
+            .limit(1);
         final Trust createdTrust = Trust.fromJson(inserted.first as Map<String, dynamic>);
 
         // Create beneficiaries if provided
@@ -58,8 +65,17 @@ class TrustService {
 
         // Create executors if provided (stored in trust_executor table)
         if (trust.executorType != null) {
-          await _createExecutors(createdTrust.id!, trust.executorType!, trust.executorIds);
+          await _createExecutors(
+              createdTrust.id!, trust.executorType!, trust.executorIds);
         }
+
+        await NotificationService.instance.createNotification(
+          title: 'Family Trust created',
+          body:
+              'Your Family Trust ${createdTrust.trustCode ?? ''} has been created.',
+          type: 'trust_created',
+          data: <String, dynamic>{'trust_id': createdTrust.id},
+        );
 
         return createdTrust;
       } catch (e) {

@@ -13,6 +13,7 @@ CREATE TABLE public.accounts (
   stripe_price_id text,
   kyc_status text,
   chip_customer_id text UNIQUE,
+  onesignal_player_id text,
   CONSTRAINT accounts_pkey PRIMARY KEY (id),
   CONSTRAINT public_accounts_ref_product_key_fkey FOREIGN KEY (ref_product_key) REFERENCES public.products(ref_key),
   CONSTRAINT public_accounts_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
@@ -63,6 +64,20 @@ CREATE TABLE public.agents (
   CONSTRAINT organization_join_requests_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
   CONSTRAINT organization_join_requests_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
   CONSTRAINT organization_join_requests_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ai_chat_qna (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question text NOT NULL,
+  answer text NOT NULL,
+  tags ARRAY DEFAULT '{}'::text[],
+  is_active boolean NOT NULL DEFAULT true,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  updated_by uuid,
+  CONSTRAINT ai_chat_qna_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_chat_qna_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
+  CONSTRAINT ai_chat_qna_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.ai_chat_settings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -261,6 +276,9 @@ CREATE TABLE public.digital_assets (
   new_service_platform_logo_url text,
   updated_at timestamp with time zone DEFAULT now(),
   is_custom boolean DEFAULT false,
+  asset_type text DEFAULT 'digital'::text CHECK (asset_type = ANY (ARRAY['digital'::text, 'physical'::text])),
+  physical_asset_category text,
+  physical_legal_classification text CHECK (physical_legal_classification = ANY (ARRAY['movable'::text, 'immovable'::text])),
   CONSTRAINT digital_assets_pkey PRIMARY KEY (id),
   CONSTRAINT public_digital_assets_beloved_id_fkey FOREIGN KEY (beloved_id) REFERENCES public.beloved(id),
   CONSTRAINT public_digital_assets_bodies_id_fkey FOREIGN KEY (bodies_id) REFERENCES public.bodies(id),
@@ -294,6 +312,7 @@ CREATE TABLE public.executor (
   created_at timestamp without time zone DEFAULT now(),
   updated_at timestamp without time zone DEFAULT now(),
   uuid uuid,
+  status text DEFAULT 'submitted'::text CHECK (status = ANY (ARRAY['draft'::text, 'submitted'::text, 'under_review'::text, 'approved'::text, 'rejected'::text])),
   CONSTRAINT executor_pkey PRIMARY KEY (id),
   CONSTRAINT executor_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
@@ -378,6 +397,17 @@ CREATE TABLE public.extra_wishes (
   CONSTRAINT extra_wishes_pkey PRIMARY KEY (id),
   CONSTRAINT public_extra_wishes_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
+CREATE TABLE public.feedback (
+  id bigint NOT NULL DEFAULT nextval('feedback_id_seq'::regclass),
+  uuid uuid,
+  email text,
+  type text NOT NULL CHECK (type = ANY (ARRAY['bug'::text, 'feature'::text])),
+  description text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  screenshot_url text,
+  CONSTRAINT feedback_pkey PRIMARY KEY (id),
+  CONSTRAINT feedback_uuid_fkey FOREIGN KEY (uuid) REFERENCES auth.users(id)
+);
 CREATE TABLE public.hibah (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
@@ -387,6 +417,7 @@ CREATE TABLE public.hibah (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   certificate_id text UNIQUE,
   final_agreement jsonb,
+  status text CHECK (status = ANY (ARRAY['draft'::text, 'submitted'::text, 'pending_review'::text, 'under_review'::text, 'approved'::text, 'rejected'::text])),
   CONSTRAINT hibah_pkey PRIMARY KEY (id),
   CONSTRAINT hibah_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
@@ -462,22 +493,53 @@ CREATE TABLE public.hibah_payments (
   CONSTRAINT hibah_payments_coupon_id_fkey FOREIGN KEY (coupon_id) REFERENCES public.hibah_coupons(id)
 );
 CREATE TABLE public.inform_death (
-  uuid uuid NOT NULL UNIQUE,
+  uuid uuid NOT NULL,
   nric_no text,
   nric_name text,
   image_path text,
   certification_id text,
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL UNIQUE,
   invite_user_uuid uuid,
+  status text DEFAULT 'submitted'::text CHECK (status = ANY (ARRAY['draft'::text, 'submitted'::text, 'under_review'::text, 'approved'::text, 'rejected'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT inform_death_pkey PRIMARY KEY (id),
   CONSTRAINT public_inform_death_invite_user_uuid_fkey FOREIGN KEY (invite_user_uuid) REFERENCES public.profiles(uuid),
   CONSTRAINT public_inform_death_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
+);
+CREATE TABLE public.learning_resources (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  resource_type text NOT NULL CHECK (resource_type = ANY (ARRAY['podcast'::text, 'guide'::text, 'short'::text])),
+  category text NOT NULL,
+  title text NOT NULL,
+  duration_label text,
+  author_name text,
+  published_at date DEFAULT CURRENT_DATE,
+  body text,
+  is_published boolean NOT NULL DEFAULT true,
+  sort_index integer,
+  video_url text,
+  image_url text,
+  CONSTRAINT learning_resources_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.newsletter (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   email text NOT NULL UNIQUE,
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL UNIQUE,
   CONSTRAINT newsletter_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  body text NOT NULL,
+  type text,
+  data jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  read_at timestamp with time zone,
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.organizations (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -633,6 +695,7 @@ CREATE TABLE public.trust (
   doc_validation_errors jsonb DEFAULT '{}'::jsonb,
   fund_support_categories ARRAY DEFAULT '{}'::text[],
   fund_support_configs jsonb DEFAULT '{}'::jsonb,
+  status text DEFAULT 'submitted'::text CHECK (status = ANY (ARRAY['draft'::text, 'submitted'::text, 'approved'::text, 'rejected'::text])),
   CONSTRAINT trust_pkey PRIMARY KEY (id),
   CONSTRAINT trust_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );

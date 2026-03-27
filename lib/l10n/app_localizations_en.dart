@@ -57,10 +57,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get appleSignInCancelled => 'Apple sign-in was cancelled or failed';
+
+  @override
+  String appleSignInFailed(String error) {
+    return 'Apple sign-in failed: $error';
+  }
+
+  @override
   String get signingIn => 'Signing in…';
 
   @override
   String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
 
   @override
   String get dontHaveAccount => 'Don\'t have an account?';
@@ -265,6 +276,137 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aftercare => 'Aftercare';
 
   @override
+  String get informDeathTitle => 'Inform Death';
+
+  @override
+  String get informDeathStartCta => 'Start Inform Death';
+
+  @override
+  String get informDeathMenuLabel => 'Inform Death';
+
+  @override
+  String get informDeathDeleteDialogTitle => 'Delete Inform Death record';
+
+  @override
+  String get informDeathDeleteSuccess => 'Inform Death record deleted';
+
+  @override
+  String get informDeathHeroTitle => 'Inform Sampul of a death';
+
+  @override
+  String get informDeathHeroBody =>
+      'If someone who uses Sampul has passed away, this page helps you let us know in a calm, structured way.';
+
+  @override
+  String get informDeathWhatYoullShareTitle => 'What you’ll share';
+
+  @override
+  String get informDeathWhatYoullShareBody =>
+      'We’ll ask for the Sampul owner’s details and a copy of the death certificate. This helps us confirm the right person and support their family appropriately.';
+
+  @override
+  String get informDeathFeatureOwner =>
+      'Owner’s full name and NRIC (as per NRIC).';
+
+  @override
+  String get informDeathFeatureCertNumber =>
+      'Death certificate number so we can match the document.';
+
+  @override
+  String get informDeathFeatureCertImage =>
+      'A clear photo or scan of the death certificate.';
+
+  @override
+  String get informDeathOwnerSectionTitle => 'Sampul owner’s details';
+
+  @override
+  String get informDeathOwnerNameLabel => 'Full name (as per NRIC)';
+
+  @override
+  String get informDeathOwnerNricLabel => 'NRIC number';
+
+  @override
+  String get informDeathSupportingDocsSectionTitle => 'Supporting documents';
+
+  @override
+  String get informDeathSupportingDocsBody =>
+      'Attach the death certificate so our team can verify the information.';
+
+  @override
+  String get informDeathNoFileChosen => 'No file chosen';
+
+  @override
+  String get informDeathUploadHint =>
+      'Upload a clear photo or scan of the death certificate.';
+
+  @override
+  String get informDeathChooseFile => 'Choose file';
+
+  @override
+  String get informDeathCertificateIdLabel => 'Death certificate ID';
+
+  @override
+  String get informDeathRequiredField => 'Required';
+
+  @override
+  String get informDeathSubmitCta => 'Submit to Sampul';
+
+  @override
+  String get informDeathStatusDraft => 'Draft';
+
+  @override
+  String get informDeathStatusSubmitted => 'Submitted';
+
+  @override
+  String get informDeathStatusUnderReview => 'Under review';
+
+  @override
+  String get informDeathStatusApproved => 'Approved';
+
+  @override
+  String get informDeathStatusRejected => 'Rejected';
+
+  @override
+  String get informDeathStatusUnknown => 'Submitted';
+
+  @override
+  String informDeathListNric(String nric) {
+    return 'NRIC: $nric';
+  }
+
+  @override
+  String informDeathListCertificateId(String certId) {
+    return 'Certificate ID: $certId';
+  }
+
+  @override
+  String informDeathListSubmittedOn(String date) {
+    return 'Submitted on: $date';
+  }
+
+  @override
+  String get informDeathInfoBannerBody => 'Need to inform Sampul of a death?';
+
+  @override
+  String get informDeathInfoBannerCta => 'New request';
+
+  @override
+  String get informDeathOpenFile => 'Open file';
+
+  @override
+  String get informDeathUnableToOpenFile => 'Unable to open file';
+
+  @override
+  String get informDeathRemoveFile => 'Remove file';
+
+  @override
+  String get informDeathRemoveFileTitle => 'Remove uploaded file?';
+
+  @override
+  String get informDeathRemoveFileBody =>
+      'This will delete the uploaded file from this request.';
+
+  @override
   String get add => 'Add';
 
   @override
@@ -362,6 +504,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageSampulAiResponses => 'Manage Sampul AI responses';
+
+  @override
+  String get teamAccess => 'Team access';
+
+  @override
+  String get teamAccessListSubtitle => 'Assign Marketing or Admin access';
+
+  @override
+  String get teamAccessDescription =>
+      'Set Marketing or Admin for each person with a Sampul account.';
+
+  @override
+  String get teamAccessRoleLabel => 'Access level';
+
+  @override
+  String get teamAccessSearchHint => 'Search by email or name';
+
+  @override
+  String get teamAccessEmptySearch =>
+      'No one matches that search. Try a different name or email.';
+
+  @override
+  String get teamAccessTryAgain => 'Try again';
+
+  @override
+  String get teamAccessRefreshTooltip => 'Refresh list';
+
+  @override
+  String get teamAccessInfoTooltip => 'Role guide';
+
+  @override
+  String get teamAccessInfoTitle => 'Role guide';
+
+  @override
+  String get teamAccessInfoStandard =>
+      'Standard: regular app use. No access to Team access or content admin tools.';
+
+  @override
+  String get teamAccessInfoMarketing =>
+      'Marketing: can manage AI and learning content. Cannot assign roles.';
+
+  @override
+  String get teamAccessInfoAdmin =>
+      'Admin: full access to Team access, role assignment, and content admin tools.';
+
+  @override
+  String get teamAccessFilterLabel => 'Role';
+
+  @override
+  String get teamAccessFilterAll => 'All';
+
+  @override
+  String teamAccessLoadFailed(String error) {
+    return 'We couldn’t load the team list. $error';
+  }
+
+  @override
+  String get roleStandardUser => 'Standard';
+
+  @override
+  String get roleMarketing => 'Marketing';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get teamRoleSaved => 'Access updated.';
+
+  @override
+  String teamRoleSaveFailed(String error) {
+    return 'We couldn’t update access. $error';
+  }
+
+  @override
+  String get workspaceAccessNotAvailable =>
+      'That area isn’t available with your current sign-in.';
+
+  @override
+  String get changeYourAccess => 'Change your access?';
+
+  @override
+  String get changeYourAccessAdminHint =>
+      'You’re removing admin access from your own account. You’ll return to Settings after this saves.';
+
+  @override
+  String get continueLabel => 'Continue';
 
   @override
   String get darkMode => 'Dark mode';
@@ -539,6 +767,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startVerification => 'Start Verification';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get youAreAllCaughtUp => 'You\'re all caught up.';
+
+  @override
+  String get markAllAsRead => 'Mark all as read';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String get removeNotificationTitle => 'Remove notification?';
+
+  @override
+  String get removeNotificationDescription =>
+      'This removes the notification from your list.';
+
+  @override
   String get editProfile => 'Edit Profile';
 
   @override
@@ -602,6 +852,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gender => 'Gender';
+
+  @override
+  String get religion => 'Religion';
 
   @override
   String get enterYourEmail => 'Enter your email';
