@@ -361,6 +361,12 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final Widget bodyContent = _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _will == null
+            ? _buildNoWillState()
+            : _buildWillState();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.myWill),
@@ -373,11 +379,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _will == null
-              ? _buildNoWillState()
-              : _buildWillState(),
+      body: RefreshIndicator(
+        onRefresh: _loadWillData,
+        child: bodyContent,
+      ),
     );
   }
 
@@ -392,6 +397,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
           // Scrollable intro content (standardized with trust / hibah / assets)
           Expanded(
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
@@ -731,6 +737,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             child: _buildPaperWill(),
           ),
         ),
@@ -739,6 +746,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   Widget _buildPaperWill() {
+    final bool isMuslim = _userProfile?.isMuslim ?? false;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -773,7 +781,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Document Header - First Page
-                _buildPaperHeader(),
+                _buildPaperHeader(isMuslim: isMuslim),
                 
                 // Page Break
                 Container(
@@ -788,7 +796,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 // Page 2 Header
                 Center(
                   child: Text(
-                    'WASIAT ASET SAYA',
+                    isMuslim ? 'WASIAT ASET SAYA' : 'MY ASSETS WILL',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -800,178 +808,256 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 
                 const SizedBox(height: 20),
                 
-                // 1. Mukaddimah
-                _buildPaperSection(
-                  '1. Mukaddimah',
-                  [
-                    'Dengan nama Allah, Yang Maha Pengasih, Lagi Maha Penyayang, saya, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}, memegang NRIC ${_userProfile?.nricNo ?? 'Not provided'}, bermastautin di ${_formatAddress(_userProfile!)}, mengisytiharkan dokumen ini sebagai wasiat terakhir saya, memberi tumpuan kepada pengurusan aset saya.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 2. Pengisytiharan
-                _buildPaperSection(
-                  '2. Pengisytiharan',
-                  [
-                    'Mengakui kepercayaan Islam saya, saya berazam untuk mengisytiharkan wasiat terakhir saya untuk aset saya, yang ditulis pada ${_formatDateMalay(DateTime.now())}.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 3. Permintaan
-                _buildPaperSection(
-                  '3. Permintaan',
-                  [
-                    'Saya menyeru keluarga saya untuk menegakkan ketaqwaan kepada Allah S.W.T dan menunaikan perintah-Nya. Apabila saya meninggal dunia, harta saya hendaklah diuruskan dengan teliti mengikut prinsip Islam. Saya memohon harta pusaka saya sebagai keutamaan digunakan untuk mengendalikan perbelanjaan pengebumian dan menyelesaikan hutang kepada Allah S.W.T dan manusia, termasuk Zakat dan kewajipan agama lain.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 4. Wasiat Pelengkap
-                _buildPaperSection(
-                  '4. Wasiat Pelengkap',
-                  [
-                    'Wasiat ini adalah wasiat pelengkap yang terhad kepada aset yang disenaraikan dalam Jadual 1 sahaja.',
-                    'Semua wasiat terdahulu berkaitan aset lain kekal sah dan berkuat kuasa jika ada.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 5. Co-Sampul Utama dan Pentadbir Bersama
-                _buildPaperSection(
-                  '5. Co-Sampul Utama dan Pentadbir Bersama',
-                  [
-                    'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai Co-Sampul Utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 6. Co-Sampul Ganti
-                _buildPaperSection(
-                  '6. Co-Sampul Ganti',
-                  [
-                    'Jika perlu, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} akan bertindak sebagai Co-Sampul Ganti.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 7. Penyelesaian Hutang dan Tanggungjawab Berkaitan Hutang
-                _buildPaperSection(
-                  '7. Penyelesaian Hutang dan Tanggungjawab Berkaitan Hutang',
-                  [
-                    'Saya berharap waris tersayang saya akan melunaskan hutang-hutang saya yang tidak mempunyai perlindungan Takaful seperti yang disenaraikan dalam Jadual 1 dan juga melunaskan tanggungjawab berkaitan hutang yang lain seperti Nazar/Kaffarah/Fidyah saya yang berbaki yang tidak sempat saya sempurnakan ketika hidup dan diambil daripada harta pusaka saya seperti berikut:',
-                    '',
-                    'Nazar/Kaffarah: ' + ((_extraWishes?.nazarWishes ?? '').trim().isEmpty ? '-' : _extraWishes!.nazarWishes!),
-                    'Anggaran Kos: RM ' + ((_extraWishes?.nazarEstimatedCostMyr ?? 0).toStringAsFixed(2)),
-                    'Fidyah: ' + ((_extraWishes?.fidyahFastLeftDays ?? 0).toString()) + ' hari',
-                    'Kos: RM ' + ((_extraWishes?.fidyahAmountDueMyr ?? 0).toStringAsFixed(2)),
-                    'Derma Organ: ' + ((_extraWishes?.organDonorPledge ?? false) ? 'Saya dengan ini bersetuju sebagai penderma organ.' : 'Saya dengan ini tidak bersetuju sebagai penderma organ.'),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 8. Penjelasan Kos Pentadbiran Harta Pusaka dan Agihan Pendahuluan
-                _buildPaperSection(
-                  '8. Penjelasan Kos Pentadbiran Harta Pusaka dan Agihan Pendahuluan',
-                  [
-                    'Saya membenarkan waris saya setelah melantik pentadbir atau pemegang amanah atau Wasi untuk menjelaskan segala perbelanjaan bagi pentadbiran harta pusaka daripada harta pusaka saya. Saya juga membenarkan sekiranya perlu dikeluarkan satu jumlah yang muhasabah sebagai nafkah perbelanjaan bulanan bagi waris di bawah tanggungan saya dan jumlah itu ditolak daripada bahagian harta pusaka yang akan diterima oleh waris saya semasa agihan akhir sekiranya proses tuntutan pusaka mengambil masa yang lama daripada sepatutnya.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 9. Pengagihan Aset
-                _buildPaperSection(
-                  '9. Pengagihan Aset',
-                  [
-                    'Sehingga ⅓: Aset tertentu kepada bukan waris atau disedekahkan atau diwaqafkan kepada pihak tertentu seperti di [Jadual 2].',
-                    '',
-                    'Penerima Hadiah (Hibah): Aset tertentu ditetapkan untuk penerima tertentu secara terus tertakluk kepada persetujuan waris Faraid yang berhak seperti di [Jadual 1]',
-                    '',
-                    'Faraid: Aset tertentu ditetapkan untuk penerima tertentu berdasarkan pembahagian Faraid seperti di [Jadual 1].',
-                    '',
-                    'Baki Harta: Selebihnya aset saya yang tidak dinyatakan secara khusus akan diagihkan sewajarnya sama ada kepada penerima tertentu tertakluk kepada persetujuan waris Faraid atau berdasarkan pembahagian Faraid.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 10. Penjagaan Anak
-                _buildPaperSection(
-                  '10. Penjagaan Anak',
-                  [
-                    'N/A',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 11. Tanda Tangan
-                _buildPaperSection(
-                  '11. Tanda Tangan',
-                  [
-                    'Disediakan oleh',
-                    '',
-                    '',
-                    '____________________',
-                    '${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
-                    '${_userProfile?.nricNo ?? 'Not provided'}',
-                    'pada ${_formatDateMalay(DateTime.now())}',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 12. Notis
-                _buildPaperSection(
-                  '12. Notis',
-                  [
-                    'Walaupun platform kami menyediakan perkhidmatan digital untuk membuat wasiat, kami amat menggalakkan anda mencetak wasiat yang telah dilengkapkan dan menandatanganinya secara fizikal untuk simpanan peribadi anda. Sekiranya timbul sebarang pertikaian pada masa hadapan, salinan wasiat yang ditandatangani secara fizikal akan memberikan kepastian undang-undang. Salinan bercetak dan bertandatangan ini boleh bertindak sebagai sandaran kepada rekod digital anda.',
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // 13. Saksi
-                _buildPaperSection(
-                  '13. Saksi',
-                  [
-                    'Diperakui oleh',
-                    'Muhammad Arham Munir Merican bin Amir Feisal Merican',
-                    '931011875001',
-                    'Pengasas, SAMPUL',
-                    'pada ${_formatDateMalay(DateTime.now())}',
-                    '',
-                    'Diperakui oleh',
-                    'Mohamad Hafiz bin Che Hamid',
-                    '950208035341',
-                    'Pembangun Perisian, SAMPUL',
-                    'pada ${_formatDateMalay(DateTime.now())}',
-                    '',
-                    'Diperakui oleh',
-                    '',
-                    '____________________',
-                    'Nama:',
-                    'No IC:',
-                    'Hubungan:',
-                    'Tarikh:',
-                    '',
-                    'Diperakui oleh',
-                    '',
-                    '____________________',
-                    'Nama:',
-                    'No IC:',
-                    'Hubungan:',
-                    'Tarikh:',
-                  ],
-                ),
+                if (isMuslim) ...[
+                  _buildPaperSection(
+                    '1. Mukaddimah',
+                    [
+                      'Dengan nama Allah, Yang Maha Pengasih, Lagi Maha Penyayang, saya, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}, memegang NRIC ${_userProfile?.nricNo ?? 'Not provided'}, bermastautin di ${_formatAddress(_userProfile!)}, mengisytiharkan dokumen ini sebagai wasiat terakhir saya, memberi tumpuan kepada pengurusan aset saya.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '2. Pengisytiharan',
+                    [
+                      'Mengakui kepercayaan Islam saya, saya berazam untuk mengisytiharkan wasiat terakhir saya untuk aset saya, yang ditulis pada ${_formatDateMalay(DateTime.now())}.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '3. Permintaan',
+                    [
+                      'Saya menyeru keluarga saya untuk menegakkan ketaqwaan kepada Allah S.W.T dan menunaikan perintah-Nya. Apabila saya meninggal dunia, harta saya hendaklah diuruskan dengan teliti mengikut prinsip Islam. Saya memohon harta pusaka saya sebagai keutamaan digunakan untuk mengendalikan perbelanjaan pengebumian dan menyelesaikan hutang kepada Allah S.W.T dan manusia, termasuk Zakat dan kewajipan agama lain.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '4. Wasiat Pelengkap',
+                    [
+                      'Wasiat ini adalah wasiat pelengkap yang terhad kepada aset yang disenaraikan dalam Jadual 1 sahaja.',
+                      'Semua wasiat terdahulu berkaitan aset lain kekal sah dan berkuat kuasa jika ada.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '5. Co-Sampul Utama dan Pentadbir Bersama',
+                    [
+                      'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai Co-Sampul Utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '6. Co-Sampul Ganti',
+                    [
+                      'Jika perlu, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} akan bertindak sebagai Co-Sampul Ganti.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '7. Penyelesaian Hutang dan Tanggungjawab Berkaitan Hutang',
+                    [
+                      'Saya berharap waris tersayang saya akan melunaskan hutang-hutang saya yang tidak mempunyai perlindungan Takaful seperti yang disenaraikan dalam Jadual 1 dan juga melunaskan tanggungjawab berkaitan hutang yang lain seperti Nazar/Kaffarah/Fidyah saya yang berbaki yang tidak sempat saya sempurnakan ketika hidup dan diambil daripada harta pusaka saya seperti berikut:',
+                      '',
+                      'Nazar/Kaffarah: ' + ((_extraWishes?.nazarWishes ?? '').trim().isEmpty ? '-' : _extraWishes!.nazarWishes!),
+                      'Anggaran Kos: RM ' + ((_extraWishes?.nazarEstimatedCostMyr ?? 0).toStringAsFixed(2)),
+                      'Fidyah: ' + ((_extraWishes?.fidyahFastLeftDays ?? 0).toString()) + ' hari',
+                      'Kos: RM ' + ((_extraWishes?.fidyahAmountDueMyr ?? 0).toStringAsFixed(2)),
+                      'Derma Organ: ' + ((_extraWishes?.organDonorPledge ?? false) ? 'Saya dengan ini bersetuju sebagai penderma organ.' : 'Saya dengan ini tidak bersetuju sebagai penderma organ.'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '8. Penjelasan Kos Pentadbiran Harta Pusaka dan Agihan Pendahuluan',
+                    [
+                      'Saya membenarkan waris saya setelah melantik pentadbir atau pemegang amanah atau Wasi untuk menjelaskan segala perbelanjaan bagi pentadbiran harta pusaka daripada harta pusaka saya. Saya juga membenarkan sekiranya perlu dikeluarkan satu jumlah yang muhasabah sebagai nafkah perbelanjaan bulanan bagi waris di bawah tanggungan saya dan jumlah itu ditolak daripada bahagian harta pusaka yang akan diterima oleh waris saya semasa agihan akhir sekiranya proses tuntutan pusaka mengambil masa yang lama daripada sepatutnya.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '9. Pengagihan Aset',
+                    [
+                      'Sehingga ⅓: Aset tertentu kepada bukan waris atau disedekahkan atau diwaqafkan kepada pihak tertentu seperti di [Jadual 2].',
+                      '',
+                      'Penerima Hadiah (Hibah): Aset tertentu ditetapkan untuk penerima tertentu secara terus tertakluk kepada persetujuan waris Faraid yang berhak seperti di [Jadual 1]',
+                      '',
+                      'Faraid: Aset tertentu ditetapkan untuk penerima tertentu berdasarkan pembahagian Faraid seperti di [Jadual 1].',
+                      '',
+                      'Baki Harta: Selebihnya aset saya yang tidak dinyatakan secara khusus akan diagihkan sewajarnya sama ada kepada penerima tertentu tertakluk kepada persetujuan waris Faraid atau berdasarkan pembahagian Faraid.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '10. Penjagaan Anak',
+                    ['N/A'],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '11. Tanda Tangan',
+                    [
+                      'Disediakan oleh',
+                      '',
+                      '',
+                      '____________________',
+                      '${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
+                      '${_userProfile?.nricNo ?? 'Not provided'}',
+                      'pada ${_formatDateMalay(DateTime.now())}',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '12. Notis',
+                    [
+                      'Walaupun platform kami menyediakan perkhidmatan digital untuk membuat wasiat, kami amat menggalakkan anda mencetak wasiat yang telah dilengkapkan dan menandatanganinya secara fizikal untuk simpanan peribadi anda. Sekiranya timbul sebarang pertikaian pada masa hadapan, salinan wasiat yang ditandatangani secara fizikal akan memberikan kepastian undang-undang. Salinan bercetak dan bertandatangan ini boleh bertindak sebagai sandaran kepada rekod digital anda.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '13. Saksi',
+                    [
+                      'Diperakui oleh',
+                      'Muhammad Arham Munir Merican bin Amir Feisal Merican',
+                      '931011875001',
+                      'Pengasas, SAMPUL',
+                      'pada ${_formatDateMalay(DateTime.now())}',
+                      '',
+                      'Diperakui oleh',
+                      'Mohamad Hafiz bin Che Hamid',
+                      '950208035341',
+                      'Pembangun Perisian, SAMPUL',
+                      'pada ${_formatDateMalay(DateTime.now())}',
+                      '',
+                      'Diperakui oleh',
+                      '',
+                      '____________________',
+                      'Nama:',
+                      'No IC:',
+                      'Hubungan:',
+                      'Tarikh:',
+                      '',
+                      'Diperakui oleh',
+                      '',
+                      '____________________',
+                      'Nama:',
+                      'No IC:',
+                      'Hubungan:',
+                      'Tarikh:',
+                    ],
+                  ),
+                ] else ...[
+                  _buildPaperSection(
+                    '1. Declaration',
+                    [
+                      'I, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}, ${_userProfile?.nricNo ?? 'Not provided'}, ${_formatAddress(_userProfile!)}, declare this document, created on ${_formatDateMalay(DateTime.now())}, as my Last Will and Testament for my assets.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '2. Supplementary Will',
+                    [
+                      'This Will complements any existing Wills and is limited solely to the assets listed in Table 1 of this document.',
+                      'All previous Wills concerning other assets remain valid and in effect.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '3. Main Co-Sampul and Joint Executor',
+                    [
+                      'I hereby appoint the following as co-executors of this Will:',
+                      '',
+                      'a) Sampul Sdn Bhd (202301027717)',
+                      '',
+                      'b) ${_getCoSampulUtama()} (Main Co-Sampul)',
+                      '',
+                      'Both shall act jointly to safekeep and deliver this Will and Testament of my assets to my beneficiaries.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '4. Substitute Co-Sampul',
+                    [
+                      'If necessary, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} will act as Substitute Co-Sampul.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '5. Assets Distribution',
+                    [
+                      'Specific Bequests: Certain assets are designated for specific beneficiaries as per [Table 1].',
+                      '',
+                      'Residual Estate: The rest of my assets not specifically mentioned are to be distributed accordingly.',
+                      '',
+                      'Additional Bequests: For charity, [Charitable Body] is designated as per [Table 2].',
+                      '',
+                      'Organ Donation: ${(_extraWishes?.organDonorPledge ?? false) ? 'I hereby Agree to donate my organ at the point of demise.' : 'I do not agree to donate my organ at the point of demise.'}',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '6. Guardianship',
+                    [
+                      'If my spouse/partner predeceases me or is unable, ${_getGuardianUtama()}, ${_getGuardianUtamaNric()} is appointed for my minor children, with ${_getGuardianGanti()}, ${_getGuardianGantiNric()} as an alternate as per [Table 1].',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '7. Predecease Condition',
+                    [
+                      'If any beneficiary predeceases me, their share shall be redistributed among the remaining beneficiaries or as specified in this Will.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '8. Signature',
+                    [
+                      'Signed by',
+                      '',
+                      '',
+                      '____________________',
+                      '${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
+                      '${_userProfile?.nricNo ?? 'Not provided'}',
+                      'on ${_formatDateMalay(DateTime.now())}',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '9. Notice',
+                    [
+                      'While our platform provides a digital service for creating wills, we strongly recommend that you print out your completed will and sign it physically for your personal safekeeping. In the event of any potential disputes, a physically signed copy of your will shall provide legal certainty. This printed and signed version can serve as a tangible backup to your digital records.',
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildPaperSection(
+                    '10. Witnesses',
+                    [
+                      'Signed by',
+                      'Muhammad Arham Munir Merican bin Amir Feisal Merican',
+                      '931011875001',
+                      'Founder, SAMPUL',
+                      'on ${_formatDateMalay(DateTime.now())}',
+                      '',
+                      'Signed by',
+                      'Mohamad Hafiz bin Che Hamid',
+                      '950208035341',
+                      'Software Developer, SAMPUL',
+                      'on ${_formatDateMalay(DateTime.now())}',
+                      '',
+                      'Signed by',
+                      '',
+                      '____________________',
+                      'Name:',
+                      'IC Number:',
+                      'Relationship:',
+                      'Date:',
+                      '',
+                      'Signed by',
+                      '',
+                      '____________________',
+                      'Name:',
+                      'IC Number:',
+                      'Relationship:',
+                      'Date:',
+                    ],
+                  ),
+                ],
 
                 // Page Break
                 Container(
@@ -993,7 +1079,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     );
   }
 
-  Widget _buildPaperHeader() {
+  Widget _buildPaperHeader({required bool isMuslim}) {
     return Container(
       height: 600, // Fixed height for first page
       child: Column(
@@ -1019,11 +1105,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
           
           // Title
           Text(
-            'WASIAT',
+            isMuslim ? 'WASIAT' : 'Will and Testament for Digital Asset',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: isMuslim ? 24 : 18,
               fontWeight: FontWeight.bold,
-              letterSpacing: 3,
+              letterSpacing: isMuslim ? 3 : 1.2,
               color: Colors.black87,
             ),
             textAlign: TextAlign.center,
@@ -1035,7 +1121,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
           Column(
             children: [
               Text(
-                'ditulis oleh',
+                isMuslim ? 'ditulis oleh' : 'of',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -1110,7 +1196,9 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              'Salinan sijil dan perincian penuh wasiat boleh didapati dalam peti simpanan digital Sampul. Sebarang maklumat dan pertanyaan, sila emel kepada hello@sampul.co',
+              isMuslim
+                  ? 'Salinan sijil dan perincian penuh wasiat boleh didapati dalam peti simpanan digital Sampul. Sebarang maklumat dan pertanyaan, sila emel kepada hello@sampul.co'
+                  : 'A copy of this certificate and details of the will is stored in Sampul digital vault. For queries and info please email hello@sampul.co',
               style: TextStyle(
                 fontSize: 11,
                 color: Colors.grey.shade700,
@@ -1202,17 +1290,6 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     return executor['name'] ?? '[PRIMARY CO-SAMPUL NAME/NICKNAME]';
   }
 
-  String _getCoSampulUtamaNric() {
-    if (_will?.coSampul1 == null) return '[PRIMARY CO-SAMPUL NRIC NO]';
-    
-    final executor = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.coSampul1,
-      orElse: () => {'nric_no': '[PRIMARY CO-SAMPUL NRIC NO]'},
-    );
-    
-    return executor['nric_no'] ?? '[PRIMARY CO-SAMPUL NRIC NO]';
-  }
-
   String _getCoSampulGanti() {
     if (_will?.coSampul2 == null) return '[SECONDARY CO-SAMPUL NAME/NICKNAME]';
     
@@ -1233,6 +1310,42 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     );
     
     return executor['nric_no'] ?? '[SECONDARY CO-SAMPUL NRIC NO]';
+  }
+
+  String _getGuardianUtama() {
+    if (_will?.guardian1 == null) return '[Guardian Name]';
+    final guardian = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.guardian1,
+      orElse: () => {'name': '[Guardian Name]'},
+    );
+    return guardian['name'] ?? '[Guardian Name]';
+  }
+
+  String _getGuardianUtamaNric() {
+    if (_will?.guardian1 == null) return '[IC]';
+    final guardian = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.guardian1,
+      orElse: () => {'nric_no': '[IC]'},
+    );
+    return guardian['nric_no'] ?? '[IC]';
+  }
+
+  String _getGuardianGanti() {
+    if (_will?.guardian2 == null) return '[Guardian Name 2]';
+    final guardian = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.guardian2,
+      orElse: () => {'name': '[Guardian Name 2]'},
+    );
+    return guardian['name'] ?? '[Guardian Name 2]';
+  }
+
+  String _getGuardianGantiNric() {
+    if (_will?.guardian2 == null) return '[IC]';
+    final guardian = _familyMembers.firstWhere(
+      (member) => member['id'] == _will!.guardian2,
+      orElse: () => {'nric_no': '[IC]'},
+    );
+    return guardian['nric_no'] ?? '[IC]';
   }
 
   Widget _buildAssetsList() {

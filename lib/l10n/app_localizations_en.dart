@@ -506,6 +506,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageSampulAiResponses => 'Manage Sampul AI responses';
 
   @override
+  String get teamAccess => 'Team access';
+
+  @override
+  String get teamAccessListSubtitle => 'Assign Marketing or Admin access';
+
+  @override
+  String get teamAccessDescription =>
+      'Set Marketing or Admin for each person with a Sampul account.';
+
+  @override
+  String get teamAccessRoleLabel => 'Access level';
+
+  @override
+  String get teamAccessSearchHint => 'Search by email or name';
+
+  @override
+  String get teamAccessEmptySearch =>
+      'No one matches that search. Try a different name or email.';
+
+  @override
+  String get teamAccessTryAgain => 'Try again';
+
+  @override
+  String get teamAccessRefreshTooltip => 'Refresh list';
+
+  @override
+  String get teamAccessInfoTooltip => 'Role guide';
+
+  @override
+  String get teamAccessInfoTitle => 'Role guide';
+
+  @override
+  String get teamAccessInfoStandard =>
+      'Standard: regular app use. No access to Team access or content admin tools.';
+
+  @override
+  String get teamAccessInfoMarketing =>
+      'Marketing: can manage AI and learning content. Cannot assign roles.';
+
+  @override
+  String get teamAccessInfoAdmin =>
+      'Admin: full access to Team access, role assignment, and content admin tools.';
+
+  @override
+  String get teamAccessFilterLabel => 'Role';
+
+  @override
+  String get teamAccessFilterAll => 'All';
+
+  @override
+  String teamAccessLoadFailed(String error) {
+    return 'We couldn’t load the team list. $error';
+  }
+
+  @override
+  String get roleStandardUser => 'Standard';
+
+  @override
+  String get roleMarketing => 'Marketing';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get teamRoleSaved => 'Access updated.';
+
+  @override
+  String teamRoleSaveFailed(String error) {
+    return 'We couldn’t update access. $error';
+  }
+
+  @override
+  String get workspaceAccessNotAvailable =>
+      'That area isn’t available with your current sign-in.';
+
+  @override
+  String get changeYourAccess => 'Change your access?';
+
+  @override
+  String get changeYourAccessAdminHint =>
+      'You’re removing admin access from your own account. You’ll return to Settings after this saves.';
+
+  @override
+  String get continueLabel => 'Continue';
+
+  @override
   String get darkMode => 'Dark mode';
 
   @override

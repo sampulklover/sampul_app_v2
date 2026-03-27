@@ -227,6 +227,45 @@
   "yourCodeAndReferrals": "Your code and referrals",
   "aiChatSettings": "AI Chat Settings",
   "manageSampulAiResponses": "Manage Sampul AI responses",
+  "teamAccess": "Team access",
+  "teamAccessListSubtitle": "Assign Marketing or Admin access",
+  "teamAccessDescription": "Set Marketing or Admin for each person with a Sampul account.",
+  "teamAccessRoleLabel": "Access level",
+  "teamAccessSearchHint": "Search by email or name",
+  "teamAccessEmptySearch": "No one matches that search. Try a different name or email.",
+  "teamAccessTryAgain": "Try again",
+  "teamAccessRefreshTooltip": "Refresh list",
+  "teamAccessInfoTooltip": "Role guide",
+  "teamAccessInfoTitle": "Role guide",
+  "teamAccessInfoStandard": "Standard: regular app use. No access to Team access or content admin tools.",
+  "teamAccessInfoMarketing": "Marketing: can manage AI and learning content. Cannot assign roles.",
+  "teamAccessInfoAdmin": "Admin: full access to Team access, role assignment, and content admin tools.",
+  "teamAccessFilterLabel": "Role",
+  "teamAccessFilterAll": "All",
+  "teamAccessLoadFailed": "We couldn’t load the team list. {error}",
+  "@teamAccessLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "roleStandardUser": "Standard",
+  "roleMarketing": "Marketing",
+  "roleAdmin": "Admin",
+  "teamRoleSaved": "Access updated.",
+  "teamRoleSaveFailed": "We couldn’t update access. {error}",
+  "@teamRoleSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "workspaceAccessNotAvailable": "That area isn’t available with your current sign-in.",
+  "changeYourAccess": "Change your access?",
+  "changeYourAccessAdminHint": "You’re removing admin access from your own account. You’ll return to Settings after this saves.",
+  "continueLabel": "Continue",
   "darkMode": "Dark mode",
   "restartOnboarding": "Restart onboarding",
   "runTheSetupFlowAgain": "Run the setup flow again",

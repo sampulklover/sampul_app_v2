@@ -1022,6 +1022,156 @@ abstract class AppLocalizations {
   /// **'Manage Sampul AI responses'**
   String get manageSampulAiResponses;
 
+  /// No description provided for @teamAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Team access'**
+  String get teamAccess;
+
+  /// No description provided for @teamAccessListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign Marketing or Admin access'**
+  String get teamAccessListSubtitle;
+
+  /// No description provided for @teamAccessDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Marketing or Admin for each person with a Sampul account.'**
+  String get teamAccessDescription;
+
+  /// No description provided for @teamAccessRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Access level'**
+  String get teamAccessRoleLabel;
+
+  /// No description provided for @teamAccessSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by email or name'**
+  String get teamAccessSearchHint;
+
+  /// No description provided for @teamAccessEmptySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No one matches that search. Try a different name or email.'**
+  String get teamAccessEmptySearch;
+
+  /// No description provided for @teamAccessTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get teamAccessTryAgain;
+
+  /// No description provided for @teamAccessRefreshTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh list'**
+  String get teamAccessRefreshTooltip;
+
+  /// No description provided for @teamAccessInfoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Role guide'**
+  String get teamAccessInfoTooltip;
+
+  /// No description provided for @teamAccessInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Role guide'**
+  String get teamAccessInfoTitle;
+
+  /// No description provided for @teamAccessInfoStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard: regular app use. No access to Team access or content admin tools.'**
+  String get teamAccessInfoStandard;
+
+  /// No description provided for @teamAccessInfoMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing: can manage AI and learning content. Cannot assign roles.'**
+  String get teamAccessInfoMarketing;
+
+  /// No description provided for @teamAccessInfoAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin: full access to Team access, role assignment, and content admin tools.'**
+  String get teamAccessInfoAdmin;
+
+  /// No description provided for @teamAccessFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get teamAccessFilterLabel;
+
+  /// No description provided for @teamAccessFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get teamAccessFilterAll;
+
+  /// No description provided for @teamAccessLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t load the team list. {error}'**
+  String teamAccessLoadFailed(String error);
+
+  /// No description provided for @roleStandardUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get roleStandardUser;
+
+  /// No description provided for @roleMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing'**
+  String get roleMarketing;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @teamRoleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Access updated.'**
+  String get teamRoleSaved;
+
+  /// No description provided for @teamRoleSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t update access. {error}'**
+  String teamRoleSaveFailed(String error);
+
+  /// No description provided for @workspaceAccessNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'That area isn’t available with your current sign-in.'**
+  String get workspaceAccessNotAvailable;
+
+  /// No description provided for @changeYourAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Change your access?'**
+  String get changeYourAccess;
+
+  /// No description provided for @changeYourAccessAdminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re removing admin access from your own account. You’ll return to Settings after this saves.'**
+  String get changeYourAccessAdminHint;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
   /// No description provided for @darkMode.
   ///
   /// In en, this message translates to:

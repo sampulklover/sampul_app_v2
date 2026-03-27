@@ -18,6 +18,7 @@ import 'edit_profile_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'admin_ai_settings_screen.dart';
 import 'admin_learning_resources_screen.dart';
+import 'admin_team_access_screen.dart';
 import '../utils/admin_utils.dart';
 import '../services/image_upload_service.dart';
 import '../utils/card_decoration_helper.dart';
@@ -41,7 +42,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   String? _verificationStatus;
   bool _isLoadingVerification = true;
   bool _isAdmin = false;
-  bool _isLoadingAdmin = true;
+  bool _canManageAppContent = false;
+  bool _isLoadingStaff = true;
 
   @override
   void initState() {
@@ -49,23 +51,25 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
     _loadVerificationStatus();
-    _checkAdminStatus();
+    _loadStaffAccess();
   }
 
-  Future<void> _checkAdminStatus() async {
+  Future<void> _loadStaffAccess() async {
     try {
-      final isAdmin = await AdminUtils.isAdmin();
+      final StaffAccess access = await AdminUtils.getStaffAccess();
       if (mounted) {
         setState(() {
-          _isAdmin = isAdmin;
-          _isLoadingAdmin = false;
+          _isAdmin = access.isAdmin;
+          _canManageAppContent = access.canManageAppContent;
+          _isLoadingStaff = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isAdmin = false;
-          _isLoadingAdmin = false;
+          _canManageAppContent = false;
+          _isLoadingStaff = false;
         });
       }
     }
@@ -1161,8 +1165,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   },
                 ),
                 const Divider(height: 1),
-                // Admin-only settings
-                if (!_isLoadingAdmin && _isAdmin) ...[
+                // Admin or marketing: content & AI tools
+                if (!_isLoadingStaff && _canManageAppContent) ...[
                   ListTile(
                     leading: const Icon(Icons.smart_toy_outlined),
                     title: Text(l10n.aiChatSettings),
@@ -1186,6 +1190,23 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => const AdminLearningResourcesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                ],
+                // Admins only: who gets marketing / admin
+                if (!_isLoadingStaff && _isAdmin) ...[
+                  ListTile(
+                    leading: const Icon(Icons.group_outlined),
+                    title: Text(l10n.teamAccess),
+                    subtitle: Text(l10n.teamAccessListSubtitle),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AdminTeamAccessScreen(),
                         ),
                       );
                     },

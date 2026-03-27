@@ -100,4 +100,12 @@ class UserProfile {
   String? get fullImageUrl {
     return SupabaseConfig.getFullImageUrl(imagePath);
   }
+
+  bool get isMuslim {
+    final r = (religion ?? '').trim().toLowerCase();
+    if (r.isEmpty) return false;
+    // profiles.religion enum:
+    // islam, christianity, hinduism, buddhism, sikhism, taoism, confucianism, others
+    return r == 'islam';
+  }
 }

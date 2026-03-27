@@ -508,6 +508,92 @@ class AppLocalizationsMs extends AppLocalizations {
   String get manageSampulAiResponses => 'Urus respons AI Sampul';
 
   @override
+  String get teamAccess => 'Akses pasukan';
+
+  @override
+  String get teamAccessListSubtitle => 'Berikan akses Pemasaran atau Pentadbir';
+
+  @override
+  String get teamAccessDescription =>
+      'Tetapkan Pemasaran atau Pentadbir bagi setiap orang yang mempunyai akaun Sampul.';
+
+  @override
+  String get teamAccessRoleLabel => 'Tahap akses';
+
+  @override
+  String get teamAccessSearchHint => 'Cari mengikut e-mel atau nama';
+
+  @override
+  String get teamAccessEmptySearch =>
+      'Tiada padanan untuk carian itu. Cuba nama atau e-mel lain.';
+
+  @override
+  String get teamAccessTryAgain => 'Cuba lagi';
+
+  @override
+  String get teamAccessRefreshTooltip => 'Segar semula senarai';
+
+  @override
+  String get teamAccessInfoTooltip => 'Panduan peranan';
+
+  @override
+  String get teamAccessInfoTitle => 'Panduan peranan';
+
+  @override
+  String get teamAccessInfoStandard =>
+      'Biasa: penggunaan aplikasi biasa. Tiada akses ke Akses pasukan atau alat pentadbiran kandungan.';
+
+  @override
+  String get teamAccessInfoMarketing =>
+      'Pemasaran: boleh urus kandungan AI dan pembelajaran. Tidak boleh beri peranan.';
+
+  @override
+  String get teamAccessInfoAdmin =>
+      'Pentadbir: akses penuh ke Akses pasukan, tetapan peranan, dan alat pentadbiran kandungan.';
+
+  @override
+  String get teamAccessFilterLabel => 'Peranan';
+
+  @override
+  String get teamAccessFilterAll => 'Semua';
+
+  @override
+  String teamAccessLoadFailed(String error) {
+    return 'Kami tidak dapat memuatkan senarai pasukan. $error';
+  }
+
+  @override
+  String get roleStandardUser => 'Biasa';
+
+  @override
+  String get roleMarketing => 'Pemasaran';
+
+  @override
+  String get roleAdmin => 'Pentadbir';
+
+  @override
+  String get teamRoleSaved => 'Akses dikemas kini.';
+
+  @override
+  String teamRoleSaveFailed(String error) {
+    return 'Kami tidak dapat mengemas kini akses. $error';
+  }
+
+  @override
+  String get workspaceAccessNotAvailable =>
+      'Bahagian itu tidak tersedia dengan log masuk semasa anda.';
+
+  @override
+  String get changeYourAccess => 'Ubah akses anda?';
+
+  @override
+  String get changeYourAccessAdminHint =>
+      'Anda membuang akses pentadbir daripada akaun sendiri. Anda akan kembali ke Tetapan selepas ini disimpan.';
+
+  @override
+  String get continueLabel => 'Teruskan';
+
+  @override
   String get darkMode => 'Mod gelap';
 
   @override

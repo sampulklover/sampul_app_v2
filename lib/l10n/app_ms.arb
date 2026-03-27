@@ -221,6 +221,45 @@
   "yourCodeAndReferrals": "Kod dan rujukan anda",
   "aiChatSettings": "Tetapan AI Chat",
   "manageSampulAiResponses": "Urus respons AI Sampul",
+  "teamAccess": "Akses pasukan",
+  "teamAccessListSubtitle": "Berikan akses Pemasaran atau Pentadbir",
+  "teamAccessDescription": "Tetapkan Pemasaran atau Pentadbir bagi setiap orang yang mempunyai akaun Sampul.",
+  "teamAccessRoleLabel": "Tahap akses",
+  "teamAccessSearchHint": "Cari mengikut e-mel atau nama",
+  "teamAccessEmptySearch": "Tiada padanan untuk carian itu. Cuba nama atau e-mel lain.",
+  "teamAccessTryAgain": "Cuba lagi",
+  "teamAccessRefreshTooltip": "Segar semula senarai",
+  "teamAccessInfoTooltip": "Panduan peranan",
+  "teamAccessInfoTitle": "Panduan peranan",
+  "teamAccessInfoStandard": "Biasa: penggunaan aplikasi biasa. Tiada akses ke Akses pasukan atau alat pentadbiran kandungan.",
+  "teamAccessInfoMarketing": "Pemasaran: boleh urus kandungan AI dan pembelajaran. Tidak boleh beri peranan.",
+  "teamAccessInfoAdmin": "Pentadbir: akses penuh ke Akses pasukan, tetapan peranan, dan alat pentadbiran kandungan.",
+  "teamAccessFilterLabel": "Peranan",
+  "teamAccessFilterAll": "Semua",
+  "teamAccessLoadFailed": "Kami tidak dapat memuatkan senarai pasukan. {error}",
+  "@teamAccessLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "roleStandardUser": "Biasa",
+  "roleMarketing": "Pemasaran",
+  "roleAdmin": "Pentadbir",
+  "teamRoleSaved": "Akses dikemas kini.",
+  "teamRoleSaveFailed": "Kami tidak dapat mengemas kini akses. {error}",
+  "@teamRoleSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "workspaceAccessNotAvailable": "Bahagian itu tidak tersedia dengan log masuk semasa anda.",
+  "changeYourAccess": "Ubah akses anda?",
+  "changeYourAccessAdminHint": "Anda membuang akses pentadbir daripada akaun sendiri. Anda akan kembali ke Tetapan selepas ini disimpan.",
+  "continueLabel": "Teruskan",
   "darkMode": "Mod gelap",
   "restartOnboarding": "Mulakan semula onboarding",
   "runTheSetupFlowAgain": "Jalankan aliran persediaan semula",
