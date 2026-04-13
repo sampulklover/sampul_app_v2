@@ -6,6 +6,8 @@ import '../services/chat_service.dart';
 import '../services/ai_chat_settings_service.dart';
 import 'enhanced_chat_conversation_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../services/analytics_service.dart';
+import '../config/analytics_screens.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -21,6 +23,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void initState() {
     super.initState();
     _initializeChats();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.chatList);
+    });
   }
 
   void _initializeChats() async {
@@ -86,9 +91,20 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   void _navigateToChat(ChatConversation conversation) {
+    AnalyticsService.capture(
+      'chat opened',
+      properties: <String, Object>{
+        'type': conversation.conversationType.name,
+      },
+    );
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
+        settings: RouteSettings(
+          name: conversation.conversationType == ConversationType.ai
+              ? AnalyticsScreens.sampulAiChat
+              : 'Chat conversation',
+        ),
         builder: (context) => EnhancedChatConversationScreen(
           conversation: conversation,
         ),

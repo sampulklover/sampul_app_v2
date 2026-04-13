@@ -93,7 +93,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
       // If we have a new payment or payment count changed, show status
       if (currentPaymentCount > _previousPaymentCount) {
         // New payment detected
-        final latestPayment = updatedTrust.trustPayments?.last;
+        final latestPayment = updatedTrust.trustPayments?.first;
         if (latestPayment != null) {
           setState(() {
             _currentTrust = updatedTrust;
@@ -1305,27 +1305,7 @@ class _PartnershipSection extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(
-                    text: l10n.sampulPartnerWithRakyat,
-                  ),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () {
-                        // TODO: Navigate to learn more page or open URL
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(l10n.learnMoreAboutPartners),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        l10n.learnMore,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                          decorationColor: colorScheme.primary,
-                        ),
-                      ),
-                    ),
+                    text: l10n.sampulPartnerWithRakyat.trimRight(),
                   ),
                 ],
               ),

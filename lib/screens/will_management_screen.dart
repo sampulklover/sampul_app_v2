@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
+import 'package:confetti/confetti.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
@@ -9,8 +13,14 @@ import '../services/will_service.dart';
 import '../services/notification_service.dart';
 import '../models/extra_wishes.dart';
 import '../services/extra_wishes_service.dart';
+import '../services/billing_service.dart';
 import '../controllers/auth_controller.dart';
+import '../config/analytics_screens.dart';
+import '../services/analytics_service.dart';
+import 'plans_overview_screen.dart';
 import 'will_generation_screen.dart';
+
+enum _WasiatDocView { certificate, details }
 
 class WillManagementScreen extends StatefulWidget {
   const WillManagementScreen({super.key});
@@ -24,14 +34,16 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _isDeleting = false;
+  _WasiatDocView _docView = _WasiatDocView.certificate;
   List<Map<String, dynamic>> _familyMembers = [];
   List<Map<String, dynamic>> _assets = [];
   ExtraWishes? _extraWishes;
+  BillingStatus _planStatus = const BillingStatus();
   final ScrollController _scrollController = ScrollController();
   bool _showActionBar = true;
   double _lastScrollOffset = 0.0;
   late final AnimationController _actionBarController;
-  late final Animation<double> _actionBarAnimation;
+  late final ConfettiController _confettiController;
 
   @override
   void initState() {
@@ -44,10 +56,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       reverseDuration: const Duration(milliseconds: 420),
       value: 1.0,
     );
-    _actionBarAnimation = CurvedAnimation(
-      parent: _actionBarController,
-      curve: Curves.easeInOutCubic,
-    );
+    _confettiController = ConfettiController(duration: const Duration(milliseconds: 900));
   }
 
   // Expose a public reload method for external triggers (e.g., when tab becomes active)
@@ -79,7 +88,58 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _actionBarController.dispose();
+    _confettiController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showConfettiCelebration() async {
+    if (!mounted) return;
+    _confettiController.play();
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'confetti',
+      barrierColor: Colors.black.withOpacity(0.12),
+      transitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (context, _, __) {
+        final cs = Theme.of(context).colorScheme;
+        return SafeArea(
+          child: Stack(
+            children: [
+              // Confetti from top
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  emissionFrequency: 0.22,
+                  numberOfParticles: 18,
+                  maxBlastForce: 18,
+                  minBlastForce: 10,
+                  gravity: 0.35,
+                  colors: <Color>[
+                    cs.primary,
+                    cs.secondary,
+                    cs.tertiary,
+                    cs.primaryContainer,
+                    cs.secondaryContainer,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      transitionBuilder: (_, anim, __, child) {
+        return FadeTransition(opacity: anim, child: child);
+      },
+    );
+    // Auto-close after a short burst (if still open).
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (mounted && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   
@@ -91,8 +151,16 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         return;
       }
 
+      final Future<BillingStatus> planFuture = BillingService.instance.fetchStatus();
       final will = await WillService.instance.getUserWill(user.id);
       final profile = await AuthController.instance.getUserProfile();
+
+      BillingStatus planStatus = const BillingStatus();
+      try {
+        planStatus = await planFuture;
+      } catch (_) {
+        planStatus = const BillingStatus();
+      }
 
       if (will != null && profile != null) {
         // Load family members and assets for will document generation
@@ -109,6 +177,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             _familyMembers = familyMembers;
             _assets = assets;
             _extraWishes = wishes;
+            _planStatus = planStatus;
             _isLoading = false;
           });
         }
@@ -117,6 +186,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
           setState(() {
             _will = will;
             _userProfile = profile;
+            _planStatus = planStatus;
             _isLoading = false;
           });
         }
@@ -153,8 +223,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Future<void> _createNewWill() async {
     // For the main Will tab, go straight into the editor to avoid
     // duplicating the intro copy that is already shown on this page.
+    await AnalyticsService.capture('will journey started', properties: {'mode': 'create'});
+    if (!mounted) return;
     final bool? result = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
+        settings: const RouteSettings(name: AnalyticsScreens.willGeneration),
         builder: (context) => const WillGenerationScreen(),
       ),
     );
@@ -167,8 +240,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Future<void> _editWill() async {
     if (_will == null) return;
 
-    final result = await Navigator.of(context).push(
+    await AnalyticsService.capture('will journey started', properties: {'mode': 'edit'});
+    if (!mounted) return;
+    final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
+        settings: const RouteSettings(name: AnalyticsScreens.willGeneration),
         builder: (context) => WillGenerationScreen(existingWill: _will),
       ),
     );
@@ -178,74 +254,443 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     }
   }
 
+  Future<void> _openWasiatPlan() async {
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: AnalyticsScreens.plansOverview),
+        builder: (_) => const PlansOverviewScreen(),
+      ),
+    );
+    if (!mounted) return;
+    try {
+      final BillingStatus s = await BillingService.instance.fetchStatus();
+      if (mounted) setState(() => _planStatus = s);
+    } catch (_) {}
+  }
+
+  /// Same title as the real publish flow ([publishWill]), so this feels like the publish modal.
+  Future<void> _showPublishBlockedByPlanDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: Text(l10n.wasiatCertificateDialogTitle),
+        content: SizedBox(
+          width: 360,
+          child: Text(
+            l10n.wasiatPublishBlockedBody,
+            style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(height: 1.45),
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _openWasiatPlan();
+            },
+            child: Text(l10n.wasiatViewPlanAndPay),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onPublishPressed() async {
+    if (_will == null || _will!.id == null) return;
+    if (_will!.isDraft != true) {
+      await _unpublishWill();
+      return;
+    }
+    if (!_planStatus.isSubscribed) {
+      await _showPublishBlockedByPlanDialog();
+      return;
+    }
+    await _publishWill();
+  }
+
+  Future<void> _openCertificateShareSheet(String url) async {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+
+    Future<void> copy() async {
+      await Clipboard.setData(ClipboardData(text: url));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.shareLinkCopiedToClipboard),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+
+    Future<void> systemShare() async {
+      await Share.share(url);
+    }
+
+    Widget quickAction({required IconData icon, required String label, required VoidCallback onTap}) {
+      return Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  child: Icon(icon, color: cs.onSurface, size: 20),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: false,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.wasiatShareSheetTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.wasiatShareSheetSubtitle,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withOpacity(0.65),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: cs.outline.withOpacity(0.12)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          url,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontFamily: 'monospace',
+                                color: cs.onSurfaceVariant,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: copy,
+                        icon: const Icon(Icons.copy_rounded, size: 18),
+                        tooltip: l10n.copy,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    quickAction(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: l10n.wasiatShareSheetMessages,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        systemShare();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    quickAction(
+                      icon: Icons.email_outlined,
+                      label: l10n.wasiatShareSheetEmail,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        systemShare();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    quickAction(
+                      icon: Icons.send_rounded,
+                      label: l10n.wasiatShareSheetTelegram,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        systemShare();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    quickAction(
+                      icon: Icons.forum_outlined,
+                      label: l10n.wasiatShareSheetWhatsApp,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        systemShare();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          copy();
+                        },
+                        child: Text(l10n.copy),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          systemShare();
+                        },
+                        child: Text(l10n.wasiatShareSheetMore),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showWasiatValidationSheet({
+    required List<String> issues,
+    required List<String> warnings,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+
+    Widget section({required String title, required List<String> items, required IconData icon, required Color accent}) {
+      if (items.isEmpty) return const SizedBox.shrink();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: accent),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...items.map(
+            (t) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: cs.onSurfaceVariant,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      t,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurface,
+                            height: 1.25,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.wasiatReviewSheetTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 14),
+                section(
+                  title: l10n.wasiatReviewSheetIssues,
+                  items: issues,
+                  icon: Icons.error_outline_rounded,
+                  accent: Colors.red.shade600,
+                ),
+                if (issues.isNotEmpty && warnings.isNotEmpty) const SizedBox(height: 6),
+                section(
+                  title: l10n.wasiatReviewSheetWarnings,
+                  items: warnings,
+                  icon: Icons.info_outline_rounded,
+                  accent: Colors.orange.shade700,
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _editWill();
+                  },
+                  child: Text(l10n.wasiatReviewSheetEditCta),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _publishWill() async {
     if (_will == null || _will!.id == null) return;
-    
+
+    if (!_planStatus.isSubscribed) {
+      await _showPublishBlockedByPlanDialog();
+      return;
+    }
+
     final l10n = AppLocalizations.of(context)!;
     final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
-    
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme cs = theme.colorScheme;
+    final bool isTurningOn = _will!.isDraft == true;
+
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.publishWill),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.publishWillConfirmation(url),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
+        title: Text(l10n.wasiatCertificateDialogTitle),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_planStatus.periodEnd != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'https://sampul.co/view-will?id=${_will!.willCode}',
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                      color: Colors.grey,
+                    l10n.wasiatPublishReadyUntil(
+                      DateFormat.yMMMd().format(_planStatus.periodEnd!),
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    l10n.wasiatPublishReadyShort,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () async {
-                    final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
-                    await Clipboard.setData(ClipboardData(text: url));
-                    if (context.mounted) {
-                      final l10n = AppLocalizations.of(context)!;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.shareLinkCopiedToClipboard),
-                          backgroundColor: Colors.green,
+              Text(isTurningOn ? l10n.wasiatCertificateConfirmationPre : l10n.wasiatCertificateConfirmation(url)),
+              if (!isTurningOn) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withOpacity(0.65),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: cs.outline.withOpacity(0.12)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          url,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: Text(l10n.copy),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: url));
+                          if (context.mounted) {
+                            final l10n = AppLocalizations.of(context)!;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.shareLinkCopiedToClipboard),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.copy_rounded, size: 18),
+                        tooltip: l10n.copy,
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(l10n.cancel),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: Text(l10n.publish),
+            child: Text(l10n.wasiatCertificateOn),
           ),
         ],
       ),
@@ -266,8 +711,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       }
       
       await _loadWillData();
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       _showSuccessSnackBar(l10n.willPublishedSuccessfully);
+      await _showConfettiCelebration();
+      await _openCertificateShareSheet(url);
       await NotificationService.instance.createNotification(
         title: l10n.myWill,
         body: l10n.willPublishedSuccessfully,
@@ -277,6 +725,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             : null,
       );
     } catch (e) {
+      if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
       _showErrorSnackBar(l10n.failedToPublishWill(e.toString()));
     }
@@ -351,10 +800,8 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
   Future<void> _shareWillDocument() async {
     if (_will == null) return;
-    final l10n = AppLocalizations.of(context)!;
     final String url = 'https://sampul.co/view-will?id=${_will!.willCode}';
-    await Clipboard.setData(ClipboardData(text: url));
-    _showSuccessSnackBar(l10n.shareLinkCopiedToClipboard);
+    await _openCertificateShareSheet(url);
   }
 
 
@@ -371,7 +818,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       appBar: AppBar(
         title: Text(l10n.myWill),
         actions: [
-          if (_will != null && _will!.isDraft == false)
+          if (_will != null && _will!.isDraft == false && _docView == _WasiatDocView.certificate)
             IconButton(
               onPressed: _shareWillDocument,
               icon: const Icon(Icons.share_outlined),
@@ -581,6 +1028,84 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     );
   }
 
+  /// Compact one-line plan status + action (full details on [PlansOverviewScreen]).
+  Widget _buildWasiatAccessPanel(AppLocalizations l10n) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme cs = theme.colorScheme;
+    final bool active = _planStatus.isSubscribed;
+    final DateTime? end = _planStatus.periodEnd;
+
+    final Color bg;
+    final Color borderColor;
+    final Color accent;
+    final IconData icon;
+    final String line;
+
+    if (active) {
+      bg = cs.primaryContainer.withValues(alpha: 0.4);
+      borderColor = cs.primary.withValues(alpha: 0.28);
+      accent = cs.primary;
+      icon = Icons.verified_rounded;
+      line = end != null
+          ? l10n.wasiatAccessActiveUntil(DateFormat.yMMMd().format(end))
+          : l10n.wasiatAccessActiveNoEndDate;
+    } else {
+      bg = Colors.amber.shade50;
+      borderColor = Colors.amber.shade200;
+      accent = Colors.amber.shade900;
+      icon = Icons.payment_outlined;
+      line = l10n.wasiatAccessInlineInactive;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _openWasiatPlan,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: accent, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    line,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w500,
+                      height: 1.25,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton(
+                  onPressed: _openWasiatPlan,
+                  style: TextButton.styleFrom(
+                    foregroundColor: cs.primary,
+                    padding: const EdgeInsets.only(left: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(active ? l10n.wasiatManagePlan : l10n.wasiatViewPlanAndPay),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildWillState() {
     final l10n = AppLocalizations.of(context)!;
     final validation = WillService.instance.validateWill(_will!);
@@ -597,140 +1122,206 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
             ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _will!.isDraft == true ? Colors.orange.shade100 : Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _will!.isDraft == true ? Icons.edit : Icons.check_circle,
-                      color: _will!.isDraft == true ? Colors.orange.shade700 : Colors.green.shade700,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _will!.statusText,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _will!.isDraft == true ? Colors.orange.shade700 : Colors.green.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${l10n.code}: ${_will!.willCode}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
+              _buildWasiatAccessPanel(l10n),
             ],
           ),
         ),
 
         // Compact Validation Alert
         if (!validation['isValid'] || (validation['warnings'] as List).isNotEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          Material(
             color: validation['isValid'] ? Colors.orange.shade50 : Colors.red.shade50,
-            child: Row(
-              children: [
-                Icon(
-                  validation['isValid'] ? Icons.warning_amber_rounded : Icons.error_outline_rounded,
-                  color: validation['isValid'] ? Colors.orange.shade600 : Colors.red.shade600,
-                  size: 16,
+            child: InkWell(
+              onTap: () => _showWasiatValidationSheet(
+                issues: List<String>.from(validation['issues'] as List),
+                warnings: List<String>.from(validation['warnings'] as List),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  children: [
+                    Icon(
+                      validation['isValid'] ? Icons.info_outline_rounded : Icons.error_outline_rounded,
+                      color: validation['isValid'] ? Colors.orange.shade700 : Colors.red.shade600,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        validation['isValid']
+                            ? l10n.warningsReviewRecommended((validation['warnings'] as List).length)
+                            : l10n.issuesActionRequired((validation['issues'] as List).length),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: validation['isValid'] ? Colors.orange.shade800 : Colors.red.shade700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 18,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  validation['isValid'] 
-                      ? l10n.warningsReviewRecommended((validation['warnings'] as List).length)
-                      : l10n.issuesActionRequired((validation['issues'] as List).length),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: validation['isValid'] ? Colors.orange.shade700 : Colors.red.shade700,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
+
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          child: Row(
+            children: [
+              TextButton.icon(
+                onPressed: _editWill,
+                icon: const Icon(Icons.edit_outlined, size: 16),
+                label: Text(l10n.edit),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 12),
+              TextButton.icon(
+                onPressed: _isDeleting ? null : _deleteWill,
+                icon: _isDeleting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_outline, size: 16),
+                label: Text(_isDeleting ? l10n.deleting : l10n.delete),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red.shade600,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const Spacer(),
+              if (_docView == _WasiatDocView.certificate)
+                TextButton.icon(
+                  onPressed: _onPublishPressed,
+                  icon: Icon(
+                    _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
+                    size: 16,
+                  ),
+                  label: Text(_will!.isDraft == true ? l10n.wasiatCertificateOn : l10n.wasiatCertificateOff),
+                  style: TextButton.styleFrom(
+                    foregroundColor: _will!.isDraft == true && !_planStatus.isSubscribed
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : null,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.55),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Make segments equal-width so the thumb stays centered.
+                    final double segmentWidth = (constraints.maxWidth - 8) / 2;
+                    Widget segment(String text) => SizedBox(
+                          width: segmentWidth,
+                          child: Center(
+                            child: Text(
+                              text,
+                              style: Theme.of(context).textTheme.labelLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                    Widget detailsSegment(String text) => SizedBox(
+                          width: segmentWidth,
+                          child: Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.lock_outline_rounded,
+                                  size: 14,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  text,
+                                  style: Theme.of(context).textTheme.labelLarge,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                    return CupertinoSlidingSegmentedControl<_WasiatDocView>(
+                      groupValue: _docView,
+                      padding: const EdgeInsets.all(4),
+                      thumbColor: Theme.of(context).colorScheme.surface,
+                      backgroundColor: Colors.transparent,
+                      children: <_WasiatDocView, Widget>{
+                        _WasiatDocView.certificate: segment(l10n.wasiatViewCertificateTab),
+                        _WasiatDocView.details: detailsSegment(l10n.wasiatViewDetailsTab),
+                      },
+                      onValueChanged: (_WasiatDocView? next) {
+                        if (next == null || _docView == next) return;
+                        setState(() => _docView = next);
+                        if (_scrollController.hasClients) {
+                          _scrollController.jumpTo(0);
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+              if (_docView == _WasiatDocView.details) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l10n.wasiatDetailsPrivateNote,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              height: 1.2,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
 
         // Data Sync Notice removed (redundant with review page)
 
-        // Compact Action Bar (auto-hide on scroll)
-        SizeTransition(
-          sizeFactor: _actionBarAnimation,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
-              ),
-            ),
-          child: Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
-              return Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: _editWill,
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: Text(l10n.edit),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  TextButton.icon(
-                    onPressed: _isDeleting ? null : _deleteWill,
-                    icon: _isDeleting 
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.delete_outline, size: 16),
-                    label: Text(_isDeleting ? l10n.deleting : l10n.delete),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red.shade600,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _will!.isDraft == true ? _publishWill : _unpublishWill,
-                    icon: Icon(
-                      _will!.isDraft == true ? Icons.publish_outlined : Icons.unpublished_outlined,
-                      size: 16,
-                    ),
-                    label: Text(_will!.isDraft == true ? l10n.publish : l10n.unpublish),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          ),
-        ),
+        // Action bar removed (actions live above the switch)
 
         // Will Document Content
         Expanded(
@@ -738,14 +1329,14 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            child: _buildPaperWill(),
+            child: _buildPaperWill(view: _docView),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPaperWill() {
+  Widget _buildPaperWill({required _WasiatDocView view}) {
     final bool isMuslim = _userProfile?.isMuslim ?? false;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -780,35 +1371,22 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Document Header - First Page
-                _buildPaperHeader(isMuslim: isMuslim),
-                
-                // Page Break
-                Container(
-                  width: double.infinity,
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 40),
-                  child: CustomPaint(
-                    painter: DottedLinePainter(),
-                  ),
-                ),
-                
-                // Page 2 Header
-                Center(
-                  child: Text(
-                    isMuslim ? 'WASIAT ASET SAYA' : 'MY ASSETS WILL',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      letterSpacing: 1,
+                if (view == _WasiatDocView.certificate) ...[
+                  _buildPaperHeader(isMuslim: isMuslim),
+                ] else ...[
+                  Center(
+                    child: Text(
+                      isMuslim ? 'WASIAT ASET SAYA' : 'MY ASSETS WILL',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        letterSpacing: 1,
+                      ),
                     ),
                   ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                if (isMuslim) ...[
+                  const SizedBox(height: 20),
+                  if (isMuslim) ...[
                   _buildPaperSection(
                     '1. Mukaddimah',
                     [
@@ -839,16 +1417,16 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   ),
                   const SizedBox(height: 20),
                   _buildPaperSection(
-                    '5. Co-Sampul Utama dan Pentadbir Bersama',
+                    '5. Pelaksana Utama dan Pentadbir Bersama',
                     [
-                      'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai Co-Sampul Utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
+                      'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai pelaksana utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
                     ],
                   ),
                   const SizedBox(height: 20),
                   _buildPaperSection(
-                    '6. Co-Sampul Ganti',
+                    '6. Pelaksana Ganti',
                     [
-                      'Jika perlu, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} akan bertindak sebagai Co-Sampul Ganti.',
+                      'Jika perlu, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} akan bertindak sebagai pelaksana ganti.',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -959,22 +1537,22 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   ),
                   const SizedBox(height: 20),
                   _buildPaperSection(
-                    '3. Main Co-Sampul and Joint Executor',
+                    '3. Joint executors',
                     [
                       'I hereby appoint the following as co-executors of this Will:',
                       '',
                       'a) Sampul Sdn Bhd (202301027717)',
                       '',
-                      'b) ${_getCoSampulUtama()} (Main Co-Sampul)',
+                      'b) ${_getCoSampulUtama()} (your executor)',
                       '',
                       'Both shall act jointly to safekeep and deliver this Will and Testament of my assets to my beneficiaries.',
                     ],
                   ),
                   const SizedBox(height: 20),
                   _buildPaperSection(
-                    '4. Substitute Co-Sampul',
+                    '4. Substitute executor',
                     [
-                      'If necessary, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} will act as Substitute Co-Sampul.',
+                      'If necessary, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} will act as substitute executor.',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1071,6 +1649,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 
                 // Assets List
                 _buildAssetsList(),
+                ],
               ],
             ),
           ),
@@ -1280,36 +1859,36 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   }
 
   String _getCoSampulUtama() {
-    if (_will?.coSampul1 == null) return '[PRIMARY CO-SAMPUL NAME/NICKNAME]';
+    if (_will?.coSampul1 == null) return '[PRIMARY EXECUTOR NAME/NICKNAME]';
     
     final executor = _familyMembers.firstWhere(
       (member) => member['id'] == _will!.coSampul1,
-      orElse: () => {'name': '[PRIMARY CO-SAMPUL NAME/NICKNAME]'},
+      orElse: () => {'name': '[PRIMARY EXECUTOR NAME/NICKNAME]'},
     );
     
-    return executor['name'] ?? '[PRIMARY CO-SAMPUL NAME/NICKNAME]';
+    return executor['name'] ?? '[PRIMARY EXECUTOR NAME/NICKNAME]';
   }
 
   String _getCoSampulGanti() {
-    if (_will?.coSampul2 == null) return '[SECONDARY CO-SAMPUL NAME/NICKNAME]';
+    if (_will?.coSampul2 == null) return '[SECONDARY EXECUTOR NAME/NICKNAME]';
     
     final executor = _familyMembers.firstWhere(
       (member) => member['id'] == _will!.coSampul2,
-      orElse: () => {'name': '[SECONDARY CO-SAMPUL NAME/NICKNAME]'},
+      orElse: () => {'name': '[SECONDARY EXECUTOR NAME/NICKNAME]'},
     );
     
-    return executor['name'] ?? '[SECONDARY CO-SAMPUL NAME/NICKNAME]';
+    return executor['name'] ?? '[SECONDARY EXECUTOR NAME/NICKNAME]';
   }
 
   String _getCoSampulGantiNric() {
-    if (_will?.coSampul2 == null) return '[SECONDARY CO-SAMPUL NRIC NO]';
+    if (_will?.coSampul2 == null) return '[SECONDARY EXECUTOR NRIC NO]';
     
     final executor = _familyMembers.firstWhere(
       (member) => member['id'] == _will!.coSampul2,
-      orElse: () => {'nric_no': '[SECONDARY CO-SAMPUL NRIC NO]'},
+      orElse: () => {'nric_no': '[SECONDARY EXECUTOR NRIC NO]'},
     );
     
-    return executor['nric_no'] ?? '[SECONDARY CO-SAMPUL NRIC NO]';
+    return executor['nric_no'] ?? '[SECONDARY EXECUTOR NRIC NO]';
   }
 
   String _getGuardianUtama() {

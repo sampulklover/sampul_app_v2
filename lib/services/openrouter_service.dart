@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'ai_chat_settings_service.dart';
 import 'ai_chat_qna_service.dart';
+import 'ai_kb_service.dart';
 
 class OpenRouterService {
   static const String _baseUrl = 'https://openrouter.ai/api/v1';
@@ -24,7 +25,12 @@ class OpenRouterService {
     }
   }
 
-  static Future<String> sendMessage(String message, {String? model, String? context}) async {
+  static Future<String> sendMessage(
+    String message, {
+    String? model,
+    String? context,
+    String? kbContextOverride,
+  }) async {
     try {
       if (_apiKey == null || _model == null) {
         await initialize();
@@ -40,8 +46,18 @@ class OpenRouterService {
       // Load a small set of curated Q&A pairs for additional low-token context
       final qnaItems = await AiChatQnaService.instance.getActiveQna(limit: 5);
 
+      // Load KB matches (keyword retrieval) and keep it short
+      final kbContext = (kbContextOverride != null && kbContextOverride.trim().isNotEmpty)
+          ? kbContextOverride.trim()
+          : AiKbService.instance.buildKbContext(
+              await AiKbService.instance.searchKeyword(
+                queryText: message,
+                limit: 4,
+              ),
+            );
+
       // Debug logging to verify settings are being used
-      debugPrint('🔧 OpenRouter Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}, qna_count=${qnaItems.length}');
+      debugPrint('🔧 OpenRouter Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}, qna_count=${qnaItems.length}, kb_context=${kbContext.isNotEmpty}');
 
       // Build enhanced system prompt with resources context
       String enhancedPrompt = systemPrompt;
@@ -56,6 +72,11 @@ class OpenRouterService {
         for (final q in qnaItems) {
           enhancedPrompt += 'Q: ${q.question}\nA: ${q.answer}\n\n';
         }
+      }
+
+      // Append KB context (retrieved from Supabase)
+      if (kbContext.isNotEmpty) {
+        enhancedPrompt += '\n\n' + kbContext;
       }
 
       final response = await http.post(
@@ -138,7 +159,12 @@ class OpenRouterService {
     }
   }
 
-  static Stream<String> sendMessageStream(String message, {String? model, String? context}) async* {
+  static Stream<String> sendMessageStream(
+    String message, {
+    String? model,
+    String? context,
+    String? kbContextOverride,
+  }) async* {
     try {
       if (_apiKey == null || _model == null) {
         await initialize();
@@ -153,9 +179,19 @@ class OpenRouterService {
 
       // Load curated Q&A pairs for context
       final qnaItems = await AiChatQnaService.instance.getActiveQna(limit: 5);
+
+      // Load KB matches (keyword retrieval) and keep it short
+      final kbContext = (kbContextOverride != null && kbContextOverride.trim().isNotEmpty)
+          ? kbContextOverride.trim()
+          : AiKbService.instance.buildKbContext(
+              await AiKbService.instance.searchKeyword(
+                queryText: message,
+                limit: 4,
+              ),
+            );
       
       // Debug logging to verify settings are being used
-      debugPrint('🔧 OpenRouter Streaming Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}, qna_count=${qnaItems.length}');
+      debugPrint('🔧 OpenRouter Streaming Settings: max_tokens=$maxTokens, temperature=$temperature, model=${model ?? settingsModel ?? _model}, qna_count=${qnaItems.length}, kb_context=${kbContext.isNotEmpty}');
 
       // Build enhanced system prompt with resources context
       String enhancedPrompt = systemPrompt;
@@ -170,6 +206,11 @@ class OpenRouterService {
         for (final q in qnaItems) {
           enhancedPrompt += 'Q: ${q.question}\nA: ${q.answer}\n\n';
         }
+      }
+
+      // Append KB context (retrieved from Supabase)
+      if (kbContext.isNotEmpty) {
+        enhancedPrompt += '\n\n' + kbContext;
       }
 
       final request = http.Request('POST', Uri.parse('$_baseUrl/chat/completions'));
@@ -239,7 +280,12 @@ class OpenRouterService {
       debugPrint('Streaming failed, attempting fallback: $e');
       try {
         // Fallback to non-streaming if streaming fails
-        final response = await sendMessage(message, model: model, context: context);
+        final response = await sendMessage(
+          message,
+          model: model,
+          context: context,
+          kbContextOverride: kbContextOverride,
+        );
         yield response;
       } catch (fallbackError) {
         // If fallback also fails, rethrow with more context

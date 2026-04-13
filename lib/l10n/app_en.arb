@@ -199,7 +199,7 @@
   "terminateSubscriptions": "Terminate Subscriptions",
   "transferAsGift": "Transfer as Gift",
   "settleDebts": "Settle Debts",
-  "coSampul": "Co-sampul",
+  "coSampul": "Executor",
   "beneficiary": "Beneficiary",
   "guardian": "Guardian",
   
@@ -237,9 +237,9 @@
   "teamAccessRefreshTooltip": "Refresh list",
   "teamAccessInfoTooltip": "Role guide",
   "teamAccessInfoTitle": "Role guide",
-  "teamAccessInfoStandard": "Standard: regular app use. No access to Team access or content admin tools.",
-  "teamAccessInfoMarketing": "Marketing: can manage AI and learning content. Cannot assign roles.",
-  "teamAccessInfoAdmin": "Admin: full access to Team access, role assignment, and content admin tools.",
+  "teamAccessInfoStandard": "Regular app use. No access to Team access or content admin tools.",
+  "teamAccessInfoMarketing": "Can manage AI and learning content. Cannot assign roles.",
+  "teamAccessInfoAdmin": "Full access to Team access, role assignment, and content admin tools.",
   "teamAccessFilterLabel": "Role",
   "teamAccessFilterAll": "All",
   "teamAccessLoadFailed": "We couldn’t load the team list. {error}",
@@ -282,7 +282,7 @@
   "reportBugsOrRequestFeatures": "Report bugs or request new features",
   "about": "About",
   "appVersion": "App version",
-  "appVersionDemo": "1.0.0 (demo)",
+  "appVersionDemo": "1.0.0 (beta)",
   "termsOfService": "Terms of Service",
   "termsTappedDemo": "Terms tapped (demo)",
   "privacyPolicy": "Privacy Policy",
@@ -413,8 +413,30 @@
     }
   },
   "shareLinkCopiedToClipboard": "Share link copied to clipboard",
-  "willPublishedSuccessfully": "Wasiat published successfully",
-  "willUnpublishedSuccessfully": "Wasiat unpublished successfully",
+  "willPublishedSuccessfully": "Certificate link is on",
+  "willUnpublishedSuccessfully": "Certificate link is off",
+  "wasiatCertificateDialogTitle": "Certificate",
+  "wasiatCertificateOn": "Generate certificate",
+  "wasiatCertificateOff": "Turn off link",
+  "wasiatCertificateConfirmation": "Your certificate link is ready.\n\nYour full wasiat details stay private with Sampul.",
+  "@wasiatCertificateConfirmation": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatCertificateConfirmationPre": "We’ll create a shareable certificate link.\n\nYour full wasiat details stay private with Sampul.",
+  "wasiatViewCertificateTab": "Certificate",
+  "wasiatViewDetailsTab": "Details",
+  "wasiatDetailsPrivateNote": "Private. Kept with Sampul while your plan is active. Only released with a valid request.",
+  "wasiatShareSheetTitle": "Share certificate",
+  "wasiatShareSheetSubtitle": "Share the certificate link. Your details stay private with Sampul.",
+  "wasiatShareSheetMore": "More",
+  "wasiatShareSheetWhatsApp": "WhatsApp",
+  "wasiatShareSheetTelegram": "Telegram",
+  "wasiatShareSheetMessages": "Message",
+  "wasiatShareSheetEmail": "Email",
   "failedToPublishWill": "Failed to publish wasiat: {error}",
   "@failedToPublishWill": {
     "placeholders": {
@@ -447,6 +469,90 @@
       }
     }
   },
+  "wasiatPublishBlockedBody": "To turn on your certificate link, you’ll need an active yearly plan.\n\nTap View plans to continue.",
+  "wasiatPublishReadyUntil": "Plan active until {date}",
+  "@wasiatPublishReadyUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatPublishReadyShort": "Your plan is active.",
+  "wasiatViewPlanAndPay": "View plans",
+  "wasiatAccessBannerTitle": "Plan required to publish",
+  "wasiatAccessBannerSubtitle": "A yearly plan is needed.",
+  "wasiatAccessActiveUntil": "Valid until {date}",
+  "@wasiatAccessActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatAccessPanelTitle": "Your plans",
+  "plansOverviewIntro": "Plans, pricing, and payment history.",
+  "planSectionWasiatTitle": "Wasiat",
+  "plansWasiatBadgeActive": "Active",
+  "plansWasiatBadgeInactive": "No access",
+  "plansWasiatBadgeEnded": "Ended",
+  "planSectionPropertyTrustTitle": "Property",
+  "planPropertyTrustSummary": "From RM 2,500 for one asset. Larger bundles from RM 8,500. You will see the full amount before you pay.",
+  "planSectionTrustTitle": "Family Trust",
+  "planTrustSummary": "Minimum funding is {amount}. Other fees are shown when you continue in Family Trust.",
+  "@planTrustSummary": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "plansOpenPropertyTrust": "Open Property",
+  "plansOpenTrustDashboard": "Open Family Trust",
+  "plansPaymentHistoryForPropertyTrust": "Property payments",
+  "plansPaymentHistoryForTrust": "Family Trust payments",
+  "plansPaymentHistoryEmptyProduct": "Nothing recorded yet.",
+  "plansPaymentHistorySubtitleEmpty": "No payments yet",
+  "plansPaymentHistorySubtitleCount": "{count} payments",
+  "@plansPaymentHistorySubtitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plansPaymentTrustRefLabel": "Family Trust #{id}",
+  "@plansPaymentTrustRefLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "plansPaymentCertificateRefLabel": "Certificate",
+  "plansOverviewLoadError": "Something went wrong loading your plans. Please try again.",
+  "plansPaymentStatusRefunded": "Refunded",
+  "wasiatAccessActiveNoEndDate": "Access active",
+  "wasiatAccessInlineInactive": "Pay to publish",
+  "wasiatManagePlan": "Details",
+  "wasiatPlanHeadline": "Yearly access",
+  "wasiatPlanExplainerShort": "Annual access. Renew anytime.",
+  "wasiatPlanEndedOn": "Ended {date}",
+  "@wasiatPlanEndedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatPlanPayChip": "Pay with CHIP",
+  "wasiatPlanRenewEarly": "Renew early",
+  "wasiatPlanPerYearLabel": "per year",
+  "wasiatPaymentHistoryTitle": "Payment history",
+  "wasiatPaymentHistoryEmpty": "No payments yet.",
+  "wasiatPaymentStatusPaid": "Paid",
+  "wasiatPaymentStatusFailed": "Failed",
+  "wasiatPaymentStatusProcessing": "Processing",
   "code": "Code",
   "warningsReviewRecommended": "{count} warning(s) - Review recommended",
   "@warningsReviewRecommended": {
@@ -464,6 +570,10 @@
       }
     }
   },
+  "wasiatReviewSheetTitle": "What to fix",
+  "wasiatReviewSheetIssues": "Action required",
+  "wasiatReviewSheetWarnings": "Optional",
+  "wasiatReviewSheetEditCta": "Edit wasiat",
   "published": "Published",
   "deleteWill": "Delete Wasiat",
   "areYouSureDeleteWill": "Are you sure you want to delete your wasiat? This action cannot be undone.",
@@ -743,10 +853,10 @@
   
   "aboutFamilyMembers": "About Family Members",
   "letsAddYourFamily": "Let's add your family",
-  "addPeopleWhoMatterMost": "Add the people who matter most — Pusaka, beneficiaries, and guardians — so your will stays clear and connected.",
+  "addPeopleWhoMatterMost": "Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.",
   "whyAddFamilyMembers": "Why add family members?",
-  "familyListConnectsToWill": "Your family list connects to your will, trust, and Property Trust planning. Add Pusaka (Co-Sampul), beneficiaries, and guardians.",
-  "assignExecutorsCoSampul": "Assign Pusaka (Co-Sampul) who will carry out your will.",
+  "familyListConnectsToWill": "Your family list connects to your will, trust, and Property Trust planning. Add executors, beneficiaries, and guardians.",
+  "assignExecutorsCoSampul": "Assign executors who will carry out your will.",
   "listBeneficiariesWhoReceive": "List beneficiaries who will receive your assets.",
   "designateGuardiansForMinors": "Designate guardians for minor children if needed.",
   "addFamilyMember": "Add family member",
@@ -762,8 +872,8 @@
   "relationship": "Relationship",
   "relationshipRequired": "Relationship is required",
   "category": "Category",
-  "coSampulExecutor": "Co-sampul (Pusaka)",
-  "coSampulExecutorHelp": "Co-sampul (Pusaka): A trusted person who carries out your will together with you.",
+  "coSampulExecutor": "Executor",
+  "coSampulExecutorHelp": "Executor: Someone you trust who carries out your will together with Sampul.",
   "beneficiaryHelp": "Beneficiary: A person who will inherit your selected assets.",
   "guardianHelp": "Guardian: A person responsible for the care of your dependents or minors.",
   "percentage0To100": "Percentage (0 - 100)",
@@ -772,6 +882,34 @@
   "phone": "Phone",
   "pleaseEnterValidEmailAddress": "Please enter a valid email address",
   "pleaseProvidePercentageForBeneficiary": "Please provide percentage for beneficiary",
+  "beneficiaryShareFieldLabel": "Their share (%)",
+  "beneficiaryShareHelperDefault": "You can leave this blank for now. Use the Faraid calculator on My Family when you're ready.",
+  "faraidBannerTitle": "Faraid calculator",
+  "faraidBannerSubtitle": "Suggestions from your family details. Update when you’re ready.",
+  "faraidBannerCta": "Calculate now",
+  "faraidSuggestShares": "Faraid calculator",
+  "faraidPreviewTitle": "Faraid preview",
+  "faraidPreviewIntro": "Suggested shares from your family setup. Update when you’re ready.",
+  "faraidPreviewSave": "Update",
+  "faraidPreviewTotal": "Total",
+  "faraidPreviewSkippedNote": "We did not update {count} other beneficiary profile(s). Their share could not be auto-calculated.",
+  "@faraidPreviewSkippedNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "faraidSuggestSharesUpdated": "Updated {count} beneficiaries.",
+  "@faraidSuggestSharesUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "faraidSuggestSharesNone": "No beneficiary percentages were changed. Add missing relationships or set gender in Profile, then try again.",
+  "faraidSuggestSharesNeedGender": "Add your gender in Profile first, then try again.",
   "percentageMustBeBetween0And100": "Percentage must be between 0 and 100",
   "contactId": "Contact & ID",
   "address": "Address",
@@ -1267,5 +1405,61 @@
     }
   },
   "profile": "Profile",
-  "propertyTrust": "Property Trust"
+  "propertyTrust": "Property Trust",
+
+  "couponsMenuTitle": "Offers & coupons",
+  "couponsMenuSubtitle": "Checkout discounts",
+  "couponsScreenTitle": "Your coupons",
+  "couponsScreenHeadline": "Checkout savings",
+  "couponsScreenIntro": "Use these when you pay. More may arrive from referrals and offers.",
+  "couponsGoToReferralsButton": "Go to referrals",
+  "couponsSectionActive": "Ready to use",
+  "couponsSectionPast": "Used or expired",
+  "couponsEmptyActive": "Referrals and offers can add coupons here.",
+  "couponsEmptyActiveTitle": "No active coupons",
+  "couponsEmptyPast": "Used and expired coupons appear here.",
+  "couponsEmptyPastTitle": "No history yet",
+  "couponProductHibah": "Hibah",
+  "couponProductWasiat": "Wasiat",
+  "couponProductOther": "Offer",
+  "couponDescriptionHibah": "Hibah certificate fee—choose it under Payment on your Hibah screen before checkout.",
+  "couponDescriptionWasiat": "Wasiat yearly access—choose it on {screenTitle} before you pay.",
+  "@couponDescriptionWasiat": {
+    "placeholders": {
+      "screenTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "couponDescriptionOther": "We’ll show where to use this at checkout.",
+  "couponStatusActive": "Active",
+  "couponStatusUsed": "Used",
+  "couponStatusExpired": "Expired",
+  "couponDiscountPercent": "{percent}% off",
+  "@couponDiscountPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "couponExpiresOn": "Valid until {date}",
+  "@couponExpiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "couponUsedOnDate": "Used on {date}",
+  "@couponUsedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutCouponLabel": "Discount",
+  "checkoutNoCoupon": "None",
+  "checkoutYouPay": "You'll pay"
 }

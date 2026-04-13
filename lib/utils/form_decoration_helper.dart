@@ -25,6 +25,7 @@ class FormDecorationHelper {
   /// - [prefixIcon]: Optional Material icon to show before the input (deprecated, use prefixIconPath)
   /// - [prefixIconPath]: Optional SVG icon path to show before the input
   /// - [helperText]: Optional helper text below the field
+  /// - [helperMaxLines]: Max lines for helper text (default 2)
   /// 
   /// Returns an InputDecoration with:
   /// - Rounded borders (using formBorderRadius)
@@ -37,6 +38,7 @@ class FormDecorationHelper {
     IconData? prefixIcon,
     String? prefixIconPath,
     String? helperText,
+    int? helperMaxLines = 2,
   }) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final OutlineInputBorder roundedBorder = OutlineInputBorder(
@@ -61,6 +63,7 @@ class FormDecorationHelper {
       labelText: labelText,
       hintText: hintText,
       helperText: helperText,
+      helperMaxLines: helperMaxLines,
       prefixIcon: prefixWidget,
       border: roundedBorder,
       enabledBorder: roundedBorder,

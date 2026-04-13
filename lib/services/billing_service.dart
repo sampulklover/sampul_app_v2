@@ -1,67 +1,42 @@
-import 'dart:convert';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../config/stripe_config.dart';
 import 'supabase_service.dart';
 
-class BillingPlan {
-  final String priceId;
-  final String name;
-  final int? amount; // smallest unit
-  final String? currency;
-  final String? interval;
-  final String? description;
-
-  const BillingPlan({
-    required this.priceId,
-    required this.name,
-    this.amount,
-    this.currency,
-    this.interval,
-    this.description,
-  });
-
-  factory BillingPlan.fromJson(Map<String, dynamic> json) {
-    return BillingPlan(
-      priceId: json['price_id'] as String,
-      name: json['name'] as String? ?? 'Plan',
-      amount: json['price'] as int?,
-      currency: json['currency'] as String?,
-      interval: json['interval'] as String?,
-      description: json['description'] as String?,
-    );
-  }
-}
-
+/// Subscription state for Wasiat: driven by `accounts` CHIP billing window,
+/// with a fallback to `is_subscribed` for legacy Stripe-linked rows (no end date).
 class BillingStatus {
-  final String? planId;
-  final String? planName;
-  final String? status;
-  final DateTime? currentPeriodEnd;
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
+  final bool? backendIsSubscribedFlag;
 
-  BillingStatus({
-    this.planId,
-    this.planName,
-    this.status,
-    this.currentPeriodEnd,
+  const BillingStatus({
+    this.periodStart,
+    this.periodEnd,
+    this.backendIsSubscribedFlag,
   });
 
-  bool get isSubscribed =>
-      status != null &&
-      status!.isNotEmpty &&
-      status != 'incomplete' &&
-      status != 'canceled' &&
-      status != 'incomplete_expired';
+  /// True when the current access window is active, or legacy Stripe subscription.
+  bool get isSubscribed {
+    final DateTime? end = periodEnd;
+    if (end != null) {
+      return DateTime.now().isBefore(end);
+    }
+    return backendIsSubscribedFlag == true;
+  }
 
-  factory BillingStatus.fromJson(Map<String, dynamic> json) {
+  /// User has CHIP-managed dates (show start / end in UI).
+  bool get hasChipBillingWindow => periodEnd != null;
+
+  factory BillingStatus.fromAccountRow(Map<String, dynamic>? row) {
+    if (row == null) return const BillingStatus();
     return BillingStatus(
-      planId: json['plan_id'] as String?,
-      planName: json['plan_name'] as String?,
-      status: json['status'] as String?,
-      currentPeriodEnd: json['current_period_end'] != null
-          ? DateTime.tryParse(json['current_period_end'].toString())
+      periodStart: row['wasiat_subscription_period_start'] != null
+          ? DateTime.tryParse(row['wasiat_subscription_period_start'].toString())
           : null,
+      periodEnd: row['wasiat_subscription_period_end'] != null
+          ? DateTime.tryParse(row['wasiat_subscription_period_end'].toString())
+          : null,
+      backendIsSubscribedFlag: row['is_subscribed'] as bool?,
     );
   }
 }
@@ -72,93 +47,18 @@ class BillingService {
 
   final SupabaseClient _client = SupabaseService.instance.client;
 
-  Future<List<BillingPlan>> fetchPlans() async {
-    final response = await _client.functions.invoke(
-      StripeConfig.listPlansFunction,
-      method: HttpMethod.get,
-    );
-    // Debug: log raw response for troubleshooting
-    // ignore: avoid_print
-    print('list-plans response: ${response.data}');
-    final data = response.data;
-    if (data is Map<String, dynamic> && data['plans'] is List) {
-      return (data['plans'] as List)
-          .whereType<Map<String, dynamic>>()
-          .map(BillingPlan.fromJson)
-          .toList();
-    }
-    // try decode string response
-    if (data is String) {
-      final decoded = jsonDecode(data);
-      if (decoded is Map<String, dynamic> && decoded['plans'] is List) {
-        return (decoded['plans'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map(BillingPlan.fromJson)
-            .toList();
-      }
-    }
-    return <BillingPlan>[];
-  }
-
   Future<BillingStatus> fetchStatus() async {
-    final response = await _client.functions.invoke(
-      StripeConfig.subscriptionStatusFunction,
-      method: HttpMethod.get,
-    );
-    // Debug: log raw response for troubleshooting
-    // ignore: avoid_print
-    print('get-subscription response: ${response.data}');
+    final String? userId = _client.auth.currentUser?.id;
+    if (userId == null) return const BillingStatus();
 
-    final data = response.data;
-    if (data == null) return BillingStatus();
+    final Map<String, dynamic>? row = await _client
+        .from('accounts')
+        .select(
+          'is_subscribed, wasiat_subscription_period_start, wasiat_subscription_period_end',
+        )
+        .eq('uuid', userId)
+        .maybeSingle();
 
-    if (data is Map<String, dynamic>) {
-      return BillingStatus.fromJson(data);
-    }
-
-    // Try to decode if it is JSON string
-    try {
-      final decoded = jsonDecode(data as String) as Map<String, dynamic>;
-      return BillingStatus.fromJson(decoded);
-    } catch (_) {
-      return BillingStatus();
-    }
-  }
-
-  Future<String> createCheckoutSession({
-    required String priceId,
-    required String successUrl,
-    required String cancelUrl,
-  }) async {
-    final response = await _client.functions.invoke(
-      StripeConfig.createCheckoutFunction,
-      body: <String, dynamic>{
-        'priceId': priceId,
-        'successUrl': successUrl,
-        'cancelUrl': cancelUrl,
-      },
-    );
-
-    final data = response.data;
-    if (data is Map && data['sessionUrl'] is String) {
-      return data['sessionUrl'] as String;
-    }
-    throw Exception('Failed to create checkout session');
-  }
-
-  Future<String> createBillingPortal({required String returnUrl}) async {
-    final response = await _client.functions.invoke(
-      StripeConfig.billingPortalFunction,
-      body: <String, dynamic>{
-        'returnUrl': returnUrl,
-      },
-    );
-
-    final data = response.data;
-    if (data is Map && data['portalUrl'] is String) {
-      return data['portalUrl'] as String;
-    }
-    throw Exception('Failed to create billing portal session');
+    return BillingStatus.fromAccountRow(row);
   }
 }
-

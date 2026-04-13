@@ -51,9 +51,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to camera to take profile pictures.</string>
+	<string>Sampul uses the camera so you can take a profile photo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to photo library to select profile pictures.</string>
+	<string>Sampul uses your photo library so you can choose a profile photo.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

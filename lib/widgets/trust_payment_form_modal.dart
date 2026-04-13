@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/trust.dart';
 import '../config/trust_constants.dart';
 import '../services/trust_payment_service.dart';
+import '../services/analytics_service.dart';
 import '../utils/form_decoration_helper.dart';
 
 class TrustPaymentFormModal extends StatefulWidget {
@@ -78,6 +78,15 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
     setState(() => _isLoading = true);
 
     try {
+      await AnalyticsService.capture(
+        'trust funding started',
+        properties: <String, Object>{
+          if (widget.trust.id != null) 'trust_id': widget.trust.id!,
+          if (widget.trust.trustCode != null && widget.trust.trustCode!.isNotEmpty)
+            'trust_code': widget.trust.trustCode!,
+          'amount_cents': amountInCents,
+        },
+      );
       print('🟢 [TRUST PAYMENT] Starting payment flow...');
       print('🟢 [TRUST PAYMENT] Amount: ${_formatCurrencyWithCommas(amountInCents)}');
       print('🟢 [TRUST PAYMENT] Trust ID: ${widget.trust.id}');
@@ -85,7 +94,8 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
 
       // Step 1: Get or create CHIP client ID
       print('🟢 [TRUST PAYMENT] Step 1: Getting CHIP client ID...');
-      final clientId = await TrustPaymentService.instance.getChipClient();
+      final clientId =
+          await TrustPaymentService.instance.getChipClient(forTrustMerchant: true);
       print('🟢 [TRUST PAYMENT] Got CHIP client ID: $clientId');
 
       // Step 2: Create payment session
@@ -108,6 +118,13 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
       print('🟢 [TRUST PAYMENT] Step 3: Opening checkout URL...');
       final uri = Uri.parse(paymentResponse.checkoutUrl);
       if (await canLaunchUrl(uri)) {
+        await AnalyticsService.capture(
+          'trust funding checkout opened',
+          properties: <String, Object>{
+            if (widget.trust.id != null) 'trust_id': widget.trust.id!,
+            'amount_cents': amountInCents,
+          },
+        );
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         print('🟢 [TRUST PAYMENT] Checkout URL opened successfully');
         if (mounted) {
@@ -118,6 +135,12 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
         throw Exception('Unable to open payment page');
       }
     } catch (e, stackTrace) {
+      await AnalyticsService.capture(
+        'trust funding failed',
+        properties: <String, Object>{
+          if (widget.trust.id != null) 'trust_id': widget.trust.id!,
+        },
+      );
       print('🔴 [TRUST PAYMENT] Error occurred: $e');
       print('🔴 [TRUST PAYMENT] Stack trace: $stackTrace');
       if (mounted) {

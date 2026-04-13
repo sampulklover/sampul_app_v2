@@ -9,6 +9,7 @@ import '../models/user_profile.dart';
 import '../config/supabase_config.dart';
 import '../services/affiliate_service.dart';
 import '../services/onesignal_service.dart';
+import '../services/analytics_service.dart';
 
 class AuthController {
   AuthController._();
@@ -32,10 +33,17 @@ class AuthController {
     required String email,
     required String password,
   }) async {
-    return await _supabaseService.signUp(
+    final response = await _supabaseService.signUp(
       email: email,
       password: password,
     );
+
+    await AnalyticsService.capture(
+      'user signed up',
+      properties: <String, Object>{'method': 'email'},
+    );
+
+    return response;
   }
 
   // Sign in with email and password
@@ -50,6 +58,10 @@ class AuthController {
     
     // Set OneSignal user ID after successful login
     if (response.user != null) {
+      await AnalyticsService.capture(
+        'user signed in',
+        properties: <String, Object>{'method': 'email'},
+      );
       await OneSignalService.instance.setUserId(response.user!.id);
     }
     
@@ -76,6 +88,10 @@ class AuthController {
       
       // Set OneSignal user ID after successful login
       if (response.user != null) {
+        await AnalyticsService.capture(
+          'user signed in',
+          properties: <String, Object>{'method': 'google'},
+        );
         await OneSignalService.instance.setUserId(response.user!.id);
       }
       
@@ -127,6 +143,10 @@ class AuthController {
 
       // Set OneSignal user ID after successful login
       if (response.user != null) {
+        await AnalyticsService.capture(
+          'user signed in',
+          properties: <String, Object>{'method': 'apple'},
+        );
         await OneSignalService.instance.setUserId(response.user!.id);
       }
 
@@ -140,6 +160,8 @@ class AuthController {
   Future<void> signOut() async {
     try {
       final String? userId = currentUser?.id;
+
+      await AnalyticsService.capture('user signed out');
 
       // Sign out from Supabase
       await _supabaseService.signOut();

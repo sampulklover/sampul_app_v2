@@ -27,7 +27,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   int _currentStep = 0;
   File? _selectedImageFile;
 
-  // Categories supported: co-sampul (co_sampul), future_owner (beneficiary), guardian
+  // Categories supported: executor (co_sampul), future_owner (beneficiary), guardian
   static const List<String> _typeOptions = <String>['co_sampul', 'future_owner', 'guardian'];
   String _selectedType = 'co_sampul';
   final TextEditingController _percentageController = TextEditingController();
@@ -98,13 +98,14 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
         final l10n = AppLocalizations.of(context)!;
         final String p = _percentageController.text.trim();
         if (p.isEmpty) {
-          throw Exception(l10n.pleaseProvidePercentageForBeneficiary);
+          payload['percentage'] = 0.0;
+        } else {
+          final double parsed = double.tryParse(p) ?? -1;
+          if (parsed < 0 || parsed > 100) {
+            throw Exception(l10n.percentageMustBeBetween0And100);
+          }
+          payload['percentage'] = parsed;
         }
-        final double parsed = double.tryParse(p) ?? -1;
-        if (parsed < 0 || parsed > 100) {
-          throw Exception(l10n.percentageMustBeBetween0And100);
-        }
-        payload['percentage'] = parsed;
       }
 
       // Insert record first to get beloved id
@@ -126,11 +127,13 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       }
 
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
+      final AppLocalizations addedL10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.familyMemberAdded), backgroundColor: Colors.green),
+        SnackBar(content: Text(addedL10n.familyMemberAdded), backgroundColor: Colors.green),
       );
       await Future<void>.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
@@ -198,10 +201,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 final File? file = await ImageUploadService().pickImage();
                                 if (file != null) {
                                   if (!ImageUploadService().validateImage(file)) {
-                                    if (!mounted) return;
-                                    final l10n = AppLocalizations.of(context)!;
+                                    if (!context.mounted) return;
+                                    final AppLocalizations loc = AppLocalizations.of(context)!;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(l10n.invalidImageUseJpgPngWebp)),
+                                      SnackBar(content: Text(loc.invalidImageUseJpgPngWebp)),
                                     );
                                     return;
                                   }
@@ -210,10 +213,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                   });
                                 }
                               } catch (e) {
-                                if (!mounted) return;
-                                final l10n = AppLocalizations.of(context)!;
+                                if (!context.mounted) return;
+                                final AppLocalizations loc = AppLocalizations.of(context)!;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.imageSelectionFailed(e.toString()))),
+                                  SnackBar(content: Text(loc.imageSelectionFailed(e.toString()))),
                                 );
                               }
                             },
@@ -286,30 +289,39 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       items: _typeOptions
                           .map((String t) => DropdownMenuItem<String>(value: t, child: Text(_prettyType(t, l10n))))
                           .toList(),
-                      onChanged: (String? v) => setState(() => _selectedType = v ?? 'co_sampul'),
+                      onChanged: (String? v) {
+                        setState(() {
+                          _selectedType = v ?? 'co_sampul';
+                          if (_selectedType != 'future_owner') {
+                            _percentageController.clear();
+                          }
+                        });
+                      },
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
                         labelText: l10n.category,
                         prefixIcon: Icons.category_outlined,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SampulIcons.buildIcon(SampulIcons.info, width: 16, height: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _typeHelpText(_selectedType, l10n),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    if (_selectedType != 'future_owner') ...<Widget>[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SampulIcons.buildIcon(SampulIcons.info, width: 16, height: 16, color: const Color.fromRGBO(83, 61, 233, 1)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _typeHelpText(_selectedType, l10n),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     if (_selectedType == 'future_owner')
                       TextFormField(
@@ -317,8 +329,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: FormDecorationHelper.roundedInputDecoration(
                           context: context,
-                          labelText: l10n.percentage0To100,
+                          labelText: l10n.beneficiaryShareFieldLabel,
                           prefixIcon: Icons.percent,
+                          helperText: l10n.beneficiaryShareHelperDefault,
+                          helperMaxLines: 3,
                         ),
                       ),
                   ],
@@ -540,7 +554,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
             row(l10n.name, _nameController.text),
             row(l10n.relationship, _prettyRelationship(_selectedRelationship ?? '')),
             row(l10n.category, _prettyType(_selectedType, l10n)),
-            if (_selectedType == 'future_owner') row(l10n.percentage0To100, _percentageController.text.isEmpty ? null : '${_percentageController.text}%'),
+            if (_selectedType == 'future_owner')
+              row(
+                l10n.beneficiaryShareFieldLabel,
+                _percentageController.text.isEmpty ? '0%' : '${_percentageController.text}%',
+              ),
             row(l10n.icNricNumber, _nricController.text),
             row(l10n.email, _emailController.text),
             row(l10n.phone, _phoneController.text),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/ai_chat_settings.dart';
 import '../services/ai_chat_settings_service.dart';
+import '../services/ai_kb_import_service.dart';
 import '../utils/admin_utils.dart';
+import 'package:file_picker/file_picker.dart';
 
 class AdminAiResourcesScreen extends StatefulWidget {
   const AdminAiResourcesScreen({super.key});
@@ -111,6 +113,65 @@ class _AdminAiResourcesScreenState extends State<AdminAiResourcesScreen> {
     }
   }
 
+  Future<void> _importKbFile() async {
+    setState(() {
+      _isSaving = true;
+    });
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['xlsx', 'csv'],
+      );
+      if (result == null || result.files.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+        }
+        return;
+      }
+
+      final file = result.files.first;
+      final bytes = file.bytes;
+      if (bytes == null) {
+        throw Exception('Could not read file bytes');
+      }
+
+      final import = await AiKbImportService.instance.importFromFile(
+        bytes: bytes,
+        fileName: file.name,
+        sourceName: file.name,
+        product: 'general',
+        language: 'en',
+        version: 'v1',
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Imported ${import.insertedEntries} entries'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Import failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasContentAccess) {
@@ -125,6 +186,11 @@ class _AdminAiResourcesScreenState extends State<AdminAiResourcesScreen> {
       appBar: AppBar(
         title: const Text('Knowledge Base Resources'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.upload_file),
+            onPressed: _isSaving ? null : _importKbFile,
+            tooltip: 'Import KB File',
+          ),
           if (_isSaving)
             const Padding(
               padding: EdgeInsets.all(16.0),

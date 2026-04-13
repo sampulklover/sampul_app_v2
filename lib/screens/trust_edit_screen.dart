@@ -11,6 +11,8 @@ import 'trust_beneficiary_form_screen.dart';
 import 'trust_charity_form_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
 import '../utils/card_decoration_helper.dart';
+import '../services/analytics_service.dart';
+import '../config/analytics_screens.dart';
 
 class TrustEditScreen extends StatefulWidget {
   final Trust initial;
@@ -55,6 +57,9 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
   void initState() {
     super.initState();
     _initializeData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.trustEdit);
+    });
   }
 
   @override
@@ -163,6 +168,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
     final result = await Navigator.push<TrustBeneficiary>(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: 'Trust beneficiary'),
         builder: (context) => const TrustBeneficiaryFormScreen(),
       ),
     );
@@ -221,6 +227,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
     final result = await Navigator.push<TrustBeneficiary>(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: 'Trust beneficiary'),
         builder: (context) => TrustBeneficiaryFormScreen(
           beneficiary: beneficiary,
           index: index,
@@ -300,6 +307,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
     final result = await Navigator.push<TrustCharity>(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: 'Trust charity'),
         builder: (context) => const TrustCharityFormScreen(),
       ),
     );
@@ -349,6 +357,7 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
     final result = await Navigator.push<TrustCharity>(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: 'Trust charity'),
         builder: (context) => TrustCharityFormScreen(
           charity: charity,
           index: index,
@@ -444,9 +453,12 @@ class _TrustEditScreenState extends State<TrustEditScreen> {
                 ),
                 OutlinedButton.icon(
                   onPressed: () async {
-                    final result = await Navigator.push(
+                    final result = await Navigator.push<bool>(
                       context,
-                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                      MaterialPageRoute<bool>(
+                        settings: const RouteSettings(name: AnalyticsScreens.editProfile),
+                        builder: (context) => const EditProfileScreen(),
+                      ),
                     );
                     if (result == true) {
                       _loadProfile();

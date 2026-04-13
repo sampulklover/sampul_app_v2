@@ -137,6 +137,33 @@ Deno.serve(async (req) => {
     });
   }
 
+  // New referral: welcome coupons for the referee (5% off Hibah + 5% off Wasiat, one year).
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+  const expiresIso = expiresAt.toISOString();
+  const { error: couponErr } = await supabaseAdmin.from("user_coupons").insert([
+    {
+      user_id: userId,
+      applies_to: "hibah",
+      discount_percent: 5,
+      status: "active",
+      source: "referee_welcome_hibah",
+      expires_at: expiresIso,
+    },
+    {
+      user_id: userId,
+      applies_to: "wasiat",
+      discount_percent: 5,
+      status: "active",
+      source: "referee_welcome_wasiat",
+      expires_at: expiresIso,
+    },
+  ]);
+  if (couponErr) {
+    console.error("[claim-referral] user_coupons insert failed:", couponErr);
+    // Referral row already exists; coupons are a bonus — still return success for UX.
+  }
+
   return new Response(JSON.stringify({ claimed: true, code: codeRow.code }), {
     status: 200,
     headers: corsHeaders({ "Content-Type": "application/json" }),

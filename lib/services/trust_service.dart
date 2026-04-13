@@ -17,11 +17,13 @@ class TrustService {
     if (user == null) return <Trust>[];
     final List<dynamic> rows = await _client
         .from('trust')
-        .select()
+        .select('*, trust_payments(*)')
         .eq('uuid', user.id)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .order('created_at', ascending: false, referencedTable: 'trust_payments');
 
-    // Trust.fromJson now maps doc_status → computedStatus
+    // Keep the home cards in sync with the dashboard by loading the
+    // related payment rows up front as well.
     return rows.map((e) => Trust.fromJson(e as Map<String, dynamic>)).toList();
   }
 
@@ -236,6 +238,7 @@ class TrustService {
         .from('trust')
         .select('*, trust_payments(*)')
         .eq('id', id)
+        .order('created_at', ascending: false, referencedTable: 'trust_payments')
         .limit(1);
     if (rows.isEmpty) return null;
     return Trust.fromJson(rows.first as Map<String, dynamic>);
@@ -247,6 +250,7 @@ class TrustService {
         .from('trust')
         .select('*, trust_payments(*)')
         .eq('id', id)
+        .order('created_at', ascending: false, referencedTable: 'trust_payments')
         .limit(1);
     if (rows.isEmpty) return null;
     return Trust.fromJson(rows.first as Map<String, dynamic>);

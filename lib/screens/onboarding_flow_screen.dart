@@ -21,6 +21,8 @@ import '../l10n/app_localizations.dart';
 import '../controllers/locale_controller.dart';
 import 'enhanced_chat_conversation_screen.dart';
 import 'aftercare_screen.dart';
+import '../services/analytics_service.dart';
+import '../config/analytics_screens.dart';
 
 class OnboardingFlowScreen extends StatefulWidget {
   final OnboardingGoal? goal;
@@ -57,6 +59,9 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     super.initState();
     _checkCompletionStatus();
     _loadPendingReferralCode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.onboardingFlow);
+    });
   }
 
   @override
@@ -546,17 +551,26 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     switch (step) {
       case OnboardingStepType.profile:
         result = await Navigator.of(context).push(
-          MaterialPageRoute<bool>(builder: (_) => const EditProfileScreen()),
+          MaterialPageRoute<bool>(
+            settings: const RouteSettings(name: AnalyticsScreens.editProfile),
+            builder: (_) => const EditProfileScreen(),
+          ),
         );
         break;
       case OnboardingStepType.familyMember:
         result = await Navigator.of(context).push(
-          MaterialPageRoute<bool>(builder: (_) => const FamilyInfoScreen()),
+          MaterialPageRoute<bool>(
+            settings: const RouteSettings(name: 'Add family member'),
+            builder: (_) => const FamilyInfoScreen(),
+          ),
         );
         break;
       case OnboardingStepType.asset:
         result = await Navigator.of(context).push(
-          MaterialPageRoute<bool>(builder: (_) => const AssetInfoScreen()),
+          MaterialPageRoute<bool>(
+            settings: const RouteSettings(name: 'Add asset'),
+            builder: (_) => const AssetInfoScreen(),
+          ),
         );
         break;
       case OnboardingStepType.will:

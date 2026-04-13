@@ -10,6 +10,7 @@ import 'hibah_management_screen.dart';
 import 'will_management_screen.dart';
 import 'executor_management_screen.dart';
 import 'trust_management_screen.dart';
+import '../config/analytics_screens.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -78,6 +79,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.informDeathManagement),
             builder: (_) => const InformDeathManagementScreen(),
           ),
         );
@@ -86,6 +88,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.hibahManagement),
             builder: (_) => const HibahManagementScreen(),
           ),
         );
@@ -94,6 +97,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.willManagement),
             builder: (_) => const WillManagementScreen(),
           ),
         );
@@ -102,6 +106,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.executorManagement),
             builder: (_) => const ExecutorManagementScreen(),
           ),
         );
@@ -110,6 +115,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         if (!mounted) return;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.trustManagement),
             builder: (_) => const TrustManagementScreen(),
           ),
         );

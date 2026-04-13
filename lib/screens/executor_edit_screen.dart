@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import '../services/executor_service.dart';
 import '../models/executor.dart';
+import '../config/executor_constants.dart';
 import '../utils/form_decoration_helper.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../controllers/auth_controller.dart';
+import '../models/executor_document.dart';
+import '../services/executor_documents_service.dart';
+import 'executor_document_form_screen.dart';
+import '../services/supabase_service.dart';
 
 class ExecutorEditScreen extends StatefulWidget {
   final Executor initial;
@@ -23,7 +29,7 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
   final TextEditingController _deceasedNricCtrl = TextEditingController();
   final TextEditingController _deceasedDobCtrl = TextEditingController();
   final TextEditingController _deceasedDodCtrl = TextEditingController();
-  final TextEditingController _relationshipCtrl = TextEditingController();
+  String? _selectedRelationship;
 
   // Claimant information controllers
   final TextEditingController _claimantNameCtrl = TextEditingController();
@@ -38,8 +44,20 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
   final TextEditingController _claimantStateCtrl = TextEditingController();
 
   // Additional information controllers
-  final TextEditingController _supportingDocsCtrl = TextEditingController();
-  final TextEditingController _additionalNotesCtrl = TextEditingController();
+  final List<ExecutorDocumentDraft> _supportingDocs = <ExecutorDocumentDraft>[];
+  List<ExecutorDocument> _existingDocuments = <ExecutorDocument>[];
+  bool _loadingExistingDocuments = false;
+  Future<void> _addSupportingDocument() async {
+    final ExecutorDocumentDraft? draft =
+        await Navigator.of(context).push<ExecutorDocumentDraft>(
+      MaterialPageRoute<ExecutorDocumentDraft>(
+        builder: (_) => const ExecutorDocumentFormScreen(),
+      ),
+    );
+    if (draft == null) return;
+    setState(() => _supportingDocs.add(draft));
+  }
+
 
   int _currentStep = 0;
   bool _isSubmitting = false;
@@ -47,27 +65,94 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
   @override
   void initState() {
     super.initState();
-    _populateFields();
+    _loadExistingData();
+    _loadExistingDocuments();
   }
 
-  void _populateFields() {
-    _deceasedNameCtrl.text = widget.initial.deceasedName ?? '';
-    _deceasedNricCtrl.text = widget.initial.deceasedNricNumber ?? '';
-    _deceasedDobCtrl.text = widget.initial.deceasedDateOfBirth?.toIso8601String().split('T').first ?? '';
-    _deceasedDodCtrl.text = widget.initial.deceasedDateOfDeath?.toIso8601String().split('T').first ?? '';
-    _relationshipCtrl.text = widget.initial.relationshipToDeceased ?? '';
-    _claimantNameCtrl.text = widget.initial.claimantName ?? '';
-    _claimantNricCtrl.text = widget.initial.claimantNricNumber ?? '';
-    _claimantDobCtrl.text = widget.initial.claimantDateOfBirth?.toIso8601String().split('T').first ?? '';
-    _claimantPhoneCtrl.text = widget.initial.claimantPhoneNo ?? '';
-    _claimantEmailCtrl.text = widget.initial.claimantEmail ?? '';
-    _claimantAddress1Ctrl.text = widget.initial.claimantAddressLine1 ?? '';
-    _claimantAddress2Ctrl.text = widget.initial.claimantAddressLine2 ?? '';
-    _claimantCityCtrl.text = widget.initial.claimantCity ?? '';
-    _claimantPostcodeCtrl.text = widget.initial.claimantPostcode ?? '';
-    _claimantStateCtrl.text = widget.initial.claimantState ?? '';
-    _supportingDocsCtrl.text = widget.initial.supportingDocuments ?? '';
-    _additionalNotesCtrl.text = widget.initial.additionalNotes ?? '';
+  Future<void> _loadExistingData() async {
+    final int? executorId = widget.initial.id;
+    if (executorId == null) return;
+    try {
+      final Map<String, dynamic>? exec = await SupabaseService.instance.client
+          .from('executor')
+          .select(
+            'name,nric_number,phone_no,email,relationship_with_deceased,address_line_1,address_line_2,city,postcode,state',
+          )
+          .eq('id', executorId)
+          .maybeSingle();
+
+      final Map<String, dynamic>? deceased = await SupabaseService.instance.client
+          .from('executor_deceased')
+          .select('full_name,nric_new,date_of_death')
+          .eq('executor_id', executorId)
+          .maybeSingle();
+
+      if (!mounted) return;
+      setState(() {
+        // Applicant (stored in executor table)
+        _claimantNameCtrl.text = (exec?['name'] as String?) ?? '';
+        _claimantNricCtrl.text = (exec?['nric_number'] as String?) ?? '';
+        _claimantPhoneCtrl.text = (exec?['phone_no'] as String?) ?? '';
+        _claimantEmailCtrl.text = (exec?['email'] as String?) ?? '';
+        _claimantAddress1Ctrl.text = (exec?['address_line_1'] as String?) ?? '';
+        _claimantAddress2Ctrl.text = (exec?['address_line_2'] as String?) ?? '';
+        _claimantCityCtrl.text = (exec?['city'] as String?) ?? '';
+        _claimantPostcodeCtrl.text = (exec?['postcode'] as String?) ?? '';
+        _claimantStateCtrl.text = (exec?['state'] as String?) ?? '';
+        _selectedRelationship = (exec?['relationship_with_deceased'] as String?);
+
+        // Deceased (stored in executor_deceased table)
+        _deceasedNameCtrl.text = (deceased?['full_name'] as String?) ?? '';
+        _deceasedNricCtrl.text = (deceased?['nric_new'] as String?) ?? '';
+        _deceasedDodCtrl.text = (deceased?['date_of_death'] as String?) ?? '';
+
+        // Not stored in current schema (keep visible but not persisted)
+        _deceasedDobCtrl.text = '';
+        _claimantDobCtrl.text = '';
+      });
+    } catch (_) {
+      // If load fails, keep form usable with empty fields.
+    }
+  }
+
+  Future<void> _loadExistingDocuments() async {
+    final int? executorId = widget.initial.id;
+    if (executorId == null) return;
+    if (_loadingExistingDocuments) return;
+    setState(() => _loadingExistingDocuments = true);
+    try {
+      final List<ExecutorDocument> docs =
+          await ExecutorDocumentsService.instance.listForExecutor(executorId);
+      if (!mounted) return;
+      setState(() => _existingDocuments = docs);
+    } finally {
+      if (mounted) setState(() => _loadingExistingDocuments = false);
+    }
+  }
+
+  Future<void> _deleteExistingDocument(ExecutorDocument doc) async {
+    try {
+      await ExecutorDocumentsService.instance.delete(doc);
+      if (!mounted) return;
+      setState(() {
+        _existingDocuments =
+            _existingDocuments.where((d) => d.id != doc.id).toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Document removed'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not remove document: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -76,7 +161,6 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
     _deceasedNricCtrl.dispose();
     _deceasedDobCtrl.dispose();
     _deceasedDodCtrl.dispose();
-    _relationshipCtrl.dispose();
     _claimantNameCtrl.dispose();
     _claimantNricCtrl.dispose();
     _claimantDobCtrl.dispose();
@@ -87,8 +171,6 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
     _claimantCityCtrl.dispose();
     _claimantPostcodeCtrl.dispose();
     _claimantStateCtrl.dispose();
-    _supportingDocsCtrl.dispose();
-    _additionalNotesCtrl.dispose();
     super.dispose();
   }
 
@@ -107,27 +189,76 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
     }
     setState(() => _isSubmitting = true);
     try {
-      final Map<String, dynamic> updateData = {
-        'deceased_name': _deceasedNameCtrl.text.trim(),
-        'deceased_nric_number': _deceasedNricCtrl.text.trim().isEmpty ? null : _deceasedNricCtrl.text.trim(),
-        'deceased_date_of_birth': _deceasedDobCtrl.text.isNotEmpty ? _deceasedDobCtrl.text : null,
-        'deceased_date_of_death': _deceasedDodCtrl.text.isNotEmpty ? _deceasedDodCtrl.text : null,
-        'relationship_to_deceased': _relationshipCtrl.text.trim().isEmpty ? null : _relationshipCtrl.text.trim(),
-        'claimant_name': _claimantNameCtrl.text.trim(),
-        'claimant_nric_number': _claimantNricCtrl.text.trim().isEmpty ? null : _claimantNricCtrl.text.trim(),
-        'claimant_date_of_birth': _claimantDobCtrl.text.isNotEmpty ? _claimantDobCtrl.text : null,
-        'claimant_phone_no': _claimantPhoneCtrl.text.trim().isEmpty ? null : _claimantPhoneCtrl.text.trim(),
-        'claimant_email': _claimantEmailCtrl.text.trim().isEmpty ? null : _claimantEmailCtrl.text.trim(),
-        'claimant_address_line_1': _claimantAddress1Ctrl.text.trim().isEmpty ? null : _claimantAddress1Ctrl.text.trim(),
-        'claimant_address_line_2': _claimantAddress2Ctrl.text.trim().isEmpty ? null : _claimantAddress2Ctrl.text.trim(),
-        'claimant_city': _claimantCityCtrl.text.trim().isEmpty ? null : _claimantCityCtrl.text.trim(),
-        'claimant_postcode': _claimantPostcodeCtrl.text.trim().isEmpty ? null : _claimantPostcodeCtrl.text.trim(),
-        'claimant_state': _claimantStateCtrl.text.trim().isEmpty ? null : _claimantStateCtrl.text.trim(),
-        'supporting_documents': _supportingDocsCtrl.text.trim().isEmpty ? null : _supportingDocsCtrl.text.trim(),
-        'additional_notes': _additionalNotesCtrl.text.trim().isEmpty ? null : _additionalNotesCtrl.text.trim(),
+      final user = AuthController.instance.currentUser;
+      if (user == null) {
+        throw Exception('You must be signed in to upload documents.');
+      }
+      final int executorId = widget.initial.id!;
+      // Upload new files and insert rows into executor_documents table
+      for (final ExecutorDocumentDraft draft in _supportingDocs) {
+        final bytes = draft.file.bytes;
+        if (bytes == null) {
+          throw Exception(
+            'Unable to read ${draft.file.name}. Please remove and re-upload it.',
+          );
+        }
+        await ExecutorDocumentsService.instance.uploadAndCreateRow(
+          executorId: executorId,
+          title: draft.title,
+          bytes: bytes,
+          fileName: draft.file.name,
+          mimeType: draft.mimeType,
+          documentType: 'supporting',
+        );
+      }
+      // Refresh list and clear drafts
+      await _loadExistingDocuments();
+      if (mounted) {
+        setState(() => _supportingDocs.clear());
+      }
+
+      // Update executor table (only real columns from DB_STRUCTURE.md)
+      final Map<String, dynamic> executorUpdate = <String, dynamic>{
+        // Required by DB constraints (NOT NULL)
+        'name': _claimantNameCtrl.text.trim(),
+        'nric_number': _claimantNricCtrl.text.trim(),
+        'phone_no': _claimantPhoneCtrl.text.trim().isEmpty
+            ? null
+            : _claimantPhoneCtrl.text.trim(),
+        // Required by DB constraints (NOT NULL)
+        'email': _claimantEmailCtrl.text.trim(),
+        'relationship_with_deceased': _selectedRelationship,
+        'address_line_1': _claimantAddress1Ctrl.text.trim().isEmpty
+            ? null
+            : _claimantAddress1Ctrl.text.trim(),
+        'address_line_2': _claimantAddress2Ctrl.text.trim().isEmpty
+            ? null
+            : _claimantAddress2Ctrl.text.trim(),
+        'city': _claimantCityCtrl.text.trim().isEmpty
+            ? null
+            : _claimantCityCtrl.text.trim(),
+        'postcode': _claimantPostcodeCtrl.text.trim().isEmpty
+            ? null
+            : _claimantPostcodeCtrl.text.trim(),
+        'state': _claimantStateCtrl.text.trim().isEmpty
+            ? null
+            : _claimantStateCtrl.text.trim(),
       };
 
-      await ExecutorService.instance.updateExecutor(widget.initial.id!, updateData);
+      await ExecutorService.instance.updateExecutor(executorId, executorUpdate);
+
+      // Update executor_deceased table (only real columns from DB_STRUCTURE.md)
+      await SupabaseService.instance.client.from('executor_deceased').update(
+        <String, dynamic>{
+          'full_name': _deceasedNameCtrl.text.trim(),
+          'nric_new': _deceasedNricCtrl.text.trim().isEmpty
+              ? null
+              : _deceasedNricCtrl.text.trim(),
+          'date_of_death': _deceasedDodCtrl.text.trim().isEmpty
+              ? null
+              : _deceasedDodCtrl.text.trim(),
+        },
+      ).eq('executor_id', executorId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Executor updated successfully'), backgroundColor: Colors.green),
@@ -236,17 +367,25 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _relationshipCtrl,
+                    DropdownButtonFormField<String>(
+                      value: _selectedRelationship,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Your Relationship to Deceased *',
+                        labelText: 'Relationship with Deceased *',
                         prefixIcon: Icons.people_outline,
                       ),
-                      validator: (String? v) {
-                        if (v == null || v.trim().isEmpty) return 'Required';
-                        return null;
-                      },
+                      items: ExecutorConstants.executorRelationships
+                          .map(
+                            (r) => DropdownMenuItem<String>(
+                              value: r['value'],
+                              child: Text(r['name'] ?? ''),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => _selectedRelationship = v),
+                      validator: (v) => v == null ? 'Required' : null,
                     ),
                   ],
                 ),
@@ -278,9 +417,13 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                       controller: _claimantNricCtrl,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Your IC/NRIC Number',
+                        labelText: 'Your IC/NRIC Number *',
                         prefixIcon: Icons.badge_outlined,
                       ),
+                      validator: (String? v) {
+                        if (v == null || v.trim().isEmpty) return 'Required';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -323,12 +466,12 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: FormDecorationHelper.roundedInputDecoration(
                         context: context,
-                        labelText: 'Email Address',
+                        labelText: 'Email Address *',
                         prefixIcon: Icons.email_outlined,
                       ),
                       validator: (String? v) {
                         final String value = (v ?? '').trim();
-                        if (value.isEmpty) return null; // optional
+                        if (value.isEmpty) return 'Required';
                         final RegExp re = RegExp(r"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", caseSensitive: false);
                         if (!re.hasMatch(value)) return 'Enter a valid email address';
                         return null;
@@ -416,29 +559,59 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
                 key: _documentsFormKey,
                 child: Column(
                   children: <Widget>[
-                    TextFormField(
-                      controller: _supportingDocsCtrl,
-                      maxLines: 3,
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Supporting Documents (List the documents you have)',
-                        hintText: 'e.g., Death certificate, Will, Identity documents, etc.',
-                        prefixIcon: Icons.description_outlined,
-                      ).copyWith(
-                        alignLabelWithHint: true,
+                    if (_loadingExistingDocuments)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: LinearProgressIndicator(),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _additionalNotesCtrl,
-                      maxLines: 4,
-                      decoration: FormDecorationHelper.roundedInputDecoration(
-                        context: context,
-                        labelText: 'Additional Notes',
-                        hintText: 'Any additional information that might help with your claim...',
-                        prefixIcon: Icons.note_outlined,
-                      ).copyWith(
-                        alignLabelWithHint: true,
+                    if (_existingDocuments.isNotEmpty)
+                      ..._existingDocuments.map((ExecutorDocument doc) {
+                        final String title =
+                            (doc.title ?? '').trim().isEmpty ? 'Document' : doc.title!.trim();
+                        final String subtitle =
+                            '${(doc.fileSize / 1024).toStringAsFixed(1)} KB • ${doc.fileType}';
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            leading: const Icon(Icons.insert_drive_file_outlined),
+                            title: Text(title),
+                            subtitle: Text(subtitle),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () => _deleteExistingDocument(doc),
+                            ),
+                          ),
+                        );
+                      }),
+                    if (_supportingDocs.isNotEmpty)
+                      ..._supportingDocs.map((ExecutorDocumentDraft doc) {
+                        final String subtitle = [
+                          doc.file.name,
+                          '${(doc.file.size / 1024).toStringAsFixed(1)} KB',
+                        ].join(' • ');
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            leading: const Icon(Icons.attachment_outlined),
+                            title: Text(doc.title),
+                            subtitle: Text(subtitle),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () {
+                                setState(
+                                  () => _supportingDocs.removeWhere((d) => d.id == doc.id),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      }),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.icon(
+                        onPressed: _addSupportingDocument,
+                        icon: const Icon(Icons.upload_file_outlined),
+                        label: const Text('Add document'),
                       ),
                     ),
                   ],
@@ -483,56 +656,147 @@ class _ExecutorEditScreenState extends State<ExecutorEditScreen> {
   }
 
   Widget _buildReview() {
-    final TextStyle? label = Theme.of(context).textTheme.bodySmall;
-    final TextStyle? value = Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600);
-    Widget row(String k, String? v) {
-      if (v == null || v.trim().isEmpty) return const SizedBox.shrink();
+    final ThemeData theme = Theme.of(context);
+    final TextStyle? labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final TextStyle? valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+
+    Widget summaryRow(String label, String? value) {
+      final String v = (value ?? '').trim();
+      if (v.isEmpty) return const SizedBox.shrink();
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(width: 140, child: Text(k, style: label)),
-            const SizedBox(width: 8),
-            Expanded(child: Text(v, style: value)),
+            SizedBox(width: 130, child: Text(label, style: labelStyle)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(v, style: valueStyle)),
           ],
         ),
       );
     }
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+
+    Widget sectionCard({
+      required IconData icon,
+      required String title,
+      required VoidCallback onEdit,
+      required List<Widget> children,
+    }) {
+      return Card(
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(icon, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onEdit,
+                    child: const Text('Edit'),
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+              ...children,
+            ],
+          ),
+        ),
+      );
+    }
+
+    final String relationshipLabel = _selectedRelationship == null
+        ? ''
+        : (ExecutorConstants.executorRelationships
+                .firstWhere(
+                  (r) => r['value'] == _selectedRelationship,
+                  orElse: () => const <String, String>{},
+                )['name'] ??
+            _selectedRelationship!);
+
+    final List<String> uploadedTitles = _existingDocuments
+        .map((d) => (d.title ?? '').trim().isEmpty ? d.fileName : d.title!.trim())
+        .toList(growable: false);
+    final List<String> pendingTitles =
+        _supportingDocs.map((d) => d.title.trim()).toList(growable: false);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        sectionCard(
+          icon: Icons.person_outline,
+          title: 'Your information',
+          onEdit: () => setState(() => _currentStep = 1),
           children: <Widget>[
-            Text('Deceased Information', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            row('Name', _deceasedNameCtrl.text),
-            row('IC/NRIC', _deceasedNricCtrl.text),
-            row('Date of Birth', _deceasedDobCtrl.text),
-            row('Date of Death', _deceasedDodCtrl.text),
-            row('Relationship', _relationshipCtrl.text),
-            const SizedBox(height: 16),
-            Text('Your Information', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            row('Name', _claimantNameCtrl.text),
-            row('IC/NRIC', _claimantNricCtrl.text),
-            row('Date of Birth', _claimantDobCtrl.text),
-            row('Phone', _claimantPhoneCtrl.text),
-            row('Email', _claimantEmailCtrl.text),
-            row('Address 1', _claimantAddress1Ctrl.text),
-            row('Address 2', _claimantAddress2Ctrl.text),
-            row('City', _claimantCityCtrl.text),
-            row('Postcode', _claimantPostcodeCtrl.text),
-            row('State', _claimantStateCtrl.text),
-            const SizedBox(height: 16),
-            Text('Supporting Documents', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            row('Documents', _supportingDocsCtrl.text),
-            row('Notes', _additionalNotesCtrl.text),
+            summaryRow('Name', _claimantNameCtrl.text),
+            summaryRow('IC/NRIC', _claimantNricCtrl.text),
+            summaryRow('Phone', _claimantPhoneCtrl.text),
+            summaryRow('Email', _claimantEmailCtrl.text),
+            summaryRow('Address 1', _claimantAddress1Ctrl.text),
+            summaryRow('Address 2', _claimantAddress2Ctrl.text),
+            summaryRow('City', _claimantCityCtrl.text),
+            summaryRow('Postcode', _claimantPostcodeCtrl.text),
+            summaryRow('State', _claimantStateCtrl.text),
           ],
         ),
-      ),
+        const SizedBox(height: 12),
+        sectionCard(
+          icon: Icons.account_circle_outlined,
+          title: 'Deceased information',
+          onEdit: () => setState(() => _currentStep = 0),
+          children: <Widget>[
+            summaryRow('Name', _deceasedNameCtrl.text),
+            summaryRow('IC/NRIC', _deceasedNricCtrl.text),
+            summaryRow('Date of death', _deceasedDodCtrl.text),
+            summaryRow('Relationship', relationshipLabel),
+          ],
+        ),
+        const SizedBox(height: 12),
+        sectionCard(
+          icon: Icons.insert_drive_file_outlined,
+          title: 'Supporting documents',
+          onEdit: () => setState(() => _currentStep = 2),
+          children: <Widget>[
+            summaryRow('Uploaded', uploadedTitles.isEmpty ? 'None' : '${uploadedTitles.length} file(s)'),
+            if (uploadedTitles.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  uploadedTitles.take(5).join('\n'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 8),
+            summaryRow('Pending', pendingTitles.isEmpty ? 'None' : '${pendingTitles.length} file(s)'),
+            if (pendingTitles.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  pendingTitles.take(5).join('\n'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

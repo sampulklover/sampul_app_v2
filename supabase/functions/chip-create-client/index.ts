@@ -1,7 +1,9 @@
 // CHIP Create Client Edge Function
 // Get or create CHIP customer ID for the user
 //
-// Request: POST { "email": "user@example.com" }
+// Request: POST { "email": "user@example.com", "chipAccount"?: "main" | "trust" }
+// - main (default): CHIP_SECRET_KEY → accounts.chip_customer_id (Hibah, Wasiat)
+// - trust: CHIP_TRUST_SECRET_KEY → accounts.chip_trust_customer_id
 // Auth: Authorization: Bearer <user_jwt>
 //
 // Response: { data: { id: "chip_customer_id" } }
@@ -74,8 +76,9 @@ Deno.serve(async (req) => {
 
     // Get request body
     const body = await req.json();
-    const { email } = body;
-    console.log("🟢 [CHIP-CREATE-CLIENT] Request body:", { email, userId });
+    const { email, chipAccount: chipAccountRaw } = body;
+    const chipAccount: "main" | "trust" = chipAccountRaw === "trust" ? "trust" : "main";
+    console.log("🟢 [CHIP-CREATE-CLIENT] Request body:", { email, userId, chipAccount });
 
     if (!email) {
       console.log("🔴 [CHIP-CREATE-CLIENT] Email is required");
@@ -85,11 +88,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if user already has chip_customer_id in accounts table
+    const idColumn = chipAccount === "trust" ? "chip_trust_customer_id" : "chip_customer_id";
+
+    // Check if user already has CHIP client for this merchant
     console.log("🟢 [CHIP-CREATE-CLIENT] Checking existing account for userId:", userId);
     const { data: account, error: accountError } = await supabaseAdmin
       .from("accounts")
-      .select("chip_customer_id")
+      .select("chip_customer_id, chip_trust_customer_id")
       .eq("uuid", userId)
       .maybeSingle();
 
@@ -100,11 +105,14 @@ Deno.serve(async (req) => {
 
     console.log("🟢 [CHIP-CREATE-CLIENT] Account data:", account);
 
-    // If user already has chip_customer_id, return it
-    if (account?.chip_customer_id) {
-      console.log("🟢 [CHIP-CREATE-CLIENT] Found existing chip_customer_id:", account.chip_customer_id);
+    const existingId = chipAccount === "trust"
+      ? account?.chip_trust_customer_id as string | undefined
+      : account?.chip_customer_id as string | undefined;
+
+    if (existingId) {
+      console.log(`🟢 [CHIP-CREATE-CLIENT] Found existing ${idColumn}:`, existingId);
       return new Response(
-        JSON.stringify({ data: { id: account.chip_customer_id } }),
+        JSON.stringify({ data: { id: existingId } }),
         {
           status: 200,
           headers: corsHeaders({ "Content-Type": "application/json" }),
@@ -114,12 +122,15 @@ Deno.serve(async (req) => {
 
     console.log("🟢 [CHIP-CREATE-CLIENT] No existing client ID, creating new one");
 
-    // Create new CHIP client
-    const CHIP_SECRET_KEY = Deno.env.get("CHIP_SECRET_KEY");
+    const CHIP_SECRET_KEY = chipAccount === "trust"
+      ? Deno.env.get("CHIP_TRUST_SECRET_KEY")
+      : Deno.env.get("CHIP_SECRET_KEY");
+    const secretLabel = chipAccount === "trust" ? "CHIP_TRUST_SECRET_KEY" : "CHIP_SECRET_KEY";
+
     if (!CHIP_SECRET_KEY) {
-      console.log("🔴 [CHIP-CREATE-CLIENT] CHIP_SECRET_KEY not configured");
+      console.log(`🔴 [CHIP-CREATE-CLIENT] ${secretLabel} not configured`);
       return new Response(
-        JSON.stringify({ error: "CHIP_SECRET_KEY not configured" }),
+        JSON.stringify({ error: `${secretLabel} not configured` }),
         {
           status: 500,
           headers: corsHeaders({ "Content-Type": "application/json" }),
@@ -127,9 +138,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("🟢 [CHIP-CREATE-CLIENT] CHIP_SECRET_KEY found");
-    console.log("🟢 [CHIP-CREATE-CLIENT] CHIP_SECRET_KEY length:", CHIP_SECRET_KEY.length);
-    console.log("🟢 [CHIP-CREATE-CLIENT] CHIP_SECRET_KEY starts with:", CHIP_SECRET_KEY.substring(0, 10) + "...");
+    console.log(`🟢 [CHIP-CREATE-CLIENT] ${secretLabel} found`);
+    console.log(`🟢 [CHIP-CREATE-CLIENT] ${secretLabel} length:`, CHIP_SECRET_KEY.length);
+    console.log(`🟢 [CHIP-CREATE-CLIENT] ${secretLabel} starts with:`, CHIP_SECRET_KEY.substring(0, 10) + "...");
 
     console.log("🟢 [CHIP-CREATE-CLIENT] Calling CHIP API to create client");
     const chipResponse = await fetch("https://gate.chip-in.asia/api/v1/clients/", {
@@ -172,23 +183,19 @@ Deno.serve(async (req) => {
 
     console.log("🟢 [CHIP-CREATE-CLIENT] Created CHIP client ID:", chipClientId);
 
-    // Store chip_customer_id in accounts table
-    console.log("🟢 [CHIP-CREATE-CLIENT] Storing chip_customer_id in accounts table");
+    console.log(`🟢 [CHIP-CREATE-CLIENT] Storing ${idColumn} in accounts table`);
+    const upsertPayload: Record<string, string> = { uuid: userId };
+    upsertPayload[idColumn] = chipClientId;
+
     const { error: upsertError } = await supabaseAdmin
       .from("accounts")
-      .upsert(
-        {
-          uuid: userId,
-          chip_customer_id: chipClientId,
-        },
-        { onConflict: "uuid" },
-      );
+      .upsert(upsertPayload, { onConflict: "uuid" });
 
     if (upsertError) {
-      console.error("🔴 [CHIP-CREATE-CLIENT] Error storing chip_customer_id:", upsertError);
+      console.error(`🔴 [CHIP-CREATE-CLIENT] Error storing ${idColumn}:`, upsertError);
       // Still return the client ID even if storage fails
     } else {
-      console.log("🟢 [CHIP-CREATE-CLIENT] Successfully stored chip_customer_id");
+      console.log(`🟢 [CHIP-CREATE-CLIENT] Successfully stored ${idColumn}`);
     }
 
     console.log("🟢 [CHIP-CREATE-CLIENT] Returning success response");

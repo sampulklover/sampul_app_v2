@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/ai_chat_settings.dart';
 import '../services/ai_chat_settings_service.dart';
 import '../utils/admin_utils.dart';
+import '../utils/url_launch_helper.dart';
 import 'admin_ai_qna_screen.dart';
 import 'admin_ai_resources_screen.dart';
+import 'admin_ai_kb_import_screen.dart';
 
 class AdminAiSettingsScreen extends StatefulWidget {
   const AdminAiSettingsScreen({super.key});
@@ -630,6 +631,24 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
                             ),
                             const Divider(height: 1),
                             ListTile(
+                              title: const Text('KB Imports'),
+                              subtitle: Text(
+                                'Upload your spreadsheets and update the AI knowledge base.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const AdminAiKbImportScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            const Divider(height: 1),
+                            ListTile(
                               title: const Text('Q&A Knowledge Base'),
                               subtitle: Text(
                                 'Manage common questions and concise answers.',
@@ -769,8 +788,8 @@ class _AdminAiSettingsScreenState extends State<AdminAiSettingsScreen> {
 
   Future<void> _openOpenRouterModels() async {
     final uri = Uri.parse('https://openrouter.ai/models');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (await launchUriPreferInAppBrowser(uri)) {
+      return;
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

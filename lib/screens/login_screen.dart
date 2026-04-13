@@ -6,6 +6,8 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/form_decoration_helper.dart';
+import '../config/analytics_screens.dart';
+import '../services/analytics_service.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 import 'main_shell.dart';
@@ -32,6 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkAppleAvailability();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.login);
+    });
   }
 
   Future<void> _checkAppleAvailability() async {
@@ -268,6 +273,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
+                            settings: const RouteSettings(
+                              name: AnalyticsScreens.forgotPassword,
+                            ),
                             builder: (_) => const ForgotPasswordScreen(),
                           ),
                         );
@@ -372,6 +380,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
+                              settings: const RouteSettings(
+                                name: AnalyticsScreens.signUp,
+                              ),
                               builder: (_) => const SignupScreen(),
                             ),
                           );

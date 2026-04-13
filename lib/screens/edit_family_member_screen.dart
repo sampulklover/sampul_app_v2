@@ -77,7 +77,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
       
       // Check if this family member is included in the user's will
       await _checkIfInWill();
-      
+
       setState(() => _isLoading = false);
     } catch (e) {
       if (!mounted) return;
@@ -128,13 +128,14 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
       if (_type == 'future_owner') {
         final String p = _percentageController.text.trim();
         if (p.isEmpty) {
-          throw Exception(l10n.pleaseProvidePercentageForBeneficiary);
+          payload['percentage'] = 0.0;
+        } else {
+          final double parsed = double.tryParse(p) ?? -1;
+          if (parsed < 0 || parsed > 100) {
+            throw Exception(l10n.percentageMustBeBetween0And100);
+          }
+          payload['percentage'] = parsed;
         }
-        final double parsed = double.tryParse(p) ?? -1;
-        if (parsed < 0 || parsed > 100) {
-          throw Exception(l10n.percentageMustBeBetween0And100);
-        }
-        payload['percentage'] = parsed;
       } else {
         payload['percentage'] = null;
       }
@@ -217,20 +218,20 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 final File? file = await ImageUploadService().pickImage();
                                 if (file != null) {
                                   if (!ImageUploadService().validateImage(file)) {
-                                    if (!mounted) return;
-                                    final l10n = AppLocalizations.of(context)!;
+                                    if (!context.mounted) return;
+                                    final AppLocalizations loc = AppLocalizations.of(context)!;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(l10n.invalidImageUseJpgPngWebp)),
+                                      SnackBar(content: Text(loc.invalidImageUseJpgPngWebp)),
                                     );
                                     return;
                                   }
                                   setState(() => _newImageFile = file);
                                 }
                               } catch (e) {
-                                if (!mounted) return;
-                                final l10n = AppLocalizations.of(context)!;
+                                if (!context.mounted) return;
+                                final AppLocalizations loc = AppLocalizations.of(context)!;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l10n.imageSelectionFailed(e.toString()))),
+                                  SnackBar(content: Text(loc.imageSelectionFailed(e.toString()))),
                                 );
                               }
                             },
@@ -346,7 +347,14 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                         child: Text(t == 'future_owner' ? l10n.beneficiary : (t == 'co_sampul' ? l10n.coSampulExecutor : l10n.guardian)),
                                       ))
                                   .toList(),
-                              onChanged: (String? v) => setState(() => _type = v ?? 'co_sampul'),
+                              onChanged: (String? v) {
+                                setState(() {
+                                  _type = v ?? 'co_sampul';
+                                  if (_type != 'future_owner') {
+                                    _percentageController.clear();
+                                  }
+                                });
+                              },
                               decoration: FormDecorationHelper.roundedInputDecoration(
                                 context: context,
                                 labelText: l10n.category,
@@ -360,8 +368,10 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 decoration: FormDecorationHelper.roundedInputDecoration(
                                   context: context,
-                                  labelText: l10n.percentage0To100,
+                                  labelText: l10n.beneficiaryShareFieldLabel,
                                   prefixIcon: Icons.percent,
+                                  helperText: l10n.beneficiaryShareHelperDefault,
+                                  helperMaxLines: 3,
                                 ),
                               ),
                           ],

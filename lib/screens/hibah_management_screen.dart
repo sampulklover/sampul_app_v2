@@ -7,6 +7,8 @@ import '../services/hibah_service.dart';
 import 'hibah_detail_screen.dart';
 import 'hibah_info_screen.dart';
 import 'hibah_create_screen.dart';
+import '../config/analytics_screens.dart';
+import '../services/analytics_service.dart';
 
 class HibahManagementScreen extends StatefulWidget {
   const HibahManagementScreen({super.key});
@@ -62,10 +64,15 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
     
     // If user hasn't seen about page, show it first
     // Otherwise, go directly to create hibah page
+    await AnalyticsService.capture('property trust journey started');
+    if (!mounted) return;
     final bool? created = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => hasSeenAbout 
-            ? const HibahCreateScreen() 
+        settings: RouteSettings(
+          name: hasSeenAbout ? AnalyticsScreens.hibahCreate : AnalyticsScreens.hibahInfo,
+        ),
+        builder: (_) => hasSeenAbout
+            ? const HibahCreateScreen()
             : const HibahInfoScreen(),
       ),
     );
@@ -110,6 +117,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
+                  settings: const RouteSettings(name: AnalyticsScreens.hibahInfo),
                   builder: (_) => const HibahInfoScreen(fromHelpIcon: true),
                 ),
               );
@@ -215,6 +223,7 @@ class _HibahManagementScreenState extends State<HibahManagementScreen>
   void _showSubmissionDetails(Hibah hibah) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
+        settings: const RouteSettings(name: AnalyticsScreens.hibahDetail),
         builder: (_) => HibahDetailScreen(hibah: hibah),
       ),
     );
@@ -333,7 +342,10 @@ class _HibahInfoBanner extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const HibahInfoScreen(fromHelpIcon: true)),
+          MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.hibahInfo),
+            builder: (_) => const HibahInfoScreen(fromHelpIcon: true),
+          ),
         );
       },
       child: Container(
