@@ -430,7 +430,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settleDebts => 'Selesaikan Hutang';
 
   @override
-  String get coSampul => 'Co-sampul';
+  String get coSampul => 'Pelaksana';
 
   @override
   String get beneficiary => 'Penerima Manfaat';
@@ -541,15 +541,15 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get teamAccessInfoStandard =>
-      'Biasa: penggunaan aplikasi biasa. Tiada akses ke Akses pasukan atau alat pentadbiran kandungan.';
+      'Penggunaan aplikasi biasa. Tiada akses ke Akses pasukan atau alat pentadbiran kandungan.';
 
   @override
   String get teamAccessInfoMarketing =>
-      'Pemasaran: boleh urus kandungan AI dan pembelajaran. Tidak boleh beri peranan.';
+      'Boleh urus kandungan AI dan pembelajaran. Tidak boleh beri peranan.';
 
   @override
   String get teamAccessInfoAdmin =>
-      'Pentadbir: akses penuh ke Akses pasukan, tetapan peranan, dan alat pentadbiran kandungan.';
+      'Akses penuh ke Akses pasukan, tetapan peranan, dan alat pentadbiran kandungan.';
 
   @override
   String get teamAccessFilterLabel => 'Peranan';
@@ -624,7 +624,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get appVersion => 'Versi aplikasi';
 
   @override
-  String get appVersionDemo => '1.0.0 (demo)';
+  String get appVersionDemo => '1.0.0 (beta)';
 
   @override
   String get termsOfService => 'Terma Perkhidmatan';
@@ -954,10 +954,60 @@ class AppLocalizationsMs extends AppLocalizations {
       'Pautan kongsi disalin ke papan klip';
 
   @override
-  String get willPublishedSuccessfully => 'Wasiat berjaya diterbitkan';
+  String get willPublishedSuccessfully => 'Pautan sijil dihidupkan';
 
   @override
-  String get willUnpublishedSuccessfully => 'Wasiat berjaya dinyahterbit';
+  String get willUnpublishedSuccessfully => 'Pautan sijil dimatikan';
+
+  @override
+  String get wasiatCertificateDialogTitle => 'Sijil';
+
+  @override
+  String get wasiatCertificateOn => 'Jana sijil';
+
+  @override
+  String get wasiatCertificateOff => 'Matikan pautan';
+
+  @override
+  String wasiatCertificateConfirmation(String url) {
+    return 'Pautan sijil anda sudah sedia.\n\nButiran penuh wasiat anda kekal peribadi dengan Sampul.';
+  }
+
+  @override
+  String get wasiatCertificateConfirmationPre =>
+      'Kami akan cipta pautan sijil yang boleh dikongsi.\n\nButiran penuh wasiat anda kekal peribadi dengan Sampul.';
+
+  @override
+  String get wasiatViewCertificateTab => 'Sijil';
+
+  @override
+  String get wasiatViewDetailsTab => 'Butiran';
+
+  @override
+  String get wasiatDetailsPrivateNote =>
+      'Peribadi. Disimpan dengan Sampul selagi pelan anda aktif. Hanya dilepaskan dengan permintaan yang sah.';
+
+  @override
+  String get wasiatShareSheetTitle => 'Kongsi sijil';
+
+  @override
+  String get wasiatShareSheetSubtitle =>
+      'Kongsi pautan sijil. Butiran anda kekal peribadi dengan Sampul.';
+
+  @override
+  String get wasiatShareSheetMore => 'Lain-lain';
+
+  @override
+  String get wasiatShareSheetWhatsApp => 'WhatsApp';
+
+  @override
+  String get wasiatShareSheetTelegram => 'Telegram';
+
+  @override
+  String get wasiatShareSheetMessages => 'Mesej';
+
+  @override
+  String get wasiatShareSheetEmail => 'E-mel';
 
   @override
   String failedToPublishWill(String error) {
@@ -980,6 +1030,148 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get wasiatPublishBlockedBody =>
+      'Untuk hidupkan pautan sijil, anda perlukan pelan tahunan yang aktif.\n\nKetik Lihat pelan untuk teruskan.';
+
+  @override
+  String wasiatPublishReadyUntil(String date) {
+    return 'Pelan aktif sehingga $date';
+  }
+
+  @override
+  String get wasiatPublishReadyShort => 'Pelan anda aktif.';
+
+  @override
+  String get wasiatViewPlanAndPay => 'Lihat pelan';
+
+  @override
+  String get wasiatAccessBannerTitle => 'Pelan diperlukan untuk terbit';
+
+  @override
+  String get wasiatAccessBannerSubtitle => 'Pelan tahunan diperlukan.';
+
+  @override
+  String wasiatAccessActiveUntil(String date) {
+    return 'Sah sehingga $date';
+  }
+
+  @override
+  String get wasiatAccessPanelTitle => 'Pelan anda';
+
+  @override
+  String get plansOverviewIntro => 'Pelan, harga, dan sejarah bayaran.';
+
+  @override
+  String get planSectionWasiatTitle => 'Wasiat';
+
+  @override
+  String get plansWasiatBadgeActive => 'Aktif';
+
+  @override
+  String get plansWasiatBadgeInactive => 'Tiada akses';
+
+  @override
+  String get plansWasiatBadgeEnded => 'Tamat';
+
+  @override
+  String get planSectionPropertyTrustTitle => 'Hartanah';
+
+  @override
+  String get planPropertyTrustSummary =>
+      'Dari RM 2,500 untuk satu aset. Pakej lebih besar dari RM 8,500. Jumlah penuh dipaparkan sebelum bayar.';
+
+  @override
+  String get planSectionTrustTitle => 'Amanah Keluarga';
+
+  @override
+  String planTrustSummary(String amount) {
+    return 'Pembiayaan minimum ialah $amount. Yuran lain dipaparkan apabila anda teruskan dalam Amanah Keluarga.';
+  }
+
+  @override
+  String get plansOpenPropertyTrust => 'Buka Hartanah';
+
+  @override
+  String get plansOpenTrustDashboard => 'Buka Amanah Keluarga';
+
+  @override
+  String get plansPaymentHistoryForPropertyTrust => 'Bayaran hartanah';
+
+  @override
+  String get plansPaymentHistoryForTrust => 'Bayaran amanah keluarga';
+
+  @override
+  String get plansPaymentHistoryEmptyProduct => 'Tiada rekod lagi.';
+
+  @override
+  String get plansPaymentHistorySubtitleEmpty => 'Tiada bayaran lagi';
+
+  @override
+  String plansPaymentHistorySubtitleCount(int count) {
+    return '$count bayaran';
+  }
+
+  @override
+  String plansPaymentTrustRefLabel(String id) {
+    return 'Amanah Keluarga #$id';
+  }
+
+  @override
+  String get plansPaymentCertificateRefLabel => 'Sijil';
+
+  @override
+  String get plansOverviewLoadError =>
+      'Ada masalah memuatkan pelan anda. Cuba lagi.';
+
+  @override
+  String get plansPaymentStatusRefunded => 'Dikembalikan';
+
+  @override
+  String get wasiatAccessActiveNoEndDate => 'Akses aktif';
+
+  @override
+  String get wasiatAccessInlineInactive => 'Bayar untuk terbit';
+
+  @override
+  String get wasiatManagePlan => 'Butiran';
+
+  @override
+  String get wasiatPlanHeadline => 'Akses tahunan';
+
+  @override
+  String get wasiatPlanExplainerShort =>
+      'Akses tahunan. Perbaharui bila-bila masa.';
+
+  @override
+  String wasiatPlanEndedOn(String date) {
+    return 'Tamat $date';
+  }
+
+  @override
+  String get wasiatPlanPayChip => 'Bayar dengan CHIP';
+
+  @override
+  String get wasiatPlanRenewEarly => 'Perbaharui awal';
+
+  @override
+  String get wasiatPlanPerYearLabel => 'setahun';
+
+  @override
+  String get wasiatPaymentHistoryTitle => 'Sejarah bayaran';
+
+  @override
+  String get wasiatPaymentHistoryEmpty => 'Tiada bayaran lagi.';
+
+  @override
+  String get wasiatPaymentStatusPaid => 'Dibayar';
+
+  @override
+  String get wasiatPaymentStatusFailed => 'Gagal';
+
+  @override
+  String get wasiatPaymentStatusProcessing => 'Diproses';
+
+  @override
   String get code => 'Kod';
 
   @override
@@ -991,6 +1183,18 @@ class AppLocalizationsMs extends AppLocalizations {
   String issuesActionRequired(int count) {
     return '$count isu - Tindakan diperlukan';
   }
+
+  @override
+  String get wasiatReviewSheetTitle => 'Apa yang perlu dibetulkan';
+
+  @override
+  String get wasiatReviewSheetIssues => 'Tindakan diperlukan';
+
+  @override
+  String get wasiatReviewSheetWarnings => 'Pilihan';
+
+  @override
+  String get wasiatReviewSheetEditCta => 'Edit wasiat';
 
   @override
   String get published => 'Diterbitkan';
@@ -1612,18 +1816,18 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get addPeopleWhoMatterMost =>
-      'Tambah orang yang paling penting — Pusaka, penerima manfaat, dan penjaga — supaya wasiat anda kekal jelas dan bersambung.';
+      'Tambah orang yang paling penting — pelaksana wasiat, penerima manfaat, dan penjaga — supaya wasiat anda kekal jelas dan bersambung.';
 
   @override
   String get whyAddFamilyMembers => 'Mengapa tambah ahli keluarga?';
 
   @override
   String get familyListConnectsToWill =>
-      'Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan Property Trust anda. Tambah Pusaka (Co-Sampul), penerima manfaat, dan penjaga.';
+      'Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan Property Trust anda. Tambah pelaksana wasiat, penerima manfaat, dan penjaga.';
 
   @override
   String get assignExecutorsCoSampul =>
-      'Tugaskan Pusaka (Co-Sampul) yang akan melaksanakan wasiat anda.';
+      'Tugaskan pelaksana yang akan melaksanakan wasiat anda.';
 
   @override
   String get listBeneficiariesWhoReceive =>
@@ -1673,11 +1877,11 @@ class AppLocalizationsMs extends AppLocalizations {
   String get category => 'Kategori';
 
   @override
-  String get coSampulExecutor => 'Co-sampul (Pusaka)';
+  String get coSampulExecutor => 'Pelaksana';
 
   @override
   String get coSampulExecutorHelp =>
-      'Co-sampul (Pusaka): Orang yang dipercayai yang melaksanakan wasiat anda bersama-sama dengan anda.';
+      'Pelaksana: Orang yang dipercayai yang melaksanakan wasiat anda bersama Sampul.';
 
   @override
   String get beneficiaryHelp =>
@@ -1703,6 +1907,57 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get pleaseProvidePercentageForBeneficiary =>
       'Sila berikan peratusan untuk penerima manfaat';
+
+  @override
+  String get beneficiaryShareFieldLabel => 'Bahagian mereka (%)';
+
+  @override
+  String get beneficiaryShareHelperDefault =>
+      'Boleh kosongkan dulu. Guna kalkulator Faraid dalam Keluarga Saya bila anda sudah bersedia.';
+
+  @override
+  String get faraidBannerTitle => 'Kalkulator Faraid';
+
+  @override
+  String get faraidBannerSubtitle =>
+      'Cadangan berdasarkan maklumat keluarga anda. Kemaskini bila sudah bersedia.';
+
+  @override
+  String get faraidBannerCta => 'Kira sekarang';
+
+  @override
+  String get faraidSuggestShares => 'Kalkulator Faraid';
+
+  @override
+  String get faraidPreviewTitle => 'Pratonton Faraid';
+
+  @override
+  String get faraidPreviewIntro =>
+      'Anggaran bahagian berdasarkan maklumat keluarga anda. Kemaskini bila anda sudah bersedia.';
+
+  @override
+  String get faraidPreviewSave => 'Kemaskini';
+
+  @override
+  String get faraidPreviewTotal => 'Jumlah';
+
+  @override
+  String faraidPreviewSkippedNote(int count) {
+    return 'Kami tidak mengemas kini $count profil penerima faedah lain. Bahagian mereka tidak boleh dikira secara auto.';
+  }
+
+  @override
+  String faraidSuggestSharesUpdated(int count) {
+    return '$count penerima faedah dikemas kini.';
+  }
+
+  @override
+  String get faraidSuggestSharesNone =>
+      'Tiada peratusan ditukar. Tambah hubungan yang kurang atau tetapkan jantina dalam Profil, kemudian cuba lagi.';
+
+  @override
+  String get faraidSuggestSharesNeedGender =>
+      'Tambah jantina dalam Profil dahulu, kemudian cuba lagi.';
 
   @override
   String get percentageMustBeBetween0And100 =>
@@ -2712,4 +2967,98 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get propertyTrust => 'Amanah Hartanah';
+
+  @override
+  String get couponsMenuTitle => 'Tawaran & kupon';
+
+  @override
+  String get couponsMenuSubtitle => 'Diskaun semasa bayar';
+
+  @override
+  String get couponsScreenTitle => 'Kupon anda';
+
+  @override
+  String get couponsScreenHeadline => 'Jimat semasa bayar';
+
+  @override
+  String get couponsScreenIntro =>
+      'Guna semasa bayar. Lagi boleh datang dari rujukan dan tawaran.';
+
+  @override
+  String get couponsGoToReferralsButton => 'Ke halaman rujukan';
+
+  @override
+  String get couponsSectionActive => 'Sedia digunakan';
+
+  @override
+  String get couponsSectionPast => 'Telah guna atau tamat tempoh';
+
+  @override
+  String get couponsEmptyActive =>
+      'Rujukan dan tawaran boleh menambah kupon di sini.';
+
+  @override
+  String get couponsEmptyActiveTitle => 'Tiada kupon aktif';
+
+  @override
+  String get couponsEmptyPast =>
+      'Kupon yang telah guna atau tamat tempoh ada di sini.';
+
+  @override
+  String get couponsEmptyPastTitle => 'Tiada rekod lagi';
+
+  @override
+  String get couponProductHibah => 'Hibah';
+
+  @override
+  String get couponProductWasiat => 'Wasiat';
+
+  @override
+  String get couponProductOther => 'Tawaran';
+
+  @override
+  String get couponDescriptionHibah =>
+      'Yuran sijil Hibah—pilih di bawah Bayaran pada skrin Hibah sebelum checkout.';
+
+  @override
+  String couponDescriptionWasiat(String screenTitle) {
+    return 'Akses tahunan Wasiat—pilih di $screenTitle sebelum bayar.';
+  }
+
+  @override
+  String get couponDescriptionOther =>
+      'Kami tunjuk di mana guna ini semasa checkout.';
+
+  @override
+  String get couponStatusActive => 'Aktif';
+
+  @override
+  String get couponStatusUsed => 'Telah guna';
+
+  @override
+  String get couponStatusExpired => 'Tamat tempoh';
+
+  @override
+  String couponDiscountPercent(int percent) {
+    return 'Diskaun $percent%';
+  }
+
+  @override
+  String couponExpiresOn(String date) {
+    return 'Sah sehingga $date';
+  }
+
+  @override
+  String couponUsedOnDate(String date) {
+    return 'Digunakan pada $date';
+  }
+
+  @override
+  String get checkoutCouponLabel => 'Diskaun';
+
+  @override
+  String get checkoutNoCoupon => 'Tiada';
+
+  @override
+  String get checkoutYouPay => 'Jumlah bayaran';
 }

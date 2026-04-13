@@ -37,9 +37,15 @@ class TrustPaymentService {
 
   final SupabaseClient _client = SupabaseService.instance.client;
 
-  /// Get or create CHIP customer ID for the user
-  Future<String> getChipClient() async {
-    print('🟡 [TRUST PAYMENT SERVICE] getChipClient called');
+  /// Get or create CHIP customer ID for the signed-in user.
+  ///
+  /// [forTrustMerchant]: when true, uses the trust-only CHIP merchant and
+  /// `accounts.chip_trust_customer_id`. When false, uses Hibah/Wasiat merchant
+  /// and `accounts.chip_customer_id`.
+  Future<String> getChipClient({bool forTrustMerchant = false}) async {
+    print(
+      '🟡 [TRUST PAYMENT SERVICE] getChipClient called (forTrustMerchant: $forTrustMerchant)',
+    );
     final user = AuthController.instance.currentUser;
     if (user == null) {
       print('🔴 [TRUST PAYMENT SERVICE] No authenticated user');
@@ -48,18 +54,20 @@ class TrustPaymentService {
 
     print('🟡 [TRUST PAYMENT SERVICE] User ID: ${user.id}, Email: ${user.email}');
 
-    // Check if user already has chip_customer_id in accounts table
+    final String column =
+        forTrustMerchant ? 'chip_trust_customer_id' : 'chip_customer_id';
+
     try {
       final accountResponse = await _client
           .from('accounts')
-          .select('chip_customer_id')
+          .select(column)
           .eq('uuid', user.id)
           .maybeSingle();
 
       print('🟡 [TRUST PAYMENT SERVICE] Account response: $accountResponse');
 
-      if (accountResponse != null && accountResponse['chip_customer_id'] != null) {
-        final existingId = accountResponse['chip_customer_id'] as String;
+      if (accountResponse != null && accountResponse[column] != null) {
+        final existingId = accountResponse[column] as String;
         print('🟢 [TRUST PAYMENT SERVICE] Found existing CHIP client ID: $existingId');
         return existingId;
       }
@@ -67,13 +75,13 @@ class TrustPaymentService {
       print('🟡 [TRUST PAYMENT SERVICE] Error checking account: $e');
     }
 
-    // Call edge function to create/get CHIP client
     print('🟡 [TRUST PAYMENT SERVICE] Calling edge function: ${ChipConfig.createClientFunction}');
     try {
       final response = await _client.functions.invoke(
         ChipConfig.createClientFunction,
         body: <String, dynamic>{
           'email': user.email ?? '',
+          if (forTrustMerchant) 'chipAccount': 'trust',
         },
       );
 
@@ -93,13 +101,12 @@ class TrustPaymentService {
         print('🟡 [TRUST PAYMENT SERVICE] Extracted client ID: $clientId');
         
         if (clientId.isNotEmpty) {
-          // Store chip_customer_id in accounts table
           try {
             await _client.from('accounts').upsert({
               'uuid': user.id,
-              'chip_customer_id': clientId,
+              column: clientId,
             });
-            print('🟢 [TRUST PAYMENT SERVICE] Stored CHIP client ID in accounts');
+            print('🟢 [TRUST PAYMENT SERVICE] Stored CHIP client ID in accounts ($column)');
           } catch (e) {
             print('🟡 [TRUST PAYMENT SERVICE] Warning: Failed to store client ID: $e');
             // Continue even if storage fails
@@ -141,13 +148,13 @@ class TrustPaymentService {
       final response = await _client.functions.invoke(
         ChipConfig.createPaymentFunction,
         body: <String, dynamic>{
+          'paymentType': 'trust',
           'trustId': trustId.toString(),
           'trustCode': trustCode,
           'userId': user.id,
           'clientId': clientId,
           'amount': amount,
           'description': 'Payment for Trust $trustCode',
-          // Don't send successUrl/failureUrl - edge function will construct web URLs
         },
       );
 
@@ -198,6 +205,22 @@ class TrustPaymentService {
         .from('trust_payments')
         .select()
         .eq('trust_id', trustId)
+        .order('created_at', ascending: false);
+
+    return rows
+        .map((e) => TrustPayment.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// All CHIP payments for the signed-in user (RLS), newest first.
+  Future<List<TrustPayment>> fetchAllPaymentsForCurrentUser() async {
+    final user = AuthController.instance.currentUser;
+    if (user == null) return <TrustPayment>[];
+
+    final List<dynamic> rows = await _client
+        .from('trust_payments')
+        .select()
+        .eq('uuid', user.id)
         .order('created_at', ascending: false);
 
     return rows

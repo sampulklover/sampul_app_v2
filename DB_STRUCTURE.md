@@ -356,6 +356,21 @@ CREATE TABLE public.executor_deceased_assets (
   CONSTRAINT executor_deceased_assets_executor_id_fkey FOREIGN KEY (executor_id) REFERENCES public.executor(id),
   CONSTRAINT executor_deceased_assets_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
+CREATE TABLE public.executor_documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  executor_id integer NOT NULL,
+  file_name text NOT NULL,
+  file_path text NOT NULL,
+  file_size bigint NOT NULL,
+  file_type text NOT NULL,
+  document_type text NOT NULL DEFAULT 'supporting'::text,
+  uploaded_at timestamp with time zone NOT NULL DEFAULT now(),
+  uuid uuid NOT NULL,
+  title text,
+  CONSTRAINT executor_documents_pkey PRIMARY KEY (id),
+  CONSTRAINT executor_documents_executor_id_fkey FOREIGN KEY (executor_id) REFERENCES public.executor(id),
+  CONSTRAINT executor_documents_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
+);
 CREATE TABLE public.executor_guardian (
   id integer NOT NULL DEFAULT nextval('executor_guardian_id_seq'::regclass),
   executor_id integer NOT NULL UNIQUE,

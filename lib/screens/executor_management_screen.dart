@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/executor.dart';
 import '../services/executor_service.dart';
-import 'executor_edit_screen.dart';
 import 'executor_info_screen.dart';
 import 'executor_create_screen.dart';
+import 'executor_detail_screen.dart';
 
 class ExecutorManagementScreen extends StatefulWidget {
   const ExecutorManagementScreen({super.key});
@@ -132,14 +133,13 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
   }
 
   Future<void> _openForEdit(Executor e) async {
-    // Only allow editing drafts
-    final bool isDraft = e.computedStatus == ExecutorStatus.draft;
-    final bool? updated = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => ExecutorEditScreen(initial: e)),
+    if (e.id == null) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ExecutorDetailScreen(executorId: e.id!),
+      ),
     );
-    if (updated == true && isDraft) {
-      await _loadExecutors();
-    }
+    await _loadExecutors();
   }
 
   Widget _buildEmptyState() {
@@ -154,48 +154,6 @@ class _ExecutorManagementScreenState extends State<ExecutorManagementScreen> wit
               l10n.noPusakaYet,
               style: theme.textTheme.bodyMedium,
             ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ExecutorFeatureItem extends StatelessWidget {
-  final String text;
-  final ColorScheme colorScheme;
-
-  const _ExecutorFeatureItem({
-    required this.text,
-    required this.colorScheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: colorScheme.primary,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.check,
-            color: colorScheme.onPrimary,
-            size: 16,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
           ),
         ),
       ],
@@ -246,16 +204,15 @@ class _ExecutorList extends StatelessWidget {
         final Executor e = executors[index];
         return ListTile(
           onTap: () => onTap(e),
-          title: Text(e.name ?? e.deceasedName ?? 'Unnamed Executor'),
+          title: Text((e.executorCode ?? '').isNotEmpty ? e.executorCode! : (e.name ?? 'Pusaka')),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              if (e.claimantName != null) Text('Claimant: ${e.claimantName}'),
+              if ((e.name ?? '').isNotEmpty) Text(e.name!),
+              Text('Updated: ${DateFormat.MMMd().format(e.updatedAt)}'),
               const SizedBox(height: 4),
               Row(
                 children: <Widget>[
-                  if ((e.executorCode ?? '').isNotEmpty) Text(e.executorCode!),
-                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(

@@ -16,6 +16,8 @@ import '../services/brandfetch_service.dart';
 import '../controllers/auth_controller.dart';
 import 'edit_profile_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../config/analytics_screens.dart';
+import '../services/analytics_service.dart';
 
 class WillGenerationScreen extends StatefulWidget {
   final Will? existingWill;
@@ -118,6 +120,12 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
 
           _isLoading = false;
         });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          AnalyticsService.capture('will generation viewed', properties: {
+            'mode': widget.existingWill != null ? 'edit' : 'create',
+          });
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -188,6 +196,11 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         final l10n = AppLocalizations.of(context)!;
         _showSuccessSnackBar(l10n.willCreatedSuccessfully);
       }
+
+      await AnalyticsService.capture('will saved', properties: {
+        'mode': widget.existingWill != null ? 'update' : 'create',
+        'is_draft': _isDraft,
+      });
 
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -338,6 +351,7 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                   onPressed: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: AnalyticsScreens.editProfile),
                         builder: (context) => const EditProfileScreen(),
                       ),
                     );
@@ -448,8 +462,11 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
             Text(l10n.yourExtraWishes, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             TextButton.icon(
               onPressed: () async {
-                final bool? changed = await Navigator.of(context).push(
-                  MaterialPageRoute<bool>(builder: (_) => const ExtraWishesScreen()),
+                final bool? changed = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(
+                    settings: const RouteSettings(name: AnalyticsScreens.extraWishes),
+                    builder: (_) => const ExtraWishesScreen(),
+                  ),
                 );
                 if (changed == true) {
                   await _refreshExtraWishes();
@@ -979,8 +996,11 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                     // Otherwise, go directly to add asset page
                     final bool? result = await Navigator.of(context).push<bool>(
                       MaterialPageRoute<bool>(
-                        builder: (_) => hasSeenAbout 
-                            ? const AddAssetScreen() 
+                        settings: RouteSettings(
+                          name: hasSeenAbout ? AnalyticsScreens.addAsset : AnalyticsScreens.aboutAssets,
+                        ),
+                        builder: (_) => hasSeenAbout
+                            ? const AddAssetScreen()
                             : const AssetInfoScreen(),
                       ),
                     );
@@ -996,7 +1016,10 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                 TextButton.icon(
                   onPressed: () async {
                     await Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: AnalyticsScreens.assetsList),
+                        builder: (_) => const AssetsListScreen(),
+                      ),
                     );
                     await _refreshAssets();
                   },
@@ -1036,7 +1059,10 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                         child: TextButton(
                           onPressed: () async {
                             await Navigator.of(context).push(
-                              MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                              MaterialPageRoute<void>(
+                                settings: const RouteSettings(name: AnalyticsScreens.assetsList),
+                                builder: (_) => const AssetsListScreen(),
+                              ),
                             );
                             await _refreshAssets();
                           },
@@ -1057,8 +1083,11 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
               return ListTile(
                 onTap: () async {
                   if (type == 'digital') {
-                    final bool? changed = await Navigator.of(context).push(
-                      MaterialPageRoute<bool>(builder: (_) => EditAssetScreen(assetId: id)),
+                    final bool? changed = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute<bool>(
+                        settings: const RouteSettings(name: AnalyticsScreens.editAsset),
+                        builder: (_) => EditAssetScreen(assetId: id),
+                      ),
                     );
                     if (changed == true) {
                       await _refreshAssets();
@@ -1066,7 +1095,10 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
                   } else {
                     // For physical assets, navigate to assets list for now
                     await Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(name: AnalyticsScreens.assetsList),
+                        builder: (_) => const AssetsListScreen(),
+                      ),
                     );
                     await _refreshAssets();
                   }

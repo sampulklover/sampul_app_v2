@@ -264,7 +264,7 @@ class _ExecutorDeceasedFormScreenState extends State<ExecutorDeceasedFormScreen>
                         decoration: FormDecorationHelper.roundedInputDecoration(
                           context: context,
                           labelText: 'Religion',
-                          prefixIcon: Icons.church_outlined,
+                          prefixIcon: Icons.menu_book_outlined,
                         ),
                         items: ExecutorConstants.religions
                             .map((r) => DropdownMenuItem<String>(

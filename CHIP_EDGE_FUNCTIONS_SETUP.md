@@ -55,9 +55,14 @@ supabase functions deploy chip-payment-redirect --project-ref <your-project-ref>
 Set the following secrets in Supabase Dashboard → Edge Functions → Secrets:
 
 ```bash
-# Required secrets
+# Required secrets (Hibah + Wasiat — main CHIP merchant)
 CHIP_SECRET_KEY=your_chip_secret_key
 CHIP_BRAND_ID=your_chip_brand_id
+
+# Required for Trust payments only (separate CHIP merchant)
+CHIP_TRUST_SECRET_KEY=your_trust_chip_secret_key
+CHIP_TRUST_BRAND_ID=your_trust_chip_brand_id
+
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
@@ -79,7 +84,9 @@ supabase secrets set \
 
 ## 🔗 Configure CHIP Webhook
 
-1. Go to your CHIP Dashboard → Settings → Webhooks
+Configure the **same** webhook URL on **each** CHIP merchant you use (main merchant for Hibah/Wasiat, trust merchant for Trust):
+
+1. Go to that merchant’s CHIP Dashboard → Settings → Webhooks
 2. Add a new webhook endpoint:
    - **URL**: `https://<your-project-ref>.functions.supabase.co/chip-webhook`
    - **Events**: Select payment status events (e.g., `payment.paid`, `payment.failed`, etc.)
@@ -98,9 +105,12 @@ Authorization: Bearer <user_jwt>
 Content-Type: application/json
 
 {
-  "email": "user@example.com"
+  "email": "user@example.com",
+  "chipAccount": "main"
 }
 ```
+
+Optional `"chipAccount": "trust"` uses `CHIP_TRUST_SECRET_KEY` and stores the ID in `accounts.chip_trust_customer_id` (Trust payments only).
 
 **Response**:
 ```json
@@ -112,11 +122,9 @@ Content-Type: application/json
 ```
 
 **Behavior**:
-- Checks if user already has `chip_customer_id` in `accounts` table
-- If exists, returns existing ID
-- If not, creates new CHIP client via CHIP API
-- Stores `chip_customer_id` in `accounts` table
-- Returns the CHIP customer ID
+- **main** (default): checks `chip_customer_id`; creates with `CHIP_SECRET_KEY` if missing
+- **trust**: checks `chip_trust_customer_id`; creates with `CHIP_TRUST_SECRET_KEY` if missing
+- Returns the CHIP customer ID for that merchant
 
 ### `chip-create-payment`
 

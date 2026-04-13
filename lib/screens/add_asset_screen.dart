@@ -438,14 +438,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10nDialog.youCanReviewOrUpdateAnytime,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

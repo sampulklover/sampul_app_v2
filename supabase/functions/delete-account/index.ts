@@ -106,14 +106,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    const account = accounts[0] as { is_subscribed?: boolean | null };
+    const account = accounts[0] as {
+      is_subscribed?: boolean | null;
+      wasiat_subscription_period_end?: string | null;
+    };
 
-    if (account.is_subscribed === true) {
+    const endRaw = account.wasiat_subscription_period_end;
+    const hasActiveWasiatWindow =
+      typeof endRaw === "string" &&
+      endRaw.length > 0 &&
+      new Date(endRaw).getTime() > Date.now();
+
+    const legacyStripeOnlySubscribed =
+      account.is_subscribed === true &&
+      (endRaw == null || String(endRaw).length === 0);
+
+    if (hasActiveWasiatWindow || legacyStripeOnlySubscribed) {
       return new Response(
         JSON.stringify({
           error: {
             message:
-              "If you want to delete your profile, you need to first cancel your active subscription.",
+              "If you want to delete your profile, you need to wait until your Wasiat access period has ended, or contact support if you subscribed through another channel.",
           },
         }),
         {

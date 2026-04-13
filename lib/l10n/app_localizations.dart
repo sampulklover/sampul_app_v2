@@ -869,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @coSampul.
   ///
   /// In en, this message translates to:
-  /// **'Co-sampul'**
+  /// **'Executor'**
   String get coSampul;
 
   /// No description provided for @beneficiary.
@@ -1085,19 +1085,19 @@ abstract class AppLocalizations {
   /// No description provided for @teamAccessInfoStandard.
   ///
   /// In en, this message translates to:
-  /// **'Standard: regular app use. No access to Team access or content admin tools.'**
+  /// **'Regular app use. No access to Team access or content admin tools.'**
   String get teamAccessInfoStandard;
 
   /// No description provided for @teamAccessInfoMarketing.
   ///
   /// In en, this message translates to:
-  /// **'Marketing: can manage AI and learning content. Cannot assign roles.'**
+  /// **'Can manage AI and learning content. Cannot assign roles.'**
   String get teamAccessInfoMarketing;
 
   /// No description provided for @teamAccessInfoAdmin.
   ///
   /// In en, this message translates to:
-  /// **'Admin: full access to Team access, role assignment, and content admin tools.'**
+  /// **'Full access to Team access, role assignment, and content admin tools.'**
   String get teamAccessInfoAdmin;
 
   /// No description provided for @teamAccessFilterLabel.
@@ -1229,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @appVersionDemo.
   ///
   /// In en, this message translates to:
-  /// **'1.0.0 (demo)'**
+  /// **'1.0.0 (beta)'**
   String get appVersionDemo;
 
   /// No description provided for @termsOfService.
@@ -1829,14 +1829,104 @@ abstract class AppLocalizations {
   /// No description provided for @willPublishedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Wasiat published successfully'**
+  /// **'Certificate link is on'**
   String get willPublishedSuccessfully;
 
   /// No description provided for @willUnpublishedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Wasiat unpublished successfully'**
+  /// **'Certificate link is off'**
   String get willUnpublishedSuccessfully;
+
+  /// No description provided for @wasiatCertificateDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate'**
+  String get wasiatCertificateDialogTitle;
+
+  /// No description provided for @wasiatCertificateOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate certificate'**
+  String get wasiatCertificateOn;
+
+  /// No description provided for @wasiatCertificateOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off link'**
+  String get wasiatCertificateOff;
+
+  /// No description provided for @wasiatCertificateConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your certificate link is ready.\n\nYour full wasiat details stay private with Sampul.'**
+  String wasiatCertificateConfirmation(String url);
+
+  /// No description provided for @wasiatCertificateConfirmationPre.
+  ///
+  /// In en, this message translates to:
+  /// **'We’ll create a shareable certificate link.\n\nYour full wasiat details stay private with Sampul.'**
+  String get wasiatCertificateConfirmationPre;
+
+  /// No description provided for @wasiatViewCertificateTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate'**
+  String get wasiatViewCertificateTab;
+
+  /// No description provided for @wasiatViewDetailsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get wasiatViewDetailsTab;
+
+  /// No description provided for @wasiatDetailsPrivateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Private. Kept with Sampul while your plan is active. Only released with a valid request.'**
+  String get wasiatDetailsPrivateNote;
+
+  /// No description provided for @wasiatShareSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share certificate'**
+  String get wasiatShareSheetTitle;
+
+  /// No description provided for @wasiatShareSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the certificate link. Your details stay private with Sampul.'**
+  String get wasiatShareSheetSubtitle;
+
+  /// No description provided for @wasiatShareSheetMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get wasiatShareSheetMore;
+
+  /// No description provided for @wasiatShareSheetWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get wasiatShareSheetWhatsApp;
+
+  /// No description provided for @wasiatShareSheetTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get wasiatShareSheetTelegram;
+
+  /// No description provided for @wasiatShareSheetMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get wasiatShareSheetMessages;
+
+  /// No description provided for @wasiatShareSheetEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get wasiatShareSheetEmail;
 
   /// No description provided for @failedToPublishWill.
   ///
@@ -1862,6 +1952,258 @@ abstract class AppLocalizations {
   /// **'Failed to load wasiat data: {error}'**
   String failedToLoadWillData(String error);
 
+  /// No description provided for @wasiatPublishBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To turn on your certificate link, you’ll need an active yearly plan.\n\nTap View plans to continue.'**
+  String get wasiatPublishBlockedBody;
+
+  /// No description provided for @wasiatPublishReadyUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan active until {date}'**
+  String wasiatPublishReadyUntil(String date);
+
+  /// No description provided for @wasiatPublishReadyShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan is active.'**
+  String get wasiatPublishReadyShort;
+
+  /// No description provided for @wasiatViewPlanAndPay.
+  ///
+  /// In en, this message translates to:
+  /// **'View plans'**
+  String get wasiatViewPlanAndPay;
+
+  /// No description provided for @wasiatAccessBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan required to publish'**
+  String get wasiatAccessBannerTitle;
+
+  /// No description provided for @wasiatAccessBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A yearly plan is needed.'**
+  String get wasiatAccessBannerSubtitle;
+
+  /// No description provided for @wasiatAccessActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String wasiatAccessActiveUntil(String date);
+
+  /// No description provided for @wasiatAccessPanelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plans'**
+  String get wasiatAccessPanelTitle;
+
+  /// No description provided for @plansOverviewIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans, pricing, and payment history.'**
+  String get plansOverviewIntro;
+
+  /// No description provided for @planSectionWasiatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wasiat'**
+  String get planSectionWasiatTitle;
+
+  /// No description provided for @plansWasiatBadgeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get plansWasiatBadgeActive;
+
+  /// No description provided for @plansWasiatBadgeInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'No access'**
+  String get plansWasiatBadgeInactive;
+
+  /// No description provided for @plansWasiatBadgeEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get plansWasiatBadgeEnded;
+
+  /// No description provided for @planSectionPropertyTrustTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get planSectionPropertyTrustTitle;
+
+  /// No description provided for @planPropertyTrustSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'From RM 2,500 for one asset. Larger bundles from RM 8,500. You will see the full amount before you pay.'**
+  String get planPropertyTrustSummary;
+
+  /// No description provided for @planSectionTrustTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Trust'**
+  String get planSectionTrustTitle;
+
+  /// No description provided for @planTrustSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum funding is {amount}. Other fees are shown when you continue in Family Trust.'**
+  String planTrustSummary(String amount);
+
+  /// No description provided for @plansOpenPropertyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Property'**
+  String get plansOpenPropertyTrust;
+
+  /// No description provided for @plansOpenTrustDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Family Trust'**
+  String get plansOpenTrustDashboard;
+
+  /// No description provided for @plansPaymentHistoryForPropertyTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Property payments'**
+  String get plansPaymentHistoryForPropertyTrust;
+
+  /// No description provided for @plansPaymentHistoryForTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Trust payments'**
+  String get plansPaymentHistoryForTrust;
+
+  /// No description provided for @plansPaymentHistoryEmptyProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing recorded yet.'**
+  String get plansPaymentHistoryEmptyProduct;
+
+  /// No description provided for @plansPaymentHistorySubtitleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments yet'**
+  String get plansPaymentHistorySubtitleEmpty;
+
+  /// No description provided for @plansPaymentHistorySubtitleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} payments'**
+  String plansPaymentHistorySubtitleCount(int count);
+
+  /// No description provided for @plansPaymentTrustRefLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Trust #{id}'**
+  String plansPaymentTrustRefLabel(String id);
+
+  /// No description provided for @plansPaymentCertificateRefLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate'**
+  String get plansPaymentCertificateRefLabel;
+
+  /// No description provided for @plansOverviewLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong loading your plans. Please try again.'**
+  String get plansOverviewLoadError;
+
+  /// No description provided for @plansPaymentStatusRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get plansPaymentStatusRefunded;
+
+  /// No description provided for @wasiatAccessActiveNoEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Access active'**
+  String get wasiatAccessActiveNoEndDate;
+
+  /// No description provided for @wasiatAccessInlineInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay to publish'**
+  String get wasiatAccessInlineInactive;
+
+  /// No description provided for @wasiatManagePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get wasiatManagePlan;
+
+  /// No description provided for @wasiatPlanHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly access'**
+  String get wasiatPlanHeadline;
+
+  /// No description provided for @wasiatPlanExplainerShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual access. Renew anytime.'**
+  String get wasiatPlanExplainerShort;
+
+  /// No description provided for @wasiatPlanEndedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended {date}'**
+  String wasiatPlanEndedOn(String date);
+
+  /// No description provided for @wasiatPlanPayChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with CHIP'**
+  String get wasiatPlanPayChip;
+
+  /// No description provided for @wasiatPlanRenewEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew early'**
+  String get wasiatPlanRenewEarly;
+
+  /// No description provided for @wasiatPlanPerYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'per year'**
+  String get wasiatPlanPerYearLabel;
+
+  /// No description provided for @wasiatPaymentHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment history'**
+  String get wasiatPaymentHistoryTitle;
+
+  /// No description provided for @wasiatPaymentHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments yet.'**
+  String get wasiatPaymentHistoryEmpty;
+
+  /// No description provided for @wasiatPaymentStatusPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get wasiatPaymentStatusPaid;
+
+  /// No description provided for @wasiatPaymentStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get wasiatPaymentStatusFailed;
+
+  /// No description provided for @wasiatPaymentStatusProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get wasiatPaymentStatusProcessing;
+
   /// No description provided for @code.
   ///
   /// In en, this message translates to:
@@ -1879,6 +2221,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} issue(s) - Action required'**
   String issuesActionRequired(int count);
+
+  /// No description provided for @wasiatReviewSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What to fix'**
+  String get wasiatReviewSheetTitle;
+
+  /// No description provided for @wasiatReviewSheetIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Action required'**
+  String get wasiatReviewSheetIssues;
+
+  /// No description provided for @wasiatReviewSheetWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get wasiatReviewSheetWarnings;
+
+  /// No description provided for @wasiatReviewSheetEditCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit wasiat'**
+  String get wasiatReviewSheetEditCta;
 
   /// No description provided for @published.
   ///
@@ -2993,7 +3359,7 @@ abstract class AppLocalizations {
   /// No description provided for @addPeopleWhoMatterMost.
   ///
   /// In en, this message translates to:
-  /// **'Add the people who matter most — Pusaka, beneficiaries, and guardians — so your will stays clear and connected.'**
+  /// **'Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.'**
   String get addPeopleWhoMatterMost;
 
   /// No description provided for @whyAddFamilyMembers.
@@ -3005,13 +3371,13 @@ abstract class AppLocalizations {
   /// No description provided for @familyListConnectsToWill.
   ///
   /// In en, this message translates to:
-  /// **'Your family list connects to your will, trust, and Property Trust planning. Add Pusaka (Co-Sampul), beneficiaries, and guardians.'**
+  /// **'Your family list connects to your will, trust, and Property Trust planning. Add executors, beneficiaries, and guardians.'**
   String get familyListConnectsToWill;
 
   /// No description provided for @assignExecutorsCoSampul.
   ///
   /// In en, this message translates to:
-  /// **'Assign Pusaka (Co-Sampul) who will carry out your will.'**
+  /// **'Assign executors who will carry out your will.'**
   String get assignExecutorsCoSampul;
 
   /// No description provided for @listBeneficiariesWhoReceive.
@@ -3107,13 +3473,13 @@ abstract class AppLocalizations {
   /// No description provided for @coSampulExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Co-sampul (Pusaka)'**
+  /// **'Executor'**
   String get coSampulExecutor;
 
   /// No description provided for @coSampulExecutorHelp.
   ///
   /// In en, this message translates to:
-  /// **'Co-sampul (Pusaka): A trusted person who carries out your will together with you.'**
+  /// **'Executor: Someone you trust who carries out your will together with Sampul.'**
   String get coSampulExecutorHelp;
 
   /// No description provided for @beneficiaryHelp.
@@ -3157,6 +3523,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please provide percentage for beneficiary'**
   String get pleaseProvidePercentageForBeneficiary;
+
+  /// No description provided for @beneficiaryShareFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Their share (%)'**
+  String get beneficiaryShareFieldLabel;
+
+  /// No description provided for @beneficiaryShareHelperDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this blank for now. Use the Faraid calculator on My Family when you\'re ready.'**
+  String get beneficiaryShareHelperDefault;
+
+  /// No description provided for @faraidBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Faraid calculator'**
+  String get faraidBannerTitle;
+
+  /// No description provided for @faraidBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions from your family details. Update when you’re ready.'**
+  String get faraidBannerSubtitle;
+
+  /// No description provided for @faraidBannerCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculate now'**
+  String get faraidBannerCta;
+
+  /// No description provided for @faraidSuggestShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Faraid calculator'**
+  String get faraidSuggestShares;
+
+  /// No description provided for @faraidPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Faraid preview'**
+  String get faraidPreviewTitle;
+
+  /// No description provided for @faraidPreviewIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested shares from your family setup. Update when you’re ready.'**
+  String get faraidPreviewIntro;
+
+  /// No description provided for @faraidPreviewSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get faraidPreviewSave;
+
+  /// No description provided for @faraidPreviewTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get faraidPreviewTotal;
+
+  /// No description provided for @faraidPreviewSkippedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'We did not update {count} other beneficiary profile(s). Their share could not be auto-calculated.'**
+  String faraidPreviewSkippedNote(int count);
+
+  /// No description provided for @faraidSuggestSharesUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {count} beneficiaries.'**
+  String faraidSuggestSharesUpdated(int count);
+
+  /// No description provided for @faraidSuggestSharesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No beneficiary percentages were changed. Add missing relationships or set gender in Profile, then try again.'**
+  String get faraidSuggestSharesNone;
+
+  /// No description provided for @faraidSuggestSharesNeedGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your gender in Profile first, then try again.'**
+  String get faraidSuggestSharesNeedGender;
 
   /// No description provided for @percentageMustBeBetween0And100.
   ///
@@ -4897,6 +5347,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Property Trust'**
   String get propertyTrust;
+
+  /// No description provided for @couponsMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers & coupons'**
+  String get couponsMenuTitle;
+
+  /// No description provided for @couponsMenuSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout discounts'**
+  String get couponsMenuSubtitle;
+
+  /// No description provided for @couponsScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your coupons'**
+  String get couponsScreenTitle;
+
+  /// No description provided for @couponsScreenHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout savings'**
+  String get couponsScreenHeadline;
+
+  /// No description provided for @couponsScreenIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Use these when you pay. More may arrive from referrals and offers.'**
+  String get couponsScreenIntro;
+
+  /// No description provided for @couponsGoToReferralsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to referrals'**
+  String get couponsGoToReferralsButton;
+
+  /// No description provided for @couponsSectionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to use'**
+  String get couponsSectionActive;
+
+  /// No description provided for @couponsSectionPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Used or expired'**
+  String get couponsSectionPast;
+
+  /// No description provided for @couponsEmptyActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Referrals and offers can add coupons here.'**
+  String get couponsEmptyActive;
+
+  /// No description provided for @couponsEmptyActiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active coupons'**
+  String get couponsEmptyActiveTitle;
+
+  /// No description provided for @couponsEmptyPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Used and expired coupons appear here.'**
+  String get couponsEmptyPast;
+
+  /// No description provided for @couponsEmptyPastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No history yet'**
+  String get couponsEmptyPastTitle;
+
+  /// No description provided for @couponProductHibah.
+  ///
+  /// In en, this message translates to:
+  /// **'Hibah'**
+  String get couponProductHibah;
+
+  /// No description provided for @couponProductWasiat.
+  ///
+  /// In en, this message translates to:
+  /// **'Wasiat'**
+  String get couponProductWasiat;
+
+  /// No description provided for @couponProductOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer'**
+  String get couponProductOther;
+
+  /// No description provided for @couponDescriptionHibah.
+  ///
+  /// In en, this message translates to:
+  /// **'Hibah certificate fee—choose it under Payment on your Hibah screen before checkout.'**
+  String get couponDescriptionHibah;
+
+  /// No description provided for @couponDescriptionWasiat.
+  ///
+  /// In en, this message translates to:
+  /// **'Wasiat yearly access—choose it on {screenTitle} before you pay.'**
+  String couponDescriptionWasiat(String screenTitle);
+
+  /// No description provided for @couponDescriptionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'We’ll show where to use this at checkout.'**
+  String get couponDescriptionOther;
+
+  /// No description provided for @couponStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get couponStatusActive;
+
+  /// No description provided for @couponStatusUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get couponStatusUsed;
+
+  /// No description provided for @couponStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get couponStatusExpired;
+
+  /// No description provided for @couponDiscountPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% off'**
+  String couponDiscountPercent(int percent);
+
+  /// No description provided for @couponExpiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String couponExpiresOn(String date);
+
+  /// No description provided for @couponUsedOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Used on {date}'**
+  String couponUsedOnDate(String date);
+
+  /// No description provided for @checkoutCouponLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get checkoutCouponLabel;
+
+  /// No description provided for @checkoutNoCoupon.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get checkoutNoCoupon;
+
+  /// No description provided for @checkoutYouPay.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll pay'**
+  String get checkoutYouPay;
 }
 
 class _AppLocalizationsDelegate

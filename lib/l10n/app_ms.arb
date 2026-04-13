@@ -193,7 +193,7 @@
   "terminateSubscriptions": "Tamatkan Langganan",
   "transferAsGift": "Pindahkan sebagai Hadiah",
   "settleDebts": "Selesaikan Hutang",
-  "coSampul": "Co-sampul",
+  "coSampul": "Pelaksana",
   "beneficiary": "Penerima Manfaat",
   "guardian": "Penjaga",
   
@@ -231,9 +231,9 @@
   "teamAccessRefreshTooltip": "Segar semula senarai",
   "teamAccessInfoTooltip": "Panduan peranan",
   "teamAccessInfoTitle": "Panduan peranan",
-  "teamAccessInfoStandard": "Biasa: penggunaan aplikasi biasa. Tiada akses ke Akses pasukan atau alat pentadbiran kandungan.",
-  "teamAccessInfoMarketing": "Pemasaran: boleh urus kandungan AI dan pembelajaran. Tidak boleh beri peranan.",
-  "teamAccessInfoAdmin": "Pentadbir: akses penuh ke Akses pasukan, tetapan peranan, dan alat pentadbiran kandungan.",
+  "teamAccessInfoStandard": "Penggunaan aplikasi biasa. Tiada akses ke Akses pasukan atau alat pentadbiran kandungan.",
+  "teamAccessInfoMarketing": "Boleh urus kandungan AI dan pembelajaran. Tidak boleh beri peranan.",
+  "teamAccessInfoAdmin": "Akses penuh ke Akses pasukan, tetapan peranan, dan alat pentadbiran kandungan.",
   "teamAccessFilterLabel": "Peranan",
   "teamAccessFilterAll": "Semua",
   "teamAccessLoadFailed": "Kami tidak dapat memuatkan senarai pasukan. {error}",
@@ -276,7 +276,7 @@
   "reportBugsOrRequestFeatures": "Laporkan pepijat atau cadangkan ciri baharu",
   "about": "Mengenai",
   "appVersion": "Versi aplikasi",
-  "appVersionDemo": "1.0.0 (demo)",
+  "appVersionDemo": "1.0.0 (beta)",
   "termsOfService": "Terma Perkhidmatan",
   "termsTappedDemo": "Terma diketuk (demo)",
   "privacyPolicy": "Dasar Privasi",
@@ -407,8 +407,30 @@
     }
   },
   "shareLinkCopiedToClipboard": "Pautan kongsi disalin ke papan klip",
-  "willPublishedSuccessfully": "Wasiat berjaya diterbitkan",
-  "willUnpublishedSuccessfully": "Wasiat berjaya dinyahterbit",
+  "willPublishedSuccessfully": "Pautan sijil dihidupkan",
+  "willUnpublishedSuccessfully": "Pautan sijil dimatikan",
+  "wasiatCertificateDialogTitle": "Sijil",
+  "wasiatCertificateOn": "Jana sijil",
+  "wasiatCertificateOff": "Matikan pautan",
+  "wasiatCertificateConfirmation": "Pautan sijil anda sudah sedia.\n\nButiran penuh wasiat anda kekal peribadi dengan Sampul.",
+  "@wasiatCertificateConfirmation": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatCertificateConfirmationPre": "Kami akan cipta pautan sijil yang boleh dikongsi.\n\nButiran penuh wasiat anda kekal peribadi dengan Sampul.",
+  "wasiatViewCertificateTab": "Sijil",
+  "wasiatViewDetailsTab": "Butiran",
+  "wasiatDetailsPrivateNote": "Peribadi. Disimpan dengan Sampul selagi pelan anda aktif. Hanya dilepaskan dengan permintaan yang sah.",
+  "wasiatShareSheetTitle": "Kongsi sijil",
+  "wasiatShareSheetSubtitle": "Kongsi pautan sijil. Butiran anda kekal peribadi dengan Sampul.",
+  "wasiatShareSheetMore": "Lain-lain",
+  "wasiatShareSheetWhatsApp": "WhatsApp",
+  "wasiatShareSheetTelegram": "Telegram",
+  "wasiatShareSheetMessages": "Mesej",
+  "wasiatShareSheetEmail": "E-mel",
   "failedToPublishWill": "Gagal menerbitkan wasiat: {error}",
   "@failedToPublishWill": {
     "placeholders": {
@@ -441,6 +463,90 @@
       }
     }
   },
+  "wasiatPublishBlockedBody": "Untuk hidupkan pautan sijil, anda perlukan pelan tahunan yang aktif.\n\nKetik Lihat pelan untuk teruskan.",
+  "wasiatPublishReadyUntil": "Pelan aktif sehingga {date}",
+  "@wasiatPublishReadyUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatPublishReadyShort": "Pelan anda aktif.",
+  "wasiatViewPlanAndPay": "Lihat pelan",
+  "wasiatAccessBannerTitle": "Pelan diperlukan untuk terbit",
+  "wasiatAccessBannerSubtitle": "Pelan tahunan diperlukan.",
+  "wasiatAccessActiveUntil": "Sah sehingga {date}",
+  "@wasiatAccessActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatAccessPanelTitle": "Pelan anda",
+  "plansOverviewIntro": "Pelan, harga, dan sejarah bayaran.",
+  "planSectionWasiatTitle": "Wasiat",
+  "plansWasiatBadgeActive": "Aktif",
+  "plansWasiatBadgeInactive": "Tiada akses",
+  "plansWasiatBadgeEnded": "Tamat",
+  "planSectionPropertyTrustTitle": "Hartanah",
+  "planPropertyTrustSummary": "Dari RM 2,500 untuk satu aset. Pakej lebih besar dari RM 8,500. Jumlah penuh dipaparkan sebelum bayar.",
+  "planSectionTrustTitle": "Amanah Keluarga",
+  "planTrustSummary": "Pembiayaan minimum ialah {amount}. Yuran lain dipaparkan apabila anda teruskan dalam Amanah Keluarga.",
+  "@planTrustSummary": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "plansOpenPropertyTrust": "Buka Hartanah",
+  "plansOpenTrustDashboard": "Buka Amanah Keluarga",
+  "plansPaymentHistoryForPropertyTrust": "Bayaran hartanah",
+  "plansPaymentHistoryForTrust": "Bayaran amanah keluarga",
+  "plansPaymentHistoryEmptyProduct": "Tiada rekod lagi.",
+  "plansPaymentHistorySubtitleEmpty": "Tiada bayaran lagi",
+  "plansPaymentHistorySubtitleCount": "{count} bayaran",
+  "@plansPaymentHistorySubtitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plansPaymentTrustRefLabel": "Amanah Keluarga #{id}",
+  "@plansPaymentTrustRefLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "plansPaymentCertificateRefLabel": "Sijil",
+  "plansOverviewLoadError": "Ada masalah memuatkan pelan anda. Cuba lagi.",
+  "plansPaymentStatusRefunded": "Dikembalikan",
+  "wasiatAccessActiveNoEndDate": "Akses aktif",
+  "wasiatAccessInlineInactive": "Bayar untuk terbit",
+  "wasiatManagePlan": "Butiran",
+  "wasiatPlanHeadline": "Akses tahunan",
+  "wasiatPlanExplainerShort": "Akses tahunan. Perbaharui bila-bila masa.",
+  "wasiatPlanEndedOn": "Tamat {date}",
+  "@wasiatPlanEndedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wasiatPlanPayChip": "Bayar dengan CHIP",
+  "wasiatPlanRenewEarly": "Perbaharui awal",
+  "wasiatPlanPerYearLabel": "setahun",
+  "wasiatPaymentHistoryTitle": "Sejarah bayaran",
+  "wasiatPaymentHistoryEmpty": "Tiada bayaran lagi.",
+  "wasiatPaymentStatusPaid": "Dibayar",
+  "wasiatPaymentStatusFailed": "Gagal",
+  "wasiatPaymentStatusProcessing": "Diproses",
   "code": "Kod",
   "warningsReviewRecommended": "{count} amaran - Semakan disyorkan",
   "@warningsReviewRecommended": {
@@ -458,6 +564,10 @@
       }
     }
   },
+  "wasiatReviewSheetTitle": "Apa yang perlu dibetulkan",
+  "wasiatReviewSheetIssues": "Tindakan diperlukan",
+  "wasiatReviewSheetWarnings": "Pilihan",
+  "wasiatReviewSheetEditCta": "Edit wasiat",
   "published": "Diterbitkan",
   "deleteWill": "Padam Wasiat",
   "areYouSureDeleteWill": "Adakah anda pasti mahu memadam wasiat anda? Tindakan ini tidak boleh dibatalkan.",
@@ -737,10 +847,10 @@
   
   "aboutFamilyMembers": "Mengenai Ahli Keluarga",
   "letsAddYourFamily": "Mari kita tambah keluarga anda",
-  "addPeopleWhoMatterMost": "Tambah orang yang paling penting — Pusaka, penerima manfaat, dan penjaga — supaya wasiat anda kekal jelas dan bersambung.",
+  "addPeopleWhoMatterMost": "Tambah orang yang paling penting — pelaksana wasiat, penerima manfaat, dan penjaga — supaya wasiat anda kekal jelas dan bersambung.",
   "whyAddFamilyMembers": "Mengapa tambah ahli keluarga?",
-  "familyListConnectsToWill": "Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan Property Trust anda. Tambah Pusaka (Co-Sampul), penerima manfaat, dan penjaga.",
-  "assignExecutorsCoSampul": "Tugaskan Pusaka (Co-Sampul) yang akan melaksanakan wasiat anda.",
+  "familyListConnectsToWill": "Senarai keluarga anda bersambung dengan wasiat, amanah, dan perancangan Property Trust anda. Tambah pelaksana wasiat, penerima manfaat, dan penjaga.",
+  "assignExecutorsCoSampul": "Tugaskan pelaksana yang akan melaksanakan wasiat anda.",
   "listBeneficiariesWhoReceive": "Senaraikan penerima manfaat yang akan menerima aset anda.",
   "designateGuardiansForMinors": "Tentukan penjaga untuk kanak-kanak bawah umur jika diperlukan.",
   "addFamilyMember": "Tambah ahli keluarga",
@@ -756,8 +866,8 @@
   "relationship": "Hubungan",
   "relationshipRequired": "Hubungan diperlukan",
   "category": "Kategori",
-  "coSampulExecutor": "Co-sampul (Pusaka)",
-  "coSampulExecutorHelp": "Co-sampul (Pusaka): Orang yang dipercayai yang melaksanakan wasiat anda bersama-sama dengan anda.",
+  "coSampulExecutor": "Pelaksana",
+  "coSampulExecutorHelp": "Pelaksana: Orang yang dipercayai yang melaksanakan wasiat anda bersama Sampul.",
   "beneficiaryHelp": "Penerima Manfaat: Orang yang akan mewarisi aset yang anda pilih.",
   "guardianHelp": "Penjaga: Orang yang bertanggungjawab menjaga tanggungan atau kanak-kanak bawah umur anda.",
   "percentage0To100": "Peratusan (0 - 100)",
@@ -766,6 +876,34 @@
   "phone": "Telefon",
   "pleaseEnterValidEmailAddress": "Sila masukkan alamat e-mel yang sah",
   "pleaseProvidePercentageForBeneficiary": "Sila berikan peratusan untuk penerima manfaat",
+  "beneficiaryShareFieldLabel": "Bahagian mereka (%)",
+  "beneficiaryShareHelperDefault": "Boleh kosongkan dulu. Guna kalkulator Faraid dalam Keluarga Saya bila anda sudah bersedia.",
+  "faraidBannerTitle": "Kalkulator Faraid",
+  "faraidBannerSubtitle": "Cadangan berdasarkan maklumat keluarga anda. Kemaskini bila sudah bersedia.",
+  "faraidBannerCta": "Kira sekarang",
+  "faraidSuggestShares": "Kalkulator Faraid",
+  "faraidPreviewTitle": "Pratonton Faraid",
+  "faraidPreviewIntro": "Anggaran bahagian berdasarkan maklumat keluarga anda. Kemaskini bila anda sudah bersedia.",
+  "faraidPreviewSave": "Kemaskini",
+  "faraidPreviewTotal": "Jumlah",
+  "faraidPreviewSkippedNote": "Kami tidak mengemas kini {count} profil penerima faedah lain. Bahagian mereka tidak boleh dikira secara auto.",
+  "@faraidPreviewSkippedNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "faraidSuggestSharesUpdated": "{count} penerima faedah dikemas kini.",
+  "@faraidSuggestSharesUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "faraidSuggestSharesNone": "Tiada peratusan ditukar. Tambah hubungan yang kurang atau tetapkan jantina dalam Profil, kemudian cuba lagi.",
+  "faraidSuggestSharesNeedGender": "Tambah jantina dalam Profil dahulu, kemudian cuba lagi.",
   "percentageMustBeBetween0And100": "Peratusan mestilah antara 0 dan 100",
   "contactId": "Hubungan & ID",
   "address": "Alamat",
@@ -1261,5 +1399,61 @@
     }
   },
   "profile": "Profil",
-  "propertyTrust": "Amanah Hartanah"
+  "propertyTrust": "Amanah Hartanah",
+
+  "couponsMenuTitle": "Tawaran & kupon",
+  "couponsMenuSubtitle": "Diskaun semasa bayar",
+  "couponsScreenTitle": "Kupon anda",
+  "couponsScreenHeadline": "Jimat semasa bayar",
+  "couponsScreenIntro": "Guna semasa bayar. Lagi boleh datang dari rujukan dan tawaran.",
+  "couponsGoToReferralsButton": "Ke halaman rujukan",
+  "couponsSectionActive": "Sedia digunakan",
+  "couponsSectionPast": "Telah guna atau tamat tempoh",
+  "couponsEmptyActive": "Rujukan dan tawaran boleh menambah kupon di sini.",
+  "couponsEmptyActiveTitle": "Tiada kupon aktif",
+  "couponsEmptyPast": "Kupon yang telah guna atau tamat tempoh ada di sini.",
+  "couponsEmptyPastTitle": "Tiada rekod lagi",
+  "couponProductHibah": "Hibah",
+  "couponProductWasiat": "Wasiat",
+  "couponProductOther": "Tawaran",
+  "couponDescriptionHibah": "Yuran sijil Hibah—pilih di bawah Bayaran pada skrin Hibah sebelum checkout.",
+  "couponDescriptionWasiat": "Akses tahunan Wasiat—pilih di {screenTitle} sebelum bayar.",
+  "@couponDescriptionWasiat": {
+    "placeholders": {
+      "screenTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "couponDescriptionOther": "Kami tunjuk di mana guna ini semasa checkout.",
+  "couponStatusActive": "Aktif",
+  "couponStatusUsed": "Telah guna",
+  "couponStatusExpired": "Tamat tempoh",
+  "couponDiscountPercent": "Diskaun {percent}%",
+  "@couponDiscountPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "couponExpiresOn": "Sah sehingga {date}",
+  "@couponExpiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "couponUsedOnDate": "Digunakan pada {date}",
+  "@couponUsedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutCouponLabel": "Diskaun",
+  "checkoutNoCoupon": "Tiada",
+  "checkoutYouPay": "Jumlah bayaran"
 }

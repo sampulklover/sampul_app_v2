@@ -80,6 +80,50 @@ class FileUploadService {
       mimeType: mimeType,
     );
   }
+
+  /// Upload raw bytes to Supabase storage.
+  ///
+  /// - Uses [bucket] (defaults to 'images' to match existing app convention)
+  /// - Stores under `[userId]/[namespace]/[timestamp-micro]-[fileName]`
+  /// - Returns both storage path and a public URL
+  static Future<FileUploadResult> uploadBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String userId,
+    required String namespace,
+    String? mimeType,
+    String bucket = 'images',
+  }) async {
+    final int ts = DateTime.now().millisecondsSinceEpoch;
+    final int micro = DateTime.now().microsecondsSinceEpoch % 1000000000;
+    final String safeNamespace = namespace.trim().isEmpty ? 'uploads' : namespace.trim();
+    final String key = '$userId/$safeNamespace/$ts-$micro-$fileName';
+    final String resolvedMimeType =
+        (mimeType?.trim().isNotEmpty == true ? mimeType!.trim() : null) ??
+            (lookupMimeType(fileName, headerBytes: bytes) ??
+                'application/octet-stream');
+
+    final responsePath = await _client.storage.from(bucket).uploadBinary(
+          key,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: resolvedMimeType,
+            upsert: true,
+            cacheControl: '3600',
+          ),
+        );
+    final String normalizedPath = responsePath.startsWith('$bucket/')
+        ? responsePath.substring(bucket.length + 1)
+        : responsePath;
+    final String publicUrl = _client.storage.from(bucket).getPublicUrl(normalizedPath);
+    return FileUploadResult(
+      storagePath: normalizedPath,
+      publicUrl: publicUrl,
+      fileName: fileName,
+      sizeBytes: bytes.length,
+      mimeType: resolvedMimeType,
+    );
+  }
 }
 
 

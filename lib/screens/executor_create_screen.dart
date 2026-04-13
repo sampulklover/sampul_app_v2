@@ -12,6 +12,10 @@ import 'executor_assets_form_screen.dart';
 import 'executor_info_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
 import '../services/notification_service.dart';
+import '../services/analytics_service.dart';
+import '../config/analytics_screens.dart';
+import '../services/executor_documents_service.dart';
+import 'executor_document_form_screen.dart';
 
 class ExecutorCreateScreen extends StatefulWidget {
   const ExecutorCreateScreen({super.key});
@@ -51,8 +55,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
   Map<String, dynamic>? _guardianData;
 
   // Step 6: Documents
-  final TextEditingController _supportingDocumentsCtrl = TextEditingController();
-  final TextEditingController _additionalNotesCtrl = TextEditingController();
+  final List<ExecutorDocumentDraft> _supportingDocs = <ExecutorDocumentDraft>[];
 
   int _currentStep = 0; // Now starts at Personal Information (was step 1)
   bool _isSubmitting = false;
@@ -61,6 +64,9 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
   void initState() {
     super.initState();
     _prefillFromProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.executorCreate);
+    });
   }
 
   @override
@@ -73,9 +79,40 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
     _correspondenceCityCtrl.dispose();
     _correspondencePostcodeCtrl.dispose();
     _correspondenceStateCtrl.dispose();
-    _supportingDocumentsCtrl.dispose();
-    _additionalNotesCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _addSupportingDocument() async {
+    final ExecutorDocumentDraft? draft =
+        await Navigator.of(context).push<ExecutorDocumentDraft>(
+      MaterialPageRoute<ExecutorDocumentDraft>(
+        builder: (_) => const ExecutorDocumentFormScreen(),
+      ),
+    );
+    if (draft == null) return;
+    setState(() => _supportingDocs.add(draft));
+  }
+
+  Future<void> _uploadSupportingDocumentsToTable({
+    required int executorId,
+  }) async {
+    if (_supportingDocs.isEmpty) return;
+    for (final ExecutorDocumentDraft draft in _supportingDocs) {
+      final bytes = draft.file.bytes;
+      if (bytes == null) {
+        throw Exception(
+          'Unable to read ${draft.file.name}. Please remove and re-upload it.',
+        );
+      }
+      await ExecutorDocumentsService.instance.uploadAndCreateRow(
+        executorId: executorId,
+        title: draft.title,
+        bytes: bytes,
+        fileName: draft.file.name,
+        mimeType: draft.mimeType,
+        documentType: 'supporting',
+      );
+    }
   }
 
   Future<void> _prefillFromProfile() async {
@@ -648,31 +685,40 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _supportingDocumentsCtrl,
-              maxLines: 5,
-              decoration: FormDecorationHelper.roundedInputDecoration(
-                context: context,
-                labelText: 'Supporting Documents',
-                hintText: 'List the documents you have (e.g., Death certificate, Will, Identity documents, etc.)',
-                prefixIcon: Icons.description_outlined,
-              ).copyWith(
-                alignLabelWithHint: true,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _additionalNotesCtrl,
-              maxLines: 5,
-              decoration: FormDecorationHelper.roundedInputDecoration(
-                context: context,
-                labelText: 'Additional Notes',
-                hintText: 'Any additional information that might help with your executor registration...',
-                prefixIcon: Icons.note_outlined,
-              ).copyWith(
-                alignLabelWithHint: true,
-              ),
+            const SizedBox(height: 12),
+            if (_supportingDocs.isEmpty)
+              Text(
+                'You can add documents now, or come back to it later.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              )
+            else
+              ..._supportingDocs.map((ExecutorDocumentDraft doc) {
+                final String subtitle = [
+                  doc.file.name,
+                  '${(doc.file.size / 1024).toStringAsFixed(1)} KB',
+                ].join(' • ');
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const Icon(Icons.attachment_outlined),
+                    title: Text(doc.title),
+                    subtitle: Text(subtitle),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () {
+                        setState(
+                          () => _supportingDocs.removeWhere((d) => d.id == doc.id),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              }),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _addSupportingDocument,
+              icon: const Icon(Icons.upload_file_outlined),
+              label: const Text('Add document'),
             ),
           ],
         ),
@@ -817,6 +863,40 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                 ),
               ),
             ),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.insert_drive_file_outlined,
+                        color: const Color.fromRGBO(49, 24, 211, 1),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Supporting Documents',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  _buildReviewRow(
+                    'Pending',
+                    _supportingDocs.isEmpty
+                        ? 'None'
+                        : '${_supportingDocs.length} file(s)',
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -944,7 +1024,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               .select()
               .limit(1);
           final Map<String, dynamic> createdExecutor =
-              executorResult.first as Map<String, dynamic>;
+              executorResult.first;
           executorId = createdExecutor['id'] as int;
 
           // Create an in-app notification so user can see their Pusaka
@@ -974,6 +1054,9 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
       if (executorId == null) {
         throw Exception('Failed to create executor after multiple attempts');
       }
+
+      // Upload supporting documents (if any) to executor_documents table
+      await _uploadSupportingDocumentsToTable(executorId: executorId);
 
       // Step 2: Create executor_deceased record
       if (_deceasedData == null) {

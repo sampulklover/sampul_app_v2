@@ -3,25 +3,27 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
-import '../controllers/theme_controller.dart';
 import '../controllers/locale_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
-import 'onboarding_flow_screen.dart';
-import 'onboarding_goal_selection_screen.dart';
 import '../services/supabase_service.dart';
 import '../services/verification_service.dart';
 import '../services/account_service.dart';
 import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
 import 'referral_dashboard_screen.dart';
+import 'user_coupons_screen.dart';
 import 'admin_ai_settings_screen.dart';
 import 'admin_learning_resources_screen.dart';
 import 'admin_team_access_screen.dart';
 import '../utils/admin_utils.dart';
 import '../services/image_upload_service.dart';
 import '../utils/card_decoration_helper.dart';
+import '../services/analytics_service.dart';
+import '../config/analytics_screens.dart';
+import '../utils/url_launch_helper.dart';
+import 'plans_overview_screen.dart';
 
 enum _FeedbackType {
   bug,
@@ -36,6 +38,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
+  static final Uri _policyUri = Uri.parse('https://sampul.co/policy');
+
   UserProfile? _userProfile;
   bool _isLoadingProfile = true;
   bool _isVerified = false;
@@ -52,6 +56,9 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     _loadUserProfile();
     _loadVerificationStatus();
     _loadStaffAccess();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.mainSettings);
+    });
   }
 
   Future<void> _loadStaffAccess() async {
@@ -954,6 +961,29 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     );
   }
 
+  Future<void> _openPolicyPage() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final bool opened = await launchUriPreferInAppBrowser(_policyUri);
+      if (opened) {
+        await AnalyticsService.capture('policy opened', properties: const <String, Object>{
+          'source': 'settings',
+        });
+        return;
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.couldNotOpenVerificationLink)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.unexpectedError(e.toString()))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -1022,7 +1052,10 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   trailing: TextButton(
                     onPressed: () async {
                       final result = await Navigator.of(context).push(
-                        MaterialPageRoute(
+                        MaterialPageRoute<bool>(
+                          settings: const RouteSettings(
+                            name: AnalyticsScreens.editProfile,
+                          ),
                           builder: (context) => const EditProfileScreen(),
                         ),
                       );
@@ -1082,6 +1115,23 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.receipt_long_outlined),
+                  title: Text(l10n.wasiatAccessPanelTitle),
+                  subtitle: Text(l10n.plansOverviewIntro),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(
+                          name: AnalyticsScreens.plansOverview,
+                        ),
+                        builder: (_) => const PlansOverviewScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.logout),
                   title: Text(l10n.logOut),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -1120,32 +1170,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             ),
           ),
 
-          // Billing / subscription section temporarily hidden
-          // To re-enable, restore the section header and card below.
-          // const SizedBox(height: 16),
-          // _buildSectionHeader(l10n.billing),
-          // CardDecorationHelper.styledCard(
-          //   context: context,
-          //   padding: EdgeInsets.zero,
-          //   child: Column(
-          //     children: <Widget>[
-          //       ListTile(
-          //         leading: const Icon(Icons.credit_card_outlined),
-          //         title: Text(l10n.plansAndSubscription),
-          //         subtitle: Text(l10n.manageYourSampulPlan),
-          //         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          //         onTap: () {
-          //           Navigator.of(context).push(
-          //             MaterialPageRoute<void>(
-          //               builder: (_) => const BillingScreen(),
-          //             ),
-          //           );
-          //         },
-          //       ),
-          //     ],
-          //   ),
-          // ),
-
           const SizedBox(height: 16),
           _buildSectionHeader(l10n.preferences),
           CardDecorationHelper.styledCard(
@@ -1160,7 +1184,29 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(
+                          name: AnalyticsScreens.referralDashboard,
+                        ),
+                        builder: (_) => const ReferralDashboardScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.local_offer_outlined),
+                  title: Text(l10n.couponsMenuTitle),
+                  subtitle: Text(l10n.couponsMenuSubtitle),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        settings: const RouteSettings(
+                          name: AnalyticsScreens.coupons,
+                        ),
+                        builder: (_) => const UserCouponsScreen(),
+                      ),
                     );
                   },
                 ),
@@ -1175,6 +1221,9 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
+                          settings: const RouteSettings(
+                            name: AnalyticsScreens.adminAiSettings,
+                          ),
                           builder: (_) => const AdminAiSettingsScreen(),
                         ),
                       );
@@ -1189,6 +1238,9 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
+                          settings: const RouteSettings(
+                            name: AnalyticsScreens.adminLearningResources,
+                          ),
                           builder: (_) => const AdminLearningResourcesScreen(),
                         ),
                       );
@@ -1206,6 +1258,9 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
+                          settings: const RouteSettings(
+                            name: AnalyticsScreens.adminTeamAccess,
+                          ),
                           builder: (_) => const AdminTeamAccessScreen(),
                         ),
                       );
@@ -1213,62 +1268,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                   ),
                   const Divider(height: 1),
                 ],
-                SwitchListTile(
-                  value: ThemeController.instance.themeMode == ThemeMode.dark,
-                  onChanged: (bool value) {
-                    ThemeController.instance.toggleDarkMode(value);
-                    setState(() {});
-                  },
-                  secondary: const Icon(Icons.dark_mode_outlined),
-                  title: Text(l10n.darkMode),
-                ),
-                const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.language_outlined),
                   title: Text(AppLocalizations.of(context)!.language),
                   subtitle: Text(_getLanguageName(context)),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _showLanguageSelector(context),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.replay_outlined),
-                  title: Text(l10n.restartOnboarding),
-                  subtitle: Text(l10n.runTheSetupFlowAgain),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () async {
-                    try {
-                      final user = AuthController.instance.currentUser;
-                      if (user == null) {
-                        throw Exception('You must be signed in');
-                      }
-
-                      // Update profiles.isOnboard to false
-                      await SupabaseService.instance.client
-                          .from('profiles')
-                          .update(<String, dynamic>{'isOnboard': false})
-                          .eq('uuid', user.id);
-
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.onboardingHasBeenReset)),
-                      );
-
-                      // Launch onboarding goal selection screen
-                      // Using push to allow user to complete and return
-                      await Navigator.of(context).push(
-                        MaterialPageRoute<bool>(
-                          builder: (_) => const OnboardingGoalSelectionScreen(),
-                          fullscreenDialog: true,
-                        ),
-                      );
-                    } catch (e) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.failedToResetOnboarding(e.toString())), backgroundColor: Colors.red),
-                      );
-                    }
-                  },
                 ),
               ],
             ),
@@ -1290,31 +1295,17 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: Text(l10n.appVersion),
-                  subtitle: Text(l10n.appVersionDemo),
-                ),
-                const Divider(height: 1),
-                ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: Text(l10n.termsOfService),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.termsTappedDemo)),
-                    );
-                  },
+                  onTap: _openPolicyPage,
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: Text(l10n.privacyPolicy),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.privacyTappedDemo)),
-                    );
-                  },
+                  onTap: _openPolicyPage,
                 ),
               ],
             ),
@@ -1331,6 +1322,16 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              '${l10n.appVersion} ${l10n.appVersionDemo}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
         ),
       ),
@@ -1465,6 +1466,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     }
 
     // User clicked "Start Verification", proceed with API call
+    await AnalyticsService.capture(
+      'verification started',
+      properties: const <String, Object>{
+        'provider': 'didit',
+      },
+    );
     await _startVerificationProcess();
   }
 
@@ -1544,6 +1551,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       // Open verification URL directly
       final uri = Uri.parse(verificationUrl);
       if (await canLaunchUrl(uri)) {
+        await AnalyticsService.capture(
+          'verification link opened',
+          properties: const <String, Object>{
+            'provider': 'didit',
+          },
+        );
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         // Refresh verification status when user returns from Didit
         // This will be handled by didChangeAppLifecycleState
@@ -1558,6 +1571,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
         }
       }
     } catch (e, stackTrace) {
+      await AnalyticsService.capture(
+        'verification failed',
+        properties: const <String, Object>{
+          'provider': 'didit',
+        },
+      );
       print('🔴 [VERIFICATION] ERROR occurred!');
       print('🔴 [VERIFICATION] Error: $e');
       print('🔴 [VERIFICATION] Stack trace: $stackTrace');

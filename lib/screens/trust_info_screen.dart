@@ -198,26 +198,7 @@ class _TrustInfoScreenState extends State<TrustInfoScreen> {
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: l10n.sampulPartnerWithRakyat,
-                                  ),
-                                  WidgetSpan(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(l10n.learnMoreAboutPartners),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        l10n.learnMore,
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: colorScheme.primary,
-                                          decoration: TextDecoration.underline,
-                                          decorationColor: colorScheme.primary,
-                                        ),
-                                      ),
-                                    ),
+                                    text: l10n.sampulPartnerWithRakyat.trimRight(),
                                   ),
                                 ],
                               ),

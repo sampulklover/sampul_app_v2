@@ -14,6 +14,8 @@ import 'trust_info_screen.dart';
 import 'edit_profile_screen.dart';
 import 'fund_support_config_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
+import '../services/analytics_service.dart';
+import '../config/analytics_screens.dart';
 
 class TrustCreateScreen extends StatefulWidget {
   const TrustCreateScreen({super.key});
@@ -84,6 +86,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     super.initState();
     _prefillFromProfile();
     _fetchFamilyMembers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.trustCreate);
+    });
   }
 
   Future<void> _fetchFamilyMembers() async {
@@ -359,6 +364,9 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                       final updatedConfig =
                           await Navigator.of(context).push<Map<String, dynamic>>(
                         MaterialPageRoute(
+                          settings: const RouteSettings(
+                            name: 'Fund support config',
+                          ),
                           builder: (context) => FundSupportConfigScreen(
                             categoryId: categoryId,
                             category: category,

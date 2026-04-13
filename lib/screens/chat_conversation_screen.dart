@@ -9,7 +9,7 @@ import '../services/will_service.dart';
 import '../models/user_profile.dart';
 import '../services/chat_service.dart';
 import '../services/file_upload_service.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../utils/url_launch_helper.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -598,7 +598,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                       onTap: () async {
                         final uri = Uri.tryParse(message.content);
                         if (uri != null) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          await launchUriPreferInAppBrowser(uri);
                         }
                       },
                       child: Row(

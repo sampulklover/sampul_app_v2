@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../controllers/auth_controller.dart';
 import '../models/hibah.dart';
@@ -57,7 +59,8 @@ class HibahService {
         // Create in-app notification for new hibah submission
         await NotificationService.instance.createNotification(
           title: 'Property Trust submission created',
-          body: 'Your Property Trust submission ($certificateId) has been received.',
+          body:
+              'Your Property Trust submission ($certificateId) has been received.',
           type: 'hibah_submitted',
           data: <String, dynamic>{'hibah_id': created.id},
         );
@@ -108,19 +111,86 @@ class HibahService {
         .toList();
   }
 
+  Future<HibahGroup> updateGroup({
+    required String groupId,
+    required HibahGroupRequest group,
+  }) async {
+    final Map<String, dynamic>? updated = await _client
+        .from('hibah_group')
+        .update(group.toUpdateMap())
+        .eq('id', groupId)
+        .select()
+        .maybeSingle();
+
+    if (updated == null) {
+      throw Exception('No changes were saved. Please try again.');
+    }
+
+    return HibahGroup.fromJson(updated);
+  }
+
+  Future<void> addDocument({
+    required String hibahId,
+    required String documentType,
+    required String fileName,
+    required Uint8List bytes,
+    required String mimeType,
+    String? hibahGroupId,
+  }) async {
+    final user = AuthController.instance.currentUser;
+    if (user == null) {
+      throw Exception('You must be signed in to upload documents.');
+    }
+
+    final String fileExtension = fileName.contains('.')
+        ? fileName.split('.').last
+        : 'bin';
+    final String uniqueName =
+        '${DateTime.now().millisecondsSinceEpoch}-${(DateTime.now().microsecondsSinceEpoch % 1000000000).toString()}.$fileExtension';
+    final String key = '${user.id}/hibah-documents/$uniqueName';
+
+    await _client.storage
+        .from('images')
+        .uploadBinary(
+          key,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: true),
+        );
+
+    await _client.from('hibah_documents').insert(<String, dynamic>{
+      'submission_id': hibahId,
+      'hibah_group_id': hibahGroupId,
+      'file_name': fileName,
+      'file_path': key,
+      'file_size': bytes.length,
+      'file_type': mimeType,
+      'document_type': documentType,
+    });
+  }
+
+  Future<void> deleteDocument(HibahDocument document) async {
+    try {
+      await _client.storage.from('images').remove(<String>[document.filePath]);
+    } catch (_) {
+      // Keep going so the database row can still be removed.
+    }
+
+    await _client.from('hibah_documents').delete().eq('id', document.id);
+  }
+
   Future<void> deleteHibah(String id) async {
     // First, get all documents to delete their files from storage
     final List<dynamic> docRows = await _client
         .from('hibah_documents')
         .select('file_path')
         .eq('submission_id', id);
-    
+
     // Delete files from storage
     if (docRows.isNotEmpty) {
       final List<String> filePaths = docRows
           .map((dynamic row) => row['file_path'] as String)
           .toList();
-      
+
       try {
         await _client.storage.from('images').remove(filePaths);
       } catch (e) {
@@ -128,7 +198,7 @@ class HibahService {
         print('Error deleting files from storage: $e');
       }
     }
-    
+
     // Delete database records (cascading delete)
     await _client.from('hibah_documents').delete().eq('submission_id', id);
     await _client.from('hibah_group').delete().eq('hibah_id', id);

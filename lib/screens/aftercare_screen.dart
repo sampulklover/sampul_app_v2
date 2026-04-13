@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/care_team_member.dart';
 import '../services/care_team_service.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/card_decoration_helper.dart';
+import '../utils/url_launch_helper.dart';
 
 class AftercareScreen extends StatefulWidget {
   const AftercareScreen({super.key});
@@ -289,8 +289,8 @@ class _CareTeamCard extends StatelessWidget {
   Future<void> _bookAppointment(BuildContext context) async {
     try {
       final uri = Uri.parse(member.bookingUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (await launchUriPreferInAppBrowser(uri)) {
+        return;
       } else {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

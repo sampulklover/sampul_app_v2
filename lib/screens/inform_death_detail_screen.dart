@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../services/supabase_service.dart';
+import '../utils/url_launch_helper.dart';
 import 'inform_death_form_screen.dart';
 
 class InformDeathDetailScreen extends StatelessWidget {
@@ -43,8 +42,8 @@ class InformDeathDetailScreen extends StatelessWidget {
 
   Future<void> _openUrl(BuildContext context, String url) async {
     final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (await launchUriPreferInAppBrowser(uri)) {
+      return;
     } else {
       if (!context.mounted) return;
       final l10n = AppLocalizations.of(context)!;

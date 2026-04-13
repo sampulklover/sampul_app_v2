@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
+import '../config/analytics_screens.dart';
+import '../services/analytics_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,6 +16,14 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.logScreen(AnalyticsScreens.onboarding);
+    });
+  }
 
   List<_OnboardingPageData> _getPages(AppLocalizations l10n) {
     return <_OnboardingPageData>[
@@ -44,6 +54,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeAndGo(Widget destination) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_completed', true);
+
+    await AnalyticsService.capture(
+      'onboarding completed',
+      properties: <String, Object>{
+        'destination': destination is LoginScreen ? 'login' : 'sign_up',
+      },
+    );
+
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => destination),

@@ -38,6 +38,7 @@ import 'edit_profile_screen.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../utils/sampul_icons.dart';
 import 'asset_preview_screen.dart';
+import '../config/analytics_screens.dart';
 
 const Color _trustAccentColor = Color.fromRGBO(83, 61, 233, 1);
 
@@ -88,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showOnboardingModal() async {
     final bool? result = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
+        settings: const RouteSettings(name: AnalyticsScreens.onboardingGoalSelection),
         builder: (_) => const OnboardingGoalSelectionScreen(),
         fullscreenDialog: true,
       ),
@@ -182,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             : () async {
                                 final result = await Navigator.of(context).push<bool>(
                                   MaterialPageRoute<bool>(
+                                    settings: const RouteSettings(name: AnalyticsScreens.editProfile),
                                     builder: (_) => const EditProfileScreen(),
                                   ),
                                 );
@@ -242,7 +245,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         tooltip: l10n.referrals,
                         onPressed: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => const ReferralDashboardScreen()),
+                            MaterialPageRoute<void>(
+                              settings: const RouteSettings(name: AnalyticsScreens.referralDashboard),
+                              builder: (_) => const ReferralDashboardScreen(),
+                            ),
                           );
                         },
                         icon: SampulIcons.buildIcon(
@@ -255,7 +261,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       IconButton(
                         onPressed: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => const NotificationScreen()),
+                            MaterialPageRoute<void>(
+                              settings: const RouteSettings(name: AnalyticsScreens.notifications),
+                              builder: (_) => const NotificationScreen(),
+                            ),
                           );
                         },
                         icon: SampulIcons.buildIcon(
@@ -301,7 +310,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         actionText: l10n.seeAll,
                         onAction: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => const AssetsListScreen()),
+                            MaterialPageRoute<void>(
+                              settings: const RouteSettings(name: AnalyticsScreens.assetsList),
+                              builder: (_) => const AssetsListScreen(),
+                            ),
                           );
                           // Refresh data when returning from assets list
                           await _refreshData();
@@ -323,7 +335,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         actionText: l10n.seeAll,
                         onAction: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => const FamilyListScreen()),
+                            MaterialPageRoute<void>(
+                              settings: const RouteSettings(name: AnalyticsScreens.familyList),
+                              builder: (_) => const FamilyListScreen(),
+                            ),
                           );
                           // Refresh data when returning from family list
                           await _refreshData();
@@ -465,9 +480,9 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
   Color _statusColor(BuildContext context, TrustStatus s) {
     switch (s) {
       case TrustStatus.submitted:
-        return Colors.orange.shade700;
+        return Colors.blue.shade600;
       case TrustStatus.approved:
-        return Colors.green.shade700;
+        return Colors.green;
       case TrustStatus.rejected:
         return Colors.red.shade700;
       case TrustStatus.draft:
@@ -537,6 +552,9 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                     // successfully, the flow returns the created Trust instance.
                     final Trust? createdTrust = await Navigator.of(context).push<Trust>(
                       MaterialPageRoute<Trust>(
+                        settings: RouteSettings(
+                          name: hasSeenAbout ? AnalyticsScreens.trustCreate : AnalyticsScreens.trustInfo,
+                        ),
                         builder: (_) =>
                             hasSeenAbout ? const TrustCreateScreen() : const TrustInfoScreen(),
                       ),
@@ -662,6 +680,9 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                         // successfully, the flow returns the created Trust instance.
                         final Trust? createdTrust = await Navigator.of(context).push<Trust>(
                           MaterialPageRoute<Trust>(
+                            settings: RouteSettings(
+                              name: hasSeenAbout ? AnalyticsScreens.trustCreate : AnalyticsScreens.trustInfo,
+                            ),
                             builder: (_) => hasSeenAbout
                                 ? const TrustCreateScreen()
                                 : const TrustInfoScreen(),
@@ -758,6 +779,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
+                          settings: const RouteSettings(name: AnalyticsScreens.trustDashboard),
                           builder: (context) => TrustDashboardScreen(trust: trust),
                         ),
                       ).then((_) {
@@ -857,7 +879,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                     width: 8,
                                     height: 8,
                                     decoration: BoxDecoration(
-                                      color: isActive ? Colors.green : _statusColor(context, status),
+                                      color: _statusColor(context, status),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -868,7 +890,7 @@ class _TrustCardsCarouselState extends State<_TrustCardsCarousel> {
                                       return Text(
                                         isActive ? l10n.yourPlanIsActive : _statusLabel(status, context),
                                         style: theme.textTheme.bodySmall?.copyWith(
-                                          color: isActive ? Colors.green.shade700 : _statusColor(context, status),
+                                          color: _statusColor(context, status),
                                         ),
                                       );
                                     },
@@ -1096,6 +1118,7 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
             Navigator.of(context)
                 .push<bool>(
               MaterialPageRoute<bool>(
+                settings: const RouteSettings(name: AnalyticsScreens.onboardingGoalSelection),
                 builder: (_) => const OnboardingGoalSelectionScreen(),
                 fullscreenDialog: true,
               ),
@@ -1232,6 +1255,7 @@ class _ActionsGrid extends StatelessWidget {
     if (label == l10n.will) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
+          settings: const RouteSettings(name: AnalyticsScreens.willManagement),
           builder: (context) => const WillManagementScreen(),
         ),
       );
@@ -1247,6 +1271,7 @@ class _ActionsGrid extends StatelessWidget {
         if (hibahs.isEmpty) {
           final bool? created = await Navigator.of(context).push<bool>(
             MaterialPageRoute<bool>(
+              settings: const RouteSettings(name: AnalyticsScreens.hibahInfo),
               builder: (context) => const HibahInfoScreen(),
             ),
           );
@@ -1256,6 +1281,7 @@ class _ActionsGrid extends StatelessWidget {
         } else {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
+              settings: const RouteSettings(name: AnalyticsScreens.hibahManagement),
               builder: (context) => const HibahManagementScreen(),
             ),
           );
@@ -1266,6 +1292,7 @@ class _ActionsGrid extends StatelessWidget {
         if (!context.mounted) return;
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.hibahManagement),
             builder: (context) => const HibahManagementScreen(),
           ),
         );
@@ -1279,6 +1306,7 @@ class _ActionsGrid extends StatelessWidget {
         if (executors.isEmpty) {
           final bool? created = await Navigator.of(context).push<bool>(
             MaterialPageRoute<bool>(
+              settings: const RouteSettings(name: AnalyticsScreens.executorInfo),
               builder: (context) => const ExecutorInfoScreen(),
             ),
           );
@@ -1286,6 +1314,7 @@ class _ActionsGrid extends StatelessWidget {
             onRefresh?.call();
             await Navigator.of(context).push(
               MaterialPageRoute<void>(
+                settings: const RouteSettings(name: AnalyticsScreens.executorManagement),
                 builder: (context) => const ExecutorManagementScreen(),
               ),
             );
@@ -1293,6 +1322,7 @@ class _ActionsGrid extends StatelessWidget {
         } else {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
+              settings: const RouteSettings(name: AnalyticsScreens.executorManagement),
               builder: (context) => const ExecutorManagementScreen(),
             ),
           );
@@ -1301,6 +1331,7 @@ class _ActionsGrid extends StatelessWidget {
       } catch (_) {
         await Navigator.of(context).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.executorManagement),
             builder: (context) => const ExecutorManagementScreen(),
           ),
         );
@@ -1318,6 +1349,7 @@ class _ActionsGrid extends StatelessWidget {
     if (label == l10n.assets) {
       Navigator.of(rootContext).push(
         MaterialPageRoute<void>(
+          settings: const RouteSettings(name: AnalyticsScreens.assetsList),
           builder: (context) => const AssetsListScreen(),
         ),
       ).then((_) {
@@ -1326,6 +1358,7 @@ class _ActionsGrid extends StatelessWidget {
     } else if (label == l10n.family) {
       Navigator.of(rootContext).push(
         MaterialPageRoute<void>(
+          settings: const RouteSettings(name: AnalyticsScreens.familyList),
           builder: (context) => const FamilyListScreen(),
         ),
       ).then((_) {
@@ -1334,6 +1367,7 @@ class _ActionsGrid extends StatelessWidget {
     } else if (label == l10n.checklist) {
       Navigator.of(rootContext).push(
         MaterialPageRoute<void>(
+          settings: const RouteSettings(name: AnalyticsScreens.checklist),
           builder: (context) => const ChecklistScreen(),
         ),
       );
@@ -1342,6 +1376,7 @@ class _ActionsGrid extends StatelessWidget {
       if (trusts.isEmpty) {
         Navigator.of(rootContext).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.trustInfo),
             builder: (context) => const TrustInfoScreen(),
           ),
         ).then((_) {
@@ -1350,6 +1385,7 @@ class _ActionsGrid extends StatelessWidget {
       } else {
         Navigator.of(rootContext).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.trustManagement),
             builder: (context) => const TrustManagementScreen(),
           ),
         ).then((_) {
@@ -1359,6 +1395,7 @@ class _ActionsGrid extends StatelessWidget {
     } else if (label == l10n.aftercare) {
       Navigator.of(rootContext).push(
         MaterialPageRoute<void>(
+          settings: const RouteSettings(name: AnalyticsScreens.aftercare),
           builder: (context) => const AftercareScreen(),
         ),
       );
@@ -1370,12 +1407,14 @@ class _ActionsGrid extends StatelessWidget {
       if (user == null) {
         final bool? created = await Navigator.of(rootContext).push<bool>(
           MaterialPageRoute<bool>(
+            settings: const RouteSettings(name: AnalyticsScreens.informDeath),
             builder: (context) => const InformDeathScreen(),
           ),
         );
         if (created == true && rootContext.mounted) {
           await Navigator.of(rootContext).push(
             MaterialPageRoute<void>(
+              settings: const RouteSettings(name: AnalyticsScreens.informDeathManagement),
               builder: (context) => const InformDeathManagementScreen(),
             ),
           );
@@ -1393,12 +1432,14 @@ class _ActionsGrid extends StatelessWidget {
         if (rows.isEmpty) {
           final bool? created = await Navigator.of(rootContext).push<bool>(
             MaterialPageRoute<bool>(
+              settings: const RouteSettings(name: AnalyticsScreens.informDeath),
               builder: (context) => const InformDeathScreen(),
             ),
           );
           if (created == true && rootContext.mounted) {
             await Navigator.of(rootContext).push(
               MaterialPageRoute<void>(
+                settings: const RouteSettings(name: AnalyticsScreens.informDeathManagement),
                 builder: (context) => const InformDeathManagementScreen(),
               ),
             );
@@ -1406,6 +1447,7 @@ class _ActionsGrid extends StatelessWidget {
         } else {
           await Navigator.of(rootContext).push(
             MaterialPageRoute<void>(
+              settings: const RouteSettings(name: AnalyticsScreens.informDeathManagement),
               builder: (context) => const InformDeathManagementScreen(),
             ),
           );
@@ -1414,6 +1456,7 @@ class _ActionsGrid extends StatelessWidget {
         if (!rootContext.mounted) return;
         await Navigator.of(rootContext).push(
           MaterialPageRoute<void>(
+            settings: const RouteSettings(name: AnalyticsScreens.informDeathManagement),
             builder: (context) => const InformDeathManagementScreen(),
           ),
         );
@@ -1749,8 +1792,11 @@ class _AssetsListState extends State<_AssetsList> {
                 // Otherwise, go directly to add asset page
                 final bool? result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
-                    builder: (_) => hasSeenAbout 
-                        ? const AddAssetScreen() 
+                    settings: RouteSettings(
+                      name: hasSeenAbout ? AnalyticsScreens.addAsset : AnalyticsScreens.aboutAssets,
+                    ),
+                    builder: (_) => hasSeenAbout
+                        ? const AddAssetScreen()
                         : const AssetInfoScreen(),
                   ),
                 );
@@ -1796,6 +1842,7 @@ class _AssetsListState extends State<_AssetsList> {
             onTap: () async {
               final bool? changed = await Navigator.of(context).push<bool>(
                 MaterialPageRoute<bool>(
+                  settings: const RouteSettings(name: AnalyticsScreens.assetPreview),
                   builder: (_) => AssetPreviewScreen(assetId: id),
                 ),
               );
@@ -1971,8 +2018,11 @@ class _FamilyListState extends State<_FamilyList> {
                 // Otherwise, go directly to add family member page
                 final bool? created = await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
-                    builder: (_) => hasSeenAbout 
-                        ? const AddFamilyMemberScreen() 
+                    settings: RouteSettings(
+                      name: hasSeenAbout ? AnalyticsScreens.addFamilyMember : AnalyticsScreens.aboutFamily,
+                    ),
+                    builder: (_) => hasSeenAbout
+                        ? const AddFamilyMemberScreen()
                         : const FamilyInfoScreen(),
                   ),
                 );
@@ -2011,8 +2061,11 @@ class _FamilyListState extends State<_FamilyList> {
           final String typeText = _prettyType(type, context);
           return GestureDetector(
             onTap: () async {
-              final bool? updated = await Navigator.of(context).push(
-                MaterialPageRoute<bool>(builder: (_) => EditFamilyMemberScreen(belovedId: (f['id'] as num).toInt())),
+              final bool? updated = await Navigator.of(context).push<bool>(
+                MaterialPageRoute<bool>(
+                  settings: const RouteSettings(name: AnalyticsScreens.editFamilyMember),
+                  builder: (_) => EditFamilyMemberScreen(belovedId: (f['id'] as num).toInt()),
+                ),
               );
               if (updated == true) {
                 await _loadFamily();

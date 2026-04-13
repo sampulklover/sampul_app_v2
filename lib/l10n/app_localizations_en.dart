@@ -428,7 +428,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settleDebts => 'Settle Debts';
 
   @override
-  String get coSampul => 'Co-sampul';
+  String get coSampul => 'Executor';
 
   @override
   String get beneficiary => 'Beneficiary';
@@ -539,15 +539,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get teamAccessInfoStandard =>
-      'Standard: regular app use. No access to Team access or content admin tools.';
+      'Regular app use. No access to Team access or content admin tools.';
 
   @override
   String get teamAccessInfoMarketing =>
-      'Marketing: can manage AI and learning content. Cannot assign roles.';
+      'Can manage AI and learning content. Cannot assign roles.';
 
   @override
   String get teamAccessInfoAdmin =>
-      'Admin: full access to Team access, role assignment, and content admin tools.';
+      'Full access to Team access, role assignment, and content admin tools.';
 
   @override
   String get teamAccessFilterLabel => 'Role';
@@ -622,7 +622,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appVersion => 'App version';
 
   @override
-  String get appVersionDemo => '1.0.0 (demo)';
+  String get appVersionDemo => '1.0.0 (beta)';
 
   @override
   String get termsOfService => 'Terms of Service';
@@ -948,10 +948,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareLinkCopiedToClipboard => 'Share link copied to clipboard';
 
   @override
-  String get willPublishedSuccessfully => 'Wasiat published successfully';
+  String get willPublishedSuccessfully => 'Certificate link is on';
 
   @override
-  String get willUnpublishedSuccessfully => 'Wasiat unpublished successfully';
+  String get willUnpublishedSuccessfully => 'Certificate link is off';
+
+  @override
+  String get wasiatCertificateDialogTitle => 'Certificate';
+
+  @override
+  String get wasiatCertificateOn => 'Generate certificate';
+
+  @override
+  String get wasiatCertificateOff => 'Turn off link';
+
+  @override
+  String wasiatCertificateConfirmation(String url) {
+    return 'Your certificate link is ready.\n\nYour full wasiat details stay private with Sampul.';
+  }
+
+  @override
+  String get wasiatCertificateConfirmationPre =>
+      'We’ll create a shareable certificate link.\n\nYour full wasiat details stay private with Sampul.';
+
+  @override
+  String get wasiatViewCertificateTab => 'Certificate';
+
+  @override
+  String get wasiatViewDetailsTab => 'Details';
+
+  @override
+  String get wasiatDetailsPrivateNote =>
+      'Private. Kept with Sampul while your plan is active. Only released with a valid request.';
+
+  @override
+  String get wasiatShareSheetTitle => 'Share certificate';
+
+  @override
+  String get wasiatShareSheetSubtitle =>
+      'Share the certificate link. Your details stay private with Sampul.';
+
+  @override
+  String get wasiatShareSheetMore => 'More';
+
+  @override
+  String get wasiatShareSheetWhatsApp => 'WhatsApp';
+
+  @override
+  String get wasiatShareSheetTelegram => 'Telegram';
+
+  @override
+  String get wasiatShareSheetMessages => 'Message';
+
+  @override
+  String get wasiatShareSheetEmail => 'Email';
 
   @override
   String failedToPublishWill(String error) {
@@ -974,6 +1024,147 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get wasiatPublishBlockedBody =>
+      'To turn on your certificate link, you’ll need an active yearly plan.\n\nTap View plans to continue.';
+
+  @override
+  String wasiatPublishReadyUntil(String date) {
+    return 'Plan active until $date';
+  }
+
+  @override
+  String get wasiatPublishReadyShort => 'Your plan is active.';
+
+  @override
+  String get wasiatViewPlanAndPay => 'View plans';
+
+  @override
+  String get wasiatAccessBannerTitle => 'Plan required to publish';
+
+  @override
+  String get wasiatAccessBannerSubtitle => 'A yearly plan is needed.';
+
+  @override
+  String wasiatAccessActiveUntil(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get wasiatAccessPanelTitle => 'Your plans';
+
+  @override
+  String get plansOverviewIntro => 'Plans, pricing, and payment history.';
+
+  @override
+  String get planSectionWasiatTitle => 'Wasiat';
+
+  @override
+  String get plansWasiatBadgeActive => 'Active';
+
+  @override
+  String get plansWasiatBadgeInactive => 'No access';
+
+  @override
+  String get plansWasiatBadgeEnded => 'Ended';
+
+  @override
+  String get planSectionPropertyTrustTitle => 'Property';
+
+  @override
+  String get planPropertyTrustSummary =>
+      'From RM 2,500 for one asset. Larger bundles from RM 8,500. You will see the full amount before you pay.';
+
+  @override
+  String get planSectionTrustTitle => 'Family Trust';
+
+  @override
+  String planTrustSummary(String amount) {
+    return 'Minimum funding is $amount. Other fees are shown when you continue in Family Trust.';
+  }
+
+  @override
+  String get plansOpenPropertyTrust => 'Open Property';
+
+  @override
+  String get plansOpenTrustDashboard => 'Open Family Trust';
+
+  @override
+  String get plansPaymentHistoryForPropertyTrust => 'Property payments';
+
+  @override
+  String get plansPaymentHistoryForTrust => 'Family Trust payments';
+
+  @override
+  String get plansPaymentHistoryEmptyProduct => 'Nothing recorded yet.';
+
+  @override
+  String get plansPaymentHistorySubtitleEmpty => 'No payments yet';
+
+  @override
+  String plansPaymentHistorySubtitleCount(int count) {
+    return '$count payments';
+  }
+
+  @override
+  String plansPaymentTrustRefLabel(String id) {
+    return 'Family Trust #$id';
+  }
+
+  @override
+  String get plansPaymentCertificateRefLabel => 'Certificate';
+
+  @override
+  String get plansOverviewLoadError =>
+      'Something went wrong loading your plans. Please try again.';
+
+  @override
+  String get plansPaymentStatusRefunded => 'Refunded';
+
+  @override
+  String get wasiatAccessActiveNoEndDate => 'Access active';
+
+  @override
+  String get wasiatAccessInlineInactive => 'Pay to publish';
+
+  @override
+  String get wasiatManagePlan => 'Details';
+
+  @override
+  String get wasiatPlanHeadline => 'Yearly access';
+
+  @override
+  String get wasiatPlanExplainerShort => 'Annual access. Renew anytime.';
+
+  @override
+  String wasiatPlanEndedOn(String date) {
+    return 'Ended $date';
+  }
+
+  @override
+  String get wasiatPlanPayChip => 'Pay with CHIP';
+
+  @override
+  String get wasiatPlanRenewEarly => 'Renew early';
+
+  @override
+  String get wasiatPlanPerYearLabel => 'per year';
+
+  @override
+  String get wasiatPaymentHistoryTitle => 'Payment history';
+
+  @override
+  String get wasiatPaymentHistoryEmpty => 'No payments yet.';
+
+  @override
+  String get wasiatPaymentStatusPaid => 'Paid';
+
+  @override
+  String get wasiatPaymentStatusFailed => 'Failed';
+
+  @override
+  String get wasiatPaymentStatusProcessing => 'Processing';
+
+  @override
   String get code => 'Code';
 
   @override
@@ -985,6 +1176,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String issuesActionRequired(int count) {
     return '$count issue(s) - Action required';
   }
+
+  @override
+  String get wasiatReviewSheetTitle => 'What to fix';
+
+  @override
+  String get wasiatReviewSheetIssues => 'Action required';
+
+  @override
+  String get wasiatReviewSheetWarnings => 'Optional';
+
+  @override
+  String get wasiatReviewSheetEditCta => 'Edit wasiat';
 
   @override
   String get published => 'Published';
@@ -1605,18 +1808,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addPeopleWhoMatterMost =>
-      'Add the people who matter most — Pusaka, beneficiaries, and guardians — so your will stays clear and connected.';
+      'Add the people who matter most — executors, beneficiaries, and guardians — so your will stays clear and connected.';
 
   @override
   String get whyAddFamilyMembers => 'Why add family members?';
 
   @override
   String get familyListConnectsToWill =>
-      'Your family list connects to your will, trust, and Property Trust planning. Add Pusaka (Co-Sampul), beneficiaries, and guardians.';
+      'Your family list connects to your will, trust, and Property Trust planning. Add executors, beneficiaries, and guardians.';
 
   @override
   String get assignExecutorsCoSampul =>
-      'Assign Pusaka (Co-Sampul) who will carry out your will.';
+      'Assign executors who will carry out your will.';
 
   @override
   String get listBeneficiariesWhoReceive =>
@@ -1666,11 +1869,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get category => 'Category';
 
   @override
-  String get coSampulExecutor => 'Co-sampul (Pusaka)';
+  String get coSampulExecutor => 'Executor';
 
   @override
   String get coSampulExecutorHelp =>
-      'Co-sampul (Pusaka): A trusted person who carries out your will together with you.';
+      'Executor: Someone you trust who carries out your will together with Sampul.';
 
   @override
   String get beneficiaryHelp =>
@@ -1696,6 +1899,57 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pleaseProvidePercentageForBeneficiary =>
       'Please provide percentage for beneficiary';
+
+  @override
+  String get beneficiaryShareFieldLabel => 'Their share (%)';
+
+  @override
+  String get beneficiaryShareHelperDefault =>
+      'You can leave this blank for now. Use the Faraid calculator on My Family when you\'re ready.';
+
+  @override
+  String get faraidBannerTitle => 'Faraid calculator';
+
+  @override
+  String get faraidBannerSubtitle =>
+      'Suggestions from your family details. Update when you’re ready.';
+
+  @override
+  String get faraidBannerCta => 'Calculate now';
+
+  @override
+  String get faraidSuggestShares => 'Faraid calculator';
+
+  @override
+  String get faraidPreviewTitle => 'Faraid preview';
+
+  @override
+  String get faraidPreviewIntro =>
+      'Suggested shares from your family setup. Update when you’re ready.';
+
+  @override
+  String get faraidPreviewSave => 'Update';
+
+  @override
+  String get faraidPreviewTotal => 'Total';
+
+  @override
+  String faraidPreviewSkippedNote(int count) {
+    return 'We did not update $count other beneficiary profile(s). Their share could not be auto-calculated.';
+  }
+
+  @override
+  String faraidSuggestSharesUpdated(int count) {
+    return 'Updated $count beneficiaries.';
+  }
+
+  @override
+  String get faraidSuggestSharesNone =>
+      'No beneficiary percentages were changed. Add missing relationships or set gender in Profile, then try again.';
+
+  @override
+  String get faraidSuggestSharesNeedGender =>
+      'Add your gender in Profile first, then try again.';
 
   @override
   String get percentageMustBeBetween0And100 =>
@@ -2698,4 +2952,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get propertyTrust => 'Property Trust';
+
+  @override
+  String get couponsMenuTitle => 'Offers & coupons';
+
+  @override
+  String get couponsMenuSubtitle => 'Checkout discounts';
+
+  @override
+  String get couponsScreenTitle => 'Your coupons';
+
+  @override
+  String get couponsScreenHeadline => 'Checkout savings';
+
+  @override
+  String get couponsScreenIntro =>
+      'Use these when you pay. More may arrive from referrals and offers.';
+
+  @override
+  String get couponsGoToReferralsButton => 'Go to referrals';
+
+  @override
+  String get couponsSectionActive => 'Ready to use';
+
+  @override
+  String get couponsSectionPast => 'Used or expired';
+
+  @override
+  String get couponsEmptyActive => 'Referrals and offers can add coupons here.';
+
+  @override
+  String get couponsEmptyActiveTitle => 'No active coupons';
+
+  @override
+  String get couponsEmptyPast => 'Used and expired coupons appear here.';
+
+  @override
+  String get couponsEmptyPastTitle => 'No history yet';
+
+  @override
+  String get couponProductHibah => 'Hibah';
+
+  @override
+  String get couponProductWasiat => 'Wasiat';
+
+  @override
+  String get couponProductOther => 'Offer';
+
+  @override
+  String get couponDescriptionHibah =>
+      'Hibah certificate fee—choose it under Payment on your Hibah screen before checkout.';
+
+  @override
+  String couponDescriptionWasiat(String screenTitle) {
+    return 'Wasiat yearly access—choose it on $screenTitle before you pay.';
+  }
+
+  @override
+  String get couponDescriptionOther =>
+      'We’ll show where to use this at checkout.';
+
+  @override
+  String get couponStatusActive => 'Active';
+
+  @override
+  String get couponStatusUsed => 'Used';
+
+  @override
+  String get couponStatusExpired => 'Expired';
+
+  @override
+  String couponDiscountPercent(int percent) {
+    return '$percent% off';
+  }
+
+  @override
+  String couponExpiresOn(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String couponUsedOnDate(String date) {
+    return 'Used on $date';
+  }
+
+  @override
+  String get checkoutCouponLabel => 'Discount';
+
+  @override
+  String get checkoutNoCoupon => 'None';
+
+  @override
+  String get checkoutYouPay => 'You\'ll pay';
 }

@@ -124,7 +124,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       if (type == 'guardian') {
         handle = '@Guardian';
       } else if (type == 'co_sampul') {
-        handle = '@Co-Sampul';
+        handle = '@Executor';
       } else if (type == 'future_owner') {
         handle = '@Future Owner';
       }
@@ -286,6 +286,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               ),
             );
             if (added == true) {
+              if (!mounted) return;
               await _fetchFamilyMembers();
             }
           },
@@ -300,10 +301,12 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   }
 
   Future<void> _fetchFamilyMembers() async {
+    if (!mounted) return;
     setState(() => _isLoadingFamilyMembers = true);
     try {
       final user = AuthController.instance.currentUser;
       if (user == null) {
+        if (!mounted) return;
         setState(() => _isLoadingFamilyMembers = false);
         return;
       }
@@ -1240,6 +1243,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
 
   Future<void> _handleRequestFund(ThemeData theme, ColorScheme colorScheme) async {
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
     // Show confirmation dialog
     final bool? confirmed = await showDialog<bool>(
       context: context,
@@ -1276,7 +1280,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       // 2. Notifying the trustee
       // 3. Updating the UI state
       
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger?.showSnackBar(
         SnackBar(
           content: Text(l10n.fundRequestSubmittedSuccessfully),
           backgroundColor: Colors.green,
@@ -1287,6 +1291,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
 
   Future<void> _handleCancelRequest(ThemeData theme, ColorScheme colorScheme) async {
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
     // Show confirmation dialog
     final bool? confirmed = await showDialog<bool>(
       context: context,
@@ -1323,7 +1328,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       // 2. Notifying the trustee
       // 3. Updating the UI state
       
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger?.showSnackBar(
         SnackBar(
           content: Text(l10n.fundRequestCancelledSuccessfully),
           backgroundColor: Colors.orange,
@@ -1338,6 +1343,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     bool isPaused,
   ) async {
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final categoryTitle = widget.category['title'] as String? ?? l10n.fundSupport;
     
     // Show confirmation dialog
@@ -1380,7 +1386,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
       // 2. Notifying the trustee
       // 3. Updating any scheduled payments
       
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger?.showSnackBar(
         SnackBar(
           content: Text(
             isPaused
@@ -1408,7 +1414,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     if (type == 'guardian') {
       handle = '@Guardian';
     } else if (type == 'co_sampul') {
-      handle = '@Co-Sampul';
+      handle = '@Executor';
     } else if (type == 'future_owner') {
       handle = '@Future Owner';
     }

@@ -2,12 +2,15 @@
 // Create a payment session with CHIP gateway
 //
 // Request: POST {
+//   "paymentType": "trust" | "hibah" | "wasiat",
 //   "trustId": "123",
 //   "trustCode": "TRUST-001",
+//   "hibahId": "uuid",
+//   "certificateId": "CERT-2026-123456789",
 //   "userId": "user-uuid",
 //   "clientId": "chip_customer_id",
 //   "amount": 1000000,
-//   "description": "Payment for Trust TRUST-001",
+//   "description": "Payment description",
 //   "successUrl": "sampul://trust?payment=success",
 //   "failureUrl": "sampul://trust?payment=failed"
 // }
@@ -24,6 +27,81 @@ function corsHeaders(extra: Record<string, string> = {}) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     ...extra,
   };
+}
+
+const TERMINAL_PAYMENT_STATUSES = new Set([
+  "failed",
+  "error",
+  "expired",
+  "cancelled",
+  "paid",
+  "settled",
+  "cleared",
+]);
+
+const COUPON_LOCK_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+async function couponBlockedByOpenCheckout(
+  supabase: ReturnType<typeof createClient>,
+  couponId: string,
+): Promise<boolean> {
+  for (const table of ["hibah_payments", "wasiat_subscription_payments"] as const) {
+    const { data, error } = await supabase.from(table).select("id, status, created_at").eq(
+      "user_coupon_id",
+      couponId,
+    );
+    if (error || !data?.length) continue;
+    for (const row of data) {
+      const r = row as { id?: string; status?: string; created_at?: string };
+      const s = String(r.status ?? "").toLowerCase();
+      if (TERMINAL_PAYMENT_STATUSES.has(s)) continue;
+
+      // If a checkout was abandoned/cancelled and we never received webhook updates,
+      // let the coupon be reused after a short TTL.
+      const createdAt = r.created_at ? new Date(r.created_at).getTime() : 0;
+      const ageOk = createdAt > 0 && Date.now() - createdAt > COUPON_LOCK_TTL_MS;
+      if (ageOk && r.id) {
+        await supabase.from(table).update({
+          status: "cancelled",
+          updated_at: new Date().toISOString(),
+        }).eq("id", r.id).eq("user_coupon_id", couponId);
+        continue;
+      }
+
+      return true;
+    }
+  }
+  return false;
+}
+
+async function validateUserCoupon(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  couponId: string,
+  appliesTo: "hibah" | "wasiat",
+): Promise<{ ok: true; discountPercent: number } | { ok: false; message: string }> {
+  const { data: c, error } = await supabase.from("user_coupons").select(
+    "id, user_id, applies_to, discount_percent, status, expires_at",
+  ).eq("id", couponId).maybeSingle();
+  if (error || !c) return { ok: false, message: "Invalid coupon" };
+  if ((c as { user_id: string }).user_id !== userId) {
+    return { ok: false, message: "Coupon does not belong to this account" };
+  }
+  if ((c as { applies_to: string }).applies_to !== appliesTo) {
+    return { ok: false, message: "Coupon does not apply to this product" };
+  }
+  if ((c as { status: string }).status !== "active") {
+    return { ok: false, message: "Coupon is no longer active" };
+  }
+  if (new Date((c as { expires_at: string }).expires_at).getTime() < Date.now()) {
+    await supabase.from("user_coupons").update({ status: "expired" }).eq("id", couponId);
+    return { ok: false, message: "Coupon has expired" };
+  }
+  if (await couponBlockedByOpenCheckout(supabase, couponId)) {
+    return { ok: false, message: "This coupon is already linked to a checkout in progress" };
+  }
+  const pct = (c as { discount_percent: number }).discount_percent;
+  return { ok: true, discountPercent: pct };
 }
 
 Deno.serve(async (req) => {
@@ -86,24 +164,131 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("🟢 [CHIP-CREATE-PAYMENT] Request body:", body);
     
-    const { trustId, trustCode, userId: bodyUserId, clientId, amount, description, successUrl, failureUrl } = body;
-    
+    const {
+      paymentType,
+      trustId,
+      trustCode,
+      hibahId,
+      certificateId,
+      userId: bodyUserId,
+      clientId,
+      amount,
+      description,
+      successUrl,
+      failureUrl,
+      userCouponId,
+      user_coupon_id,
+    } = body;
+    const resolvedUserCouponId: string | null =
+      typeof userCouponId === "string" && userCouponId.length > 0
+        ? userCouponId
+        : typeof user_coupon_id === "string" && user_coupon_id.length > 0
+          ? user_coupon_id
+          : null;
+    const resolvedPaymentType: "trust" | "hibah" | "wasiat" =
+      paymentType === "hibah"
+        ? "hibah"
+        : paymentType === "wasiat"
+          ? "wasiat"
+          : "trust";
+
     // CHIP API requires HTTP/HTTPS URLs, not deep links
     // Construct web URLs that can redirect to deep links if needed
 
     // Validate required fields
-    if (!trustId || !trustCode || !clientId || !amount) {
-      console.log("🔴 [CHIP-CREATE-PAYMENT] Missing required fields:", { trustId, trustCode, clientId, amount });
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: trustId, trustCode, clientId, amount" }),
-        {
-          status: 400,
-          headers: corsHeaders({ "Content-Type": "application/json" }),
-        },
-      );
+    const hasRequiredTrustFields = Boolean(trustId && trustCode);
+    const hasRequiredHibahFields = Boolean(hibahId && certificateId);
+    const isMissingRequiredFields =
+      !clientId ||
+      !amount ||
+      (resolvedPaymentType === "trust" && !hasRequiredTrustFields) ||
+      (resolvedPaymentType === "hibah" && !hasRequiredHibahFields);
+
+    if (isMissingRequiredFields) {
+      console.log("🔴 [CHIP-CREATE-PAYMENT] Missing required fields:", {
+        paymentType: resolvedPaymentType,
+        trustId,
+        trustCode,
+        hibahId,
+        certificateId,
+        clientId,
+        amount,
+      });
+      const errMsg =
+        resolvedPaymentType === "hibah"
+          ? "Missing required fields: hibahId, certificateId, clientId, amount"
+          : resolvedPaymentType === "wasiat"
+            ? "Missing required fields: clientId, amount"
+            : "Missing required fields: trustId, trustCode, clientId, amount";
+      return new Response(JSON.stringify({ error: errMsg }), {
+        status: 400,
+        headers: corsHeaders({ "Content-Type": "application/json" }),
+      });
     }
 
-    console.log("🟢 [CHIP-CREATE-PAYMENT] Validated fields:", { trustId, trustCode, clientId, amount });
+    console.log("🟢 [CHIP-CREATE-PAYMENT] Validated fields:", {
+      paymentType: resolvedPaymentType,
+      trustId,
+      trustCode,
+      hibahId,
+      certificateId,
+      clientId,
+      amount,
+    });
+
+    const expectedWasiatCents = parseInt(
+      Deno.env.get("WASIAT_ANNUAL_AMOUNT_CENTS") ?? "18000",
+      10,
+    );
+
+    if (resolvedPaymentType === "trust" && resolvedUserCouponId) {
+      return new Response(JSON.stringify({ error: "Coupons are not available for trust payments" }), {
+        status: 400,
+        headers: corsHeaders({ "Content-Type": "application/json" }),
+      });
+    }
+
+    let baseAmountCents: number;
+    if (resolvedPaymentType === "wasiat") {
+      baseAmountCents = expectedWasiatCents;
+    } else {
+      baseAmountCents = parseInt(String(amount), 10);
+    }
+
+    let finalAmountCents = baseAmountCents;
+    let appliedDiscountPercent: number | null = null;
+
+    if (resolvedUserCouponId) {
+      const appliesTo: "hibah" | "wasiat" = resolvedPaymentType === "hibah"
+        ? "hibah"
+        : "wasiat";
+      const v = await validateUserCoupon(supabaseAdmin, userId, resolvedUserCouponId, appliesTo);
+      if (!v.ok) {
+        return new Response(JSON.stringify({ error: v.message }), {
+          status: 400,
+          headers: corsHeaders({ "Content-Type": "application/json" }),
+        });
+      }
+      appliedDiscountPercent = v.discountPercent;
+      finalAmountCents = Math.floor(baseAmountCents * (100 - v.discountPercent) / 100);
+      if (finalAmountCents < 1) {
+        return new Response(JSON.stringify({ error: "Discounted amount is too small" }), {
+          status: 400,
+          headers: corsHeaders({ "Content-Type": "application/json" }),
+        });
+      }
+    } else if (resolvedPaymentType === "wasiat") {
+      const got = parseInt(String(amount), 10);
+      if (got !== expectedWasiatCents) {
+        return new Response(
+          JSON.stringify({
+            error: "Invalid amount for Wasiat annual plan",
+            expected_cents: expectedWasiatCents,
+          }),
+          { status: 400, headers: corsHeaders({ "Content-Type": "application/json" }) },
+        );
+      }
+    }
 
     // Verify userId matches authenticated user
     if (bodyUserId && bodyUserId !== userId) {
@@ -113,18 +298,56 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create payment record in trust_payments table first
+    // Create payment record in the correct table first
     console.log("🟢 [CHIP-CREATE-PAYMENT] Creating payment record in database");
+    const sessionInsert =
+      resolvedPaymentType === "hibah"
+        ? {
+            hibah_id: hibahId,
+            user_id: userId,
+            amount: finalAmountCents,
+            original_amount: baseAmountCents / 100,
+            discount_amount: resolvedUserCouponId
+              ? (baseAmountCents - finalAmountCents) / 100
+              : 0,
+            status: "initiated",
+            chip_client_id: clientId,
+            ...(resolvedUserCouponId ? { user_coupon_id: resolvedUserCouponId } : {}),
+            created_at: new Date().toISOString(),
+          }
+        : resolvedPaymentType === "wasiat"
+          ? {
+              user_id: userId,
+              amount: finalAmountCents,
+              ...(resolvedUserCouponId
+                ? {
+                  user_coupon_id: resolvedUserCouponId,
+                  original_amount_cents: baseAmountCents,
+                }
+                : {}),
+              status: "initiated",
+              chip_client_id: clientId,
+              created_at: new Date().toISOString(),
+            }
+          : {
+              trust_id: parseInt(trustId, 10),
+              uuid: userId,
+              amount: parseInt(amount, 10),
+              status: "initiated",
+              chip_client_id: clientId,
+              created_at: new Date().toISOString(),
+            };
+
+    const sessionTable =
+      resolvedPaymentType === "hibah"
+        ? "hibah_payments"
+        : resolvedPaymentType === "wasiat"
+          ? "wasiat_subscription_payments"
+          : "trust_payments";
+
     const { data: sessionData, error: sessionError } = await supabaseAdmin
-      .from("trust_payments")
-      .insert({
-        trust_id: parseInt(trustId, 10),
-        uuid: userId,
-        amount: parseInt(amount, 10),
-        status: "initiated",
-        chip_client_id: clientId,
-        created_at: new Date().toISOString(),
-      })
+      .from(sessionTable)
+      .insert(sessionInsert)
       .select()
       .single();
 
@@ -141,16 +364,27 @@ Deno.serve(async (req) => {
 
     console.log("🟢 [CHIP-CREATE-PAYMENT] Payment record created:", sessionData.id);
 
-    // Get CHIP API credentials
-    const CHIP_SECRET_KEY = Deno.env.get("CHIP_SECRET_KEY");
-    const CHIP_BRAND_ID = Deno.env.get("CHIP_BRAND_ID");
+    // Trust uses a separate CHIP merchant (keys + brand) from Hibah/Wasiat.
+    const useTrustMerchant = resolvedPaymentType === "trust";
+    const CHIP_SECRET_KEY = useTrustMerchant
+      ? Deno.env.get("CHIP_TRUST_SECRET_KEY")
+      : Deno.env.get("CHIP_SECRET_KEY");
+    const CHIP_BRAND_ID = useTrustMerchant
+      ? Deno.env.get("CHIP_TRUST_BRAND_ID")
+      : Deno.env.get("CHIP_BRAND_ID");
 
     if (!CHIP_SECRET_KEY || !CHIP_BRAND_ID) {
-      console.log("🔴 [CHIP-CREATE-PAYMENT] CHIP credentials not configured");
-      console.log("🔴 [CHIP-CREATE-PAYMENT] CHIP_SECRET_KEY exists:", !!CHIP_SECRET_KEY);
-      console.log("🔴 [CHIP-CREATE-PAYMENT] CHIP_BRAND_ID exists:", !!CHIP_BRAND_ID);
+      const main = Deno.env.get("CHIP_SECRET_KEY") && Deno.env.get("CHIP_BRAND_ID");
+      const trust = Deno.env.get("CHIP_TRUST_SECRET_KEY") && Deno.env.get("CHIP_TRUST_BRAND_ID");
+      console.log("🔴 [CHIP-CREATE-PAYMENT] CHIP credentials not configured for", useTrustMerchant ? "trust" : "main");
+      console.log("🔴 [CHIP-CREATE-PAYMENT] main merchant complete:", !!main);
+      console.log("🔴 [CHIP-CREATE-PAYMENT] trust merchant complete:", !!trust);
       return new Response(
-        JSON.stringify({ error: "CHIP credentials not configured" }),
+        JSON.stringify({
+          error: useTrustMerchant
+            ? "Trust CHIP credentials not configured (CHIP_TRUST_SECRET_KEY, CHIP_TRUST_BRAND_ID)"
+            : "CHIP credentials not configured (CHIP_SECRET_KEY, CHIP_BRAND_ID)",
+        }),
         {
           status: 500,
           headers: corsHeaders({ "Content-Type": "application/json" }),
@@ -158,7 +392,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("🟢 [CHIP-CREATE-PAYMENT] CHIP credentials found");
+    console.log("🟢 [CHIP-CREATE-PAYMENT] CHIP credentials found for", useTrustMerchant ? "trust" : "main");
     console.log("🟢 [CHIP-CREATE-PAYMENT] CHIP_SECRET_KEY length:", CHIP_SECRET_KEY.length);
     console.log("🟢 [CHIP-CREATE-PAYMENT] CHIP_SECRET_KEY starts with:", CHIP_SECRET_KEY.substring(0, 10) + "...");
     console.log("🟢 [CHIP-CREATE-PAYMENT] CHIP_BRAND_ID:", CHIP_BRAND_ID);
@@ -194,6 +428,10 @@ Deno.serve(async (req) => {
     console.log("🟢 [CHIP-CREATE-PAYMENT] Callback URLs (placeholders - status handled via webhook):", { successCallback, finalSuccessUrl, finalFailureUrl });
 
     // Create CHIP purchase
+    const chipPurchaseAmount = resolvedPaymentType === "trust"
+      ? parseInt(String(amount), 10)
+      : finalAmountCents;
+
     const chipPayload = {
       brand_id: CHIP_BRAND_ID,
       client_id: clientId,
@@ -202,11 +440,17 @@ Deno.serve(async (req) => {
       failure_redirect: finalFailureUrl,
       send_receipt: true,
       purchase: {
-        amount: parseInt(amount, 10),
+        amount: chipPurchaseAmount,
         products: [
           {
-            name: description || `Payment for Trust ${trustCode}`,
-            price: parseInt(amount, 10),
+            name:
+              description ||
+              (resolvedPaymentType === "hibah"
+                ? `Payment for Hibah ${certificateId}`
+                : resolvedPaymentType === "wasiat"
+                  ? "Wasiat — annual access"
+                  : `Payment for Trust ${trustCode}`),
+            price: chipPurchaseAmount,
           },
         ],
       },
@@ -231,7 +475,7 @@ Deno.serve(async (req) => {
       
       // Update payment status to failed
       await supabaseAdmin
-        .from("trust_payments")
+        .from(sessionTable)
         .update({ status: "failed" })
         .eq("id", sessionData.id);
 
@@ -251,7 +495,7 @@ Deno.serve(async (req) => {
     // Update payment record with CHIP payment ID and status
     console.log("🟢 [CHIP-CREATE-PAYMENT] Updating payment record with CHIP data");
     const { error: updateError } = await supabaseAdmin
-      .from("trust_payments")
+      .from(sessionTable)
       .update({
         chip_payment_id: chipData.id,
         status: chipData.status || "pending_charge",

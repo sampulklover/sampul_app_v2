@@ -155,16 +155,8 @@ class HibahGroup {
       loanStatus: json['loan_status'] as String?,
       bankName: json['bank_name'] as String?,
       outstandingLoanAmount: json['outstanding_loan_amount'] as String?,
-      landCategories: ((json['land_categories'] as List?) ?? const [])
-          .map((dynamic e) => e?.toString() ?? '')
-          .where((element) => element.isNotEmpty)
-          .toList(),
-      beneficiaries: ((json['beneficiaries'] as List?) ?? const [])
-          .map(
-            (dynamic e) =>
-                HibahBeneficiary.fromJson((e as Map).cast<String, dynamic>()),
-          )
-          .toList(),
+      landCategories: _parseLandCategories(json['land_categories']),
+      beneficiaries: _parseBeneficiaries(json['beneficiaries']),
       createdAt:
           DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
@@ -330,6 +322,21 @@ class HibahGroupRequest {
       'property_name': propertyName,
     };
   }
+
+  Map<String, dynamic> toUpdateMap() {
+    return {
+      'asset_type': assetType,
+      'registered_title_number': registeredTitleNumber,
+      'property_location': propertyLocation,
+      'estimated_value': estimatedValue,
+      'loan_status': loanStatus,
+      'bank_name': bankName,
+      'outstanding_loan_amount': outstandingLoanAmount,
+      'land_categories': landCategories,
+      'beneficiaries': beneficiaries.map((e) => e.toJson()).toList(),
+      'property_name': propertyName,
+    };
+  }
 }
 
 class HibahBeneficiaryRequest {
@@ -389,4 +396,51 @@ class HibahDocumentRequest {
       'document_type': documentType,
     };
   }
+}
+
+/// JSONB may be stored as a JSON array or, for legacy rows, a single object.
+List<String> _parseLandCategories(dynamic value) {
+  if (value == null) return <String>[];
+  if (value is List) {
+    return value
+        .map((dynamic e) => e?.toString() ?? '')
+        .where((String s) => s.isNotEmpty)
+        .toList();
+  }
+  if (value is Map) {
+    return value.values
+        .map((dynamic e) => e?.toString() ?? '')
+        .where((String s) => s.isNotEmpty)
+        .toList();
+  }
+  final String s = value.toString();
+  return s.isEmpty ? <String>[] : <String>[s];
+}
+
+List<HibahBeneficiary> _parseBeneficiaries(dynamic value) {
+  if (value == null) return <HibahBeneficiary>[];
+  if (value is List) {
+    final List<HibahBeneficiary> out = <HibahBeneficiary>[];
+    for (final dynamic e in value) {
+      if (e is! Map) continue;
+      try {
+        out.add(
+          HibahBeneficiary.fromJson(Map<String, dynamic>.from(e)),
+        );
+      } catch (_) {
+        // Skip malformed entries rather than failing the whole screen.
+      }
+    }
+    return out;
+  }
+  if (value is Map) {
+    try {
+      return <HibahBeneficiary>[
+        HibahBeneficiary.fromJson(Map<String, dynamic>.from(value)),
+      ];
+    } catch (_) {
+      return <HibahBeneficiary>[];
+    }
+  }
+  return <HibahBeneficiary>[];
 }

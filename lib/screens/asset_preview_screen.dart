@@ -17,6 +17,7 @@ class AssetPreviewScreen extends StatefulWidget {
 class _AssetPreviewScreenState extends State<AssetPreviewScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _asset;
+  bool _didChange = false;
 
   @override
   void initState() {
@@ -86,34 +87,42 @@ class _AssetPreviewScreenState extends State<AssetPreviewScreen> {
     final String? physicalCategory = a['physical_asset_category'] as String?;
     final String? physicalLegal = a['physical_legal_classification'] as String?;
 
-    return Scaffold(
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        Navigator.of(context).pop(_didChange);
+      },
+      child: Scaffold(
+        appBar: AppBar(
         title: Text(l10n.details),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: l10n.editAsset,
             onPressed: () async {
+              final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
               final bool? updated = await Navigator.of(context).push<bool>(
                 MaterialPageRoute<bool>(
                   builder: (_) => EditAssetScreen(assetId: widget.assetId),
                 ),
               );
               if (updated == true) {
+                _didChange = true;
                 await _loadAsset();
-                if (mounted) {
-                  // Inform caller that something changed
-                  Navigator.of(context).pop(true);
-                }
+                if (!mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(content: Text(l10n.assetUpdated), backgroundColor: Colors.green),
+                );
               }
             },
           ),
         ],
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: <Widget>[
+        ),
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: <Widget>[
             Center(
               child: Column(
                 children: <Widget>[
@@ -226,7 +235,8 @@ class _AssetPreviewScreenState extends State<AssetPreviewScreen> {
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

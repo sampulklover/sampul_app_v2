@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import 'controllers/theme_controller.dart';
@@ -17,11 +16,34 @@ import 'screens/main_shell.dart';
 import 'services/supabase_service.dart';
 import 'services/openrouter_service.dart';
 import 'services/onesignal_service.dart';
-import 'config/stripe_config.dart';
+import 'services/analytics_service.dart';
+import 'config/analytics_screens.dart';
 import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    AnalyticsService.captureException(
+      details.exception,
+      stackTrace: details.stack,
+      properties: <String, Object>{
+        'context': 'FlutterError.onError',
+      },
+    );
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    AnalyticsService.captureException(
+      error,
+      stackTrace: stack,
+      properties: <String, Object>{
+        'context': 'PlatformDispatcher.onError',
+      },
+    );
+    return false;
+  };
   
   // Override debugPrint in debug mode to filter out noisy Supabase INFO logs
   if (kDebugMode) {
@@ -42,22 +64,13 @@ void main() async {
   
   // Initialize Locale Controller
   await LocaleController.instance.initialize();
+
+  // Initialize Analytics (safe to skip when not configured)
+  await AnalyticsService.initialize();
   
   // Initialize Supabase
   await SupabaseService.initialize();
 
-  // Initialize Stripe (skip on web and when key is missing)
-  if (StripeConfig.publishableKey.isNotEmpty && !kIsWeb) {
-    Stripe.publishableKey = StripeConfig.publishableKey;
-    Stripe.merchantIdentifier = StripeConfig.merchantDisplayName;
-    Stripe.urlScheme = StripeConfig.returnUrlScheme;
-    try {
-      await Stripe.instance.applySettings();
-    } catch (e) {
-      debugPrint('Stripe applySettings skipped/failed: $e');
-    }
-  }
-  
   // Initialize OpenRouter
   try {
     await OpenRouterService.initialize();
@@ -91,17 +104,20 @@ class MyApp extends StatelessWidget {
         return ValueListenableBuilder<Locale>(
           valueListenable: LocaleController.instance.localeNotifier,
           builder: (BuildContext context, Locale locale, Widget? _) {
-            return MaterialApp(
-              title: 'Sampul',
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: LocaleController.instance.supportedLocales,
-              locale: locale,
-          theme: ThemeData(
+            AnalyticsService.setLocale(locale.toLanguageTag());
+            return AnalyticsService.wrapApp(
+              MaterialApp(
+                title: 'Sampul',
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: LocaleController.instance.supportedLocales,
+                locale: locale,
+                navigatorObservers: AnalyticsService.navigatorObservers(),
+                theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromARGB(156, 136, 122, 226),
@@ -129,8 +145,8 @@ class MyApp extends StatelessWidget {
               selectedItemColor: Color.fromRGBO(83, 61, 233, 100),
               unselectedItemColor: Colors.grey,
             ),
-          ),
-          darkTheme: ThemeData(
+                ),
+                darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromRGBO(83, 61, 233, 100),
@@ -159,9 +175,18 @@ class MyApp extends StatelessWidget {
               selectedItemColor: Color.fromRGBO(83, 61, 233, 100),
               unselectedItemColor: Colors.grey,
             ),
-          ),
-              themeMode: mode,
-              home: const AuthWrapper(),
+                ),
+                themeMode: mode,
+                initialRoute: '/',
+                onGenerateRoute: (RouteSettings settings) {
+                  return MaterialPageRoute<void>(
+                    settings: const RouteSettings(
+                      name: AnalyticsScreens.app,
+                    ),
+                    builder: (_) => const AuthWrapper(),
+                  );
+                },
+              ),
             );
           },
         );
@@ -205,14 +230,26 @@ class _AuthWrapperState extends State<AuthWrapper> {
       (authState) async {
         final AuthChangeEvent event = authState.event;
         final user = authState.session?.user;
-        
+
+        // Enable analytics before the shell builds so first screen events are not dropped.
+        if (user != null && !_hasSetOneSignalUserId) {
+          await AnalyticsService.enableCapture();
+          await AnalyticsService.identify(userId: user.id);
+          await OneSignalService.instance.setUserId(user.id);
+          _hasSetOneSignalUserId = true;
+        } else if (user == null && _hasSetOneSignalUserId) {
+          await AnalyticsService.resetAndDisableCapture();
+          await OneSignalService.instance.clearUserId();
+          _hasSetOneSignalUserId = false;
+        }
+
         // Update current session
         if (mounted) {
           setState(() {
             _currentSession = authState.session;
           });
         }
-        
+
         // Handle password recovery event
         if (event == AuthChangeEvent.passwordRecovery && !_isNavigatingToPasswordRecovery) {
           _isNavigatingToPasswordRecovery = true;
@@ -221,6 +258,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const UpdatePasswordScreen(),
+                  settings: const RouteSettings(
+                    name: AnalyticsScreens.updatePassword,
+                  ),
                 ),
               ).then((_) {
                 _isNavigatingToPasswordRecovery = false;
@@ -232,14 +272,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
         // Handle token refresh failure (expired link)
         if (event == AuthChangeEvent.tokenRefreshed && authState.session == null) {
           _showExpiredLinkMessage();
-        }
-        
-        if (user != null && !_hasSetOneSignalUserId) {
-          await OneSignalService.instance.setUserId(user.id);
-          _hasSetOneSignalUserId = true;
-        } else if (user == null && _hasSetOneSignalUserId) {
-          await OneSignalService.instance.clearUserId();
-          _hasSetOneSignalUserId = false;
         }
       },
       onError: (error) {

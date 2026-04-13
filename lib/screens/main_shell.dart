@@ -10,6 +10,8 @@ import '../models/chat_conversation.dart';
 import '../services/chat_service.dart';
 import '../services/affiliate_service.dart';
 import '../utils/sampul_icons.dart';
+import '../config/analytics_screens.dart';
+import '../services/analytics_service.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -42,6 +44,35 @@ class _MainShellState extends State<MainShell> {
         // Silent fail; user can re-enter in onboarding.
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _logTabScreen(_currentIndex);
+    });
+  }
+
+  String _screenNameForTab(int index) {
+    switch (index) {
+      case 0:
+        return AnalyticsScreens.mainHome;
+      case 1:
+        return AnalyticsScreens.mainLearn;
+      case 2:
+        return AnalyticsScreens.mainWasiat;
+      case 3:
+        return AnalyticsScreens.mainSettings;
+      default:
+        return AnalyticsScreens.mainHome;
+    }
+  }
+
+  void _selectTab(int index) {
+    if (_currentIndex == index) return;
+    setState(() => _currentIndex = index);
+    _logTabScreen(index);
+  }
+
+  void _logTabScreen(int index) {
+    AnalyticsService.logScreen(_screenNameForTab(index));
   }
 
   Future<void> _openSampulAI() async {
@@ -76,8 +107,9 @@ class _MainShellState extends State<MainShell> {
         // Navigate immediately with existing conversation
         setState(() => _isOpeningAI = false);
         Navigator.of(context).push(
-          MaterialPageRoute(
+          MaterialPageRoute<void>(
             fullscreenDialog: true,
+            settings: const RouteSettings(name: AnalyticsScreens.sampulAiChat),
             builder: (context) => EnhancedChatConversationScreen(
               conversation: aiConversation!,
             ),
@@ -106,8 +138,9 @@ class _MainShellState extends State<MainShell> {
         
         setState(() => _isOpeningAI = false);
         Navigator.of(context).push(
-          MaterialPageRoute(
+          MaterialPageRoute<void>(
             fullscreenDialog: true,
+            settings: const RouteSettings(name: AnalyticsScreens.sampulAiChat),
             builder: (context) => EnhancedChatConversationScreen(
               conversation: aiConversation!,
             ),
@@ -131,8 +164,9 @@ class _MainShellState extends State<MainShell> {
       );
 
       Navigator.of(context).push(
-        MaterialPageRoute(
+        MaterialPageRoute<void>(
           fullscreenDialog: true,
+          settings: const RouteSettings(name: AnalyticsScreens.sampulAiChat),
           builder: (context) => EnhancedChatConversationScreen(
             conversation: tempConversation,
           ),
@@ -184,7 +218,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.home,
                   label: 'Home',
                   index: 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+                  onTap: () => _selectTab(0),
                 ),
                 _buildNavItem(
                   context: context,
@@ -192,7 +226,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.learn,
                   label: 'Learn',
                   index: 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                  onTap: () => _selectTab(1),
                 ),
                 // Invisible spacer for center button
                 const SizedBox(width: 60),
@@ -202,7 +236,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.wasiat,
                   label: 'Wasiat',
                   index: 2,
-                  onTap: () => setState(() => _currentIndex = 2),
+                  onTap: () => _selectTab(2),
                 ),
                 _buildNavItem(
                   context: context,
@@ -210,7 +244,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.settings,
                   label: 'Settings',
                   index: 3,
-                  onTap: () => setState(() => _currentIndex = 3),
+                  onTap: () => _selectTab(3),
                 ),
               ],
             ),

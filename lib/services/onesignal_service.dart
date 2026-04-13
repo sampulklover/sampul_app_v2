@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/onesignal_config.dart';
 import '../models/app_notification.dart';
 import 'supabase_service.dart';
+import 'analytics_service.dart';
 
 /// OneSignal Service
 /// 
@@ -86,6 +87,15 @@ class OneSignalService {
     // Handle notification received while app is in foreground
     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
       debugPrint('OneSignal: Notification received in foreground: ${event.notification.notificationId}');
+      final data = event.notification.additionalData?.cast<String, dynamic>();
+      AnalyticsService.capture(
+        'push received',
+        properties: <String, Object>{
+          'notification_id': event.notification.notificationId,
+          'has_data': data != null && data.isNotEmpty,
+          if (data?['type'] is String) 'type': data!['type'] as String,
+        },
+      );
       // Store as unread notification for in-app history
       instance._captureNotification(event.notification, markAsRead: false);
     });
@@ -94,6 +104,15 @@ class OneSignalService {
     OneSignal.Notifications.addClickListener((event) {
       debugPrint('OneSignal: Notification clicked: ${event.notification.notificationId}');
       final notification = event.notification;
+      final data = notification.additionalData?.cast<String, dynamic>();
+      AnalyticsService.capture(
+        'push opened',
+        properties: <String, Object>{
+          'notification_id': notification.notificationId,
+          'has_data': data != null && data.isNotEmpty,
+          if (data?['type'] is String) 'type': data!['type'] as String,
+        },
+      );
 
       // Store as read notification in history (or mark existing as read)
       instance._captureNotification(notification, markAsRead: true);

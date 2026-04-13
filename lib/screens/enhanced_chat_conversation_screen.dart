@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/chat_message.dart';
@@ -15,7 +14,9 @@ import '../services/file_upload_service.dart';
 import '../services/ai_chat_settings_service.dart';
 import '../services/ai_action_detector.dart';
 import '../services/supabase_service.dart';
+import '../services/ai_kb_service.dart';
 import '../utils/sampul_icons.dart';
+import '../utils/url_launch_helper.dart';
 import 'trust_create_screen.dart';
 import 'trust_management_screen.dart';
 import 'trust_info_screen.dart';
@@ -57,6 +58,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
   UserProfile? _userProfile;
   bool _isUploading = false;
   final ImagePicker _imagePicker = ImagePicker();
+  List<String> _relatedQuestions = const <String>[];
   
   late AnimationController _typingAnimationController;
   late AnimationController _messageAnimationController;
@@ -602,6 +604,9 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     if (messageText.isEmpty || _isLoading) return;
 
     _messageController.clear();
+    setState(() {
+      _relatedQuestions = const <String>[];
+    });
 
     // Add user message
     final userMessage = ChatMessage(
@@ -637,16 +642,9 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     _scrollToBottom();
 
     try {
-      // Add delay for human-like response
-      await Future.delayed(const Duration(milliseconds: 500));
+      _streamingContent = '';
 
-      // Remove typing indicator
-      setState(() {
-        _messages.removeWhere((msg) => msg.id == typingMessage.id);
-        _streamingContent = '';
-      });
-
-      // Create streaming message
+      // Create streaming message (only shown after first token)
       final streamingMessage = ChatMessage(
         id: '', // Let database generate UUID
         content: '',
@@ -654,13 +652,10 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         timestamp: DateTime.now(),
         isStreaming: true,
       );
-
-      setState(() {
-        _messages.add(streamingMessage);
-      });
+      bool hasStartedStreaming = false;
 
       // Build user context from assets (concise)
-      String? context;
+      String? userContext;
       try {
         final user = AuthController.instance.currentUser;
         if (user != null) {
@@ -668,20 +663,41 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           final int count = assets.length;
           final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
           final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
-          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+          userContext = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
         }
       } catch (_) {
-        context = null;
+        userContext = null;
       }
 
-      // Stream the response with context
-      await for (final chunk in OpenRouterService.sendMessageStream(messageText, context: context)) {
+      // Retrieve KB matches once (used for both AI context + related questions)
+      final locale = Localizations.localeOf(context);
+      final language = (locale.languageCode == 'ms' || locale.languageCode == 'bm') ? 'bm' : 'en';
+      final kbMatches = await AiKbService.instance.searchKeyword(
+        queryText: messageText,
+        language: language,
+        limit: 4,
+      );
+      final kbContext = AiKbService.instance.buildKbContext(kbMatches);
+
+      // Stream the response with context + KB
+      await for (final chunk in OpenRouterService.sendMessageStream(
+        messageText,
+        context: userContext,
+        kbContextOverride: kbContext,
+      )) {
         if (mounted) {
           setState(() {
             _streamingContent += chunk;
-            _messages[_messages.length - 1] = streamingMessage.copyWith(
-              content: _streamingContent,
-            );
+            if (!hasStartedStreaming) {
+              hasStartedStreaming = true;
+              _messages.removeWhere((msg) => msg.id == typingMessage.id);
+              _messages.add(streamingMessage.copyWith(content: _streamingContent));
+              _typingAnimationController.stop();
+            } else {
+              _messages[_messages.length - 1] = streamingMessage.copyWith(
+                content: _streamingContent,
+              );
+            }
           });
           _scrollToBottom();
         }
@@ -689,14 +705,33 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
 
       // Finalize the message
       setState(() {
-        _messages[_messages.length - 1] = streamingMessage.copyWith(
-          content: _streamingContent,
-          isStreaming: false,
-        );
+        if (!hasStartedStreaming) {
+          _messages.removeWhere((msg) => msg.id == typingMessage.id);
+          _messages.add(streamingMessage.copyWith(
+            content: _streamingContent,
+            isStreaming: false,
+          ));
+        } else {
+          _messages[_messages.length - 1] = streamingMessage.copyWith(
+            content: _streamingContent,
+            isStreaming: false,
+          );
+        }
         _isLoading = false;
       });
 
       await ChatService.saveMessage(_messages[_messages.length - 1], widget.conversation.id);
+
+      // Prepare related questions based on the same KB matches
+      final related = await AiKbService.instance.getRelatedQuestionsForMatches(
+        matches: kbMatches,
+        limit: 6,
+      );
+      if (mounted) {
+        setState(() {
+          _relatedQuestions = related;
+        });
+      }
       
       // Haptic feedback when AI finishes replying
       HapticFeedback.mediumImpact();
@@ -743,7 +778,6 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       await ChatService.saveMessage(errorMessage, widget.conversation.id);
     }
 
-    _typingAnimationController.stop();
     _scrollToBottom();
   }
 
@@ -816,17 +850,10 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       
       _typingAnimationController.repeat(reverse: true);
       _scrollToBottom();
-      
-      // Add delay for human-like response
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Remove typing indicator
-      setState(() {
-        _messages.removeWhere((msg) => msg.id == typingMessage.id);
-        _streamingContent = '';
-      });
-      
-      // Create streaming message
+
+      _streamingContent = '';
+
+      // Create streaming message (only shown after first token)
       final streamingMessage = ChatMessage(
         id: '', // Let database generate UUID
         content: '',
@@ -834,13 +861,10 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         timestamp: DateTime.now(),
         isStreaming: true,
       );
-      
-      setState(() {
-        _messages.add(streamingMessage);
-      });
+      bool hasStartedStreaming = false;
       
       // Build user context from assets
-      String? context;
+      String? userContext;
       try {
         final user = AuthController.instance.currentUser;
         if (user != null) {
@@ -848,20 +872,41 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           final int count = assets.length;
           final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
           final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
-          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+          userContext = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
         }
       } catch (_) {
-        context = null;
+        userContext = null;
       }
       
+      // Retrieve KB matches once (used for both AI context + related questions)
+      final locale = Localizations.localeOf(context);
+      final language = (locale.languageCode == 'ms' || locale.languageCode == 'bm') ? 'bm' : 'en';
+      final kbMatches = await AiKbService.instance.searchKeyword(
+        queryText: userMessage.content,
+        language: language,
+        limit: 4,
+      );
+      final kbContext = AiKbService.instance.buildKbContext(kbMatches);
+
       // Stream the new response
-      await for (final chunk in OpenRouterService.sendMessageStream(userMessage.content, context: context)) {
+      await for (final chunk in OpenRouterService.sendMessageStream(
+        userMessage.content,
+        context: userContext,
+        kbContextOverride: kbContext,
+      )) {
         if (mounted) {
           setState(() {
             _streamingContent += chunk;
-            _messages[_messages.length - 1] = streamingMessage.copyWith(
-              content: _streamingContent,
-            );
+            if (!hasStartedStreaming) {
+              hasStartedStreaming = true;
+              _messages.removeWhere((msg) => msg.id == typingMessage.id);
+              _messages.add(streamingMessage.copyWith(content: _streamingContent));
+              _typingAnimationController.stop();
+            } else {
+              _messages[_messages.length - 1] = streamingMessage.copyWith(
+                content: _streamingContent,
+              );
+            }
           });
           _scrollToBottom();
         }
@@ -869,13 +914,32 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       
       // Finalize the message
       setState(() {
-        _messages[_messages.length - 1] = streamingMessage.copyWith(
-          content: _streamingContent,
-          isStreaming: false,
-        );
+        if (!hasStartedStreaming) {
+          _messages.removeWhere((msg) => msg.id == typingMessage.id);
+          _messages.add(streamingMessage.copyWith(
+            content: _streamingContent,
+            isStreaming: false,
+          ));
+        } else {
+          _messages[_messages.length - 1] = streamingMessage.copyWith(
+            content: _streamingContent,
+            isStreaming: false,
+          );
+        }
       });
       
       await ChatService.saveMessage(_messages[_messages.length - 1], widget.conversation.id);
+
+      // Prepare related questions based on the same KB matches
+      final related = await AiKbService.instance.getRelatedQuestionsForMatches(
+        matches: kbMatches,
+        limit: 6,
+      );
+      if (mounted) {
+        setState(() {
+          _relatedQuestions = related;
+        });
+      }
       
       // Haptic feedback when AI finishes regenerating
       HapticFeedback.mediumImpact();
@@ -898,7 +962,6 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       );
     }
     
-    _typingAnimationController.stop();
     _scrollToBottom();
   }
 
@@ -1028,6 +1091,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
                   ),
           ),
           SafeArea(top: false, bottom: false, child: _buildQuickSuggestions()),
+          SafeArea(top: false, bottom: false, child: _buildRelatedQuestions()),
           SafeArea(top: false, child: _buildMessageInput()),
         ],
       ),
@@ -1176,7 +1240,7 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         onTap: () async {
           final uri = Uri.tryParse(message.content);
           if (uri != null) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            await launchUriPreferInAppBrowser(uri);
           }
         },
         child: Row(
@@ -1232,8 +1296,10 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         ),
       ),
       onTapLink: (text, href, title) {
-        if (href != null) {
-          launchUrl(Uri.parse(href));
+        if (href == null) return;
+        final Uri? uri = Uri.tryParse(href);
+        if (uri != null) {
+          launchUriPreferInAppBrowser(uri);
         }
       },
     );
@@ -1515,16 +1581,9 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     _scrollToBottom();
 
     try {
-      // Add delay for human-like response
-      await Future.delayed(const Duration(milliseconds: 500));
+      _streamingContent = '';
 
-      // Remove typing indicator
-      setState(() {
-        _messages.removeWhere((msg) => msg.id == typingMessage.id);
-        _streamingContent = '';
-      });
-
-      // Create streaming message
+      // Create streaming message (only shown after first token)
       final streamingMessage = ChatMessage(
         id: '', // Let database generate UUID
         content: '',
@@ -1532,13 +1591,10 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
         timestamp: DateTime.now(),
         isStreaming: true,
       );
-
-      setState(() {
-        _messages.add(streamingMessage);
-      });
+      bool hasStartedStreaming = false;
 
       // Build user context from assets (concise)
-      String? context;
+      String? userContext;
       try {
         final user = AuthController.instance.currentUser;
         if (user != null) {
@@ -1546,20 +1602,41 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
           final int count = assets.length;
           final double total = assets.fold<double>(0.0, (double acc, Map<String, dynamic> a) => acc + ((a['value'] as num?)?.toDouble() ?? 0.0));
           final List<String> names = assets.take(5).map<String>((Map<String, dynamic> a) => (a['new_service_platform_name'] as String?) ?? (a['name'] as String?) ?? 'Asset').toList();
-          context = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
+          userContext = 'Assets count: ' + count.toString() + '; Total value (approx): RM ' + total.toStringAsFixed(2) + '; Recent assets: ' + names.join(', ') + '. Use this context to tailor advice and references.';
         }
       } catch (_) {
-        context = null;
+        userContext = null;
       }
 
-      // Stream the response with context
-      await for (final chunk in OpenRouterService.sendMessageStream(messageText, context: context)) {
+      // Retrieve KB matches once (used for both AI context + related questions)
+      final locale = Localizations.localeOf(context);
+      final language = (locale.languageCode == 'ms' || locale.languageCode == 'bm') ? 'bm' : 'en';
+      final kbMatches = await AiKbService.instance.searchKeyword(
+        queryText: messageText,
+        language: language,
+        limit: 4,
+      );
+      final kbContext = AiKbService.instance.buildKbContext(kbMatches);
+
+      // Stream the response with context + KB
+      await for (final chunk in OpenRouterService.sendMessageStream(
+        messageText,
+        context: userContext,
+        kbContextOverride: kbContext,
+      )) {
         if (mounted) {
           setState(() {
             _streamingContent += chunk;
-            _messages[_messages.length - 1] = streamingMessage.copyWith(
-              content: _streamingContent,
-            );
+            if (!hasStartedStreaming) {
+              hasStartedStreaming = true;
+              _messages.removeWhere((msg) => msg.id == typingMessage.id);
+              _messages.add(streamingMessage.copyWith(content: _streamingContent));
+              _typingAnimationController.stop();
+            } else {
+              _messages[_messages.length - 1] = streamingMessage.copyWith(
+                content: _streamingContent,
+              );
+            }
           });
           _scrollToBottom();
         }
@@ -1567,14 +1644,33 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
 
       // Finalize the message
       setState(() {
-        _messages[_messages.length - 1] = streamingMessage.copyWith(
-          content: _streamingContent,
-          isStreaming: false,
-        );
+        if (!hasStartedStreaming) {
+          _messages.removeWhere((msg) => msg.id == typingMessage.id);
+          _messages.add(streamingMessage.copyWith(
+            content: _streamingContent,
+            isStreaming: false,
+          ));
+        } else {
+          _messages[_messages.length - 1] = streamingMessage.copyWith(
+            content: _streamingContent,
+            isStreaming: false,
+          );
+        }
         _isLoading = false;
       });
 
       await ChatService.saveMessage(_messages[_messages.length - 1], widget.conversation.id);
+
+      // Prepare related questions based on the same KB matches
+      final related = await AiKbService.instance.getRelatedQuestionsForMatches(
+        matches: kbMatches,
+        limit: 6,
+      );
+      if (mounted) {
+        setState(() {
+          _relatedQuestions = related;
+        });
+      }
       
       // Haptic feedback when AI finishes replying (retry)
       HapticFeedback.mediumImpact();
@@ -1619,7 +1715,6 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
       await ChatService.saveMessage(errorMessage, widget.conversation.id);
     }
 
-    _typingAnimationController.stop();
     _scrollToBottom();
   }
 
@@ -1766,35 +1861,96 @@ class _EnhancedChatConversationScreenState extends State<EnhancedChatConversatio
     if (hasUserMessages || _isLoading || _isInitialLoading) {
       return const SizedBox.shrink();
     }
-    
-    final List<String> suggestions = <String>[
-      'Summarize my assets',
-      'How to start my will?',
-      'What is Hibah and how to use it?',
-      'Checklist for estate planning',
+
+    final locale = Localizations.localeOf(context);
+    final language = (locale.languageCode == 'ms' || locale.languageCode == 'bm') ? 'bm' : 'en';
+    final List<String> fallbackSuggestions = <String>[
+      'How do I start my will?',
+      'What is Hibah Hartanah?',
+      'How does Sampul Executor work?',
+      'What should I do first for estate planning?',
     ];
 
     return Container(
       padding: EdgeInsets.zero,
       alignment: Alignment.centerLeft,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: suggestions
-              .map((s) => Padding(
-                    padding: const EdgeInsets.only(right: 8, bottom: 4),
-                    child: ActionChip(
-                      label: Text(s),
-                      onPressed: _isLoading
-                          ? null
-                          : () {
-                              _messageController.text = s;
-                              _sendMessage();
-                            },
-                    ),
-                  ))
-              .toList(),
+      child: FutureBuilder<List<String>>(
+        future: AiKbService.instance.getSuggestedQuestions(
+          language: language,
+          limit: 6,
         ),
+        builder: (context, snapshot) {
+          final suggestions = (snapshot.data != null && snapshot.data!.isNotEmpty)
+              ? snapshot.data!
+              : fallbackSuggestions;
+
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: suggestions
+                  .map((s) => Padding(
+                        padding: const EdgeInsets.only(right: 8, bottom: 4),
+                        child: ActionChip(
+                          label: Text(s),
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                                  _messageController.text = s;
+                                  _sendMessage();
+                                },
+                        ),
+                      ))
+                  .toList(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRelatedQuestions() {
+    final hasUserMessages = _messages.any((msg) => msg.isFromUser);
+    if (!hasUserMessages || _isLoading || _isInitialLoading || _relatedQuestions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      alignment: Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Related questions',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _relatedQuestions
+                  .map((q) => Padding(
+                        padding: const EdgeInsets.only(right: 8, bottom: 4),
+                        child: ActionChip(
+                          label: Text(q),
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                                  _messageController.text = q;
+                                  _sendMessage();
+                                },
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
