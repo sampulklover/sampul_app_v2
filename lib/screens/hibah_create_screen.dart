@@ -8,13 +8,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../controllers/auth_controller.dart';
 import '../models/hibah.dart';
+import '../models/user_profile.dart';
 import '../services/hibah_service.dart';
 import '../config/analytics_screens.dart';
 import '../services/analytics_service.dart';
 import '../services/supabase_service.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/form_decoration_helper.dart';
 import '../utils/sampul_icons.dart';
 import '../widgets/stepper_footer_controls.dart';
+import 'edit_profile_screen.dart';
 import 'hibah_detail_screen.dart';
 import 'hibah_info_screen.dart';
 
@@ -99,7 +102,11 @@ String _getDocumentTypeLabel(String key) {
 }
 
 class HibahCreateScreen extends StatefulWidget {
-  const HibahCreateScreen({super.key});
+  final bool autoStartPaymentAfterSubmit;
+  const HibahCreateScreen({
+    super.key,
+    this.autoStartPaymentAfterSubmit = false,
+  });
 
   @override
   State<HibahCreateScreen> createState() => _HibahCreateScreenState();
@@ -109,6 +116,9 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   int _currentStep = 0;
   bool _isSubmitting = false;
   bool _isLoadingBeloved = false;
+  bool _isLoadingProfile = true;
+  String? _profileError;
+  UserProfile? _userProfile;
 
   final List<HibahGroupRequest> _assetGroups = <HibahGroupRequest>[];
   final List<_DocumentDraft> _documents = <_DocumentDraft>[];
@@ -122,6 +132,183 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   void initState() {
     super.initState();
     _loadBelovedOptions();
+    _prefillFromProfile();
+  }
+
+  Future<void> _prefillFromProfile() async {
+    setState(() {
+      _profileError = null;
+      _isLoadingProfile = true;
+    });
+    try {
+      final UserProfile? profile = await AuthController.instance.getUserProfile();
+      if (!mounted) return;
+      setState(() => _userProfile = profile);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _profileError = e.toString());
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  String _formatAddress(UserProfile? profile) {
+    if (profile == null) return 'Not provided';
+    final parts = <String>[];
+    if (profile.address1?.isNotEmpty == true) parts.add(profile.address1!);
+    if (profile.address2?.isNotEmpty == true) parts.add(profile.address2!);
+    if (profile.city?.isNotEmpty == true) parts.add(profile.city!);
+    if (profile.state?.isNotEmpty == true) parts.add(profile.state!);
+    if (profile.postcode?.isNotEmpty == true) parts.add(profile.postcode!);
+    return parts.isEmpty ? 'Not provided' : parts.join(', ');
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 60,
+          child: Text(
+            '$label:',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPersonalInfoStep() {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    if (_isLoadingProfile) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.personalInformation,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const EditProfileScreen()),
+                    );
+                    await _prefillFromProfile();
+                  },
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: Text(l10n.editProfile),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
+            ),
+            if (_profileError != null) ...[
+              const SizedBox(height: 12),
+              MaterialBanner(
+                elevation: 0,
+                content: Text('${l10n.weCouldNotLoadYourProfile}\n$_profileError'),
+                leading: const Icon(Icons.info_outline),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => setState(() => _profileError = null),
+                    child: Text(l10n.dismiss),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withOpacity(0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: _userProfile?.imagePath != null && _userProfile!.imagePath!.isNotEmpty
+                        ? Image.network(
+                            SupabaseService.instance.getFullImageUrl(_userProfile!.imagePath!) ?? '',
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.person,
+                              size: 30,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          )
+                        : Icon(
+                            Icons.person,
+                            size: 30,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow(
+                        'Name',
+                        (_userProfile?.displayName ?? '').isNotEmpty ? _userProfile!.displayName : 'Not provided',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('NRIC', _userProfile?.nricNo ?? 'Not provided'),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('Phone', _userProfile?.phoneNo ?? 'Not provided'),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('Email', _userProfile?.email ?? 'Not provided'),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('Address', _formatAddress(_userProfile)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _loadBelovedOptions() async {
@@ -214,8 +401,19 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   }
 
   Future<void> _submit() async {
-    if (_assetGroups.isEmpty) {
+    final l10n = AppLocalizations.of(context)!;
+    if (_userProfile == null) {
       setState(() => _currentStep = 0);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.pleaseCompleteYourProfileFirst),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    if (_assetGroups.isEmpty) {
+      setState(() => _currentStep = 1);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Add at least one asset')));
@@ -238,7 +436,10 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
       Navigator.of(context).pushReplacement<bool, bool>(
         MaterialPageRoute<bool>(
           settings: const RouteSettings(name: AnalyticsScreens.hibahDetail),
-          builder: (_) => HibahDetailScreen(hibah: created),
+          builder: (_) => HibahDetailScreen(
+            hibah: created,
+            autoStartPayment: widget.autoStartPaymentAfterSubmit,
+          ),
         ),
         result: true,
       );
@@ -302,12 +503,13 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Property Trust'),
+        title: Text(l10n.propertyTrust),
         actions: <Widget>[
           IconButton(
-            tooltip: 'About Property Trust',
+            tooltip: l10n.propertyTrustWhatIs,
             icon: const Icon(Icons.help_outline),
             onPressed: () {
               Navigator.of(context).push(
@@ -330,21 +532,27 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
           },
           steps: <Step>[
             Step(
-              title: const Text('Assets & Beneficiaries'),
+              title: Text(l10n.personalInformation),
               state: StepState.indexed,
               isActive: _currentStep >= 0,
+              content: _buildPersonalInfoStep(),
+            ),
+            Step(
+              title: Text('${l10n.assets} & ${l10n.beneficiaries}'),
+              state: StepState.indexed,
+              isActive: _currentStep >= 1,
               content: _buildAssetsStep(),
             ),
             Step(
-              title: const Text('Documents'),
+              title: Text(l10n.supportingDocuments),
               state: StepState.indexed,
-              isActive: _currentStep >= 1,
+              isActive: _currentStep >= 2,
               content: _buildDocumentsStep(),
             ),
             Step(
-              title: const Text('Review'),
+              title: Text(l10n.reviewSubmit),
               state: StepState.indexed,
-              isActive: _currentStep >= 2,
+              isActive: _currentStep >= 3,
               content: _buildReview(),
             ),
           ],
@@ -352,10 +560,21 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
       ),
       bottomNavigationBar: StepperFooterControls(
         currentStep: _currentStep,
-        lastStep: 2,
+        lastStep: 3,
         isBusy: _isSubmitting,
         onPrimaryPressed: () async {
           if (_currentStep == 0) {
+            if (_userProfile == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.pleaseCompleteYourProfileFirst),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+            setState(() => _currentStep = 1);
+          } else if (_currentStep == 1) {
             if (_assetGroups.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -364,9 +583,9 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
               );
               return;
             }
-            setState(() => _currentStep = 1);
-          } else if (_currentStep == 1) {
             setState(() => _currentStep = 2);
+          } else if (_currentStep == 2) {
+            setState(() => _currentStep = 3);
           } else {
             await _submit();
           }
@@ -381,6 +600,7 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   }
 
   Widget _buildAssetsStep() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -390,9 +610,9 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
             child: LinearProgressIndicator(),
           ),
         if (_assetGroups.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text('No assets added yet. Tap the button below to start.'),
+            child: Text(l10n.noAssetsYet),
           )
         else
           ..._assetGroups.map((HibahGroupRequest group) {
@@ -431,7 +651,7 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
           child: FilledButton.icon(
             onPressed: () => _addAsset(),
             icon: const Icon(Icons.add),
-            label: const Text('Add asset'),
+            label: Text(l10n.addAssetButton),
           ),
         ),
       ],
@@ -439,6 +659,7 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
   }
 
   Widget _buildDocumentsStep() {
+    final l10n = AppLocalizations.of(context)!;
     final TextStyle? sectionStyle = Theme.of(
       context,
     ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600);
@@ -490,7 +711,7 @@ class _HibahCreateScreenState extends State<HibahCreateScreen> {
         FilledButton.icon(
           onPressed: _addDocument,
           icon: const Icon(Icons.upload_file_outlined),
-          label: const Text('Add document'),
+          label: Text(l10n.addDocument),
         ),
         const SizedBox(height: 16),
         if (_assetGroups.isNotEmpty) ...<Widget>[

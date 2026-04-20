@@ -41,7 +41,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   bool _isSubmitting = false;
   String? _selectedInstructionId;
   int _currentStep = 0;
-  // Asset type: 'digital' or 'physical'
+  // Asset type: 'digital', 'physical', or 'debt'
   String? _assetType;
   // Physical asset category: 'property', 'vehicle', 'jewellery', 'cash', 'other'
   // This is mapped to legal classification ('movable' or 'immovable') behind the scenes
@@ -51,6 +51,11 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
   List<Map<String, String>> _getInstructions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (_assetType == 'debt') {
+      return <Map<String, String>>[
+        {'id': 'settle', 'name': l10n.settleDebts},
+      ];
+    }
     final List<Map<String, String>> list = <Map<String, String>>[
       {'id': 'faraid', 'name': l10n.faraid},
       {'id': 'transfer_as_gift', 'name': l10n.transferAsGift},
@@ -264,7 +269,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         );
         return;
       }
-     } else {
+     } else if (_assetType == 'physical') {
        // Physical asset - validate category and name form
        if (_physicalAssetCategory == null) {
          setState(() => _currentStep = 1);
@@ -281,6 +286,12 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
          );
          return;
        }
+       if (!(_physicalAssetNameFormKey.currentState?.validate() ?? false)) {
+         setState(() => _currentStep = 1);
+         return;
+       }
+     } else {
+       // Debt - require a debt label/name
        if (!(_physicalAssetNameFormKey.currentState?.validate() ?? false)) {
          setState(() => _currentStep = 1);
          return;
@@ -328,7 +339,9 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         'email': user.email,
         'declared_value_myr': declaredValue,
         'instructions_after_death': instructions,
-        'asset_type': _assetType, // 'digital' or 'physical'
+        // DB currently allows only 'digital' or 'physical'.
+        // Debt is persisted as physical with settle instruction.
+        'asset_type': _assetType == 'debt' ? 'physical' : _assetType,
       };
 
       if (_assetType == 'physical') {
@@ -376,6 +389,16 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             _selectedBelovedId = (_belovedOptions.first['id'] as num).toInt();
           }
           payload['beloved_id'] = _selectedBelovedId;
+        }
+      } else if (_assetType == 'debt') {
+        payload['new_service_platform_name'] = _assetNameController.text.trim();
+        payload['is_custom'] = true;
+        payload['physical_asset_category'] = 'cash';
+        payload['physical_legal_classification'] = 'movable';
+
+        final String remarks = _remarksController.text.trim();
+        if (remarks.isNotEmpty) {
+          payload['remarks'] = remarks;
         }
       } else {
         // Digital asset: use brand info
@@ -496,144 +519,6 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.addAsset),
-        actions: <Widget>[
-          IconButton(
-            tooltip: l10n.aboutAssets,
-            icon: SampulIcons.buildIconButtonIcon(SampulIcons.help, size: 24),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const AssetInfoScreen(fromHelpIcon: true)),
-              );
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Stepper(
-          currentStep: _currentStep,
-          onStepTapped: (int i) => setState(() => _currentStep = i),
-          controlsBuilder: (BuildContext context, ControlsDetails details) {
-            // Use standardized fixed-footer controls instead.
-            return const SizedBox.shrink();
-          },
-          steps: <Step>[
-            // Step 0: Asset type selection
-            Step(
-              title: Text(l10n.selectAssetType),
-              state: StepState.indexed,
-              isActive: _currentStep >= 0,
-              content: _buildAssetTypeSelector(),
-            ),
-            // Step 1: Platform selection (digital) or Asset info (physical)
-            Step(
-              title: _assetType == 'physical' 
-                  ? Text(l10n.assetInfo)
-                  : Text(l10n.selectPlatform),
-              state: StepState.indexed,
-              isActive: _currentStep >= 1,
-              content: _assetType == 'physical' 
-                  ? Form(key: _physicalAssetNameFormKey, child: _buildPhysicalAssetNameForm())
-                  : _buildPlatformSelector(),
-            ),
-            // Step 2: Details
-            Step(
-              title: _assetType == 'physical'
-                  ? Text(_assetNameController.text.isNotEmpty ? _assetNameController.text : l10n.details)
-                  : (_brandInfo != null ? Text(_brandInfo!.name) : Text(l10n.details)),
-              state: StepState.indexed,
-              isActive: _currentStep >= 2,
-              content: Form(key: _detailsFormKey, child: _buildDetailsForm()),
-            ),
-            // Step 3: Review
-            Step(
-              title: Text(l10n.reviewThisAsset),
-              state: StepState.indexed,
-              isActive: _currentStep >= 3,
-              content: _buildReview(),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: StepperFooterControls(
-        currentStep: _currentStep,
-        lastStep: 3,
-        isBusy: _isSubmitting,
-        onPrimaryPressed: () async {
-          if (_currentStep == 0) {
-            // Asset type selection
-            if (_assetType == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.pleaseSelectAssetType)),
-              );
-              return;
-            }
-            setState(() => _currentStep = 1);
-          } else if (_currentStep == 1) {
-            // Platform selection (digital) or Asset info (physical)
-            if (_assetType == 'digital') {
-              if (_brandInfo == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.pleaseSelectPlatformService)),
-                );
-                return;
-              }
-              } else {
-               // Physical asset - validate category and name form
-               if (_physicalAssetCategory == null) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: Text(l10n.pleaseSelectAssetCategory)),
-                 );
-                 return;
-               }
-               // For 'other' category, validate legal classification is selected
-               if (_physicalAssetCategory == 'other' && _otherAssetLegalClassification == null) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: Text(l10n.pleaseSelectLegalClassification)),
-                 );
-                 return;
-               }
-               if (!(_physicalAssetNameFormKey.currentState?.validate() ?? false)) return;
-              }
-            setState(() => _currentStep = 2);
-          } else if (_currentStep == 2) {
-            // Details form
-            if (!(_detailsFormKey.currentState?.validate() ?? false)) return;
-            if (_selectedInstructionId == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.pleaseSelectInstruction)),
-              );
-              return;
-            }
-            if (_selectedInstructionId == 'transfer_as_gift' && _selectedBelovedId == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.giftRecipientRequired)),
-              );
-              return;
-            }
-            setState(() => _currentStep = 3);
-          } else {
-            // Review step - submit
-            await _submit();
-          }
-        },
-        onBackPressed: _currentStep > 0
-            ? () {
-                setState(() => _currentStep = _currentStep - 1);
-              }
-            : null,
-        primaryLabel: _currentStep == 3 
-            ? (_assetType == 'physical' ? l10n.savePhysicalAsset : l10n.saveDigitalAsset)
-            : null,
-      ),
-    );
-  }
-
   Widget _buildAssetTypeSelector() {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -752,7 +637,223 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        // Register Debt Option
+        InkWell(
+          onTap: () => setState(() => _assetType = 'debt'),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _assetType == 'debt'
+                    ? colorScheme.primary
+                    : colorScheme.outline.withOpacity(0.3),
+                width: _assetType == 'debt' ? 2 : 1,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color: _assetType == 'debt'
+                  ? colorScheme.primaryContainer.withOpacity(0.3)
+                  : Colors.transparent,
+            ),
+            child: Row(
+              children: <Widget>[
+                SampulIcons.buildIcon(
+                  SampulIcons.payment,
+                  width: 32,
+                  height: 32,
+                  color: _assetType == 'debt'
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Register Debt',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Loans, credit cards, and outstanding balances',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_assetType == 'debt')
+                  SampulIcons.buildIcon(SampulIcons.checkCircle, width: 20, height: 20, color: colorScheme.primary),
+              ],
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildDebtForm() {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        TextFormField(
+          controller: _assetNameController,
+          textInputAction: TextInputAction.next,
+          decoration: FormDecorationHelper.roundedInputDecoration(
+            context: context,
+            labelText: 'Debt name',
+            hintText: 'e.g. Home loan, Credit card balance',
+            prefixIconPath: SampulIcons.label,
+          ),
+          validator: (String? v) => (v == null || v.trim().isEmpty) ? l10n.required : null,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.addAsset),
+        actions: <Widget>[
+          IconButton(
+            tooltip: l10n.aboutAssets,
+            icon: SampulIcons.buildIconButtonIcon(SampulIcons.help, size: 24),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const AssetInfoScreen(fromHelpIcon: true)),
+              );
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Stepper(
+          currentStep: _currentStep,
+          onStepTapped: (int i) => setState(() => _currentStep = i),
+          controlsBuilder: (BuildContext context, ControlsDetails details) {
+            // Use standardized fixed-footer controls instead.
+            return const SizedBox.shrink();
+          },
+          steps: <Step>[
+            // Step 0: Asset type selection
+            Step(
+              title: Text(l10n.selectAssetType),
+              state: StepState.indexed,
+              isActive: _currentStep >= 0,
+              content: _buildAssetTypeSelector(),
+            ),
+            // Step 1: Platform selection (digital) or Asset info (physical)
+            Step(
+              title: _assetType == 'physical' 
+                  ? Text(l10n.assetInfo)
+                  : _assetType == 'debt'
+                      ? const Text('Debt info')
+                      : Text(l10n.selectPlatform),
+              state: StepState.indexed,
+              isActive: _currentStep >= 1,
+              content: _assetType == 'physical'
+                  ? Form(key: _physicalAssetNameFormKey, child: _buildPhysicalAssetNameForm())
+                  : _assetType == 'debt'
+                      ? Form(key: _physicalAssetNameFormKey, child: _buildDebtForm())
+                      : _buildPlatformSelector(),
+            ),
+            // Step 2: Details
+            Step(
+              title: _assetType == 'physical'
+                  ? Text(_assetNameController.text.isNotEmpty ? _assetNameController.text : l10n.details)
+                  : (_assetType == 'debt'
+                      ? Text(_assetNameController.text.isNotEmpty ? _assetNameController.text : l10n.details)
+                      : (_brandInfo != null ? Text(_brandInfo!.name) : Text(l10n.details))),
+              state: StepState.indexed,
+              isActive: _currentStep >= 2,
+              content: Form(key: _detailsFormKey, child: _buildDetailsForm()),
+            ),
+            // Step 3: Review
+            Step(
+              title: Text(l10n.reviewThisAsset),
+              state: StepState.indexed,
+              isActive: _currentStep >= 3,
+              content: _buildReview(),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: StepperFooterControls(
+        currentStep: _currentStep,
+        lastStep: 3,
+        isBusy: _isSubmitting,
+        onPrimaryPressed: () async {
+          if (_currentStep == 0) {
+            if (_assetType == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.pleaseSelectAssetType)),
+              );
+              return;
+            }
+            setState(() => _currentStep = 1);
+          } else if (_currentStep == 1) {
+            if (_assetType == 'digital') {
+              if (_brandInfo == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.pleaseSelectPlatformService)),
+                );
+                return;
+              }
+            } else if (_assetType == 'physical') {
+              if (_physicalAssetCategory == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.pleaseSelectAssetCategory)),
+                );
+                return;
+              }
+              if (_physicalAssetCategory == 'other' && _otherAssetLegalClassification == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.pleaseSelectLegalClassification)),
+                );
+                return;
+              }
+              if (!(_physicalAssetNameFormKey.currentState?.validate() ?? false)) return;
+            } else {
+              if (!(_physicalAssetNameFormKey.currentState?.validate() ?? false)) return;
+            }
+            setState(() => _currentStep = 2);
+          } else if (_currentStep == 2) {
+            if (!(_detailsFormKey.currentState?.validate() ?? false)) return;
+            if (_selectedInstructionId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.pleaseSelectInstruction)),
+              );
+              return;
+            }
+            if (_selectedInstructionId == 'transfer_as_gift' && _selectedBelovedId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.giftRecipientRequired)),
+              );
+              return;
+            }
+            setState(() => _currentStep = 3);
+          } else {
+            await _submit();
+          }
+        },
+        onBackPressed: _currentStep > 0
+            ? () => setState(() => _currentStep = _currentStep - 1)
+            : null,
+        primaryLabel: _currentStep == 3
+            ? (_assetType == 'physical'
+                ? l10n.savePhysicalAsset
+                : (_assetType == 'debt' ? 'Save debt' : l10n.saveDigitalAsset))
+            : null,
+      ),
     );
   }
 
@@ -1436,8 +1537,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Text(
-            _assetType == 'physical' 
+            _assetType == 'physical'
                 ? 'Define how this asset should be handled.'
+                : _assetType == 'debt'
+                    ? 'Define how this debt should be settled.'
                 : l10n.defineHowThisAccountShouldBeHandled,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
@@ -1498,7 +1601,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
         const SizedBox(height: 24),
         // What should happen to this account?
         Text(
-          l10n.whatShouldHappenToThisAccount,
+          _assetType == 'debt' ? 'What should happen to this debt?' : l10n.whatShouldHappenToThisAccount,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -1760,7 +1863,12 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
             ),
             const Divider(height: 24),
             // Asset type
-            row('Asset type', _assetType == 'physical' ? l10n.physicalAsset : l10n.digitalAsset),
+            row(
+              'Asset type',
+              _assetType == 'physical'
+                  ? l10n.physicalAsset
+                  : (_assetType == 'debt' ? 'Register Debt' : l10n.digitalAsset),
+            ),
             // Asset type (physical only) - show user-friendly name with legal classification
             if (_assetType == 'physical' && _physicalAssetCategory != null)
               row('Asset type', _getAssetTypeDisplayNameWithClassification(_physicalAssetCategory)),

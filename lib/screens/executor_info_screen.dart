@@ -60,7 +60,7 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "Let's register as an executor",
+                            l10n.executorInfoHeadline,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
@@ -69,7 +69,7 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "Register to manage and distribute a deceased person's estate according to their will or the law.",
+                            l10n.executorInfoSubtitle,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -103,7 +103,7 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "What is an executor?",
+                              l10n.executorInfoWhatIsTitle,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
@@ -111,7 +111,7 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "An executor is appointed to manage and distribute the assets of a deceased person's estate. This involves handling legal matters, settling debts, and ensuring proper distribution to beneficiaries.",
+                              l10n.executorInfoWhatIsBody,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.4,
@@ -119,17 +119,17 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                             ),
                             const SizedBox(height: 20),
                             _ExecutorFeatureItem(
-                              text: "Manage the deceased person's estate and assets.",
+                              text: l10n.executorInfoFeatureManage,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _ExecutorFeatureItem(
-                              text: "Settle debts and handle legal matters.",
+                              text: l10n.executorInfoFeatureSettle,
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(height: 16),
                             _ExecutorFeatureItem(
-                              text: "Distribute assets to beneficiaries according to the will or law.",
+                              text: l10n.executorInfoFeatureDistribute,
                               colorScheme: colorScheme,
                             ),
                           ],
@@ -171,7 +171,7 @@ class _ExecutorInfoScreenState extends State<ExecutorInfoScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "Register as executor",
+                          l10n.executorInfoCta,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onPrimary,

@@ -36,6 +36,11 @@ class _EditAssetScreenState extends State<EditAssetScreen> {
 
   List<Map<String, String>> _getInstructions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (_assetType == 'debt' || _instruction == 'settle') {
+      return <Map<String, String>>[
+        {'id': 'settle', 'name': l10n.settleDebts},
+      ];
+    }
     return <Map<String, String>>[
       {'id': 'faraid', 'name': l10n.faraid},
       {'id': 'terminate', 'name': l10n.terminateSubscriptions},

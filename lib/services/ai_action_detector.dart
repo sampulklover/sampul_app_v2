@@ -13,7 +13,7 @@ class AiAction {
 class AiActionDetector {
   /// Detect actionable items from AI response text
   /// Supports structured format: [ACTION:route:label] or [ACTION:route]
-  /// Example: [ACTION:trust_create:Create Trust Fund]
+  /// Example: [ACTION:trust_create:Create Family Account]
   /// Example: [ACTION:trust_create] (will use default label)
   static List<AiAction> detectActions(String message) {
     final actions = <AiAction>[];
@@ -65,9 +65,9 @@ class AiActionDetector {
   static String _getDefaultLabel(String route) {
     switch (route) {
       case 'trust_create':
-        return 'Create Trust Fund';
+        return 'Create Family Account';
       case 'trust_management':
-        return 'View Trust Funds';
+        return 'View Family Accounts';
       case 'hibah_management':
         return 'View Hibah';
       case 'will_management':
@@ -81,7 +81,7 @@ class AiActionDetector {
       case 'family_list':
         return 'View Family';
       case 'executor_management':
-        return 'Manage Pusaka';
+        return 'Manage executors';
       case 'checklist':
         return 'View Checklist';
       case 'extra_wishes':
@@ -99,22 +99,22 @@ class AiActionDetector {
     // Multi-language keyword detection
     // Trust keywords: English + Malay
     if (_matchesAny(lowerMessage, [
-      'create trust', 'set up trust', 'new trust', 'trust fund',
-      'cipta amanah', 'buat amanah', 'amanah baru', 'dana amanah'
+      'create trust', 'set up trust', 'new trust', 'trust fund', 'family account',
+      'cipta amanah', 'buat amanah', 'amanah baru', 'dana amanah', 'akaun keluarga', 'family account'
     ])) {
       actions.add(AiAction(
-        label: 'Create Trust Fund',
+        label: 'Create Family Account',
         actionType: 'navigate',
         parameters: {'route': 'trust_create'},
       ));
     }
 
     if (_matchesAny(lowerMessage, [
-      'view trust', 'my trust', 'trusts', 'trust fund',
-      'lihat amanah', 'amanah saya', 'senarai amanah'
+      'view trust', 'my trust', 'trusts', 'trust fund', 'family account',
+      'lihat amanah', 'amanah saya', 'senarai amanah', 'akaun keluarga', 'family account'
     ])) {
       actions.add(AiAction(
-        label: 'View Trust Funds',
+        label: 'View Family Accounts',
         actionType: 'navigate',
         parameters: {'route': 'trust_management'},
       ));

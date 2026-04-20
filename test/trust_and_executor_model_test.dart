@@ -9,7 +9,7 @@ void main() {
       final trust = Trust.fromJson(<String, dynamic>{
         'id': 1,
         'trust_code': 'T-001',
-        'name': 'Family Trust',
+        'name': 'Family Account',
         'status': 'approved',
         'trust_payments': <Map<String, dynamic>>[
           <String, dynamic>{'amount': 2500000, 'status': 'paid'},
@@ -35,6 +35,27 @@ void main() {
       final json = trust.toJson();
       expect(json.containsKey('fund_support_categories'), false);
       expect(json.containsKey('fund_support_configs'), false);
+    });
+
+    test('multiplies Sedekah Jumaat by years for required funding', () {
+      final trust = Trust(
+        fundSupportConfigs: <String, dynamic>{
+          'charitable': <String, dynamic>{
+            'charities': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'organization_name': 'Masjid Test',
+                'donation_amount': 50,
+                'donation_duration': 'weekly',
+                'address_line_1': 'For 2 years',
+                'address_line_2': 'sedekah_jumaat',
+              },
+            ],
+          },
+        },
+      );
+
+      // RM 50 x 52 weeks x 2 years = RM 5200 = 520000 cents
+      expect(trust.requiredFundingInCents, 520000);
     });
   });
 

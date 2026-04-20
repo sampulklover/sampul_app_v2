@@ -152,6 +152,12 @@ class AppLocalizationsMs extends AppLocalizations {
   String get startPropertyTrust => 'Mula menyediakan';
 
   @override
+  String get supportingDocuments => 'Dokumen sokongan';
+
+  @override
+  String get addDocument => 'Tambah dokumen';
+
+  @override
   String get onboardingTitle1 => 'Letakkan kekayaan anda\ndalam tulisan';
 
   @override
@@ -170,7 +176,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get onboardingSubtitle3 =>
-      'Pusaka profesional memastikan wasiat anda diikuti—tiada drama keluarga, tiada kekacauan undang-undang, hanya penyerahan yang lancar.';
+      'Executor profesional membantu memastikan wasiat anda diikuti—tenang, jelas, dan tersusun.';
 
   @override
   String get next => 'Seterusnya';
@@ -238,6 +244,16 @@ class AppLocalizationsMs extends AppLocalizations {
   String get familyAccount => 'Akaun Keluarga';
 
   @override
+  String get homeMoreWithSampul => 'Lebih dengan Sampul';
+
+  @override
+  String get homeFridayFundTitle => 'Tabung Jumaat';
+
+  @override
+  String get homeFridayFundDescription =>
+      'Sedekah setiap Jumaat, dengan pahala yang berterusan untuk anda.';
+
+  @override
   String get createYourFirstTrustFund => 'Tambah akaun keluarga pertama anda';
 
   @override
@@ -268,10 +284,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get checklist => 'Senarai Semak';
 
   @override
-  String get execution => 'Pusaka';
+  String get execution => 'Executor';
 
   @override
-  String get pusaka => 'Pusaka';
+  String get pusaka => 'Executor';
 
   @override
   String get aftercare => 'Penjagaan Selepas';
@@ -729,7 +745,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get diditNotConfigured =>
-      'Didit tidak dikonfigurasi. Sila tetapkan DIDIT_CLIENT_ID (kunci API) dan DIDIT_WORKFLOW_ID dalam fail .env anda.';
+      'Verifikasi tidak dikonfigurasi. Sila tetapkan DIDIT_CLIENT_ID (kunci API) dan DIDIT_WORKFLOW_ID dalam fail .env anda.';
 
   @override
   String get identityVerificationRequired =>
@@ -747,7 +763,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get providesAssurance =>
-      'Memberi jaminan kepada benefisiari dan Pusaka';
+      'Memberi jaminan kepada benefisiari dan executor anda';
 
   @override
   String get regulatoryCompliance => 'Pematuhan Peraturan';
@@ -946,7 +962,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String publishWillConfirmation(String url) {
-    return 'Adakah anda pasti mahu menerbitkan wasiat ini?\n\nSetelah diterbitkan, wasiat ini akan boleh diakses oleh sesiapa yang mempunyai pautan kongsi:\n$url\n\nPastikan anda hanya berkongsi pautan ini dengan ahli keluarga atau Pusaka yang dipercayai.';
+    return 'Adakah anda pasti mahu menerbitkan wasiat ini?\n\nSetelah diterbitkan, wasiat ini akan boleh diakses oleh sesiapa yang mempunyai pautan kongsi:\n$url\n\nPastikan anda hanya berkongsi pautan ini dengan ahli keluarga atau executor anda yang dipercayai.';
   }
 
   @override
@@ -986,6 +1002,27 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get wasiatDetailsPrivateNote =>
       'Peribadi. Disimpan dengan Sampul selagi pelan anda aktif. Hanya dilepaskan dengan permintaan yang sah.';
+
+  @override
+  String get wasiatDetailsLockedTitle => 'Butiran dikunci';
+
+  @override
+  String get wasiatDetailsLockedBody =>
+      'Untuk lihat butiran penuh wasiat anda, anda perlukan pelan tahunan yang aktif.';
+
+  @override
+  String get wasiatUpgradePlanCta => 'Naik taraf pelan';
+
+  @override
+  String get wasiatGeneratedHistoryTitle => 'Versi dijana';
+
+  @override
+  String get wasiatGenerateNewVersionCta => 'Jana versi baharu';
+
+  @override
+  String wasiatViewingGeneratedVersion(String date) {
+    return 'Sedang lihat: $date';
+  }
 
   @override
   String get wasiatShareSheetTitle => 'Kongsi sijil';
@@ -1034,6 +1071,47 @@ class AppLocalizationsMs extends AppLocalizations {
       'Untuk hidupkan pautan sijil, anda perlukan pelan tahunan yang aktif.\n\nKetik Lihat pelan untuk teruskan.';
 
   @override
+  String get wasiatPublishBlockedByKyc =>
+      'Untuk jana sijil, sila lengkapkan pengesahan identiti anda terlebih dahulu.';
+
+  @override
+  String get wasiatPublishBlockedByDidit =>
+      'Kami belum dapat sahkan verifikasi identiti anda. Sila lengkapkan verifikasi dan cuba semula.';
+
+  @override
+  String get wasiatPublishVerificationChecklistTitle =>
+      'Sebelum jana versi sijil baharu, sila lengkapkan semua semakan yang diperlukan.';
+
+  @override
+  String get wasiatPublishVerificationSettingsHint =>
+      'Setiap jana sijil baharu memerlukan verifikasi identiti yang baharu. Mulakan verifikasi untuk teruskan.';
+
+  @override
+  String get wasiatEligibilityPlanStatusLabel => 'Pelan tahunan';
+
+  @override
+  String get wasiatEligibilityDiditKycStatusLabel => 'Verifikasi identiti';
+
+  @override
+  String get wasiatEligibilityKycStatusLabel => 'Pengesahan identiti (KYC)';
+
+  @override
+  String get wasiatEligibilityDiditStatusLabel =>
+      'Pengesahan semula untuk sijil ini';
+
+  @override
+  String get wasiatEligibilityStatusActive => 'Aktif';
+
+  @override
+  String get wasiatEligibilityStatusInactive => 'Tidak aktif';
+
+  @override
+  String get wasiatEligibilityStatusComplete => 'Selesai';
+
+  @override
+  String get wasiatEligibilityStatusNotComplete => 'Belum selesai';
+
+  @override
   String wasiatPublishReadyUntil(String date) {
     return 'Pelan aktif sehingga $date';
   }
@@ -1078,27 +1156,27 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get planPropertyTrustSummary =>
-      'Dari RM 2,500 untuk satu aset. Pakej lebih besar dari RM 8,500. Jumlah penuh dipaparkan sebelum bayar.';
+      'Dari RM 2,500 untuk satu aset. Pakej lebih besar bermula RM 2,500 dengan tambahan RM 500 bagi setiap aset selepas 10 aset. Jumlah penuh dipaparkan sebelum bayar.';
 
   @override
-  String get planSectionTrustTitle => 'Amanah Keluarga';
+  String get planSectionTrustTitle => 'Family Account';
 
   @override
   String planTrustSummary(String amount) {
-    return 'Pembiayaan minimum ialah $amount. Yuran lain dipaparkan apabila anda teruskan dalam Amanah Keluarga.';
+    return 'Pembiayaan minimum ialah $amount. Yuran lain dipaparkan apabila anda teruskan dalam Family Account.';
   }
 
   @override
   String get plansOpenPropertyTrust => 'Buka Hartanah';
 
   @override
-  String get plansOpenTrustDashboard => 'Buka Amanah Keluarga';
+  String get plansOpenTrustDashboard => 'Buka Family Account';
 
   @override
   String get plansPaymentHistoryForPropertyTrust => 'Bayaran hartanah';
 
   @override
-  String get plansPaymentHistoryForTrust => 'Bayaran amanah keluarga';
+  String get plansPaymentHistoryForTrust => 'Bayaran Family Account';
 
   @override
   String get plansPaymentHistoryEmptyProduct => 'Tiada rekod lagi.';
@@ -1113,7 +1191,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String plansPaymentTrustRefLabel(String id) {
-    return 'Amanah Keluarga #$id';
+    return 'Family Account #$id';
   }
 
   @override
@@ -1130,7 +1208,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get wasiatAccessActiveNoEndDate => 'Akses aktif';
 
   @override
-  String get wasiatAccessInlineInactive => 'Bayar untuk terbit';
+  String get wasiatAccessInlineInactive => 'Naik taraf pelan';
 
   @override
   String get wasiatManagePlan => 'Butiran';
@@ -1216,22 +1294,31 @@ class AppLocalizationsMs extends AppLocalizations {
   String get updateWill => 'Kemas Kini Wasiat';
 
   @override
-  String get executors => 'Pusaka';
+  String get executorsAndGuardians => 'Executor & penjaga';
 
   @override
-  String get aboutPusaka => 'Tentang Pusaka';
+  String get executors => 'Executor';
 
   @override
-  String get noPusakaYet => 'Tiada Pusaka lagi';
+  String get yourExecutor => 'Executor anda';
 
   @override
-  String get newToPusaka => 'Baru kepada Pusaka?';
+  String get aboutPusaka => 'Tentang executor';
 
   @override
-  String get submitPusaka => 'Hantar Pusaka';
+  String get noPusakaYet => 'Tiada executor lagi';
+
+  @override
+  String get newToPusaka => 'Baru kepada executor?';
+
+  @override
+  String get submitPusaka => 'Hantar executor';
 
   @override
   String get guardians => 'Penjaga';
+
+  @override
+  String get yourGuardian => 'Penjaga anda';
 
   @override
   String get extraWishes => 'Hasrat Tambahan';
@@ -1240,17 +1327,17 @@ class AppLocalizationsMs extends AppLocalizations {
   String get reviewSave => 'Semak & Simpan';
 
   @override
-  String get primaryExecutor => 'Pusaka Utama';
+  String get primaryExecutor => 'Executor utama';
 
   @override
   String get selectPrimaryExecutor =>
-      'Pilih Pusaka utama untuk melaksanakan wasiat anda';
+      'Pilih executor utama untuk melaksanakan wasiat anda';
 
   @override
-  String get secondaryExecutor => 'Pusaka Sekunder';
+  String get secondaryExecutor => 'Executor sekunder';
 
   @override
-  String get selectSecondaryExecutor => 'Pilihan: Pilih Pusaka sekunder';
+  String get selectSecondaryExecutor => 'Pilihan: Pilih executor sekunder';
 
   @override
   String get primaryGuardian => 'Penjaga Utama';
@@ -1278,7 +1365,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get yourAssets => 'Aset Anda';
 
   @override
-  String get manageAll => 'Urus Semua';
+  String get manageAll => 'Lihat semua';
 
   @override
   String get noAssetsYet =>
@@ -1476,7 +1563,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get closeThisAccount => 'Tutup akaun ini';
 
   @override
-  String get transferAccessToExecutor => 'Pindahkan akses kepada Pusaka saya';
+  String get transferAccessToExecutor => 'Pindahkan akses kepada executor saya';
 
   @override
   String get memorialiseIfApplicable => 'Peringati (jika berkenaan)';
@@ -1505,7 +1592,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get estimatedValueDescription =>
-      'Nilai anggaran membantu Pusaka anda memahami nilai aset.';
+      'Nilai anggaran membantu executor anda memahami nilai aset.';
 
   @override
   String get enterEstimatedValue => 'Masukkan nilai anggaran (RM)';
@@ -1525,7 +1612,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get additionalNotesDescription =>
-      'Tambah sebarang butiran tambahan yang akan membantu Pusaka anda menguruskan aset ini.';
+      'Tambah sebarang butiran tambahan yang akan membantu executor anda menguruskan aset ini.';
 
   @override
   String get youMightWantToInclude => 'Anda mungkin ingin sertakan:';
@@ -1629,7 +1716,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get assetListConnectsToWill =>
-      'Senarai aset anda bersambung dengan wasiat dan perancangan harta pusaka. Tambah aset digital dan fizikal supaya Pusaka anda tahu apa yang perlu diuruskan.';
+      'Senarai aset anda bersambung dengan wasiat dan perancangan harta pusaka. Tambah aset digital dan fizikal supaya executor anda tahu apa yang perlu diuruskan.';
 
   @override
   String get assetType => 'Jenis aset';
@@ -1759,7 +1846,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get provideClearInstructionsToExecutor =>
-      'Berikan arahan yang jelas kepada Pusaka anda';
+      'Berikan arahan yang jelas kepada executor anda';
 
   @override
   String get weDoNotStorePasswords =>
@@ -2116,7 +2203,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get addYourFirstAsset => 'Tambah aset pertama anda';
 
   @override
-  String get startTrackingYourDigitalAssets => 'Senaraikan aset digital anda';
+  String get startTrackingYourDigitalAssets => 'Senaraikan aset anda';
 
   @override
   String get createYourWill => 'Cipta Wasiat Anda';
@@ -2153,8 +2240,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get referralCodeApplied => 'Kod rujukan telah digunakan';
 
   @override
-  String get setUpYourFamilyTrustAccount =>
-      'Sediakan Akaun Amanah Keluarga Anda';
+  String get setUpYourFamilyTrustAccount => 'Sediakan Family Account anda';
 
   @override
   String get createFamilyAccountForLongTermSupport =>
@@ -2181,13 +2267,13 @@ class AppLocalizationsMs extends AppLocalizations {
   String get theRemainingSteps => 'langkah yang tinggal';
 
   @override
-  String get familyTrustFund => 'Amanah Keluarga';
+  String get familyTrustFund => 'Family Account';
 
   @override
-  String get aboutFamilyTrustFund => 'Mengenai Amanah Keluarga';
+  String get aboutFamilyTrustFund => 'Mengenai Family Account';
 
   @override
-  String get noTrustFundsYet => 'Tiada amanah keluarga lagi';
+  String get noTrustFundsYet => 'Tiada Family Account lagi';
 
   @override
   String get createNew => 'Cipta Baru';
@@ -2202,7 +2288,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get all => 'Semua';
 
   @override
-  String get aboutTrustFund => 'Mengenai Amanah';
+  String get aboutTrustFund => 'Mengenai Family Account';
 
   @override
   String get newToTrusts => 'Baru kepada amanah?';
@@ -2215,11 +2301,11 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get whySetUpFamilyTrustFund =>
-      'Apa yang Amanah Keluarga lakukan untuk anda';
+      'Apa yang Family Account lakukan untuk anda';
 
   @override
   String get familyTrustFundDescription =>
-      'Amanah Keluarga membolehkan anda memutuskan bagaimana wang anda menyokong keluarga anda—penjagaan kesihatan, pendidikan, perbelanjaan hidup. Anda boleh mengemas kininya bila-bila masa.';
+      'Family Account membolehkan anda memutuskan bagaimana wang anda menyokong keluarga anda—penjagaan kesihatan, pendidikan, perbelanjaan hidup. Anda boleh mengemas kininya bila-bila masa.';
 
   @override
   String get chooseHowMoneySpent =>
@@ -2241,21 +2327,21 @@ class AppLocalizationsMs extends AppLocalizations {
       'Ketahui lebih lanjut tentang rakan kongsi kami';
 
   @override
-  String get trustFundDetails => 'Butiran Amanah Keluarga';
+  String get trustFundDetails => 'Butiran Family Account';
 
   @override
-  String get deleteTrustFund => 'Padam Amanah Keluarga';
+  String get deleteTrustFund => 'Padam Family Account';
 
   @override
   String get areYouSureDeleteTrustFund =>
-      'Adakah anda pasti mahu memadam amanah keluarga ini? Tindakan ini tidak boleh dibatalkan.';
+      'Adakah anda pasti mahu memadam Family Account ini? Tindakan ini tidak boleh dibatalkan.';
 
   @override
-  String get trustFundDeleted => 'Amanah Keluarga dipadam';
+  String get trustFundDeleted => 'Family Account dipadam';
 
   @override
   String failedToDeleteTrustFund(String error) {
-    return 'Gagal memadam amanah keluarga: $error';
+    return 'Gagal memadam Family Account: $error';
   }
 
   @override
@@ -2297,7 +2383,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get allocateWhatTrustFundWillCover =>
-      'Peruntukkan apa yang akan dilindungi oleh amanah keluarga ini';
+      'Peruntukkan apa yang akan dilindungi oleh Family Account ini';
 
   @override
   String get education => 'Pendidikan';
@@ -2354,10 +2440,13 @@ class AppLocalizationsMs extends AppLocalizations {
   String get viewInstructions => 'Lihat arahan';
 
   @override
-  String get openTrust => 'Buka amanah';
+  String get openTrust => 'Buka Family Account';
 
   @override
-  String get createTrustFund => 'Cipta Amanah Keluarga';
+  String get createTrustFund => 'Cipta Family Account';
+
+  @override
+  String get editTrustFund => 'Kemaskini Family Account';
 
   @override
   String get weCouldNotLoadYourProfile =>
@@ -2370,7 +2459,11 @@ class AppLocalizationsMs extends AppLocalizations {
   String get fundSupport => 'Sokongan Dana';
 
   @override
-  String get executorSelection => 'Pemilihan Pusaka';
+  String get executorSelection => 'Pemilihan pelaksana';
+
+  @override
+  String get executorSelectionDisclaimer =>
+      'Dengan melantik pelaksana ini, anda memberi kuasa kepada Sampul untuk memaklumkan mereka dan memberi akses kepada akaun anda serta maklumat harta pusaka hanya selepas Peristiwa Pencetus yang disahkan (kematian, koma, atau hilang keupayaan mental), dan untuk mereka bekerjasama dengan Rakyat Trustee Berhad (RTB) bagi mentadbir harta pusaka anda bagi pihak benefisiari anda.';
 
   @override
   String get financialInformation => 'Maklumat Kewangan';
@@ -2425,7 +2518,8 @@ class AppLocalizationsMs extends AppLocalizations {
   String get whenNeeded => 'Apabila diperlukan';
 
   @override
-  String get allAtOnceAtTheEnd => 'Semua sekaligus pada akhir';
+  String get allAtOnceAtTheEnd =>
+      'Semua sekaligus selepas Peristiwa Pencetus yang disahkan';
 
   @override
   String get someoneIKnow => 'Seseorang yang Saya Kenali';
@@ -2447,15 +2541,14 @@ class AppLocalizationsMs extends AppLocalizations {
   String get administrativeBurden => 'Beban pentadbiran';
 
   @override
-  String get whosThisFamilyTrustAccountFor =>
-      'Akaun amanah keluarga ini untuk siapa?';
+  String get whosThisFamilyTrustAccountFor => 'Family Account ini untuk siapa?';
 
   @override
   String get noFamilyMembersFound =>
       'Tiada ahli keluarga dijumpai. Tambah ahli keluarga dalam profil anda.';
 
   @override
-  String get sampulsProfessionalExecutor => 'Pusaka Profesional Sampul';
+  String get sampulsProfessionalExecutor => 'Executor Profesional Sampul';
 
   @override
   String get expertManagement => 'Pengurusan pakar';
@@ -2465,11 +2558,11 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get estFeeR4320yr =>
-      'Anggaran Yuran: RM4,320/tahun (Dibayar daripada dana amanah)';
+      'Anggaran Yuran: RM4,320/tahun (Dibayar daripada dana Family Account)';
 
   @override
   String get executorGoodToKnow =>
-      'Pusaka anda bertindak sebagai perlindungan — bukan pembuat keputusan. Pilih seseorang yang teratur dan boleh dipercayai. Mereka mestilah sekurang-kurangnya berumur 21 tahun. Sekurang-kurangnya 2 Pusaka diperlukan apabila salah satu penerima manfaat adalah bawah umur. Jika salah satu penerima manfaat anda berumur di bawah 18 tahun, anda memerlukan sekurang-kurangnya dua Pusaka yang bekerjasama. Kami akan mengingatkan anda tentang perkara ini kemudian.';
+      'Executor anda bertindak sebagai perlindungan — bukan pembuat keputusan. Pilih seseorang yang teratur dan boleh dipercayai. Mereka mestilah sekurang-kurangnya berumur 21 tahun. Jika salah satu penerima manfaat anda berumur di bawah 18 tahun, anda memerlukan sekurang-kurangnya dua executor yang bekerjasama. Kami akan mengingatkan anda tentang perkara ini kemudian.';
 
   @override
   String get estimatedNetWorth => 'Anggaran Nilai Bersih';
@@ -2535,13 +2628,13 @@ class AppLocalizationsMs extends AppLocalizations {
       'Mengikut keperluan (pemegang amanah memutuskan)';
 
   @override
-  String get lumpSumAtTheEnd => 'Jumlah sekaligus pada akhir';
+  String get lumpSumAtTheEnd => 'Jumlah Sekaligus';
 
   @override
-  String get executorType => 'Jenis Pusaka';
+  String get executorType => 'Jenis executor';
 
   @override
-  String get selectedExecutors => 'Pusaka Terpilih';
+  String get selectedExecutors => 'Executor terpilih';
 
   @override
   String familyMembersSelected(int count) {
@@ -2570,19 +2663,26 @@ class AppLocalizationsMs extends AppLocalizations {
       'Sila pilih sekurang-kurangnya satu kategori sokongan dana dan sediakan butirannya';
 
   @override
-  String get pleaseSelectAtLeastOneExecutor =>
-      'Sila pilih sekurang-kurangnya satu Pusaka';
+  String get pleaseSelectAtLeastOneExecutor => 'Sila pilih seorang pelaksana';
 
   @override
   String get pleaseCompleteYourProfileFirst =>
       'Sila lengkapkan profil anda terlebih dahulu';
 
   @override
-  String get trustFundCreatedSuccessfully => 'Amanah Keluarga berjaya dicipta';
+  String get trustFundCreatedSuccessfully => 'Family Account berjaya dicipta';
+
+  @override
+  String get trustFundUpdatedSuccessfully => 'Perubahan disimpan';
 
   @override
   String failedToCreateTrustFund(String error) {
-    return 'Gagal mencipta amanah keluarga: $error';
+    return 'Gagal mencipta Family Account: $error';
+  }
+
+  @override
+  String failedToUpdateTrustFund(String error) {
+    return 'Gagal mengemas kini Family Account: $error';
   }
 
   @override
@@ -2699,7 +2799,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get allFundsReleasedEnd =>
-      'Semua dana dilepaskan apabila tempoh amanah berakhir';
+      'Semuanya dilepaskan selepas Peristiwa Pencetus yang disahkan (kematian, koma, atau hilang keupayaan mental)';
 
   @override
   String get cancelRequest => 'Batal Permintaan';
@@ -2785,11 +2885,11 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get everythingReleasedEnd =>
-      'Semuanya dilepaskan apabila tempoh amanah berakhir';
+      'Semuanya dilepaskan selepas Peristiwa Pencetus yang disahkan (kematian, koma, atau hilang keupayaan mental)';
 
   @override
   String get thisIsAGuide =>
-      'Ini adalah panduan. Pusaka anda boleh menyesuaikan berdasarkan keperluan sebenar.';
+      'Ini adalah panduan. Executor anda boleh menyesuaikan berdasarkan keperluan sebenar.';
 
   @override
   String get addCharitableOrganizationsDonate =>
@@ -2868,7 +2968,7 @@ class AppLocalizationsMs extends AppLocalizations {
       'Sediakan arahan untuk melindungi hartanah anda.';
 
   @override
-  String get managePusaka => 'Urus Pusaka';
+  String get managePusaka => 'Urus executor';
 
   @override
   String get managePusakaDescription =>
@@ -2880,6 +2980,34 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get writeWasiatDescription =>
       'Dokumentasikan bagaimana aset anda harus diagihkan.';
+
+  @override
+  String get executorInfoHeadline => 'Mari daftar sebagai executor';
+
+  @override
+  String get executorInfoSubtitle =>
+      'Daftar untuk mengurus dan mengagihkan harta pusaka si mati mengikut wasiat atau undang-undang.';
+
+  @override
+  String get executorInfoWhatIsTitle => 'Apa itu executor?';
+
+  @override
+  String get executorInfoWhatIsBody =>
+      'Executor dilantik untuk mengurus dan mengagihkan aset harta pusaka si mati. Ini termasuk mengurus hal undang-undang, menyelesaikan hutang, dan memastikan agihan kepada benefisiari dibuat dengan betul.';
+
+  @override
+  String get executorInfoFeatureManage => 'Urus harta pusaka dan aset si mati.';
+
+  @override
+  String get executorInfoFeatureSettle =>
+      'Selesaikan hutang dan urus hal undang-undang.';
+
+  @override
+  String get executorInfoFeatureDistribute =>
+      'Agihkan aset kepada benefisiari mengikut wasiat atau undang-undang.';
+
+  @override
+  String get executorInfoCta => 'Daftar sebagai executor';
 
   @override
   String get getGuidanceTitle => 'Dapatkan panduan';
@@ -2903,7 +3031,7 @@ class AppLocalizationsMs extends AppLocalizations {
       'Lindungi hartanah anda dengan amanah';
 
   @override
-  String get setUpExecution => 'Sediakan Pusaka';
+  String get setUpExecution => 'Sediakan executor';
 
   @override
   String get setUpExecutionDescription =>
@@ -2924,6 +3052,33 @@ class AppLocalizationsMs extends AppLocalizations {
       'Dapatkan panduan peribadi dari pembantu Sampul AI';
 
   @override
+  String get chatWelcomeSampulAi =>
+      'Hai! Saya Sampul AI, pembantu perancangan harta pusaka anda. Apa yang boleh saya bantu hari ini?';
+
+  @override
+  String get chatErrorConnection =>
+      'Maaf, kami menghadapi masalah sambungan sekarang. Sila cuba lagi sebentar lagi.';
+
+  @override
+  String get chatErrorNotConfigured =>
+      'AI chat belum dikonfigurasi. Sila semak pembolehubah persekitaran anda.';
+
+  @override
+  String get chatErrorAuthFailed =>
+      'Pengesahan gagal. Sila semak konfigurasi kunci API anda.';
+
+  @override
+  String get chatErrorRateLimit =>
+      'Had permintaan telah dicapai. Sila cuba lagi sebentar lagi.';
+
+  @override
+  String get chatErrorServiceUnavailable =>
+      'Perkhidmatan AI tidak tersedia buat sementara waktu. Sila cuba lagi kemudian.';
+
+  @override
+  String get chatComposerPlaceholder => 'Tanya saya apa sahaja…';
+
+  @override
   String get setUpAftercare => 'Tetapkan Penjagaan Selepas';
 
   @override
@@ -2940,7 +3095,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get completeStepsManagePusaka =>
-      'Lengkapkan langkah-langkah ini untuk menguruskan hal pusaka anda.';
+      'Lengkapkan langkah-langkah ini untuk menyediakan executor anda.';
 
   @override
   String get completeStepsWriteWasiat =>
@@ -3018,11 +3173,11 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get couponDescriptionHibah =>
-      'Yuran sijil Hibah—pilih di bawah Bayaran pada skrin Hibah sebelum checkout.';
+      'Yuran sijil Hibah. Pilih di bawah Bayaran pada skrin Hibah sebelum checkout.';
 
   @override
   String couponDescriptionWasiat(String screenTitle) {
-    return 'Akses tahunan Wasiat—pilih di $screenTitle sebelum bayar.';
+    return 'Akses tahunan Wasiat. Pilih di $screenTitle sebelum bayar.';
   }
 
   @override

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/trust.dart';
-import '../models/trust_payment.dart';
-import '../config/trust_constants.dart';
 
 class TrustPaymentHistoryModal extends StatelessWidget {
   final Trust trust;
@@ -11,12 +9,6 @@ class TrustPaymentHistoryModal extends StatelessWidget {
     super.key,
     required this.trust,
   });
-
-  String _formatCurrency(int cents) {
-    final amount = cents / 100;
-    return NumberFormat.currency(locale: 'en_MY', symbol: 'RM ', decimalDigits: 2)
-        .format(amount);
-  }
 
   String _formatCurrencyWithCommas(int cents) {
     final amount = cents / 100;
@@ -67,6 +59,7 @@ class TrustPaymentHistoryModal extends StatelessWidget {
     final validPayments = payments.where((p) => p.status != null).toList();
     final totalPaid = trust.totalPaidInCents;
     final remaining = trust.remainingInCents;
+    final required = trust.requiredFundingInCents;
 
     return Container(
       decoration: BoxDecoration(
@@ -163,13 +156,13 @@ class TrustPaymentHistoryModal extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Minimum Required',
+                          'Required (based on instructions)',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         Text(
-                          _formatCurrencyWithCommas(TrustConstants.minTrustAmount),
+                          _formatCurrencyWithCommas(required),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),

@@ -12,6 +12,41 @@ class TrustService {
 
   final SupabaseClient _client = SupabaseService.instance.client;
 
+  Future<Map<String, dynamic>> getExecutorsByTrustId(int trustId) async {
+    final List<dynamic> rows = await _client
+        .from('trust_executor')
+        .select('executor_type, beloved_id')
+        .eq('trust_id', trustId);
+
+    if (rows.isEmpty) {
+      return <String, dynamic>{'executorType': null, 'executorIds': <int>[]};
+    }
+
+    final String? executorType =
+        (rows.first as Map<String, dynamic>)['executor_type'] as String?;
+
+    final List<int> executorIds = rows
+        .map((dynamic e) => (e as Map<String, dynamic>)['beloved_id'])
+        .where((dynamic id) => id != null)
+        .map((dynamic id) => (id as num).toInt())
+        .toList();
+
+    return <String, dynamic>{
+      'executorType': executorType,
+      'executorIds': executorIds,
+    };
+  }
+
+  Future<void> updateExecutors({
+    required int trustId,
+    required String? executorType,
+    required List<int>? executorIds,
+  }) async {
+    await _client.from('trust_executor').delete().eq('trust_id', trustId);
+    if (executorType == null) return;
+    await _createExecutors(trustId, executorType, executorIds);
+  }
+
   Future<List<Trust>> listUserTrusts() async {
     final user = AuthController.instance.currentUser;
     if (user == null) return <Trust>[];
@@ -72,9 +107,9 @@ class TrustService {
         }
 
         await NotificationService.instance.createNotification(
-          title: 'Family Trust created',
+          title: 'Family Account created',
           body:
-              'Your Family Trust ${createdTrust.trustCode ?? ''} has been created.',
+              'Your Family Account ${createdTrust.trustCode ?? ''} has been created.',
           type: 'trust_created',
           data: <String, dynamic>{'trust_id': createdTrust.id},
         );

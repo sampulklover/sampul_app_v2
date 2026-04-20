@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/cupertino.dart';
+import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:confetti/confetti.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/will.dart';
 import '../models/user_profile.dart';
@@ -14,11 +16,18 @@ import '../services/notification_service.dart';
 import '../models/extra_wishes.dart';
 import '../services/extra_wishes_service.dart';
 import '../services/billing_service.dart';
+import '../services/wasiat_generated_document_service.dart';
 import '../controllers/auth_controller.dart';
 import '../config/analytics_screens.dart';
 import '../services/analytics_service.dart';
+import '../services/verification_service.dart';
+import '../models/verification.dart';
+import '../config/didit_config.dart';
+import '../widgets/verification_status_modal.dart';
+import 'main_shell.dart';
 import 'plans_overview_screen.dart';
 import 'will_generation_screen.dart';
+import '../models/wasiat_generated_document.dart';
 
 enum _WasiatDocView { certificate, details }
 
@@ -29,25 +38,32 @@ class WillManagementScreen extends StatefulWidget {
   State<WillManagementScreen> createState() => WillManagementScreenState();
 }
 
-class WillManagementScreenState extends State<WillManagementScreen> with SingleTickerProviderStateMixin {
+class WillManagementScreenState extends State<WillManagementScreen>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   Will? _will;
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _isDeleting = false;
+  bool _isGeneratingSnapshot = false;
   _WasiatDocView _docView = _WasiatDocView.certificate;
   List<Map<String, dynamic>> _familyMembers = [];
   List<Map<String, dynamic>> _assets = [];
   ExtraWishes? _extraWishes;
   BillingStatus _planStatus = const BillingStatus();
+  List<WasiatGeneratedDocument> _generatedHistory = <WasiatGeneratedDocument>[];
+  WasiatGeneratedDocument? _selectedGenerated;
   final ScrollController _scrollController = ScrollController();
   bool _showActionBar = true;
   double _lastScrollOffset = 0.0;
   late final AnimationController _actionBarController;
   late final ConfettiController _confettiController;
+  bool _diditVerificationLaunched = false;
+  String? _activeVerificationSessionId;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadWillData();
     _scrollController.addListener(_onScroll);
     _actionBarController = AnimationController(
@@ -62,6 +78,14 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   // Expose a public reload method for external triggers (e.g., when tab becomes active)
   Future<void> reload() async {
     await _loadWillData();
+  }
+
+  Future<void> openGenerateCertificatePrompt() async {
+    if (!mounted) return;
+    if (_isGeneratingSnapshot) return;
+    final int? verificationId = await _validateCertificateEligibility();
+    if (verificationId == null) return;
+    await _publishWill(verificationId: verificationId);
   }
 
   void _onScroll() {
@@ -85,6 +109,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _actionBarController.dispose();
@@ -92,8 +117,104 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && _diditVerificationLaunched) {
+      _diditVerificationLaunched = false;
+      _refreshAfterDiditReturn();
+    }
+  }
+
+  Future<void> _refreshAfterDiditReturn() async {
+    await _loadWillData();
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    String title = l10n.verifyYourIdentity;
+    String message = l10n.wasiatPublishVerificationSettingsHint;
+    VerificationStatusModalType type = VerificationStatusModalType.pending;
+    String ctaLabel = l10n.continueLabel;
+    VoidCallback? onCtaPressed;
+
+    try {
+      Verification? activeVerification;
+      if (_activeVerificationSessionId != null &&
+          _activeVerificationSessionId!.isNotEmpty) {
+        final String sessionId = _activeVerificationSessionId!;
+        for (int attempt = 0; attempt < 3; attempt++) {
+          try {
+            activeVerification = await VerificationService.instance.syncVerificationStatus(
+              sessionId,
+            );
+          } catch (_) {
+            activeVerification = await VerificationService.instance.getVerificationBySessionId(
+              sessionId,
+            );
+          }
+
+          final String latestStatus = (activeVerification?.status ?? '').toLowerCase();
+          final bool isFinalStatus = latestStatus == 'verified' ||
+              latestStatus == 'approved' ||
+              latestStatus == 'accepted' ||
+              latestStatus == 'declined' ||
+              latestStatus == 'rejected' ||
+              latestStatus == 'failed';
+          if (isFinalStatus) {
+            break;
+          }
+
+          if (attempt < 2) {
+            await Future<void>.delayed(const Duration(milliseconds: 1200));
+          }
+        }
+      }
+
+      final String status = (activeVerification?.status ?? '').toLowerCase();
+      if (status == 'verified' || status == 'approved' || status == 'accepted') {
+        title = l10n.yourIdentityIsVerified;
+        message = l10n.yourIdentityIsVerified;
+        type = VerificationStatusModalType.success;
+        // Avoid duplicating "Generate certificate" (the next dialog’s primary action).
+        ctaLabel = l10n.continueLabel;
+        onCtaPressed = () {
+          Navigator.of(context).pop();
+          MainShell.maybeOf(context)?.openWasiatCertificatePrompt();
+        };
+      } else if (status == 'pending' || status.isEmpty) {
+        title = l10n.pending;
+        message = l10n.pending;
+      } else if (status == 'declined') {
+        title = l10n.declined;
+        message = l10n.verificationWasDeclined;
+        type = VerificationStatusModalType.failed;
+      } else if (status == 'rejected' || status == 'failed') {
+        title = l10n.rejected;
+        message = l10n.verificationWasRejected;
+        type = VerificationStatusModalType.failed;
+      }
+    } catch (_) {
+      // If status refresh fails, keep a neutral verification reminder.
+    }
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => VerificationStatusModal(
+        type: type,
+        title: title,
+        message: message,
+        ctaLabel: ctaLabel,
+        onCtaPressed: onCtaPressed,
+      ),
+    );
+    _activeVerificationSessionId = null;
+  }
+
   Future<void> _showConfettiCelebration() async {
     if (!mounted) return;
+    // Common mobile pattern: a light impact when celebration starts.
+    HapticFeedback.lightImpact();
     _confettiController.play();
     await showGeneralDialog<void>(
       context: context,
@@ -154,6 +275,8 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       final Future<BillingStatus> planFuture = BillingService.instance.fetchStatus();
       final will = await WillService.instance.getUserWill(user.id);
       final profile = await AuthController.instance.getUserProfile();
+      final Future<List<WasiatGeneratedDocument>> historyFuture =
+          WasiatGeneratedDocumentService.instance.fetchHistory();
 
       BillingStatus planStatus = const BillingStatus();
       try {
@@ -169,6 +292,12 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         
         // Load extra wishes
         final wishes = await ExtraWishesService.instance.getForCurrentUser();
+        List<WasiatGeneratedDocument> history = <WasiatGeneratedDocument>[];
+        try {
+          history = await historyFuture;
+        } catch (_) {
+          history = <WasiatGeneratedDocument>[];
+        }
 
         if (mounted) {
           setState(() {
@@ -178,15 +307,25 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             _assets = assets;
             _extraWishes = wishes;
             _planStatus = planStatus;
+            _generatedHistory = history;
+            _selectedGenerated ??= history.isNotEmpty ? history.first : null;
             _isLoading = false;
           });
         }
       } else {
+        List<WasiatGeneratedDocument> history = <WasiatGeneratedDocument>[];
+        try {
+          history = await historyFuture;
+        } catch (_) {
+          history = <WasiatGeneratedDocument>[];
+        }
         if (mounted) {
           setState(() {
             _will = will;
             _userProfile = profile;
             _planStatus = planStatus;
+            _generatedHistory = history;
+            _selectedGenerated ??= history.isNotEmpty ? history.first : null;
             _isLoading = false;
           });
         }
@@ -200,6 +339,126 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         _showErrorSnackBar(l10n.failedToLoadWillData(e.toString()));
       }
     }
+  }
+
+  Future<void> _generateSnapshot({int? verificationId}) async {
+    if (_will == null || _userProfile == null) return;
+    if (_isGeneratingSnapshot) return;
+
+    final int? resolvedVerificationId =
+        verificationId ?? await _validateCertificateEligibility();
+    if (resolvedVerificationId == null) {
+      return;
+    }
+
+    setState(() => _isGeneratingSnapshot = true);
+    try {
+      final doc = await WasiatGeneratedDocumentService.instance.createSnapshot(
+        will: _will!,
+        userProfile: _userProfile!,
+        familyMembers: _familyMembers,
+        assets: _assets,
+        extraWishes: _extraWishes,
+        verificationId: resolvedVerificationId,
+      );
+      final List<WasiatGeneratedDocument> updated = <WasiatGeneratedDocument>[doc, ..._generatedHistory];
+      if (!mounted) return;
+      setState(() {
+        _generatedHistory = updated;
+        _selectedGenerated = doc;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar(l10n.failedToPublishWill(e.toString()));
+    } finally {
+      if (mounted) setState(() => _isGeneratingSnapshot = false);
+    }
+  }
+
+  Future<void> _openGeneratedHistoryPicker() async {
+    if (_generatedHistory.isEmpty) {
+      await _generateSnapshot();
+      return;
+    }
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.wasiatGeneratedHistoryTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 10),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _generatedHistory.length,
+                    separatorBuilder: (_, __) => Divider(color: cs.outline.withOpacity(0.12)),
+                    itemBuilder: (context, i) {
+                      final d = _generatedHistory[i];
+                      final bool selected = _selectedGenerated?.id == d.id;
+                      final DateTime when = d.createdAt ?? DateTime.now();
+                      final String label = DateFormat.yMMMd().add_jm().format(when);
+                      return ListTile(
+                        onTap: () {
+                          setState(() => _selectedGenerated = d);
+                          Navigator.of(context).pop();
+                          if (_scrollController.hasClients) _scrollController.jumpTo(0);
+                        },
+                        leading: Icon(selected ? Icons.check_circle_rounded : Icons.history_rounded),
+                        title: Text(label),
+                        subtitle: d.willCode != null ? Text('Will ID: ${d.willCode}') : null,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: _isGeneratingSnapshot
+                        ? null
+                        : () async {
+                            Navigator.of(context).pop();
+                            await _generateSnapshot();
+                          },
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isGeneratingSnapshot) ...[
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
+                        Text(l10n.wasiatGenerateNewVersionCta),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -310,7 +569,315 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       await _showPublishBlockedByPlanDialog();
       return;
     }
-    await _publishWill();
+    final int? verificationId = await _validateCertificateEligibility();
+    if (verificationId == null) return;
+    await _publishWill(verificationId: verificationId);
+  }
+
+  Future<void> _startDiditKycVerification({required bool requireFullKyc}) async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final String sessionPrefix = requireFullKyc ? 'didit_kyc_' : 'didit_cert_';
+
+    if (!DiditConfig.isConfigured) {
+      _showErrorSnackBar(l10n.diditNotConfigured);
+      return;
+    }
+    if (!requireFullKyc && DiditConfig.reauthWorkflowId.isEmpty) {
+      _showErrorSnackBar(l10n.diditNotConfigured);
+      return;
+    }
+
+    try {
+      final Verification? pendingVerification =
+          await VerificationService.instance.getLatestPendingVerification(
+        sessionPrefix: sessionPrefix,
+      );
+      if (pendingVerification != null) {
+        final String? pendingUrl = pendingVerification.verificationUrl;
+        if (pendingUrl != null && pendingUrl.isNotEmpty) {
+          final Uri uri = Uri.parse(pendingUrl);
+          if (await canLaunchUrl(uri)) {
+            _activeVerificationSessionId = pendingVerification.sessionId;
+            _diditVerificationLaunched = true;
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            return;
+          }
+        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.verificationInProgress),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+    } catch (_) {
+      // Continue to create a new session if pending lookup fails.
+    }
+
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(l10n.creatingVerificationSession),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final result = await VerificationService.instance.createVerificationSession(
+        workflowIdOverride: requireFullKyc
+            ? DiditConfig.workflowId
+            : DiditConfig.reauthWorkflowId,
+        sessionPrefix: requireFullKyc ? 'didit_kyc' : 'didit_cert',
+      );
+      final String verificationUrl = result['url'] as String;
+      final Verification? createdVerification = result['verification'] as Verification?;
+      _activeVerificationSessionId = createdVerification?.sessionId;
+
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+
+      final uri = Uri.parse(verificationUrl);
+      if (await canLaunchUrl(uri)) {
+        _diditVerificationLaunched = true;
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else if (mounted) {
+        _showErrorSnackBar(l10n.couldNotOpenVerificationLink);
+      }
+    } catch (e) {
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      if (mounted) {
+        _showErrorSnackBar(
+          l10n.failedToStartVerification(e.toString().replaceFirst('Exception: ', '')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showPublishBlockedByVerificationDialog({
+    required bool planActive,
+    required String identityStatusText,
+    required Color identityStatusColor,
+    required String reauthStatusText,
+    required Color reauthStatusColor,
+    required bool requireFullKyc,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext ctx) {
+        final theme = Theme.of(ctx);
+        final cs = theme.colorScheme;
+
+        Widget statusRow({
+          required IconData icon,
+          required String label,
+          required String statusText,
+          required Color statusColor,
+        }) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withOpacity(0.45),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: cs.outline.withOpacity(0.15)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 18, color: cs.onSurfaceVariant),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  statusText,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return AlertDialog(
+          title: Text(l10n.wasiatCertificateDialogTitle),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.wasiatPublishVerificationChecklistTitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                ),
+                const SizedBox(height: 12),
+                statusRow(
+                  icon: Icons.verified_rounded,
+                  label: l10n.wasiatEligibilityPlanStatusLabel,
+                  statusText: planActive
+                      ? l10n.wasiatEligibilityStatusActive
+                      : l10n.wasiatEligibilityStatusInactive,
+                  statusColor: planActive ? Colors.green.shade700 : Colors.red.shade700,
+                ),
+                statusRow(
+                  icon: Icons.badge_outlined,
+                  label: l10n.wasiatEligibilityDiditKycStatusLabel,
+                  statusText: identityStatusText,
+                  statusColor: identityStatusColor,
+                ),
+                statusRow(
+                  icon: Icons.shield_outlined,
+                  label: l10n.wasiatEligibilityDiditStatusLabel,
+                  statusText: reauthStatusText,
+                  statusColor: reauthStatusColor,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.wasiatPublishVerificationSettingsHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await _startDiditKycVerification(requireFullKyc: requireFullKyc);
+              },
+              child: Text(l10n.startVerification),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<int?> _validateCertificateEligibility() async {
+    Verification? latestApprovedKyc;
+    Verification? latestPendingKyc;
+    Verification? latestDeclinedKyc;
+    Verification? latestRejectedKyc;
+    try {
+      latestApprovedKyc = await VerificationService.instance.getLatestVerificationFiltered(
+        statuses: const <String>['verified', 'approved', 'accepted'],
+      );
+      latestPendingKyc = await VerificationService.instance.getLatestPendingVerification(
+        sessionPrefix: 'didit_kyc_',
+      );
+      latestDeclinedKyc = await VerificationService.instance.getLatestVerificationFiltered(
+        statuses: const <String>['declined'],
+        sessionPrefix: 'didit_kyc_',
+      );
+      latestRejectedKyc = await VerificationService.instance.getLatestVerificationFiltered(
+        statuses: const <String>['rejected', 'failed'],
+        sessionPrefix: 'didit_kyc_',
+      );
+    } catch (_) {}
+
+    final bool hasApprovedKyc = latestApprovedKyc != null;
+
+    int? verificationId;
+    bool hasPendingReauth = false;
+    try {
+      if (hasApprovedKyc) {
+        // Returning user flow: prefer fresh certificate re-auth sessions.
+        verificationId = await WasiatGeneratedDocumentService.instance
+            .pickUnusedVerifiedVerificationId(
+          sessionPrefix: 'didit_cert_',
+          requireAfterLatestGenerated: true,
+        );
+        if (verificationId == null) {
+          final Verification? pending =
+              await VerificationService.instance.getLatestPendingVerification(
+            sessionPrefix: 'didit_cert_',
+          );
+          hasPendingReauth = pending != null;
+        }
+      } else {
+        verificationId = await WasiatGeneratedDocumentService.instance
+            .pickUnusedVerifiedVerificationId(
+          sessionPrefix: 'didit_kyc_',
+          requireAfterLatestGenerated: false,
+        );
+      }
+    } catch (_) {
+      verificationId = null;
+    }
+
+    final bool isDiditKycVerified = verificationId != null;
+    if (!isDiditKycVerified) {
+      final l10n = AppLocalizations.of(context)!;
+      final String identityStatusText = hasApprovedKyc
+          ? l10n.wasiatEligibilityStatusComplete
+          : (latestPendingKyc != null
+              ? l10n.pending
+              : latestDeclinedKyc != null
+                  ? l10n.declined
+                  : latestRejectedKyc != null
+                      ? l10n.rejected
+              : l10n.wasiatEligibilityStatusNotComplete);
+      final Color identityStatusColor = hasApprovedKyc
+          ? Colors.green.shade700
+          : (latestPendingKyc != null ? Colors.orange.shade700 : Colors.red.shade700);
+
+      final String reauthStatusText = hasApprovedKyc
+          ? (hasPendingReauth ? l10n.pending : l10n.wasiatEligibilityStatusNotComplete)
+          : l10n.wasiatEligibilityStatusNotComplete;
+      final Color reauthStatusColor = hasApprovedKyc
+          ? (hasPendingReauth ? Colors.orange.shade700 : Colors.red.shade700)
+          : Colors.red.shade700;
+
+      await _showPublishBlockedByVerificationDialog(
+        planActive: _planStatus.isSubscribed,
+        identityStatusText: identityStatusText,
+        identityStatusColor: identityStatusColor,
+        reauthStatusText: reauthStatusText,
+        reauthStatusColor: reauthStatusColor,
+        requireFullKyc: !hasApprovedKyc,
+      );
+      return null;
+    }
+
+    return verificationId;
   }
 
   Future<void> _openCertificateShareSheet(String url) async {
@@ -589,7 +1156,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     );
   }
 
-  Future<void> _publishWill() async {
+  Future<void> _publishWill({required int verificationId}) async {
     if (_will == null || _will!.id == null) return;
 
     if (!_planStatus.isSubscribed) {
@@ -713,6 +1280,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       await _loadWillData();
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
+      // Freeze a generated snapshot at publish-time so future edits won't change this version.
+      try {
+        await _generateSnapshot(verificationId: verificationId);
+      } catch (_) {}
       _showSuccessSnackBar(l10n.willPublishedSuccessfully);
       await _showConfettiCelebration();
       await _openCertificateShareSheet(url);
@@ -734,6 +1305,28 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Future<void> _unpublishWill() async {
     if (_will == null || _will!.id == null) return;
     final l10n = AppLocalizations.of(context)!;
+    final bool confirmTurnOff = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.wasiatCertificateOff),
+            content: Text(
+              '${l10n.wasiatCertificateOff}?\n\n${l10n.wasiatPublishVerificationSettingsHint}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(l10n.wasiatCertificateOff),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmTurnOff) return;
+
     try {
       final updatedWill = await WillService.instance.updateWill(
         willId: _will!.id!,
@@ -823,6 +1416,12 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               onPressed: _shareWillDocument,
               icon: const Icon(Icons.share_outlined),
               tooltip: l10n.shareWill,
+            ),
+          if (_will != null && _docView == _WasiatDocView.details && _planStatus.isSubscribed)
+            IconButton(
+              onPressed: _openGeneratedHistoryPicker,
+              icon: const Icon(Icons.history_rounded),
+              tooltip: l10n.wasiatGeneratedHistoryTitle,
             ),
         ],
       ),
@@ -1109,6 +1708,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
   Widget _buildWillState() {
     final l10n = AppLocalizations.of(context)!;
     final validation = WillService.instance.validateWill(_will!);
+    final bool detailsLocked = _docView == _WasiatDocView.details && !_planStatus.isSubscribed;
 
     return Column(
       children: [
@@ -1295,25 +1895,50 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
               ),
               if (_docView == _WasiatDocView.details) ...[
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                if (_planStatus.isSubscribed && _selectedGenerated != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.10)),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        l10n.wasiatDetailsPrivateNote,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              height: 1.2,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.history_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.wasiatViewingGeneratedVersion(
+                              DateFormat.yMMMd().add_jm().format(_selectedGenerated!.createdAt ?? DateTime.now()),
                             ),
-                      ),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _openGeneratedHistoryPicker,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(l10n.change),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ],
             ],
           ),
@@ -1329,15 +1954,151 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            child: _buildPaperWill(view: _docView),
+            child: detailsLocked
+                ? _buildLockedWasiatDetailsPreview()
+                : _buildPaperWill(
+                    view: _docView,
+                    generated: _docView == _WasiatDocView.details ? _selectedGenerated : null,
+                  ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPaperWill({required _WasiatDocView view}) {
-    final bool isMuslim = _userProfile?.isMuslim ?? false;
+  Widget _buildLockedWasiatDetailsPreview() {
+    final l10n = AppLocalizations.of(context)!;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme cs = theme.colorScheme;
+    const double pageHeight = 720;
+
+    return Stack(
+      children: [
+        // Keep content visible, but obscured behind a "glass" layer.
+        _buildPaperWill(view: _WasiatDocView.details, locked: true),
+        // Glass overlay (transparent + subtle blur)
+        Positioned.fill(
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                // Slight tint so it's harder to read, but still visible.
+                color: cs.surface.withOpacity(0.05),
+              ),
+            ),
+          ),
+        ),
+        // Centered lock + small CTA under it (repeated per "page")
+        Positioned.fill(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final int pageCount = (constraints.maxHeight / pageHeight).ceil().clamp(1, 999);
+
+              Widget lockAndCta() {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Material(
+                      color: cs.surfaceContainerHighest.withOpacity(0.70),
+                      elevation: 6,
+                      shadowColor: Colors.black.withOpacity(0.16),
+                      shape: CircleBorder(
+                        side: BorderSide(color: cs.outline.withOpacity(0.14)),
+                      ),
+                      child: SizedBox(
+                        width: 62,
+                        height: 62,
+                        child: Icon(
+                          Icons.lock_outline_rounded,
+                          color: cs.onSurface.withOpacity(0.88),
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Material(
+                      color: Colors.transparent,
+                      elevation: 6,
+                      shadowColor: Colors.black.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(999),
+                      child: SizedBox(
+                        height: 40,
+                        child: FilledButton(
+                          onPressed: _openWasiatPlan,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                            visualDensity: VisualDensity.standard,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(l10n.wasiatUpgradePlanCta),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward_rounded, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
+                children: List.generate(pageCount, (i) {
+                  return SizedBox(
+                    height: i == pageCount - 1
+                        ? (constraints.maxHeight - (pageHeight * (pageCount - 1))).clamp(0, pageHeight)
+                        : pageHeight,
+                    child: Center(child: lockAndCta()),
+                  );
+                }),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaperWill({
+    required _WasiatDocView view,
+    bool locked = false,
+    WasiatGeneratedDocument? generated,
+  }) {
+    final Map<String, dynamic>? snap = generated?.snapshot;
+    final Map<String, dynamic>? snapWill = snap?['will'] is Map ? Map<String, dynamic>.from(snap!['will'] as Map) : null;
+    final Map<String, dynamic>? snapProfile =
+        snap?['user_profile'] is Map ? Map<String, dynamic>.from(snap!['user_profile'] as Map) : null;
+    final List<Map<String, dynamic>> snapFamily = (snap?['family_members'] as List?)
+            ?.whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList() ??
+        _familyMembers;
+    final List<Map<String, dynamic>> snapAssets = (snap?['assets'] as List?)
+            ?.whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList() ??
+        _assets;
+    final Map<String, dynamic>? snapWishes =
+        snap?['extra_wishes'] is Map ? Map<String, dynamic>.from(snap!['extra_wishes'] as Map) : null;
+
+    final Will will = snapWill != null ? Will.fromJson(snapWill) : _will!;
+    // In practice, `_userProfile` is always available when `_will` is available.
+    // For snapshot mode, we prefer the frozen profile from the snapshot.
+    final UserProfile profile = snapProfile != null ? UserProfile.fromJson(snapProfile) : _userProfile!;
+    final ExtraWishes? wishes = snapWishes != null ? ExtraWishes.fromJson(snapWishes) : _extraWishes;
+
+    String coSampulUtama() => _getCoSampulUtama(will: will, familyMembers: snapFamily);
+    String coSampulGanti() => _getCoSampulGanti(will: will, familyMembers: snapFamily);
+    String coSampulGantiNric() => _getCoSampulGantiNric(will: will, familyMembers: snapFamily);
+    String guardianUtama() => _getGuardianUtama(will: will, familyMembers: snapFamily);
+    String guardianUtamaNric() => _getGuardianUtamaNric(will: will, familyMembers: snapFamily);
+    String guardianGanti() => _getGuardianGanti(will: will, familyMembers: snapFamily);
+    String guardianGantiNric() => _getGuardianGantiNric(will: will, familyMembers: snapFamily);
+
+    final bool isMuslim = profile.isMuslim;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -1390,7 +2151,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '1. Mukaddimah',
                     [
-                      'Dengan nama Allah, Yang Maha Pengasih, Lagi Maha Penyayang, saya, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}, memegang NRIC ${_userProfile?.nricNo ?? 'Not provided'}, bermastautin di ${_formatAddress(_userProfile!)}, mengisytiharkan dokumen ini sebagai wasiat terakhir saya, memberi tumpuan kepada pengurusan aset saya.',
+                      'Dengan nama Allah, Yang Maha Pengasih, Lagi Maha Penyayang, saya, ${will.nricName ?? profile.displayName}, memegang NRIC ${profile.nricNo ?? 'Not provided'}, bermastautin di ${_formatAddress(profile)}, mengisytiharkan dokumen ini sebagai wasiat terakhir saya, memberi tumpuan kepada pengurusan aset saya.',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1419,14 +2180,14 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '5. Pelaksana Utama dan Pentadbir Bersama',
                     [
-                      'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${_getCoSampulUtama()} sebagai pelaksana utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
+                      'Sampul Sdn Bhd (202301027717) dilantik sebagai pentadbir bersama ${coSampulUtama()} sebagai pelaksana utama untuk menyimpan dan menyampaikan wasiat aset saya kepada waris saya.',
                     ],
                   ),
                   const SizedBox(height: 20),
                   _buildPaperSection(
                     '6. Pelaksana Ganti',
                     [
-                      'Jika perlu, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} akan bertindak sebagai pelaksana ganti.',
+                      'Jika perlu, ${coSampulGanti()}, ${coSampulGantiNric()} akan bertindak sebagai pelaksana ganti.',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1435,11 +2196,11 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                     [
                       'Saya berharap waris tersayang saya akan melunaskan hutang-hutang saya yang tidak mempunyai perlindungan Takaful seperti yang disenaraikan dalam Jadual 1 dan juga melunaskan tanggungjawab berkaitan hutang yang lain seperti Nazar/Kaffarah/Fidyah saya yang berbaki yang tidak sempat saya sempurnakan ketika hidup dan diambil daripada harta pusaka saya seperti berikut:',
                       '',
-                      'Nazar/Kaffarah: ' + ((_extraWishes?.nazarWishes ?? '').trim().isEmpty ? '-' : _extraWishes!.nazarWishes!),
-                      'Anggaran Kos: RM ' + ((_extraWishes?.nazarEstimatedCostMyr ?? 0).toStringAsFixed(2)),
-                      'Fidyah: ' + ((_extraWishes?.fidyahFastLeftDays ?? 0).toString()) + ' hari',
-                      'Kos: RM ' + ((_extraWishes?.fidyahAmountDueMyr ?? 0).toStringAsFixed(2)),
-                      'Derma Organ: ' + ((_extraWishes?.organDonorPledge ?? false) ? 'Saya dengan ini bersetuju sebagai penderma organ.' : 'Saya dengan ini tidak bersetuju sebagai penderma organ.'),
+                      'Nazar/Kaffarah: ' + ((wishes?.nazarWishes ?? '').trim().isEmpty ? '-' : wishes!.nazarWishes!),
+                      'Anggaran Kos: RM ' + ((wishes?.nazarEstimatedCostMyr ?? 0).toStringAsFixed(2)),
+                      'Fidyah: ' + ((wishes?.fidyahFastLeftDays ?? 0).toString()) + ' hari',
+                      'Kos: RM ' + ((wishes?.fidyahAmountDueMyr ?? 0).toStringAsFixed(2)),
+                      'Derma Organ: ' + ((wishes?.organDonorPledge ?? false) ? 'Saya dengan ini bersetuju sebagai penderma organ.' : 'Saya dengan ini tidak bersetuju sebagai penderma organ.'),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1471,13 +2232,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '11. Tanda Tangan',
                     [
-                      'Disediakan oleh',
-                      '',
-                      '',
-                      '____________________',
-                      '${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
-                      '${_userProfile?.nricNo ?? 'Not provided'}',
-                      'pada ${_formatDateMalay(DateTime.now())}',
+                      'Direkod untuk:',
+                      '${will.nricName ?? profile.displayName}',
+                      'NRIC: ${profile.nricNo ?? 'Not provided'}',
+                      'Tarikh: ${_formatDateMalay(DateTime.now())}',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1503,17 +2261,13 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                       'Pembangun Perisian, SAMPUL',
                       'pada ${_formatDateMalay(DateTime.now())}',
                       '',
-                      'Diperakui oleh',
-                      '',
-                      '____________________',
+                      'Diperakui oleh (saksi tambahan jika perlu):',
                       'Nama:',
                       'No IC:',
                       'Hubungan:',
                       'Tarikh:',
                       '',
-                      'Diperakui oleh',
-                      '',
-                      '____________________',
+                      'Diperakui oleh (saksi tambahan jika perlu):',
                       'Nama:',
                       'No IC:',
                       'Hubungan:',
@@ -1524,7 +2278,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '1. Declaration',
                     [
-                      'I, ${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}, ${_userProfile?.nricNo ?? 'Not provided'}, ${_formatAddress(_userProfile!)}, declare this document, created on ${_formatDateMalay(DateTime.now())}, as my Last Will and Testament for my assets.',
+                      'I, ${will.nricName ?? profile.displayName}, ${profile.nricNo ?? 'Not provided'}, ${_formatAddress(profile)}, declare this document, created on ${_formatDateMalay(DateTime.now())}, as my Last Will and Testament for my assets.',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1543,7 +2297,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                       '',
                       'a) Sampul Sdn Bhd (202301027717)',
                       '',
-                      'b) ${_getCoSampulUtama()} (your executor)',
+                      'b) ${coSampulUtama()} (your executor)',
                       '',
                       'Both shall act jointly to safekeep and deliver this Will and Testament of my assets to my beneficiaries.',
                     ],
@@ -1552,7 +2306,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '4. Substitute executor',
                     [
-                      'If necessary, ${_getCoSampulGanti()}, ${_getCoSampulGantiNric()} will act as substitute executor.',
+                      'If necessary, ${coSampulGanti()}, ${coSampulGantiNric()} will act as substitute executor.',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1565,14 +2319,14 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                       '',
                       'Additional Bequests: For charity, [Charitable Body] is designated as per [Table 2].',
                       '',
-                      'Organ Donation: ${(_extraWishes?.organDonorPledge ?? false) ? 'I hereby Agree to donate my organ at the point of demise.' : 'I do not agree to donate my organ at the point of demise.'}',
+                      'Organ Donation: ${(wishes?.organDonorPledge ?? false) ? 'I hereby Agree to donate my organ at the point of demise.' : 'I do not agree to donate my organ at the point of demise.'}',
                     ],
                   ),
                   const SizedBox(height: 20),
                   _buildPaperSection(
                     '6. Guardianship',
                     [
-                      'If my spouse/partner predeceases me or is unable, ${_getGuardianUtama()}, ${_getGuardianUtamaNric()} is appointed for my minor children, with ${_getGuardianGanti()}, ${_getGuardianGantiNric()} as an alternate as per [Table 1].',
+                      'If my spouse/partner predeceases me or is unable, ${guardianUtama()}, ${guardianUtamaNric()} is appointed for my minor children, with ${guardianGanti()}, ${guardianGantiNric()} as an alternate as per [Table 1].',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1586,13 +2340,10 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '8. Signature',
                     [
-                      'Signed by',
-                      '',
-                      '',
-                      '____________________',
-                      '${_will!.nricName ?? _userProfile?.displayName ?? 'Not provided'}',
-                      '${_userProfile?.nricNo ?? 'Not provided'}',
-                      'on ${_formatDateMalay(DateTime.now())}',
+                      'Recorded for:',
+                      '${will.nricName ?? profile.displayName}',
+                      'IC: ${profile.nricNo ?? 'Not provided'}',
+                      'Date: ${_formatDateMalay(DateTime.now())}',
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -1606,29 +2357,25 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                   _buildPaperSection(
                     '10. Witnesses',
                     [
-                      'Signed by',
+                      'Witnessed by',
                       'Muhammad Arham Munir Merican bin Amir Feisal Merican',
                       '931011875001',
                       'Founder, SAMPUL',
                       'on ${_formatDateMalay(DateTime.now())}',
                       '',
-                      'Signed by',
+                      'Witnessed by',
                       'Mohamad Hafiz bin Che Hamid',
                       '950208035341',
                       'Software Developer, SAMPUL',
                       'on ${_formatDateMalay(DateTime.now())}',
                       '',
-                      'Signed by',
-                      '',
-                      '____________________',
+                      'Witnessed by (additional witness if needed):',
                       'Name:',
                       'IC Number:',
                       'Relationship:',
                       'Date:',
                       '',
-                      'Signed by',
-                      '',
-                      '____________________',
+                      'Witnessed by (additional witness if needed):',
                       'Name:',
                       'IC Number:',
                       'Relationship:',
@@ -1648,7 +2395,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
                 ),
                 
                 // Assets List
-                _buildAssetsList(),
+                _buildAssetsListFrom(assets: snapAssets),
                 ],
               ],
             ),
@@ -1858,77 +2605,91 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
     return '${months[date.month - 1]} ${date.day}, ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} ${date.hour < 12 ? 'AM' : 'PM'}';
   }
 
-  String _getCoSampulUtama() {
-    if (_will?.coSampul1 == null) return '[PRIMARY EXECUTOR NAME/NICKNAME]';
+  String _getCoSampulUtama({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.coSampul1 == null) return '[PRIMARY EXECUTOR NAME/NICKNAME]';
     
-    final executor = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.coSampul1,
+    final executor = members.firstWhere(
+      (member) => member['id'] == w!.coSampul1,
       orElse: () => {'name': '[PRIMARY EXECUTOR NAME/NICKNAME]'},
     );
     
     return executor['name'] ?? '[PRIMARY EXECUTOR NAME/NICKNAME]';
   }
 
-  String _getCoSampulGanti() {
-    if (_will?.coSampul2 == null) return '[SECONDARY EXECUTOR NAME/NICKNAME]';
+  String _getCoSampulGanti({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.coSampul2 == null) return '[SECONDARY EXECUTOR NAME/NICKNAME]';
     
-    final executor = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.coSampul2,
+    final executor = members.firstWhere(
+      (member) => member['id'] == w!.coSampul2,
       orElse: () => {'name': '[SECONDARY EXECUTOR NAME/NICKNAME]'},
     );
     
     return executor['name'] ?? '[SECONDARY EXECUTOR NAME/NICKNAME]';
   }
 
-  String _getCoSampulGantiNric() {
-    if (_will?.coSampul2 == null) return '[SECONDARY EXECUTOR NRIC NO]';
+  String _getCoSampulGantiNric({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.coSampul2 == null) return '[SECONDARY EXECUTOR NRIC NO]';
     
-    final executor = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.coSampul2,
+    final executor = members.firstWhere(
+      (member) => member['id'] == w!.coSampul2,
       orElse: () => {'nric_no': '[SECONDARY EXECUTOR NRIC NO]'},
     );
     
     return executor['nric_no'] ?? '[SECONDARY EXECUTOR NRIC NO]';
   }
 
-  String _getGuardianUtama() {
-    if (_will?.guardian1 == null) return '[Guardian Name]';
-    final guardian = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.guardian1,
+  String _getGuardianUtama({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.guardian1 == null) return '[Guardian Name]';
+    final guardian = members.firstWhere(
+      (member) => member['id'] == w!.guardian1,
       orElse: () => {'name': '[Guardian Name]'},
     );
     return guardian['name'] ?? '[Guardian Name]';
   }
 
-  String _getGuardianUtamaNric() {
-    if (_will?.guardian1 == null) return '[IC]';
-    final guardian = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.guardian1,
+  String _getGuardianUtamaNric({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.guardian1 == null) return '[IC]';
+    final guardian = members.firstWhere(
+      (member) => member['id'] == w!.guardian1,
       orElse: () => {'nric_no': '[IC]'},
     );
     return guardian['nric_no'] ?? '[IC]';
   }
 
-  String _getGuardianGanti() {
-    if (_will?.guardian2 == null) return '[Guardian Name 2]';
-    final guardian = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.guardian2,
+  String _getGuardianGanti({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.guardian2 == null) return '[Guardian Name 2]';
+    final guardian = members.firstWhere(
+      (member) => member['id'] == w!.guardian2,
       orElse: () => {'name': '[Guardian Name 2]'},
     );
     return guardian['name'] ?? '[Guardian Name 2]';
   }
 
-  String _getGuardianGantiNric() {
-    if (_will?.guardian2 == null) return '[IC]';
-    final guardian = _familyMembers.firstWhere(
-      (member) => member['id'] == _will!.guardian2,
+  String _getGuardianGantiNric({Will? will, List<Map<String, dynamic>>? familyMembers}) {
+    final Will? w = will ?? _will;
+    final List<Map<String, dynamic>> members = familyMembers ?? _familyMembers;
+    if (w?.guardian2 == null) return '[IC]';
+    final guardian = members.firstWhere(
+      (member) => member['id'] == w!.guardian2,
       orElse: () => {'nric_no': '[IC]'},
     );
     return guardian['nric_no'] ?? '[IC]';
   }
 
-  Widget _buildAssetsList() {
-    if (_assets.isEmpty) {
+  Widget _buildAssetsListFrom({required List<Map<String, dynamic>> assets}) {
+    if (assets.isEmpty) {
       return _buildPaperSection(
         'SENARAI ASET',
         [
@@ -1956,7 +2717,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
         const SizedBox(height: 16),
 
         // Flat list of all assets (physical + digital), simple like web
-        ..._assets.asMap().entries.map(
+        ...assets.asMap().entries.map(
           (entry) {
             final index = entry.key;
             final asset = entry.value;
@@ -1982,6 +2743,7 @@ class WillManagementScreenState extends State<WillManagementScreen> with SingleT
       ],
     );
   }
+
 
   Widget _buildAssetCard({
     required int index,

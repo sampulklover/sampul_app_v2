@@ -103,7 +103,7 @@ class _ExecutorDetailScreenState extends State<ExecutorDetailScreen> {
 
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Pusaka details')),
+        appBar: AppBar(title: const Text('Executor details')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -113,7 +113,7 @@ class _ExecutorDetailScreenState extends State<ExecutorDetailScreen> {
     final String title =
         (deceased?['full_name'] as String?)?.trim().isNotEmpty == true
             ? (deceased!['full_name'] as String)
-            : (exec?['executor_code'] as String?) ?? 'Pusaka details';
+            : (exec?['executor_code'] as String?) ?? 'Executor details';
     final String rawStatus = (exec?['status'] as String? ?? '').toLowerCase();
 
     String statusLabel(String s) {

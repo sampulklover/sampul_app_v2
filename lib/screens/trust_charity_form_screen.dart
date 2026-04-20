@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../models/body.dart';
 import '../models/trust_charity.dart';
-import '../config/trust_constants.dart';
+import '../utils/form_decoration_helper.dart';
+import 'trust_charity_browse_screen.dart';
 
 class TrustCharityFormScreen extends StatefulWidget {
   final TrustCharity? charity;
@@ -18,22 +21,15 @@ class TrustCharityFormScreen extends StatefulWidget {
 
 class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  static const String _sedekahMarker = 'sedekah_jumaat';
   
   late TextEditingController _organizationNameCtrl;
-  late TextEditingController _address1Ctrl;
-  late TextEditingController _address2Ctrl;
-  late TextEditingController _cityCtrl;
-  late TextEditingController _postcodeCtrl;
-  late TextEditingController _stateCtrl;
-  late TextEditingController _accountNumberCtrl;
   late TextEditingController _donationAmountCtrl;
-  late TextEditingController _emailCtrl;
-  late TextEditingController _phoneCtrl;
   
-  String? _selectedCategory;
-  String? _selectedBank;
-  String? _selectedCountry;
-  String? _selectedDonationDuration;
+  double? _amount;
+  String _frequency = 'monthly';
+  bool _isSedekahJumaat = false;
+  int _years = 1;
 
   @override
   void initState() {
@@ -41,347 +37,260 @@ class _TrustCharityFormScreenState extends State<TrustCharityFormScreen> {
     _initializeControllers();
   }
 
+  bool _detectSedekahJumaat(TrustCharity? charity) {
+    final String marker = (charity?.addressLine2 ?? '').trim().toLowerCase();
+    if (marker == _sedekahMarker) return true;
+    final String n = (charity?.organizationName ?? '').trim().toLowerCase();
+    return n.startsWith('sedekah jumaat');
+  }
+
+  String _stripSedekahPrefix(String name) {
+    final trimmed = name.trim();
+    final lower = trimmed.toLowerCase();
+    if (!lower.startsWith('sedekah jumaat')) return trimmed;
+    // Accept both "Sedekah Jumaat — X" and "Sedekah Jumaat - X"
+    final parts = trimmed.split(RegExp(r'[—-]'));
+    if (parts.length <= 1) return 'Sedekah Jumaat';
+    return parts.sublist(1).join('—').trim();
+  }
+
+  int _parseYearsFromAddressLine1(String? addressLine1) {
+    final String raw = (addressLine1 ?? '').trim();
+    if (raw.isEmpty) return 1;
+    final RegExpMatch? match = RegExp(r'(\d+)').firstMatch(raw);
+    if (match == null) return 1;
+    final int? parsed = int.tryParse(match.group(1) ?? '');
+    if (parsed == null) return 1;
+    return parsed.clamp(1, 20);
+  }
+
   void _initializeControllers() {
     final charity = widget.charity;
-    _organizationNameCtrl = TextEditingController(text: charity?.organizationName);
-    _address1Ctrl = TextEditingController(text: charity?.addressLine1);
-    _address2Ctrl = TextEditingController(text: charity?.addressLine2);
-    _cityCtrl = TextEditingController(text: charity?.city);
-    _postcodeCtrl = TextEditingController(text: charity?.postcode);
-    _stateCtrl = TextEditingController(text: charity?.state);
-    _accountNumberCtrl = TextEditingController(text: charity?.accountNumber);
+    _isSedekahJumaat = _detectSedekahJumaat(charity);
+    _years = _isSedekahJumaat ? _parseYearsFromAddressLine1(charity?.addressLine1) : 1;
+    final String initialName = _isSedekahJumaat
+        ? _stripSedekahPrefix(charity?.organizationName ?? '')
+        : (charity?.organizationName ?? '');
+    _organizationNameCtrl = TextEditingController(text: initialName);
+    _amount = charity?.donationAmount;
     _donationAmountCtrl = TextEditingController(
-      text: charity?.donationAmount?.toString() ?? '',
+      text: charity?.donationAmount != null ? charity!.donationAmount!.toStringAsFixed(0) : '',
     );
-    _emailCtrl = TextEditingController(text: charity?.email);
-    _phoneCtrl = TextEditingController(text: charity?.phoneNo);
-    
-    _selectedCategory = charity?.category;
-    _selectedBank = charity?.bank;
-    _selectedCountry = charity?.country;
-    _selectedDonationDuration = charity?.donationDuration;
+    _frequency = (charity?.donationDuration?.trim().isNotEmpty == true)
+        ? charity!.donationDuration!
+        : 'monthly';
+    if (_isSedekahJumaat) {
+      _frequency = 'weekly';
+    }
   }
 
   @override
   void dispose() {
     _organizationNameCtrl.dispose();
-    _address1Ctrl.dispose();
-    _address2Ctrl.dispose();
-    _cityCtrl.dispose();
-    _postcodeCtrl.dispose();
-    _stateCtrl.dispose();
-    _accountNumberCtrl.dispose();
     _donationAmountCtrl.dispose();
-    _emailCtrl.dispose();
-    _phoneCtrl.dispose();
     super.dispose();
   }
 
   void _saveCharity() {
     if (_formKey.currentState?.validate() ?? false) {
+      final double? amount = _amount ?? double.tryParse(_donationAmountCtrl.text.trim());
+      final String orgName = _organizationNameCtrl.text.trim();
+      final String resolvedOrgName = orgName;
       final newCharity = TrustCharity(
         id: widget.charity?.id,
-        organizationName: _organizationNameCtrl.text.trim(),
-        addressLine1: _address1Ctrl.text.trim().isEmpty ? null : _address1Ctrl.text.trim(),
-        addressLine2: _address2Ctrl.text.trim().isEmpty ? null : _address2Ctrl.text.trim(),
-        city: _cityCtrl.text.trim().isEmpty ? null : _cityCtrl.text.trim(),
-        postcode: _postcodeCtrl.text.trim().isEmpty ? null : _postcodeCtrl.text.trim(),
-        state: _stateCtrl.text.trim().isEmpty ? null : _stateCtrl.text.trim(),
-        country: _selectedCountry,
-        category: _selectedCategory,
-        bank: _selectedBank,
-        accountNumber: _accountNumberCtrl.text.trim().isEmpty ? null : _accountNumberCtrl.text.trim(),
-        donationAmount: _donationAmountCtrl.text.trim().isEmpty 
-            ? null 
-            : double.tryParse(_donationAmountCtrl.text.trim()),
-        donationDuration: _selectedDonationDuration,
-        email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-        phoneNo: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+        organizationName: resolvedOrgName,
+        donationAmount: amount,
+        donationDuration: _isSedekahJumaat ? 'weekly' : _frequency,
+        // Preserve any extra fields (e.g. Sedekah Jumaat "For X years") by carrying forward the old values.
+        addressLine1: _isSedekahJumaat
+            ? (_years == 1 ? 'For 1 year' : 'For $_years years')
+            : widget.charity?.addressLine1,
+        // If this is Sedekah Jumaat, keep / set marker for reliable differentiation.
+        addressLine2: _isSedekahJumaat ? _sedekahMarker : widget.charity?.addressLine2,
+        city: widget.charity?.city,
+        postcode: widget.charity?.postcode,
+        state: widget.charity?.state,
+        country: widget.charity?.country,
+        category: widget.charity?.category,
+        bank: widget.charity?.bank,
+        accountNumber: widget.charity?.accountNumber,
+        email: widget.charity?.email,
+        phoneNo: widget.charity?.phoneNo,
       );
 
       Navigator.pop(context, newCharity);
     }
   }
 
+  Future<void> _pickOrganisation() async {
+    if (_isSedekahJumaat) return;
+    final BodyItem? picked = await Navigator.of(context).push<BodyItem>(
+      MaterialPageRoute<BodyItem>(
+        builder: (_) => const TrustCharityBrowseScreen(pickOrganisationOnly: true),
+      ),
+    );
+    if (!mounted || picked == null) return;
+    setState(() {
+      _organizationNameCtrl.text = (picked.name ?? '').trim();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final List<int> presetAmounts = <int>[10, 50, 100];
+    final List<Map<String, String>> frequencies = const <Map<String, String>>[
+      {'value': 'weekly', 'label': 'Weekly'},
+      {'value': 'monthly', 'label': 'Monthly'},
+      {'value': 'quarterly', 'label': 'Quarterly'},
+      {'value': 'yearly', 'label': 'Yearly'},
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.charity == null ? 'Add Charity/Donation' : 'Edit Charity/Donation'),
-        actions: [
-          TextButton(
-            onPressed: _saveCharity,
-            child: Text(
-              widget.charity == null ? 'ADD' : 'UPDATE',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+        title: Text(widget.charity == null ? 'Add Charity' : 'Edit charity'),
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
-            // Essential Information Card
-            Card(
-              elevation: 0,
-              color: const Color.fromRGBO(255, 255, 255, 1),
-              child: Padding(
+            Expanded(
+              child: ListView(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.volunteer_activism,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Charity Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _organizationNameCtrl,
-                      decoration: InputDecoration(labelText: 'Organization Name *',
-                      ),
-                      validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: _selectedCategory,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                      decoration: InputDecoration(labelText: 'Category',
-                      ),
-                      items: TrustConstants.donationCategories
-                          .map((item) => DropdownMenuItem(
-                                value: item['value'],
-                                child: Text(item['name']!),
-                              ))
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedCategory = v),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Bank & Donation Details Card
-            Card(
-              elevation: 0,
-              color: const Color.fromRGBO(255, 255, 255, 1),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.account_balance,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Bank & Donation Details',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _selectedBank,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                      decoration: InputDecoration(labelText: 'Bank *',
-                      ),
-                      items: TrustConstants.banks
-                          .map((item) => DropdownMenuItem(
-                                value: item['value'],
-                                child: Text(
-                                  item['name']!,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedBank = v),
-                      validator: (v) => v == null ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _accountNumberCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: 'Account Number *',
-                      ),
-                      validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _donationAmountCtrl,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            decoration: InputDecoration(
-                              labelText: 'Amount (RM) *',                            ),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Required';
-                              final amount = double.tryParse(v.trim());
-                              if (amount == null || amount <= 0) {
-                                return 'Enter valid amount';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedDonationDuration,
-                            isExpanded: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                            decoration: InputDecoration(labelText: 'Frequency *',
-                            ),
-                            items: TrustConstants.donationDurations
-                                .map((item) => DropdownMenuItem(
-                                      value: item['value'],
-                                      child: Text(item['name']!),
-                                    ))
-                                .toList(),
-                            onChanged: (v) => setState(() => _selectedDonationDuration = v),
-                            validator: (v) => v == null ? 'Required' : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Optional Contact & Address (Expandable)
-            Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                leading: const Icon(Icons.add_circle_outline),
-                title: Text(
-                  'Additional Information (Optional)',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
                 children: [
-                  Card(
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Contact Information',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
+                  TextFormField(
+                    controller: _organizationNameCtrl,
+                    readOnly: !_isSedekahJumaat,
+                    onTap: _isSedekahJumaat ? null : _pickOrganisation,
+                    textCapitalization:
+                        _isSedekahJumaat ? TextCapitalization.words : TextCapitalization.none,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: _isSedekahJumaat ? 'Masjid / Surau name' : 'Organisation name',
+                      prefixIcon: _isSedekahJumaat ? Icons.mosque_outlined : Icons.account_balance_outlined,
+                    ).copyWith(
+                      suffixIcon: _isSedekahJumaat
+                          ? null
+                          : IconButton(
+                              tooltip: 'Change',
+                              onPressed: _pickOrganisation,
+                              icon: const Icon(Icons.search),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: 'Email',                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _phoneCtrl,
-                            keyboardType: TextInputType.phone,
-                            decoration: InputDecoration(
-                              labelText: 'Phone Number',                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Address',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _address1Ctrl,
-                            decoration: InputDecoration(
-                              labelText: 'Address Line 1',                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _address2Ctrl,
-                            decoration: InputDecoration(
-                              labelText: 'Address Line 2',                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _cityCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: 'City',                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _postcodeCtrl,
-                                  decoration: InputDecoration(
-                                    labelText: 'Postcode',                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _stateCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'State',                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            value: _selectedCountry,
-                            isExpanded: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                            decoration: InputDecoration(
-                              labelText: 'Country',                            ),
-                            items: TrustConstants.countries
-                                .map((item) => DropdownMenuItem(
-                                      value: item['value'],
-                                      child: Text(item['name']!),
-                                    ))
-                                .toList(),
-                            onChanged: (v) => setState(() => _selectedCountry = v),
-                          ),
-                        ],
-                      ),
                     ),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _donationAmountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Amount (RM)',
+                      hintText: 'e.g. 50',
+                      prefixIcon: Icons.payments_outlined,
+                    ).copyWith(prefixText: 'RM '),
+                    onChanged: (v) => setState(() => _amount = double.tryParse(v.trim())),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      final amount = double.tryParse(v.trim());
+                      if (amount == null || amount <= 0) return 'Enter a valid amount';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: presetAmounts.map((int amt) {
+                      final bool selected = _amount != null && (_amount! - amt).abs() < 0.01;
+                      return ChoiceChip(
+                        label: Text('RM $amt'),
+                        selected: selected,
+                        onSelected: (bool on) {
+                          if (!on) return;
+                          setState(() {
+                            _amount = amt.toDouble();
+                            _donationAmountCtrl.text = '$amt';
+                          });
+                        },
+                        selectedColor: colorScheme.primaryContainer,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_isSedekahJumaat) ...[
+                    DropdownButtonFormField<int>(
+                      value: _years,
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'How many years?',
+                        prefixIcon: Icons.schedule_outlined,
+                      ),
+                      items: List<int>.generate(20, (i) => i + 1)
+                          .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
+                          .toList(),
+                      onChanged: (v) => setState(() => _years = v ?? 1),
+                    ),
+                  ] else ...[
+                    DropdownButtonFormField<String>(
+                      value: _frequency,
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'Frequency',
+                        prefixIcon: Icons.calendar_today_outlined,
+                      ),
+                      items: frequencies
+                          .map(
+                            (f) => DropdownMenuItem<String>(
+                              value: f['value'],
+                              child: Text(f['label'] ?? f['value'] ?? ''),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setState(() => _frequency = v);
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
-            
-            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SafeArea(
+                top: false,
+                bottom: true,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _saveCharity,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+                      disabledForegroundColor: colorScheme.onSurfaceVariant,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      widget.charity == null ? 'Add' : 'Save',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

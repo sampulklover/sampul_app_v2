@@ -460,7 +460,7 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: const Text(
-                'In the event beneficiary becomes mentally incapacitated to make decisions or is unable to provide any written instructions or is unable to be contacted for 30 days, the Trustee shall utilize the Trust Fund for maintenance, medical/hospitalization, caretaker\'s allowances, household expenses and other personal needs upon submission of relevant supporting documents.',
+                'In the event beneficiary becomes mentally incapacitated to make decisions or is unable to provide any written instructions or is unable to be contacted for 30 days, the Trustee shall utilize the Family Account for maintenance, medical/hospitalization, caretaker\'s allowances, household expenses and other personal needs upon submission of relevant supporting documents.',
                 style: TextStyle(fontSize: 12),
               ),
                             contentPadding: EdgeInsets.zero,
@@ -494,7 +494,7 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: const Text(
-                'The Trustee may use the trust fund for medical expenses if there is no insurance coverage or the coverage limit has been exhausted. The fund may also be used to pay for a medical policy.',
+                'The Trustee may use the Family Account for medical expenses if there is no insurance coverage or the coverage limit has been exhausted. The fund may also be used to pay for a medical policy.',
                 style: TextStyle(fontSize: 12),
               ),
                             contentPadding: EdgeInsets.zero,
@@ -511,7 +511,7 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: const Text(
-                'The Trustee may use the trust fund for education expenses upon submission of supporting documents. A monthly allowance may also be provided for living expenses during local or overseas studies.',
+                'The Trustee may use the Family Account for education expenses upon submission of supporting documents. A monthly allowance may also be provided for living expenses during local or overseas studies.',
                 style: TextStyle(fontSize: 12),
               ),
                             contentPadding: EdgeInsets.zero,
@@ -528,7 +528,7 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: const Text(
-                'Trust Fund to be invested in money market instruments with any licensed financial institution in Malaysia.',
+                'Family Account funds to be invested in money market instruments with any licensed financial institution in Malaysia.',
                 style: TextStyle(fontSize: 12),
               ),
                             contentPadding: EdgeInsets.zero,
@@ -545,7 +545,7 @@ class _TrustBeneficiaryFormScreenState extends State<TrustBeneficiaryFormScreen>
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: const Text(
-                'Trust Fund to be invested in Unit Trust/Mutual Fund investment with any licensed fund management company in Malaysia based on recommendation from the Management Committee.',
+                'Family Account funds to be invested in Unit Trust/Mutual Fund investment with any licensed fund management company in Malaysia based on recommendation from the Management Committee.',
                 style: TextStyle(fontSize: 12),
               ),
                             contentPadding: EdgeInsets.zero,

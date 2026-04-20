@@ -25,11 +25,10 @@ void main() {
         OnboardingGoal.protectProperty.requiredSteps,
         <OnboardingStepType>[
           OnboardingStepType.profile,
-          OnboardingStepType.asset,
           OnboardingStepType.hibah,
         ],
       );
-      expect(OnboardingGoal.protectProperty.minimumRequiredSteps, 2);
+      expect(OnboardingGoal.protectProperty.minimumRequiredSteps, 1);
     });
   });
 

@@ -20,13 +20,13 @@
 ### Structured Markers (Recommended)
 ```
 [ACTION:route:label]
-[ACTION:trust_create:Create Trust Fund]
+[ACTION:trust_create:Create Family Account]
 [ACTION:add_asset:Tambah Aset]
 ```
 
 ### Supported Routes
-- `trust_create` - Create Trust Fund
-- `trust_management` - View Trust Funds
+- `trust_create` - Create Family Account
+- `trust_management` - View Family Accounts
 - `hibah_management` - View Hibah
 - `will_management` - View Will
 - `add_asset` - Add Asset

@@ -108,7 +108,7 @@ AI includes action markers in responses using format: `[ACTION:route:label]`
 - `[ACTION:route]` - Uses default label
 
 **Examples:**
-- `[ACTION:trust_create:Create Trust Fund]`
+- `[ACTION:trust_create:Create Family Account]`
 - `[ACTION:add_asset:Tambah Aset]`
 - `[ACTION:hibah_management]`
 
@@ -134,8 +134,8 @@ If AI doesn't use markers, system detects keywords in multiple languages:
 ### Supported Routes
 | Route | Default Label | Screen |
 |-------|--------------|--------|
-| `trust_create` | Create Trust Fund | TrustCreateScreen |
-| `trust_management` | View Trust Funds | TrustManagementScreen |
+| `trust_create` | Create Family Account | TrustCreateScreen |
+| `trust_management` | View Family Accounts | TrustManagementScreen |
 | `hibah_management` | View Hibah | HibahManagementScreen |
 | `will_management` | View Will | WillManagementScreen |
 | `add_asset` | Add Asset | AddAssetScreen |
@@ -279,8 +279,8 @@ Admin saves settings → Resources stored in database
 ### Testing Action Buttons
 
 #### Test Structured Markers
-1. Ask AI: "How do I create a trust fund?"
-2. Check AI response includes: `[ACTION:trust_create:Create Trust Fund]`
+1. Ask AI: "How do I create a Family Account?"
+2. Check AI response includes: `[ACTION:trust_create:Create Family Account]`
 3. Verify button appears below message
 4. Verify markers are hidden from display
 5. Click button → Should navigate to Trust Create screen

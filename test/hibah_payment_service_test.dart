@@ -12,17 +12,17 @@ void main() {
     });
 
     test('registration fee uses the middle tier up to ten assets', () {
-      expect(service.calculateRegistrationFeeInCents(2), 850000);
-      expect(service.calculateRegistrationFeeInCents(10), 850000);
+      expect(service.calculateRegistrationFeeInCents(2), 250000);
+      expect(service.calculateRegistrationFeeInCents(10), 250000);
       expect(service.getRegistrationFeeDescription(10), 'Up to 10 assets');
     });
 
     test('registration fee adds extra charges above ten assets', () {
-      expect(service.calculateRegistrationFeeInCents(11), 900000);
-      expect(service.calculateRegistrationFeeInCents(12), 950000);
+      expect(service.calculateRegistrationFeeInCents(11), 300000);
+      expect(service.calculateRegistrationFeeInCents(12), 350000);
       expect(
         service.getRegistrationFeeDescription(12),
-        '12 assets (RM 8,500 + RM 500 x 2)',
+        '12 assets (RM 2,500 + RM 500 x 2)',
       );
     });
 
@@ -47,12 +47,12 @@ void main() {
       );
 
       expect(breakdown.assetCount, 12);
-      expect(breakdown.registrationFeeInCents, 950000);
+      expect(breakdown.registrationFeeInCents, 350000);
       expect(breakdown.amendmentFeeInCents, 100000);
       expect(breakdown.executionFeeInCents, 55000);
       expect(breakdown.stampDutyInCents, 5000);
-      expect(breakdown.totalAmountInCents, 1105000);
-      expect(breakdown.description, '12 assets (RM 8,500 + RM 500 x 2)');
+      expect(breakdown.totalAmountInCents, 505000);
+      expect(breakdown.description, '12 assets (RM 2,500 + RM 500 x 2)');
     });
 
     test('calculatePayment skips execution fee when property value is zero', () {

@@ -31,7 +31,7 @@ class _OnboardingModalState extends State<OnboardingModal> {
     ),
     _OnboardingStep(
       title: 'Add Your First Asset',
-      description: 'Start tracking your digital assets',
+      description: 'Start tracking your assets',
       icon: Icons.account_balance_wallet_outlined,
     ),
   ];

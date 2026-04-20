@@ -1,115 +1,287 @@
-// Didit Webhook Handler
-// Updates verification table (session tracking) and accounts.kyc_status (user verification status)
-// Similar pattern to stripe-webhook
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
+const JSON_HEADERS = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, X-Signature, X-Timestamp",
+};
+
+function jsonResponse(payload: Record<string, unknown>, status = 200): Response {
+  return new Response(JSON.stringify(payload), { status, headers: JSON_HEADERS });
+}
+
+function logInfo(message: string, data: Record<string, unknown> = {}): void {
+  console.log(`didit-webhook: ${message}`, data);
+}
+
+function logWarn(message: string, data: Record<string, unknown> = {}): void {
+  console.warn(`didit-webhook: ${message}`, data);
+}
+
+function logError(message: string, data: Record<string, unknown> = {}): void {
+  console.error(`didit-webhook: ${message}`, data);
+}
+
+function normalizeSignature(rawSignature: string): string[] {
+  return rawSignature
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    // Only strip known keyed formats like "v1=...", "sig=...", "signature=...".
+    // Do not strip plain base64 values that contain "=" padding.
+    .map((s) => /^(v\d+|sig|signature)=/i.test(s) ? s.split("=").slice(1).join("=").trim() : s)
+    .map((s) => s.toLowerCase());
+}
+
+function hexToBytes(hex: string): Uint8Array {
+  const cleanHex = hex.trim().toLowerCase();
+  if (cleanHex.length % 2 !== 0) throw new Error("Invalid hex length");
+  const bytes = new Uint8Array(cleanHex.length / 2);
+  for (let i = 0; i < cleanHex.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(cleanHex.slice(i, i + 2), 16);
+  }
+  return bytes;
+}
+
+function timingSafeEqualBytes(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
+function isLikelyHex(input: string): boolean {
+  return /^[0-9a-f]+$/i.test(input) && input.length % 2 === 0;
+}
+
+function base64ToBytes(input: string): Uint8Array {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function hmacBytes(secret: string, message: string): Promise<Uint8Array> {
+  const encoder = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message));
+  return new Uint8Array(signature);
+}
+
+async function verifyWebhookSignature(opts: {
+  bodyText: string;
+  timestamp: string;
+  signatureHeader: string;
+  webhookSecret: string;
+}): Promise<boolean> {
+  const { bodyText, timestamp, signatureHeader, webhookSecret } = opts;
+  const providedSignatures = normalizeSignature(signatureHeader);
+  if (providedSignatures.length === 0) return false;
+
+  // Support both likely payload concatenation formats for compatibility.
+  const candidates = await Promise.all([
+    hmacBytes(webhookSecret, `${timestamp}.${bodyText}`),
+    hmacBytes(webhookSecret, `${bodyText}${timestamp}`),
+    hmacBytes(webhookSecret, `${timestamp}${bodyText}`),
+  ]);
+
+  for (const provided of providedSignatures) {
+    try {
+      const providedBytes = isLikelyHex(provided)
+        ? hexToBytes(provided)
+        : base64ToBytes(provided);
+      for (const candidate of candidates) {
+        if (timingSafeEqualBytes(providedBytes, candidate)) {
+          return true;
+        }
+      }
+    } catch {
+      // Ignore malformed signature fragment and continue.
+    }
+  }
+  return false;
+}
+
+function mapDiditStatus(raw: string): {
+  verificationStatus: string;
+  kycStatus: string | null;
+  isCompleted: boolean;
+} {
+  const diditStatus = raw.toLowerCase();
+  switch (diditStatus) {
+    case "completed":
+    case "verified":
+    case "approved":
+    case "accepted":
+    case "success":
+    case "passed":
+    case "pass":
+      return { verificationStatus: "verified", kycStatus: diditStatus, isCompleted: true };
+    case "declined":
+    case "rejected":
+    case "failed":
+    case "denied":
+      return { verificationStatus: "rejected", kycStatus: diditStatus, isCompleted: true };
+    case "pending":
+    case "in_progress":
+    case "processing":
+    case "in_review":
+    case "review":
+    case "not started":
+      return { verificationStatus: "pending", kycStatus: "pending", isCompleted: false };
+    case "expired":
+      return { verificationStatus: "rejected", kycStatus: "expired", isCompleted: true };
+    case "cancelled":
+    case "canceled":
+      return { verificationStatus: "pending", kycStatus: null, isCompleted: false };
+    default:
+      // Unknown statuses should not downgrade account KYC.
+      return { verificationStatus: "pending", kycStatus: null, isCompleted: false };
+  }
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  const requestId = crypto.randomUUID();
+
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    });
+    logInfo("cors preflight", { request_id: requestId });
+    return new Response(null, { status: 204, headers: JSON_HEADERS });
   }
 
-  // Only allow POST requests
   if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { "Content-Type": "application/json" } }
-    );
+    logWarn("invalid method", { request_id: requestId, method: req.method });
+    return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
   try {
-    // Get request body as text first (like Stripe webhook)
     const bodyText = await req.text();
     let body: any;
-    
     try {
       body = JSON.parse(bodyText);
-    } catch (e) {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON payload" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    } catch {
+      logWarn("invalid json payload", { request_id: requestId, body_length: bodyText.length });
+      return jsonResponse({ error: "Invalid JSON payload" }, 400);
     }
 
-    const headers = req.headers;
-    
-    // Webhook secret for verifying Didit webhook requests (optional for now)
     const webhookSecret = Deno.env.get("DIDIT_WEBHOOK_SECRET_KEY");
+    const signature = req.headers.get("X-Signature") ?? req.headers.get("x-signature");
+    const timestamp = req.headers.get("X-Timestamp") ?? req.headers.get("x-timestamp");
+    logInfo("incoming request", {
+      request_id: requestId,
+      has_webhook_secret: !!webhookSecret,
+      has_signature: !!signature,
+      has_timestamp: !!timestamp,
+      signature_length: signature?.length ?? 0,
+      timestamp_length: timestamp?.length ?? 0,
+    });
 
-    // Verify webhook signature (Didit uses X-Signature and X-Timestamp headers)
-    const signature = headers.get("X-Signature") || headers.get("x-signature");
-    const timestamp = headers.get("X-Timestamp") || headers.get("x-timestamp");
-    
-    // TODO: Implement signature verification based on Didit's documentation
-    // Didit likely uses: HMAC-SHA256(body + timestamp, secret)
-    // For now, we'll trust requests (you should implement proper verification)
-    // if (webhookSecret && signature && timestamp) {
-    //   const expectedSignature = calculateSignature(bodyText, timestamp, webhookSecret);
-    //   if (signature !== expectedSignature) {
-    //     return new Response("Invalid signature", { status: 401 });
-    //   }
-    // }
+    if (webhookSecret) {
+      if (!signature || !timestamp) {
+        logWarn("missing signature headers", {
+          request_id: requestId,
+          has_signature: !!signature,
+          has_timestamp: !!timestamp,
+        });
+        return jsonResponse({ error: "Missing signature headers" }, 401);
+      }
+      const isValidSignature = await verifyWebhookSignature({
+        bodyText,
+        timestamp,
+        signatureHeader: signature,
+        webhookSecret,
+      });
+      if (!isValidSignature) {
+        logWarn("signature verification failed", {
+          request_id: requestId,
+          webhook_type: body?.webhook_type ?? null,
+          session_id: body?.session_id ?? null,
+          vendor_data_present: !!body?.vendor_data,
+        });
+        return jsonResponse({ error: "Invalid signature" }, 401);
+      }
+      logInfo("signature verification passed", { request_id: requestId });
+    }
 
-    // Extract event data from Didit webhook
-    // Based on actual Didit webhook payload structure
-    const webhookType = body.webhook_type; // e.g., "status.updated"
-    const diditSessionId = body.session_id; // Didit's session ID (e.g., "726f2d35-354f-44f3-8398-54e72cd0352b")
-    const vendorData = body.vendor_data; // Our internal session_id (e.g., "didit_1767534073475_073475")
-    const status = body.status; // Overall status (e.g., "Declined", "Approved")
-    const decision = body.decision; // Decision object with detailed status
-    const decisionStatus = decision?.status; // Decision status (e.g., "Approved", "Declined")
-    const metadata = body; // Store full payload
+    const webhookType = body.webhook_type as string | undefined;
+    if (webhookType && webhookType !== "status.updated") {
+      logInfo("ignored webhook type", { request_id: requestId, webhook_type: webhookType });
+      return jsonResponse({ received: true, ignored: true, reason: "Unsupported webhook_type" }, 200);
+    }
+
+    const diditSessionId = body.session_id as string | undefined;
+    const vendorData = body.vendor_data as string | undefined;
+    const decisionStatus = body?.decision?.status as string | undefined;
+    const rootStatus = body?.status as string | undefined;
+    const diditStatusRaw = (decisionStatus ?? rootStatus ?? "").trim();
+    logInfo("parsed webhook payload", {
+      request_id: requestId,
+      webhook_type: webhookType ?? null,
+      session_id: diditSessionId ?? null,
+      has_vendor_data: !!vendorData,
+      raw_status: diditStatusRaw || null,
+    });
 
     if (!vendorData && !diditSessionId) {
-      return new Response(
-        JSON.stringify({ error: "Missing session identifier" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      logWarn("missing session identifier", { request_id: requestId });
+      return jsonResponse({ error: "Missing session identifier" }, 400);
+    }
+    if (!diditStatusRaw) {
+      logWarn("missing status field", { request_id: requestId });
+      return jsonResponse({ error: "Missing status in payload" }, 400);
     }
 
-    // Get Supabase credentials
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
     if (!supabaseUrl || !supabaseServiceKey) {
-      return new Response(
-        JSON.stringify({ 
+      logError("missing supabase env", {
+        request_id: requestId,
+        has_url: !!supabaseUrl,
+        has_service_key: !!supabaseServiceKey,
+      });
+      return jsonResponse(
+        {
           error: "Server configuration error",
           details: {
             has_url: !!supabaseUrl,
             has_service_key: !!supabaseServiceKey,
-          }
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+          },
+        },
+        500,
       );
     }
 
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseServiceKey, // service role for bypassing RLS
-    );
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find verification record by session_id (vendor_data) or didit_session_id
-    // vendor_data is our internal session_id, so try that first
-    let { data: verification, error: verificationError } = await supabase
-      .from("verification")
-      .select("id, uuid, session_id, didit_session_id")
-      .eq("session_id", vendorData)
-      .maybeSingle();
+    let verification: { id: number; uuid: string; didit_session_id: string | null } | null = null;
+    let verificationError: any = null;
 
-    // If not found by vendor_data, try by didit_session_id
+    if (vendorData) {
+      const result = await supabase
+        .from("verification")
+        .select("id, uuid, didit_session_id")
+        .eq("session_id", vendorData)
+        .maybeSingle();
+      verification = result.data;
+      verificationError = result.error;
+    }
+
     if (!verification && diditSessionId) {
       const result = await supabase
         .from("verification")
-        .select("id, uuid, session_id, didit_session_id")
+        .select("id, uuid, didit_session_id")
         .eq("didit_session_id", diditSessionId)
         .maybeSingle();
       verification = result.data;
@@ -117,165 +289,89 @@ Deno.serve(async (req) => {
     }
 
     if (verificationError || !verification) {
-      return new Response(
-        JSON.stringify({ error: "Verification record not found" }),
-        { status: 404 }
-      );
+      logWarn("verification record not found", {
+        request_id: requestId,
+        didit_session_id: diditSessionId ?? null,
+        vendor_data: vendorData ?? null,
+        lookup_error: verificationError?.message ?? null,
+      });
+      return jsonResponse({ error: "Verification record not found" }, 404);
     }
 
-    const userUuid = verification.uuid;
+    const mapped = mapDiditStatus(diditStatusRaw);
+    logInfo("status mapped", {
+      request_id: requestId,
+      verification_id: verification.id,
+      user_uuid: verification.uuid,
+      verification_status: mapped.verificationStatus,
+      kyc_status: mapped.kycStatus,
+    });
+    const nowIso = new Date().toISOString();
 
-    // Map Didit status to common status values
-    // Didit uses: "Approved", "Declined", "Pending", etc. (capitalized)
-    // Use decision.status if available, otherwise use root status
-    // kyc_status uses: approved, pending, accepted, rejected, declined (text field)
-    const diditStatus = (decisionStatus || status || "").toLowerCase();
-    let mappedStatus: string; // For verification.status (flexible text)
-    let kycStatus: string | null = null; // For accounts.kyc_status (standard values)
-
-    switch (diditStatus) {
-      case "approved":
-        mappedStatus = "approved";
-        kycStatus = "approved";
-        break;
-      case "declined":
-        mappedStatus = "declined";
-        kycStatus = "declined";
-        break;
-      case "accepted":
-        mappedStatus = "accepted";
-        kycStatus = "accepted";
-        break;
-      case "rejected":
-        mappedStatus = "rejected";
-        kycStatus = "rejected";
-        break;
-      case "pending":
-      case "in_progress":
-      case "processing":
-      case "not started":
-        mappedStatus = "pending";
-        kycStatus = "pending";
-        break;
-      case "expired":
-        mappedStatus = "expired";
-        kycStatus = "expired";
-        break;
-      case "cancelled":
-      case "canceled":
-        mappedStatus = "cancelled";
-        // Don't update kyc_status if cancelled (keep previous state)
-        kycStatus = null;
-        break;
-      default:
-        // Keep original status if unknown, but normalize to lowercase
-        mappedStatus = diditStatus || "pending";
-        kycStatus = "pending";
-    }
-
-    // Update verification table (session tracking)
-    const updateData: Record<string, any> = {
-      status: mappedStatus,
-      updated_at: new Date().toISOString(),
-      metadata: metadata,
+    const updateData: Record<string, unknown> = {
+      status: mapped.verificationStatus,
+      updated_at: nowIso,
+      metadata: body,
     };
-
-    // Set completed_at if verification is completed (approved, declined, rejected, accepted)
-    if (["approved", "declined", "rejected", "accepted"].includes(mappedStatus)) {
-      updateData.completed_at = new Date().toISOString();
+    if (mapped.isCompleted) {
+      updateData.completed_at = nowIso;
     }
 
-    // Add error message if verification was declined
-    // Check for warnings/errors in decision object
-    if (mappedStatus === "declined" || mappedStatus === "rejected") {
+    if (mapped.verificationStatus === "rejected") {
+      const decision = body?.decision;
       const allWarnings: any[] = [
-        ...(decision?.id_verification?.warnings || []),
-        ...(decision?.liveness?.warnings || []),
-        ...(decision?.face_match?.warnings || []),
+        ...(decision?.id_verification?.warnings ?? []),
+        ...(decision?.liveness?.warnings ?? []),
+        ...(decision?.face_match?.warnings ?? []),
       ];
-      
       const errorMessages = allWarnings
-        .filter((w: any) => w.log_type === "error")
-        .map((w: any) => w.short_description || w.long_description)
+        .filter((w: any) => w?.log_type === "error")
+        .map((w: any) => w?.short_description ?? w?.long_description)
         .filter(Boolean)
         .join("; ");
-      
       if (errorMessages) {
         updateData.error_message = errorMessages;
       }
     }
 
-    // Update didit_session_id if not already set
     if (diditSessionId && !verification.didit_session_id) {
       updateData.didit_session_id = diditSessionId;
     }
 
-    const { error: updateError } = await supabase
+    const { error: verificationUpdateError } = await supabase
       .from("verification")
       .update(updateData)
       .eq("id", verification.id);
 
-    if (updateError) {
-      return new Response(
-        JSON.stringify({ error: "Failed to update verification" }),
-        { status: 500 }
-      );
+    if (verificationUpdateError) {
+      logError("failed to update verification", {
+        request_id: requestId,
+        verification_id: verification.id,
+        message: verificationUpdateError.message,
+      });
+      return jsonResponse({ error: "Failed to update verification" }, 500);
     }
 
-    // Update accounts.kyc_status (user's actual verification status)
-    if (kycStatus && userUuid) {
-      // Ensure accounts row exists for user
-      const { data: account } = await supabase
-        .from("accounts")
-        .select("uuid")
-        .eq("uuid", userUuid)
-        .single();
+    logInfo("webhook processed successfully", {
+      request_id: requestId,
+      verification_id: verification.id,
+      user_uuid: verification.uuid,
+      verification_status: mapped.verificationStatus,
+      kyc_status: mapped.kycStatus,
+    });
 
-      if (!account) {
-        // Create accounts row if it doesn't exist
-        const { error: createError } = await supabase
-          .from("accounts")
-          .insert({
-            uuid: userUuid,
-            kyc_status: kycStatus,
-          });
-
-        if (createError) {
-          // Silently fail - account creation error
-        }
-      } else {
-        // Update existing accounts row
-        const { error: accountUpdateError } = await supabase
-          .from("accounts")
-          .update({ kyc_status: kycStatus })
-          .eq("uuid", userUuid);
-
-        if (accountUpdateError) {
-          // Silently fail - account update error
-        }
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        received: true, 
-        status: mappedStatus,
-        kyc_status: kycStatus,
-      }),
-      { 
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
+    return jsonResponse(
+      {
+        received: true,
+        verification_status: mapped.verificationStatus,
+        kyc_status: mapped.kycStatus,
+      },
+      200,
     );
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : String(e);
-    return new Response(
-      JSON.stringify({ error: `Webhook Error: ${errorMessage}` }),
-      { 
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+    logError("unhandled error", { request_id: requestId, message: errorMessage });
+    return jsonResponse({ error: `Webhook Error: ${errorMessage}` }, 400);
   }
 });
 

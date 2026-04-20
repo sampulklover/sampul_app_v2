@@ -69,6 +69,8 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
 
   String _assetTypeLabel(String raw) {
     switch (raw.toLowerCase()) {
+      case 'debt':
+        return 'Debt';
       case 'physical':
         return 'Physical';
       case 'digital':
@@ -79,6 +81,8 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
 
   Color _assetTypeBg(String raw) {
     switch (raw.toLowerCase()) {
+      case 'debt':
+        return Colors.orange.shade50;
       case 'physical':
         return Colors.green.shade50;
       case 'digital':
@@ -89,6 +93,8 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
 
   Color _assetTypeFg(String raw) {
     switch (raw.toLowerCase()) {
+      case 'debt':
+        return Colors.orange.shade800;
       case 'physical':
         return Colors.green.shade700;
       case 'digital':
@@ -133,7 +139,7 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Assets')),
+      appBar: AppBar(title: const Text('My Networths')),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
@@ -182,6 +188,7 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
                         final String? url = a['new_service_platform_url'] as String?;
                         final double? value = (a['declared_value_myr'] as num?)?.toDouble();
                         final String? category = a['instructions_after_death'] as String?;
+                        final bool isDebtRecord = (category ?? '').toLowerCase() == 'settle';
                         final String categoryText = _prettyInstruction(category);
                         return ListTile(
                           onTap: () async {
@@ -194,9 +201,25 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
                               await _loadAssets();
                             }
                           },
-                          leading: assetType == 'physical'
+                          leading: isDebtRecord
+                              ? Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0xFFFFF3E0),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: SampulIcons.buildIcon(
+                                    SampulIcons.payment,
+                                    width: 22,
+                                    height: 22,
+                                    color: Colors.orange,
+                                  ),
+                                )
+                              : assetType == 'physical'
                               ? _PhysicalAssetIcon(category: physicalCategory, size: 40)
-                              : _Logo(url: BrandfetchService.instance.addClientIdToUrl(logo), size: 40),
+                                  : _Logo(url: BrandfetchService.instance.addClientIdToUrl(logo), size: 40),
                           title: Text(name),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,14 +233,14 @@ class _AssetsListScreenState extends State<AssetsListScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: _assetTypeBg(assetType),
+                                      color: isDebtRecord ? Colors.orange.shade50 : _assetTypeBg(assetType),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
                                     child: Text(
-                                      _assetTypeLabel(assetType),
+                                      isDebtRecord ? 'Debt' : _assetTypeLabel(assetType),
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: _assetTypeFg(assetType),
+                                        color: isDebtRecord ? Colors.orange.shade800 : _assetTypeFg(assetType),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -357,28 +380,34 @@ class _AssetsSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final Map<String, double> totals = <String, double>{};
-    double grandTotal = 0;
+    final Map<String, double> assetTotals = <String, double>{};
+    double totalAssets = 0;
+    double totalDebts = 0;
     for (final Map<String, dynamic> a in data) {
       final String raw = ((a['instructions_after_death'] as String?) ?? 'unspecified').toLowerCase();
       final String category = _prettyCategory(raw);
       final double value = (a['declared_value_myr'] as num?)?.toDouble() ?? (a['value'] as num?)?.toDouble() ?? 0.0;
-      totals[category] = (totals[category] ?? 0.0) + value;
-      grandTotal += value;
+      if (raw == 'settle') {
+        totalDebts += value;
+        continue;
+      }
+      assetTotals[category] = (assetTotals[category] ?? 0.0) + value;
+      totalAssets += value;
     }
-    // Fallback to avoid divide-by-zero
-    if (grandTotal <= 0) grandTotal = 1;
 
-    final List<_Slice> slices = <_Slice>[];
-    final entries = totals.entries.toList()
+    final List<_Slice> assetSlices = <_Slice>[];
+    final entries = assetTotals.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     for (final e in entries) {
-      slices.add(_Slice(
+      assetSlices.add(_Slice(
         label: e.key,
         value: e.value,
         color: _categoryColor(e.key, theme),
       ));
     }
+    final double safeAssetTotal = totalAssets <= 0 ? 1 : totalAssets;
+    final bool hasAssets = totalAssets > 0;
+    final bool hasDebts = totalDebts > 0;
 
     return Card(
       elevation: 0,
@@ -388,10 +417,10 @@ class _AssetsSummaryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('Distribution by Category', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text('Assets by Category', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(
-              'Total Assets: RM ${grandTotal == 1 ? '0.00' : grandTotal.toStringAsFixed(2)}',
+              'Total Assets: RM ${totalAssets.toStringAsFixed(2)}',
               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
@@ -401,35 +430,113 @@ class _AssetsSummaryCard extends StatelessWidget {
                 SizedBox(
                   width: 110,
                   height: 110,
-                  child: CustomPaint(
-                    painter: _PieChartPainter(slices: slices, total: grandTotal),
-                  ),
+                  child: hasAssets
+                      ? CustomPaint(
+                          painter: _PieChartPainter(slices: assetSlices, total: safeAssetTotal),
+                        )
+                      : Center(
+                          child: Text(
+                            'No assets',
+                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: slices
-                        .map((s) {
-                          final double pct = (s.value / grandTotal * 100);
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _LegendLine(
-                              color: s.color,
-                              label: '${s.label}: RM ${s.value.toStringAsFixed(2)} (${pct.toStringAsFixed(1)}%)',
-                              maxLines: 3,
-                              style: theme.textTheme.bodySmall,
-                            ),
-                          );
-                        })
-                        .toList(),
-                  ),
+                  child: hasAssets
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: assetSlices
+                              .map((s) {
+                                final double pct = (s.value / safeAssetTotal * 100);
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: _LegendLine(
+                                    color: s.color,
+                                    label: '${s.label}: RM ${s.value.toStringAsFixed(2)} (${pct.toStringAsFixed(1)}%)',
+                                    maxLines: 3,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                );
+                              })
+                              .toList(),
+                        )
+                      : Text(
+                          'No asset value available yet.',
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Divider(color: theme.colorScheme.outline.withOpacity(0.2), height: 1),
+            const SizedBox(height: 16),
+            Text('Total Debt', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              'RM ${totalDebts.toStringAsFixed(2)}',
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            if (hasDebts) ...<Widget>[
+              _DebtBarChart(
+                debtTotal: totalDebts,
+                allAssetsTotal: totalAssets,
+              ),
+              const SizedBox(height: 8),
+              _LegendLine(
+                color: Colors.orange.shade800,
+                label: 'Settle Debts: RM ${totalDebts.toStringAsFixed(2)}',
+                maxLines: 3,
+                style: theme.textTheme.bodySmall,
+              ),
+            ] else
+              Text(
+                'No debt value available yet.',
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _DebtBarChart extends StatelessWidget {
+  final double debtTotal;
+  final double allAssetsTotal;
+
+  const _DebtBarChart({
+    required this.debtTotal,
+    required this.allAssetsTotal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final double combined = debtTotal + allAssetsTotal;
+    final double share = combined <= 0 ? 0 : (debtTotal / combined).clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: share,
+            minHeight: 12,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade800),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Debt share: ${(share * 100).toStringAsFixed(1)}% of total value',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

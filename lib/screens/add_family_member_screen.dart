@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import '../services/supabase_service.dart';
 import '../services/image_upload_service.dart';
+import '../services/executor_invitation_email_service.dart';
 import '../models/relationship.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/stepper_footer_controls.dart';
@@ -30,6 +31,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   // Categories supported: executor (co_sampul), future_owner (beneficiary), guardian
   static const List<String> _typeOptions = <String>['co_sampul', 'future_owner', 'guardian'];
   String _selectedType = 'co_sampul';
+  bool _notifyExecutorByEmail = true;
   final TextEditingController _percentageController = TextEditingController();
   final TextEditingController _nricController = TextEditingController();
   final TextEditingController _address1Controller = TextEditingController();
@@ -43,6 +45,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
 
   // Use the new relationship model with waris/non-waris classification
   String? _selectedRelationship;
+  static const int _minimumAdultAge = 18;
 
   @override
   void dispose() {
@@ -67,6 +70,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     }
     // Validate email format if provided on contact step
     if (!(_contactFormKey.currentState?.validate() ?? true)) {
+      setState(() => _currentStep = 1);
+      return;
+    }
+    if (!_validateAdultByNricForExecutorGuardian()) {
       setState(() => _currentStep = 1);
       return;
     }
@@ -108,6 +115,13 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
         }
       }
 
+      if (_selectedType == 'co_sampul') {
+        final bool canAddExecutor = await _canAddMoreExecutors(user.id);
+        if (!canAddExecutor) {
+          throw Exception('You can only register up to 2 executors.');
+        }
+      }
+
       // Insert record first to get beloved id
       final List<dynamic> insertResp = await SupabaseService.instance.client
           .from('beloved')
@@ -124,6 +138,17 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
             .from('beloved')
             .update(<String, dynamic>{'image_path': path})
             .eq('id', belovedId);
+      }
+
+      if (_selectedType == 'co_sampul' && _notifyExecutorByEmail) {
+        final String recipientEmail = _emailController.text.trim();
+        final String executorCode = 'CO-SAMPUL-$belovedId';
+        // Best effort: family member save should still succeed even if email fails.
+        await ExecutorInvitationEmailService.instance.sendInvitationForBeloved(
+          belovedId: belovedId,
+          recipientEmail: recipientEmail,
+          executorCode: executorCode,
+        );
       }
 
       if (!mounted) return;
@@ -322,6 +347,28 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                         ],
                       ),
                     ],
+                    if (_selectedType == 'co_sampul') ...<Widget>[
+                      const SizedBox(height: 8),
+                      CheckboxListTile(
+                        value: _notifyExecutorByEmail,
+                        dense: true,
+                        visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          'Notify executor by email',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        onChanged: (bool? value) {
+                          setState(() {
+                            _notifyExecutorByEmail = value ?? true;
+                          });
+                        },
+                        controlAffinity: ListTileControlAffinity.leading,
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     if (_selectedType == 'future_owner')
                       TextFormField(
@@ -354,7 +401,28 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                         context: context,
                         labelText: l10n.icNricNumber,
                         prefixIcon: Icons.badge_outlined,
+                        errorMaxLines: 3,
                       ),
+                      validator: (String? v) {
+                        if (!(_selectedType == 'co_sampul' || _selectedType == 'guardian')) {
+                          return null;
+                        }
+                        final String normalized = _normalizeNric(v ?? '');
+                        if (normalized.isEmpty) {
+                          return 'IC diperlukan untuk executor atau guardian.';
+                        }
+                        if (!_isValidNricDate(normalized)) {
+                          return 'Sila masukkan IC yang sah.';
+                        }
+                        final int? age = _extractAgeFromNric(normalized);
+                        if (age == null) {
+                          return 'Sila masukkan IC yang sah.';
+                        }
+                        if (age < _minimumAdultAge) {
+                          return 'Executor dan guardian mesti berumur sekurang-kurangnya 18 tahun.';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     const SizedBox(height: 12),
@@ -684,6 +752,70 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       default:
         return c;
     }
+  }
+
+  bool _validateAdultByNricForExecutorGuardian() {
+    if (!(_selectedType == 'co_sampul' || _selectedType == 'guardian')) {
+      return true;
+    }
+    final String normalized = _normalizeNric(_nricController.text);
+    final int? age = _extractAgeFromNric(normalized);
+    final bool isValid = normalized.isNotEmpty && _isValidNricDate(normalized) && age != null && age >= _minimumAdultAge;
+    if (isValid) return true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Executor dan guardian mesti berumur sekurang-kurangnya 18 tahun berdasarkan IC.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return false;
+  }
+
+  String _normalizeNric(String value) => value.replaceAll(RegExp(r'[^0-9]'), '');
+
+  bool _isValidNricDate(String normalizedNric) {
+    if (normalizedNric.length < 6) return false;
+    final int? yy = int.tryParse(normalizedNric.substring(0, 2));
+    final int? mm = int.tryParse(normalizedNric.substring(2, 4));
+    final int? dd = int.tryParse(normalizedNric.substring(4, 6));
+    if (yy == null || mm == null || dd == null) return false;
+    if (mm < 1 || mm > 12) return false;
+    if (dd < 1 || dd > 31) return false;
+
+    final int currentTwoDigitYear = DateTime.now().year % 100;
+    final int year = yy > currentTwoDigitYear ? 1900 + yy : 2000 + yy;
+    try {
+      final DateTime date = DateTime(year, mm, dd);
+      return date.year == year && date.month == mm && date.day == dd && !date.isAfter(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  int? _extractAgeFromNric(String normalizedNric) {
+    if (!_isValidNricDate(normalizedNric)) return null;
+    final int yy = int.parse(normalizedNric.substring(0, 2));
+    final int mm = int.parse(normalizedNric.substring(2, 4));
+    final int dd = int.parse(normalizedNric.substring(4, 6));
+    final int currentTwoDigitYear = DateTime.now().year % 100;
+    final int year = yy > currentTwoDigitYear ? 1900 + yy : 2000 + yy;
+    final DateTime dob = DateTime(year, mm, dd);
+    final DateTime now = DateTime.now();
+    int age = now.year - dob.year;
+    final bool hasBirthdayPassed =
+        now.month > dob.month || (now.month == dob.month && now.day >= dob.day);
+    if (!hasBirthdayPassed) age--;
+    return age;
+  }
+
+  Future<bool> _canAddMoreExecutors(String userId) async {
+    final List<dynamic> existingExecutors = await SupabaseService.instance.client
+        .from('beloved')
+        .select('id')
+        .eq('uuid', userId)
+        .eq('type', 'co_sampul');
+    return existingExecutors.length < 2;
   }
 }
 

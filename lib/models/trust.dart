@@ -176,19 +176,84 @@ class Trust {
         .fold(0, (sum, payment) => sum + payment.amount);
   }
 
+  int get requiredFundingInCents {
+    final configs = fundSupportConfigs;
+    if (configs == null || configs.isEmpty) return 0;
+
+    double totalRm = 0.0;
+
+    for (final entry in configs.entries) {
+      final categoryId = entry.key;
+      final dynamic raw = entry.value;
+      if (raw is! Map) continue;
+      final config = Map<String, dynamic>.from(raw);
+
+      // Debt: use captured total debt amount.
+      if (categoryId == 'debt') {
+        totalRm += (config['debtAmount'] as num?)?.toDouble() ?? 0.0;
+        continue;
+      }
+
+      // Charitable: sum donation amounts.
+      if (categoryId == 'charitable') {
+        final charities = config['charities'];
+        if (charities is List) {
+          for (final c in charities) {
+            if (c is! Map) continue;
+            final charity = Map<String, dynamic>.from(c);
+            final double donationAmount =
+                (charity['donation_amount'] as num?)?.toDouble() ??
+                (charity['donationAmount'] as num?)?.toDouble() ??
+                0.0;
+            final int multiplier = _charityAmountMultiplier(charity);
+            totalRm += donationAmount * multiplier;
+          }
+        }
+        continue;
+      }
+
+      // Regular payments: use the configured paymentAmount (RM).
+      final isRegularPayments = config['isRegularPayments'] as bool?;
+      if (isRegularPayments == true) {
+        totalRm += (config['paymentAmount'] as num?)?.toDouble() ?? 0.0;
+      }
+    }
+
+    // Convert RM to cents.
+    return (totalRm * 100).round();
+  }
+
   // Calculate remaining amount in cents to reach minimum
   int get remainingInCents {
-    const int minTrustAmount = 10000000; // RM 100,000 in cents
-    return minTrustAmount - totalPaidInCents;
+    final required = requiredFundingInCents;
+    final remaining = required - totalPaidInCents;
+    return remaining < 0 ? 0 : remaining;
   }
 
   // Calculate progress percentage (0-100)
   double get progressPercentage {
-    const int minTrustAmount = 10000000; // RM 100,000 in cents
-    if (minTrustAmount == 0) return 0.0;
-    final percentage = (totalPaidInCents / minTrustAmount) * 100;
+    final required = requiredFundingInCents;
+    if (required <= 0) return 0.0;
+    final percentage = (totalPaidInCents / required) * 100;
     return percentage.clamp(0.0, 100.0);
   }
+}
+
+int _charityAmountMultiplier(Map<String, dynamic> charity) {
+  final String marker = ((charity['address_line_2'] ?? charity['addressLine2']) as String? ?? '')
+      .trim()
+      .toLowerCase();
+  final String orgName = ((charity['organization_name'] ?? charity['organizationName']) as String? ?? '')
+      .trim()
+      .toLowerCase();
+  final bool isSedekahJumaat = marker == 'sedekah_jumaat' || orgName.startsWith('sedekah jumaat');
+  if (!isSedekahJumaat) return 1;
+
+  final String yearsRaw =
+      ((charity['address_line_1'] ?? charity['addressLine1']) as String? ?? '').trim();
+  final RegExpMatch? match = RegExp(r'(\d+)').firstMatch(yearsRaw);
+  final int years = int.tryParse(match?.group(1) ?? '') ?? 1;
+  return years.clamp(1, 20) * 52;
 }
 
 TrustStatus _mapDocStatus(String? s) {

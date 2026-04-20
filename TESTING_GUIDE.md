@@ -1,7 +1,7 @@
 INTRODUCTION
 This document is a test script for User Acceptance Test (UAT) of the Sampul mobile application. Testers will perform testing based on user experience and predefined test scenarios to ensure the app works as expected.
 About Sampul App
-Sampul is an estate planning application for Malaysian users. It helps users manage their estate planning documents including Trust Funds, Hibah, traditional Wills, assets, family members, and provides AI-powered guidance.
+Sampul is an estate planning application for Malaysian users. It helps users manage their estate planning documents including Family Accounts, Hibah, traditional Wills, assets, family members, and provides AI-powered guidance.
 
 TESTING OBJECTIVES
 The primary goal of this User Acceptance Test is to verify that the Sampul mobile application meets all functional requirements and provides a seamless user experience across different devices. Through systematic testing, we aim to identify any issues, validate feature functionality, and ensure the app is ready for production use. The objectives of this User Acceptance Test are:

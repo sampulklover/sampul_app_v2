@@ -23,8 +23,13 @@ import '../widgets/payment_status_modal.dart';
 
 class HibahDetailScreen extends StatefulWidget {
   final Hibah hibah;
+  final bool autoStartPayment;
 
-  const HibahDetailScreen({super.key, required this.hibah});
+  const HibahDetailScreen({
+    super.key,
+    required this.hibah,
+    this.autoStartPayment = false,
+  });
 
   @override
   State<HibahDetailScreen> createState() => _HibahDetailScreenState();
@@ -136,6 +141,7 @@ class _HibahDetailScreenState extends State<HibahDetailScreen>
         _selectedHibahCoupon = keepCoupon;
         _isLoading = false;
       });
+      _maybeAutoStartPayment();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -143,6 +149,23 @@ class _HibahDetailScreenState extends State<HibahDetailScreen>
         context,
       ).showSnackBar(SnackBar(content: Text('Error loading details: $e')));
     }
+  }
+
+  void _maybeAutoStartPayment() {
+    if (!widget.autoStartPayment) return;
+    if (!mounted) return;
+    if (_isLoading) return;
+    if (_isStartingPayment) return;
+    if (_groups.isEmpty) return;
+    final bool paymentComplete = _latestPayment?.isSuccessful == true;
+    if (paymentComplete) return;
+    final HibahPaymentBreakdown estimate = HibahPaymentService.instance
+        .calculatePayment(assetCount: _groups.length);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_isStartingPayment) return;
+      _startPayment(estimate, showConfirmationModal: false);
+    });
   }
 
   @override
@@ -552,8 +575,19 @@ class _HibahDetailScreenState extends State<HibahDetailScreen>
     );
   }
 
-  Future<void> _startPayment(HibahPaymentBreakdown breakdown) async {
+  Future<void> _startPayment(
+    HibahPaymentBreakdown breakdown, {
+    bool showConfirmationModal = true,
+  }) async {
     if (_groups.isEmpty || _isStartingPayment) return;
+
+    if (showConfirmationModal) {
+      final bool? shouldContinue = await _showHibahPaymentDetailsModal();
+      if (shouldContinue != true) {
+        return;
+      }
+    }
+
     setState(() => _isStartingPayment = true);
 
     try {
@@ -607,6 +641,335 @@ class _HibahDetailScreenState extends State<HibahDetailScreen>
     } finally {
       if (mounted) setState(() => _isStartingPayment = false);
     }
+  }
+
+  Future<bool?> _showHibahPaymentDetailsModal() {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+
+    Widget row({
+      required String label,
+      required String value,
+      String? subtitle,
+      bool emphasize = false,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              flex: 2,
+              child: Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(
+                    value,
+                    textAlign: TextAlign.right,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: emphasize ? scheme.primary : null,
+                    ),
+                  ),
+                  if (subtitle != null) ...<Widget>[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      textAlign: TextAlign.right,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        bool showFeeInfo = false;
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.92,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Flexible(
+                      fit: FlexFit.loose,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Center(
+                              child: Container(
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: scheme.outline.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Review Hibah payment',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Check the fee details before you continue to payment.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(
+                                    'Property Documentation Fee',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    'RM2,500',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            InkWell(
+                              onTap: () {
+                                setModalState(() {
+                                  showFeeInfo = !showFeeInfo;
+                                });
+                              },
+                              child: Row(
+                                children: <Widget>[
+                                  Icon(
+                                    showFeeInfo
+                                        ? Icons.expand_less
+                                        : Icons.expand_more,
+                                    size: 20,
+                                    color: scheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Payment details',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: scheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (showFeeInfo) ...<Widget>[
+                              const SizedBox(height: 8),
+                              Card(
+                                color: scheme.surfaceContainerHighest,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Row(
+                                        children: <Widget>[
+                                          Icon(
+                                            Icons.info_outline,
+                                            size: 18,
+                                            color: scheme.primary,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Shariah-Compliant Home Gifting',
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      row(
+                                        label: 'Property Documentation Fee',
+                                        value: 'RM2,500',
+                                        emphasize: true,
+                                        subtitle: 'One-time fee',
+                                      ),
+                                      row(
+                                        label: 'Amendment/Cancellation',
+                                        value: 'RM500',
+                                        subtitle: 'Per request',
+                                      ),
+                                      row(
+                                        label: 'Execution Fee',
+                                        value:
+                                            '0.5% of property value + stamp duty',
+                                        subtitle: 'When execution is needed',
+                                      ),
+                                      const Divider(height: 20),
+                                      Text(
+                                        'Stamp duty',
+                                        style:
+                                            theme.textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      row(
+                                        label: 'Stamp Duty - First RM 100,000',
+                                        value: '1.0%',
+                                      ),
+                                      row(
+                                        label:
+                                            'Stamp Duty - RM 100,001 to RM 500,000',
+                                        value: '2.0%',
+                                      ),
+                                      row(
+                                        label:
+                                            'Stamp Duty - RM 500,001 to RM 1,000,000',
+                                        value: '3.0%',
+                                      ),
+                                      row(
+                                        label: 'Stamp Duty - Above RM 1,000,001',
+                                        value: '4.0%',
+                                      ),
+                                      row(
+                                        label: 'Stamp Duty - Spouse to Spouse',
+                                        value: 'FREE (Full exemption)',
+                                      ),
+                                      row(
+                                        label: 'Stamp Duty - Family Members*',
+                                        value:
+                                            'FREE (First RM 1M), 50% (Excess)',
+                                        subtitle: 'For eligible family transfer',
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        '*Family Members include: Parents, children, step-children, adopted children, grandparents, grandchildren',
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Note: All fees are inclusive of applicable taxes. Stamp duty is a third-party cost.',
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        border: Border(
+                          top: BorderSide(
+                            color: scheme.outlineVariant.withOpacity(0.4),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        12,
+                        24,
+                        MediaQuery.of(context).viewInsets.bottom + 16,
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: scheme.primary,
+                                foregroundColor: scheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Continue to payment'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _checkPaymentStatusOnResume() async {

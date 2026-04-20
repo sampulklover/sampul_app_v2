@@ -170,7 +170,7 @@ class AiChatSettings {
     buffer.writeln('When relevant, include action buttons using this format: [ACTION:route:label]');
     buffer.writeln('Available routes: trust_create, trust_management, hibah_management, will_management, add_asset, assets_list, add_family, family_list, executor_management, checklist, extra_wishes');
     buffer.writeln('Examples:');
-    buffer.writeln('- [ACTION:trust_create:Create Trust Fund]');
+    buffer.writeln('- [ACTION:trust_create:Create Family Account]');
     buffer.writeln('- [ACTION:add_asset:Tambah Aset]');
     buffer.writeln('- [ACTION:hibah_management]');
     buffer.writeln('Include action buttons when user asks about creating or viewing these features.');
