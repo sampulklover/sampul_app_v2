@@ -7,7 +7,6 @@ import '../models/user_profile.dart';
 import '../utils/form_decoration_helper.dart';
 import 'edit_profile_screen.dart';
 import 'executor_deceased_form_screen.dart';
-import 'executor_guardian_form_screen.dart';
 import 'executor_assets_form_screen.dart';
 import 'executor_info_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
@@ -50,9 +49,6 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
 
   // Step 4: Assets Info (executor_deceased_assets table) - stored from separate screen
   Map<String, dynamic>? _assetsData;
-
-  // Guardian Info (stored from separate screen)
-  Map<String, dynamic>? _guardianData;
 
   // Step 6: Documents
   final List<ExecutorDocumentDraft> _supportingDocs = <ExecutorDocumentDraft>[];
@@ -520,23 +516,6 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
     }
   }
 
-  Future<void> _navigateToGuardianInfo() async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExecutorGuardianFormScreen(
-          initialData: _guardianData,
-        ),
-      ),
-    );
-
-    if (result != null) {
-      setState(() {
-        _guardianData = result;
-      });
-    }
-  }
-
   Future<void> _navigateToAssetsInfo() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
@@ -628,43 +607,6 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: _navigateToAssetsInfo,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGuardianInfoStep() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Guardian Information',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: ListTile(
-              leading: Icon(
-                Icons.family_restroom_outlined,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-              title: const Text('Guardian Information'),
-              subtitle: Text(
-                _guardianData != null
-                    ? '${_guardianData!['full_name'] ?? 'Unknown'}'
-                    : 'Optional - Not provided yet',
-                style: TextStyle(
-                  color: _guardianData != null ? Colors.green : Colors.grey,
-                  fontStyle: _guardianData == null ? FontStyle.italic : FontStyle.normal,
-                ),
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _navigateToGuardianInfo,
             ),
           ),
         ],
@@ -834,36 +776,6 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // Guardian Info
-          if (_guardianData != null)
-            Card(
-              elevation: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.family_restroom, color: const Color.fromRGBO(49, 24, 211, 1)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Guardian Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 24),
-                    _buildReviewRow('Full Name', _guardianData!['full_name']?.toString()),
-                    _buildReviewRow('Phone', _guardianData!['phone_no']?.toString()),
-                    _buildReviewRow('Email', _guardianData!['email']?.toString()),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
           Card(
             elevation: 0,
             child: Padding(
@@ -1014,7 +926,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
         'is_same_address': _isSameAddress,
         'executor_code': executorCode,
         'uuid': user.id,
-        // Mark as submitted once the full Pusaka application is completed
+        // Mark as submitted once the full executor application is completed
         'status': 'submitted',
           };
 
@@ -1027,12 +939,12 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
               executorResult.first;
           executorId = createdExecutor['id'] as int;
 
-          // Create an in-app notification so user can see their Pusaka
+          // Create an in-app notification so user can see their executor
           // application in the notifications list.
           await NotificationService.instance.createNotification(
-            title: 'Pusaka application submitted',
+            title: 'Executor application submitted',
             body:
-                'Your Pusaka application has been submitted. Our team will review your information.',
+                'Your executor application has been submitted. Our team will review your information.',
             type: 'executor_created',
             data: <String, dynamic>{'executor_id': executorId},
           );
@@ -1086,17 +998,6 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
       };
 
       await client.from('executor_deceased_assets').insert(assetsData);
-
-      // Step 4: Create executor_guardian record (if provided)
-      if (_guardianData != null) {
-        final guardianData = {
-          'executor_id': executorId,
-          ..._guardianData!,
-          'uuid': user.id,
-        };
-
-        await client.from('executor_guardian').insert(guardianData);
-      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1167,21 +1068,15 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
                     content: _buildAssetsInfoStep(),
                   ),
                   Step(
-                    title: const Text('Guardian Info'),
+                    title: const Text('Documents'),
                     state: _currentStep > 3 ? StepState.complete : StepState.indexed,
                     isActive: _currentStep >= 3,
-                    content: _buildGuardianInfoStep(),
-                  ),
-                  Step(
-                    title: const Text('Documents'),
-                    state: _currentStep > 4 ? StepState.complete : StepState.indexed,
-                    isActive: _currentStep >= 4,
                     content: _buildDocumentsStep(),
                   ),
                   Step(
                     title: const Text('Review'),
-                    state: StepState.indexed,
-                    isActive: _currentStep >= 5,
+                    state: _currentStep > 4 ? StepState.complete : StepState.indexed,
+                    isActive: _currentStep >= 4,
                     content: _buildReviewStep(),
                   ),
                 ],
@@ -1192,9 +1087,9 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
       ),
       bottomNavigationBar: StepperFooterControls(
         currentStep: _currentStep,
-        lastStep: 5,
+        lastStep: 4,
         isBusy: _isSubmitting,
-        primaryLabel: _currentStep == 5
+        primaryLabel: _currentStep == 4
             ? 'Submit Executor'
             : null,
         onPrimaryPressed: () async {
@@ -1217,10 +1112,7 @@ class _ExecutorCreateScreenState extends State<ExecutorCreateScreen> {
           } else if (_currentStep == 2) {
             setState(() => _currentStep = 3);
           } else if (_currentStep == 3) {
-            // Guardian is optional, so just proceed
             setState(() => _currentStep = 4);
-          } else if (_currentStep == 4) {
-            setState(() => _currentStep = 5);
           } else {
             await _submit();
           }

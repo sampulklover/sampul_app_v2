@@ -13,12 +13,14 @@ import '../utils/card_decoration_helper.dart';
 import 'trust_info_screen.dart';
 import 'edit_profile_screen.dart';
 import 'fund_support_config_screen.dart';
+import 'add_family_member_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
 import '../services/analytics_service.dart';
 import '../config/analytics_screens.dart';
 
 class TrustCreateScreen extends StatefulWidget {
-  const TrustCreateScreen({super.key});
+  final Trust? initial;
+  const TrustCreateScreen({super.key, this.initial});
 
   @override
   State<TrustCreateScreen> createState() => _TrustCreateScreenState();
@@ -45,16 +47,15 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         'isRegularPayments': null, // null means not selected yet - no option selected by default
         'paymentAmount': 1000.0, // Default RM 1,000 (only used when isRegularPayments is true)
         'paymentFrequency': null, // 'monthly', 'quarterly', 'yearly', 'when_conditions'
-        'releaseCondition': null, // 'as_needed' or 'lump_sum'
+        'releaseCondition': null, // 'lump_sum'
       };
     }
     return _fundSupportConfigs[categoryId]!;
   }
 
   // Executor Selection
-  String? _executorType; // 'someone_i_know' or 'sampul_professional'
-  final Set<int> _selectedExecutorIds = {}; // IDs of selected family members when executorType is 'someone_i_know'
-  bool _showExecutorGoodToKnow = true; // Show/hide the executor "Good to Know" info box
+  // Family Account: keep this step simple — pick ONE executor from your family list.
+  final Set<int> _selectedExecutorIds = {};
   List<Map<String, dynamic>> _familyMembers = []; // Family members for executor selection
   bool _isLoadingFamilyMembers = false;
 
@@ -81,14 +82,81 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
   String? _profileError;
   UserProfile? _userProfile;
 
+  bool get _isEditMode => widget.initial?.id != null;
+
   @override
   void initState() {
     super.initState();
     _prefillFromProfile();
     _fetchFamilyMembers();
+    _prefillFromExistingTrust();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AnalyticsService.logScreen(AnalyticsScreens.trustCreate);
+      AnalyticsService.logScreen(
+        _isEditMode ? AnalyticsScreens.trustEdit : AnalyticsScreens.trustCreate,
+      );
     });
+  }
+
+  Future<void> _prefillFromExistingTrust() async {
+    final Trust? trust = widget.initial;
+    if (trust == null || trust.id == null) return;
+
+    // Form values from existing trust
+    _selectedEstimatedNetWorth = TrustConstants.estimatedNetWorths
+            .any((e) => e['value'] == trust.estimatedNetWorth)
+        ? trust.estimatedNetWorth
+        : null;
+    _selectedSourceOfFund = TrustConstants.sourceOfWealth
+            .any((e) => e['value'] == trust.sourceOfFund)
+        ? trust.sourceOfFund
+        : null;
+    _purposeOfTransactionCtrl.text = trust.purposeOfTransaction ?? '';
+
+    _employerNameCtrl.text = trust.employerName ?? '';
+    _businessNatureCtrl.text = trust.businessNature ?? '';
+    _businessAddress1Ctrl.text = trust.businessAddressLine1 ?? '';
+    _businessAddress2Ctrl.text = trust.businessAddressLine2 ?? '';
+    _businessCityCtrl.text = trust.businessCity ?? '';
+    _businessPostcodeCtrl.text = trust.businessPostcode ?? '';
+    _businessStateCtrl.text = trust.businessState ?? '';
+    _selectedBusinessCountry = TrustConstants.countries
+            .any((e) => e['value'] == trust.businessCountry)
+        ? trust.businessCountry
+        : null;
+
+    final categories = trust.fundSupportCategories ?? <String>[];
+    final configs = trust.fundSupportConfigs ?? <String, dynamic>{};
+
+    if (mounted) {
+      setState(() {
+        _selectedFundSupports
+          ..clear()
+          ..addAll(categories);
+        _fundSupportConfigs
+          ..clear()
+          ..addAll(
+            configs.map((k, v) => MapEntry<String, Map<String, dynamic>>(
+                  k,
+                  v is Map ? Map<String, dynamic>.from(v) : <String, dynamic>{},
+                )),
+          );
+      });
+    }
+
+    try {
+      final exec = await TrustService.instance.getExecutorsByTrustId(trust.id!);
+      final String? executorType = exec['executorType'] as String?;
+      final List<int> ids = (exec['executorIds'] as List<int>?) ?? <int>[];
+
+      if (!mounted) return;
+      setState(() {
+        _selectedExecutorIds
+          ..clear()
+          ..addAll(executorType == 'someone_i_know' ? ids : <int>[]);
+      });
+    } catch (_) {
+      // Ignore executor prefill failures; user can reselect.
+    }
   }
 
   Future<void> _fetchFamilyMembers() async {
@@ -390,16 +458,6 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
             ),
           );
         }).toList(),
-        const SizedBox(height: 24),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            l10n.youCanSelectMoreThanOne,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -408,6 +466,7 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     final Object? charities = config['charities'];
     final bool hasCharities = charities is List && charities.isNotEmpty;
     return hasCharities ||
+           config['debtAmount'] != null ||
            config['beneficiaryId'] != null ||
            config['durationType'] != null || 
            config['isRegularPayments'] != null || 
@@ -431,14 +490,19 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
 
   /// Validates that executor selection is complete
   bool _validateExecutorSelection() {
-    if (_executorType == null) {
-      return false;
-    }
-    // If executor type is 'someone_i_know', must have at least one executor selected
-    if (_executorType == 'someone_i_know' && _selectedExecutorIds.isEmpty) {
-      return false;
-    }
-    return true;
+    return _selectedExecutorIds.length == 1;
+  }
+
+  String? _getSelectedExecutorName() {
+    if (_selectedExecutorIds.isEmpty) return null;
+    final int id = _selectedExecutorIds.first;
+    final member = _familyMembers.firstWhere(
+      (m) => (m['id'] as num?)?.toInt() == id,
+      orElse: () => <String, dynamic>{},
+    );
+    final name = (member['name'] as String?) ?? '';
+    final trimmed = name.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   Widget _buildConfigPreviewCard({
@@ -505,6 +569,18 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
       }
     }
 
+    // Debt preview: show captured debt amount
+    if (categoryId == 'debt') {
+      final double? debtAmount = (config['debtAmount'] as num?)?.toDouble();
+      if (debtAmount != null && debtAmount > 0) {
+        final formatted = debtAmount.toStringAsFixed(0).replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+        previewItems.add('RM $formatted');
+      }
+    }
+
     // Duration preview
     final l10n = AppLocalizations.of(context)!;
     if (durationType == 'age') {
@@ -527,8 +603,6 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
         (Match m) => '${m[1]},',
       );
       previewItems.add('RM $formattedAmount $frequencyLabel');
-    } else if (releaseCondition == 'as_needed') {
-      previewItems.add(l10n.whenNeeded);
     } else if (releaseCondition == 'lump_sum') {
       previewItems.add(l10n.allAtOnceAtTheEnd);
     }
@@ -600,390 +674,173 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isSomeoneIKnow = _executorType == 'someone_i_know';
-    final isSampulProfessional = _executorType == 'sampul_professional';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8),
-        // Option 1: Someone I Know
-        InkWell(
-          onTap: () {
-            setState(() {
-              _executorType = 'someone_i_know';
-            });
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isSomeoneIKnow
-                  ? colorScheme.primaryContainer.withOpacity(0.3)
-                  : colorScheme.surface,
-              border: Border.all(
-                color: isSomeoneIKnow
-                    ? colorScheme.primary
-                    : colorScheme.outline.withOpacity(0.2),
-                width: isSomeoneIKnow ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AddFamilyMemberScreen(),
+                  settings: RouteSettings(name: l10n.openFamilyAccount),
+                ),
+              );
+              await _fetchFamilyMembers();
+            },
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.addNew),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSomeoneIKnow
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isSomeoneIKnow
-                              ? colorScheme.primary
-                              : colorScheme.outline,
-                          width: 2,
-                        ),
-                      ),
-                      child: isSomeoneIKnow
-                          ? Icon(
-                              Icons.check,
-                              size: 16,
-                              color: colorScheme.onPrimary,
-                            )
-                          : null,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_isLoadingFamilyMembers)
+          const Center(child: CircularProgressIndicator())
+        else if (_familyMembers.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              l10n.noFamilyMembersFound,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          )
+        else
+          ..._familyMembers.map((member) {
+            final memberId = (member['id'] as num?)?.toInt();
+            if (memberId == null) return const SizedBox.shrink();
+
+            final isSelected = _selectedExecutorIds.contains(memberId);
+            final name = (member['name'] as String?) ?? l10n.unknown;
+            final imagePath = member['image_path'] as String?;
+            final relationship = member['relationship'] as String?;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedExecutorIds
+                      ..clear()
+                      ..add(memberId);
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? colorScheme.primaryContainer.withOpacity(0.3)
+                        : colorScheme.surface,
+                    border: Border.all(
+                      color: isSelected
+                          ? colorScheme.primary
+                          : colorScheme.outline.withOpacity(0.2),
+                      width: isSelected ? 2 : 1,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.someoneIKnow,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isSomeoneIKnow
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.familyMemberCloseFriendOrTrustedAdvisor,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                const SizedBox(height: 12),
-                // Pros and Cons
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          _buildProConItem(Icons.check_circle_outline, l10n.freeUsually, Colors.green),
-                          const SizedBox(height: 8),
-                          _buildProConItem(Icons.check_circle_outline, l10n.basicReportingAndAnalytics, Colors.green),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildProConItem(Icons.warning_amber_outlined, l10n.personalConflict, Colors.orange),
-                          const SizedBox(height: 8),
-                          _buildProConItem(Icons.warning_amber_outlined, l10n.administrativeBurden, Colors.orange),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                // Family members selection (when selected)
-                if (isSomeoneIKnow) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    l10n.whosThisFamilyTrustAccountFor,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (_isLoadingFamilyMembers)
-                    const Center(child: CircularProgressIndicator())
-                  else if (_familyMembers.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        l10n.noFamilyMembersFound,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  else
-                    ..._familyMembers.map((member) {
-                      final memberId = (member['id'] as num?)?.toInt();
-                      final isSelected = memberId != null && _selectedExecutorIds.contains(memberId);
-                      final name = member['name'] as String? ?? 'Unknown';
-                      final imagePath = member['image_path'] as String?;
-                      final relationship = member['relationship'] as String?;
-                      
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          onTap: () {
-                            if (memberId != null) {
-                              setState(() {
-                                if (isSelected) {
-                                  _selectedExecutorIds.remove(memberId);
-                                } else {
-                                  _selectedExecutorIds.add(memberId);
-                                }
-                              });
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? colorScheme.primaryContainer.withOpacity(0.3)
-                                  : colorScheme.surface,
-                              border: Border.all(
-                                color: isSelected
-                                    ? colorScheme.primary
-                                    : colorScheme.outline.withOpacity(0.2),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundImage: imagePath != null && imagePath.isNotEmpty
+                                ? NetworkImage(
+                                    SupabaseService.instance.getFullImageUrl(imagePath) ?? '',
+                                  )
+                                : null,
+                            child: (imagePath == null || imagePath.isEmpty)
+                                ? Text(
+                                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Profile picture
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundImage: imagePath != null && imagePath.isNotEmpty
-                                      ? NetworkImage(
-                                          SupabaseService.instance.getFullImageUrl(imagePath) ?? '',
-                                        )
-                                      : null,
-                                  child: imagePath == null || imagePath.isEmpty
-                                      ? Text(
-                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        name,
-                                        style: theme.textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      if (relationship != null) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          relationship,
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                Text(
+                                  name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isSelected
-                                        ? colorScheme.primary
-                                        : Colors.transparent,
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? colorScheme.primary
-                                          : colorScheme.outline,
-                                      width: 2,
+                                if (relationship != null && relationship.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    relationship,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
-                                  child: isSelected
-                                      ? Icon(
-                                          Icons.check,
-                                          size: 16,
-                                          color: colorScheme.onPrimary,
-                                        )
-                                      : null,
-                                ),
+                                ],
                               ],
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                ],
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Option 2: Sampul's Professional Executor
-        InkWell(
-          onTap: () {
-            setState(() {
-              _executorType = 'sampul_professional';
-              _selectedExecutorIds.clear(); // Clear family member selections
-            });
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isSampulProfessional
-                  ? colorScheme.primaryContainer.withOpacity(0.3)
-                  : colorScheme.surface,
-              border: Border.all(
-                color: isSampulProfessional
-                    ? colorScheme.primary
-                    : colorScheme.outline.withOpacity(0.2),
-                width: isSampulProfessional ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSampulProfessional
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isSampulProfessional
-                              ? colorScheme.primary
-                              : colorScheme.outline,
-                          width: 2,
-                        ),
+                          Icon(
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                          ),
+                        ],
                       ),
-                      child: isSampulProfessional
-                          ? Icon(
-                              Icons.check,
-                              size: 16,
-                              color: colorScheme.onPrimary,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.sampulsProfessionalExecutor,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isSampulProfessional
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onSurface,
+                      if (isSelected) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colorScheme.outline.withOpacity(0.12),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 18,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.executorSelectionDisclaimer,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Pros
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProConItem(Icons.check_circle_outline, l10n.expertManagement, Colors.green),
-                    const SizedBox(height: 8),
-                    _buildProConItem(Icons.check_circle_outline, l10n.neutralParty, Colors.green),
-                    const SizedBox(height: 8),
-                    _buildProConItem(Icons.info_outline, l10n.estFeeR4320yr, Colors.blue),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        // Good to Know info box
-        if (_showExecutorGoodToKnow)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.outline.withOpacity(0.2),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  color: Colors.orange.shade700,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10n.executorGoodToKnow,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () {
-                    setState(() {
-                      _showExecutorGoodToKnow = false;
-                    });
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildProConItem(IconData icon, String text, Color color) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
+              ),
+            );
+          }).toList(),
       ],
     );
   }
@@ -1130,11 +987,6 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
                               'when_conditions': l10n.whenConditions,
                             }[paymentFrequency] ?? paymentFrequency,
                           ),
-                      ] else if (releaseCondition == 'as_needed') ...[
-                        _buildReviewRow(
-                          l10n.paymentType,
-                          l10n.asNeededTrusteeDecides,
-                        ),
                       ] else if (releaseCondition == 'lump_sum') ...[
                         _buildReviewRow(
                           l10n.paymentType,
@@ -1149,60 +1001,34 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
           }).toList(),
         
         // Executor Selection Section
-        if (_executorType != null)
+        if (_selectedExecutorIds.isNotEmpty)
           CardDecorationHelper.styledCard(
             context: context,
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.person_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.executorSelection,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.person_outline, color: const Color.fromRGBO(83, 61, 233, 1)),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.executorSelection,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  _buildReviewRow(
-                    l10n.executorType,
-                    _executorType == 'someone_i_know'
-                        ? l10n.someoneIKnow
-                        : _executorType == 'sampul_professional'
-                            ? l10n.sampulsProfessionalExecutor
-                            : null,
-                  ),
-                  if (_executorType == 'someone_i_know' && _selectedExecutorIds.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    _buildReviewRow(
-                      l10n.selectedExecutors,
-                      l10n.familyMembersSelected(_selectedExecutorIds.length),
                     ),
-                    const SizedBox(height: 8),
-                    ..._selectedExecutorIds.map((id) {
-                      final member = _familyMembers.firstWhere(
-                        (m) => (m['id'] as num?)?.toInt() == id,
-                        orElse: () => <String, dynamic>{},
-                      );
-                      final name = member['name'] as String? ?? 'Unknown';
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 140, top: 4),
-                        child: Text(
-                          '• $name',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      );
-                    }).toList(),
                   ],
-                ],
-              ),
+                ),
+                const Divider(height: 24),
+                _buildReviewRow(
+                  l10n.coSampul,
+                  _getSelectedExecutorName(),
+                ),
+              ],
             ),
+          ),
         
-        if (_executorType != null)
+        if (_selectedExecutorIds.isNotEmpty)
           const SizedBox(height: 16),
         
         // Financial Information Section
@@ -1607,68 +1433,118 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final createdTrust = await TrustService.instance.createTrust(
-        Trust(
-          // Personal info from profile
-          name: _userProfile!.nricName ?? _userProfile!.username,
-          nricNumber: _userProfile!.nricNo,
-          dateOfBirth: _userProfile!.dob,
-          gender: _userProfile!.gender,
-          residentStatus: null, // Not in profile yet
-          nationality: _userProfile!.country,
-          phoneNo: _userProfile!.phoneNo,
-          email: _userProfile!.email,
-          addressLine1: _userProfile!.address1,
-          addressLine2: _userProfile!.address2,
-          city: _userProfile!.city,
-          postcode: _userProfile!.postcode,
-          state: _userProfile!.state,
-          country: _userProfile!.country,
-          // Financial info from form
-          estimatedNetWorth: _selectedEstimatedNetWorth,
-          sourceOfFund: _selectedSourceOfFund,
-          purposeOfTransaction: _purposeOfTransactionCtrl.text.trim().isEmpty ? null : _purposeOfTransactionCtrl.text.trim(),
-          // Business info from form
-          employerName: _employerNameCtrl.text.trim().isEmpty ? null : _employerNameCtrl.text.trim(),
-          businessNature: _businessNatureCtrl.text.trim().isEmpty ? null : _businessNatureCtrl.text.trim(),
-          businessAddressLine1: _businessAddress1Ctrl.text.trim().isEmpty ? null : _businessAddress1Ctrl.text.trim(),
-          businessAddressLine2: _businessAddress2Ctrl.text.trim().isEmpty ? null : _businessAddress2Ctrl.text.trim(),
-          businessCity: _businessCityCtrl.text.trim().isEmpty ? null : _businessCityCtrl.text.trim(),
-          businessPostcode: _businessPostcodeCtrl.text.trim().isEmpty ? null : _businessPostcodeCtrl.text.trim(),
-          businessState: _businessStateCtrl.text.trim().isEmpty ? null : _businessStateCtrl.text.trim(),
-          businessCountry: _selectedBusinessCountry,
-          // Fund support categories
-          fundSupportCategories: _selectedFundSupports.isNotEmpty ? _selectedFundSupports.toList() : null,
-          // Fund support configurations (per-category)
-          fundSupportConfigs: _fundSupportConfigs.isNotEmpty ? _fundSupportConfigs : null,
-          // Executor selection
-          executorType: _executorType,
-          executorIds: _executorType == 'someone_i_know' && _selectedExecutorIds.isNotEmpty
-              ? _selectedExecutorIds.toList()
-              : null,
-        ),
-        beneficiaries: _beneficiaries.isNotEmpty ? _beneficiaries : null,
-        charities: () {
-          // Get charities from charitable fund support config
-          final charitableConfig = _fundSupportConfigs['charitable'];
-          final charitiesData = charitableConfig?['charities'] as List?;
-          if (charitiesData == null || charitiesData.isEmpty) return null;
-          return charitiesData.map((c) => TrustCharity.fromJson(c as Map<String, dynamic>)).toList();
-        }(),
+      final payload = Trust(
+        // Personal info from profile (authoritative)
+        name: _userProfile!.nricName ?? _userProfile!.username,
+        nricNumber: _userProfile!.nricNo,
+        dateOfBirth: _userProfile!.dob,
+        gender: _userProfile!.gender,
+        residentStatus: null, // Not in profile yet
+        nationality: _userProfile!.country,
+        phoneNo: _userProfile!.phoneNo,
+        email: _userProfile!.email,
+        addressLine1: _userProfile!.address1,
+        addressLine2: _userProfile!.address2,
+        city: _userProfile!.city,
+        postcode: _userProfile!.postcode,
+        state: _userProfile!.state,
+        country: _userProfile!.country,
+        // Financial info from form
+        estimatedNetWorth: _selectedEstimatedNetWorth,
+        sourceOfFund: _selectedSourceOfFund,
+        purposeOfTransaction: _purposeOfTransactionCtrl.text.trim().isEmpty
+            ? null
+            : _purposeOfTransactionCtrl.text.trim(),
+        // Business info from form
+        employerName: _employerNameCtrl.text.trim().isEmpty
+            ? null
+            : _employerNameCtrl.text.trim(),
+        businessNature: _businessNatureCtrl.text.trim().isEmpty
+            ? null
+            : _businessNatureCtrl.text.trim(),
+        businessAddressLine1: _businessAddress1Ctrl.text.trim().isEmpty
+            ? null
+            : _businessAddress1Ctrl.text.trim(),
+        businessAddressLine2: _businessAddress2Ctrl.text.trim().isEmpty
+            ? null
+            : _businessAddress2Ctrl.text.trim(),
+        businessCity: _businessCityCtrl.text.trim().isEmpty
+            ? null
+            : _businessCityCtrl.text.trim(),
+        businessPostcode: _businessPostcodeCtrl.text.trim().isEmpty
+            ? null
+            : _businessPostcodeCtrl.text.trim(),
+        businessState: _businessStateCtrl.text.trim().isEmpty
+            ? null
+            : _businessStateCtrl.text.trim(),
+        businessCountry: _selectedBusinessCountry,
+        // Fund support categories
+        fundSupportCategories:
+            _selectedFundSupports.isNotEmpty ? _selectedFundSupports.toList() : null,
+        // Fund support configurations (per-category)
+        fundSupportConfigs: _fundSupportConfigs.isNotEmpty ? _fundSupportConfigs : null,
+        // Executor selection
+        executorType: _selectedExecutorIds.isNotEmpty ? 'someone_i_know' : null,
+        executorIds:
+            _selectedExecutorIds.isNotEmpty ? _selectedExecutorIds.toList() : null,
       );
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.trustFundCreatedSuccessfully), backgroundColor: Colors.green),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      // Return the created trust so callers can navigate to its detail page.
-      Navigator.of(context).pop(createdTrust);
+
+      if (_isEditMode) {
+        final id = widget.initial!.id!;
+        final Map<String, dynamic> update = payload.toJson()
+          ..remove('id')
+          ..remove('trust_code');
+        await TrustService.instance.updateTrust(id, update);
+        await TrustService.instance.updateExecutors(
+          trustId: id,
+          executorType: payload.executorType,
+          executorIds: payload.executorIds,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.trustFundUpdatedSuccessfully),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        Navigator.of(context).pop(true);
+      } else {
+        final createdTrust = await TrustService.instance.createTrust(
+          payload,
+          beneficiaries: _beneficiaries.isNotEmpty ? _beneficiaries : null,
+          charities: () {
+            // Get charities from charitable fund support config
+            final charitableConfig = _fundSupportConfigs['charitable'];
+            final charitiesData = charitableConfig?['charities'] as List?;
+            if (charitiesData == null || charitiesData.isEmpty) return null;
+            return charitiesData
+                .map((c) => TrustCharity.fromJson(c as Map<String, dynamic>))
+                .toList();
+          }(),
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.trustFundCreatedSuccessfully),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        // Return the created trust so callers can navigate to its detail page.
+        Navigator.of(context).pop(createdTrust);
+      }
     } catch (e) {
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.failedToCreateTrustFund(e.toString())), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            _isEditMode
+                ? l10n.failedToUpdateTrustFund(e.toString())
+                : l10n.failedToCreateTrustFund(e.toString()),
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -1680,14 +1556,14 @@ class _TrustCreateScreenState extends State<TrustCreateScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (_isLoadingProfile) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.createTrustFund)),
+        appBar: AppBar(title: Text(_isEditMode ? l10n.editTrustFund : l10n.createTrustFund)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.createTrustFund),
+        title: Text(_isEditMode ? l10n.editTrustFund : l10n.createTrustFund),
         actions: <Widget>[
           IconButton(
             tooltip: l10n.aboutTrustFund,

@@ -39,9 +39,9 @@ class HibahPaymentService {
       return 250000;
     }
     if (assetCount <= 10) {
-      return 850000;
+      return 250000;
     }
-    return 850000 + ((assetCount - 10) * 50000);
+    return 250000 + ((assetCount - 10) * 50000);
   }
 
   String getRegistrationFeeDescription(int assetCount) {
@@ -51,7 +51,7 @@ class HibahPaymentService {
     if (assetCount <= 10) {
       return 'Up to 10 assets';
     }
-    return '$assetCount assets (RM 8,500 + RM 500 x ${assetCount - 10})';
+    return '$assetCount assets (RM 2,500 + RM 500 x ${assetCount - 10})';
   }
 
   int calculateAmendmentFeeInCents(int amendmentCount) {

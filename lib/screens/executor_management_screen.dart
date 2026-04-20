@@ -204,7 +204,7 @@ class _ExecutorList extends StatelessWidget {
         final Executor e = executors[index];
         return ListTile(
           onTap: () => onTap(e),
-          title: Text((e.executorCode ?? '').isNotEmpty ? e.executorCode! : (e.name ?? 'Pusaka')),
+          title: Text((e.executorCode ?? '').isNotEmpty ? e.executorCode! : (e.name ?? 'Executor')),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[

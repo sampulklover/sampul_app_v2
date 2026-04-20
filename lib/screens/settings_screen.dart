@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/locale_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_profile.dart';
 import 'login_screen.dart';
 import '../services/supabase_service.dart';
-import '../services/verification_service.dart';
 import '../services/account_service.dart';
-import '../config/didit_config.dart';
 import 'edit_profile_screen.dart';
 import 'referral_dashboard_screen.dart';
 import 'user_coupons_screen.dart';
@@ -37,14 +34,11 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
+class _SettingsScreenState extends State<SettingsScreen> {
   static final Uri _policyUri = Uri.parse('https://sampul.co/policy');
 
   UserProfile? _userProfile;
   bool _isLoadingProfile = true;
-  bool _isVerified = false;
-  String? _verificationStatus;
-  bool _isLoadingVerification = true;
   bool _isAdmin = false;
   bool _canManageAppContent = false;
   bool _isLoadingStaff = true;
@@ -52,9 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
-    _loadVerificationStatus();
     _loadStaffAccess();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AnalyticsService.logScreen(AnalyticsScreens.mainSettings);
@@ -82,21 +74,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     }
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Refresh verification status when app comes back to foreground
-    // This handles the case when user returns from Didit verification
-    if (state == AppLifecycleState.resumed) {
-      _loadVerificationStatus();
-    }
-  }
-
   Future<void> _loadUserProfile() async {
     try {
       final profile = await AuthController.instance.getUserProfile();
@@ -110,26 +87,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       if (mounted) {
         setState(() {
           _isLoadingProfile = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _loadVerificationStatus() async {
-    try {
-      final isVerified = await VerificationService.instance.isUserVerified();
-      final status = await VerificationService.instance.getUserVerificationStatus();
-      if (mounted) {
-        setState(() {
-          _isVerified = isVerified;
-          _verificationStatus = status;
-          _isLoadingVerification = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingVerification = false;
         });
       }
     }
@@ -993,10 +950,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await Future.wait([
-            _loadUserProfile(),
-            _loadVerificationStatus(),
-          ]);
+          await _loadUserProfile();
         },
         child: ListView(
         padding: const EdgeInsets.all(16),
@@ -1066,45 +1020,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
                     },
                     child: Text(l10n.edit),
                   ),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(
-                    _isVerified ? Icons.verified_user : Icons.verified_user_outlined,
-                    color: _isVerified 
-                        ? Theme.of(context).colorScheme.primary 
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  title: Text(l10n.identityVerification),
-                  subtitle: Text(
-                    _isLoadingVerification
-                        ? l10n.checkingStatus
-                        : _isVerified
-                            ? l10n.yourIdentityIsVerified
-                            : _verificationStatus == 'pending'
-                                ? l10n.verificationInProgress
-                                : _verificationStatus == 'declined'
-                                    ? l10n.verificationWasDeclined
-                                    : _verificationStatus == 'rejected'
-                                        ? l10n.verificationWasRejected
-                                        : l10n.verifyYourIdentity,
-                  ),
-                  trailing: _isLoadingVerification
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : _isVerified
-                          ? _buildVerificationBadge()
-                          : _buildVerificationBadge() ?? Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                  onTap: _isVerified 
-                      ? null 
-                      : _handleVerification,
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -1338,269 +1253,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
     );
   }
 
-  Widget? _buildVerificationBadge() {
-    if (_isLoadingVerification) {
-      return null;
-    }
-
-    final theme = Theme.of(context);
-    
-    // Show badge based on kyc_status from accounts table
-    if (_isVerified) {
-      // approved or accepted
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_circle,
-              size: 16,
-              color: theme.colorScheme.onPrimaryContainer,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              AppLocalizations.of(context)!.verified,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (_verificationStatus == 'pending') {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.pending,
-              size: 16,
-              color: theme.colorScheme.onSecondaryContainer,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              AppLocalizations.of(context)!.pending,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSecondaryContainer,
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (_verificationStatus == 'declined' || _verificationStatus == 'rejected') {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.cancel,
-              size: 16,
-              color: theme.colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              _verificationStatus == 'declined' ? AppLocalizations.of(context)!.declined : AppLocalizations.of(context)!.rejected,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onErrorContainer,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return null;
-  }
-
-  Future<void> _handleVerification() async {
-    print('🔵 [VERIFICATION] Button clicked - Showing info modal');
-    
-    // Check configuration first
-    if (!DiditConfig.isConfigured) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.diditNotConfigured),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Show informational modal first
-    final shouldProceed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _VerificationInfoModal(
-        onStart: () => Navigator.of(context).pop(true),
-        onCancel: () => Navigator.of(context).pop(false),
-      ),
-    );
-
-    if (shouldProceed != true) {
-      print('🔵 [VERIFICATION] User cancelled');
-      return;
-    }
-
-    // User clicked "Start Verification", proceed with API call
-    await AnalyticsService.capture(
-      'verification started',
-      properties: const <String, Object>{
-        'provider': 'didit',
-      },
-    );
-    await _startVerificationProcess();
-  }
-
-  Future<void> _startVerificationProcess() async {
-    final theme = Theme.of(context);
-    
-    print('🔵 [VERIFICATION] Starting verification process...');
-    
-    // Check configuration
-    final configStatus = VerificationService.instance.getConfigurationStatus();
-    print('🔵 [VERIFICATION] Configuration status: $configStatus');
-    
-    // Show loading dialog
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: CardDecorationHelper.styledCard(
-          context: context,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context)!.creatingVerificationSession,
-                style: TextStyle(color: theme.colorScheme.onSurface),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    try {
-      print('🔵 [VERIFICATION] Getting user profile data...');
-      // Get user profile data to pre-fill
-      final profile = _userProfile;
-      
-      Map<String, dynamic>? userData;
-      if (profile != null) {
-        userData = {
-          'email': profile.email,
-          if (profile.nricName != null) 'name': profile.nricName,
-          if (profile.phoneNo != null) 'phone': profile.phoneNo,
-        };
-        print('🔵 [VERIFICATION] User data prepared: $userData');
-      } else {
-        print('🔵 [VERIFICATION] No user profile available');
-      }
-
-      print('🔵 [VERIFICATION] Calling createVerificationSession...');
-      // Create verification session
-      final result = await VerificationService.instance.createVerificationSession(
-        userData: userData,
-      );
-
-      print('🔵 [VERIFICATION] Session created successfully!');
-      print('🔵 [VERIFICATION] Result: $result');
-      
-      final String verificationUrl = result['url'] as String;
-      print('🔵 [VERIFICATION] Verification URL: $verificationUrl');
-
-      if (!mounted) {
-        print('🔵 [VERIFICATION] Widget not mounted, returning');
-        return;
-      }
-      
-      print('🔵 [VERIFICATION] Closing loading dialog');
-      Navigator.of(context).pop(); // Close loading dialog
-
-      print('🔵 [VERIFICATION] Opening verification URL');
-      // Open verification URL directly
-      final uri = Uri.parse(verificationUrl);
-      if (await canLaunchUrl(uri)) {
-        await AnalyticsService.capture(
-          'verification link opened',
-          properties: const <String, Object>{
-            'provider': 'didit',
-          },
-        );
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        // Refresh verification status when user returns from Didit
-        // This will be handled by didChangeAppLifecycleState
-      } else {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.couldNotOpenVerificationLink),
-            ),
-          );
-        }
-      }
-    } catch (e, stackTrace) {
-      await AnalyticsService.capture(
-        'verification failed',
-        properties: const <String, Object>{
-          'provider': 'didit',
-        },
-      );
-      print('🔴 [VERIFICATION] ERROR occurred!');
-      print('🔴 [VERIFICATION] Error: $e');
-      print('🔴 [VERIFICATION] Stack trace: $stackTrace');
-      
-      if (!mounted) {
-        print('🔴 [VERIFICATION] Widget not mounted, cannot show error');
-        return;
-      }
-      
-      print('🔴 [VERIFICATION] Closing loading dialog');
-      Navigator.of(context).pop(); // Close loading dialog
-      
-      print('🔴 [VERIFICATION] Showing error message to user');
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.failedToStartVerification(e.toString().replaceFirst('Exception: ', ''))),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    }
-  }
-
   Widget _buildSectionHeader(String title) {
     final theme = Theme.of(context);
     return Padding(
@@ -1782,258 +1434,6 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       }
       setState(() {}); // Refresh the UI to show updated language
     }
-  }
-}
-
-/// Verification Info Modal
-/// Shows information about identity verification before starting the process
-class _VerificationInfoModal extends StatelessWidget {
-  final VoidCallback onStart;
-  final VoidCallback onCancel;
-
-  const _VerificationInfoModal({
-    required this.onStart,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mediaQuery = MediaQuery.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: mediaQuery.size.height * 0.85,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Icon
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.verified_user,
-                        size: 64,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Main text
-                    Text(
-                      l10n.identityVerificationRequired,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        height: 1.5,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Key points
-                    _buildRequirementItem(
-                      context,
-                      theme,
-                      Icons.gavel,
-                      l10n.legalValidity,
-                      l10n.establishesLegalValidity,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRequirementItem(
-                      context,
-                      theme,
-                      Icons.handshake,
-                      l10n.buildsTrust,
-                      l10n.providesAssurance,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRequirementItem(
-                      context,
-                      theme,
-                      Icons.verified,
-                      l10n.regulatoryCompliance,
-                      l10n.ensuresCompliance,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRequirementItem(
-                      context,
-                      theme,
-                      Icons.shield,
-                      l10n.fraudProtection,
-                      l10n.protectsAgainstFraud,
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Privacy note
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.lock_outline,
-                          size: 16,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          l10n.yourInformationIsEncrypted,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            // Buttons
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: onCancel,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(l10n.cancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton(
-                        onPressed: onStart,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          l10n.startVerification,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRequirementItem(
-    BuildContext context,
-    ThemeData theme,
-    IconData icon,
-    String title,
-    String description,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: theme.colorScheme.onSecondaryContainer,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                description,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }
 

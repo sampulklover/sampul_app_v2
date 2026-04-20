@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/trust.dart';
 import '../config/trust_constants.dart';
 import '../services/trust_payment_service.dart';
@@ -25,6 +24,7 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
   final _amountController = TextEditingController();
   bool _isLoading = false;
   bool _showFeeInfo = false;
+  bool _showAllPaymentSteps = false;
 
   @override
   void dispose() {
@@ -49,6 +49,276 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
     return (amount * 100).round();
   }
 
+  List<int> _buildPlanStepsToClearRemaining(int stepAmountInCents) {
+    final int remainingTarget = widget.trust.remainingInCents;
+    if (stepAmountInCents <= 0 || remainingTarget <= 0) {
+      return <int>[];
+    }
+
+    final int normalizedStepAmount =
+        stepAmountInCents > TrustConstants.maxTransactionAmount
+            ? TrustConstants.maxTransactionAmount
+            : stepAmountInCents;
+
+    final List<int> steps = <int>[];
+    int remaining = remainingTarget;
+    while (remaining > 0) {
+      final int nextStep = remaining > normalizedStepAmount
+          ? normalizedStepAmount
+          : remaining;
+      steps.add(nextStep);
+      remaining -= nextStep;
+    }
+    return steps;
+  }
+
+  List<int> _buildMaxCapStepsForRemaining() {
+    final int remainingTarget = widget.trust.remainingInCents;
+    if (remainingTarget <= 0) {
+      return <int>[];
+    }
+    final List<int> steps = <int>[];
+    int remaining = remainingTarget;
+    while (remaining > 0) {
+      final int nextStep = remaining > TrustConstants.maxTransactionAmount
+          ? TrustConstants.maxTransactionAmount
+          : remaining;
+      steps.add(nextStep);
+      remaining -= nextStep;
+    }
+    return steps;
+  }
+
+  Widget _buildPaymentStepsCard({
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+  }) {
+    final int totalPaid = widget.trust.totalPaidInCents;
+    final int remaining = widget.trust.remainingInCents;
+    final int required = widget.trust.requiredFundingInCents;
+
+    final List<int> historySteps = <int>[];
+    int paidLeft = totalPaid;
+    while (paidLeft > 0) {
+      final int doneStep = paidLeft > TrustConstants.maxTransactionAmount
+          ? TrustConstants.maxTransactionAmount
+          : paidLeft;
+      historySteps.add(doneStep);
+      paidLeft -= doneStep;
+    }
+
+    final List<int> remainingSteps = _buildMaxCapStepsForRemaining();
+    const int previewStepCount = 3;
+    final int doneVisibleCount = _showAllPaymentSteps
+        ? historySteps.length
+        : (historySteps.length > previewStepCount ? previewStepCount : historySteps.length);
+    final int nextVisibleCount = _showAllPaymentSteps
+        ? remainingSteps.length
+        : (remainingSteps.length > previewStepCount ? previewStepCount : remainingSteps.length);
+    final List<int> doneVisible = historySteps.take(doneVisibleCount).toList();
+    final List<int> nextVisible = remainingSteps.take(nextVisibleCount).toList();
+    final int hiddenDoneCount = historySteps.length - doneVisibleCount;
+    final int hiddenNextCount = remainingSteps.length - nextVisibleCount;
+    final bool canExpand = historySteps.length > previewStepCount ||
+        remainingSteps.length > previewStepCount;
+    int runningRemaining = required;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your Payment Steps',
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Paid: ${_formatCurrencyWithCommas(totalPaid)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Remaining: ${_formatCurrencyWithCommas(remaining)}',
+                  textAlign: TextAlign.right,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (historySteps.isEmpty && remainingSteps.isEmpty)
+            Text(
+              'No payment steps yet.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ...List<Widget>.generate(doneVisible.length, (index) {
+            final int amount = doneVisible[index];
+            runningRemaining = (runningRemaining - amount).clamp(0, required);
+            return _buildTimelineRow(
+              theme: theme,
+              colorScheme: colorScheme,
+              indexLabel: '${index + 1}',
+              amountLabel: _formatCurrencyWithCommas(amount),
+              statusLabel: 'done',
+              state: _TimelineState.done,
+            );
+          }),
+          ...List<Widget>.generate(nextVisible.length, (index) {
+            final int amount = nextVisible[index];
+            runningRemaining = (runningRemaining - amount).clamp(0, required);
+            final bool isCurrent = index == 0;
+            final bool isFinal = runningRemaining == 0;
+            return _buildTimelineRow(
+              theme: theme,
+              colorScheme: colorScheme,
+              indexLabel: '${doneVisible.length + index + 1}',
+              amountLabel: _formatCurrencyWithCommas(amount),
+              statusLabel: isCurrent
+                  ? "you're here"
+                  : (isFinal ? 'final step' : 'next step'),
+              state: isCurrent ? _TimelineState.current : _TimelineState.upcoming,
+            );
+          }),
+          if ((hiddenDoneCount > 0 || hiddenNextCount > 0) && !_showAllPaymentSteps)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 2),
+              child: Text(
+                '+${hiddenDoneCount + hiddenNextCount} more steps',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (canExpand) ...[
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _showAllPaymentSteps = !_showAllPaymentSteps;
+                });
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _showAllPaymentSteps ? Icons.expand_less : Icons.expand_more,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _showAllPaymentSteps ? 'Show less' : 'Show all steps',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineRow({
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+    required String indexLabel,
+    required String amountLabel,
+    required String statusLabel,
+    required _TimelineState state,
+  }) {
+    final Color dotColor;
+    final Color amountColor;
+    switch (state) {
+      case _TimelineState.done:
+        dotColor = Colors.teal;
+        amountColor = Colors.teal;
+        break;
+      case _TimelineState.current:
+        dotColor = colorScheme.primary;
+        amountColor = colorScheme.onSurface;
+        break;
+      case _TimelineState.upcoming:
+        dotColor = colorScheme.outline.withOpacity(0.45);
+        amountColor = colorScheme.onSurfaceVariant;
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: dotColor,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: state == _TimelineState.done
+                ? Icon(Icons.check, size: 12, color: colorScheme.onPrimary)
+                : Text(
+                    indexLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: state == _TimelineState.current
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$amountLabel - $statusLabel',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: amountColor,
+                    fontWeight: state == _TimelineState.current
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handlePayment() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -65,15 +335,17 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
       return;
     }
 
-    if (amountInCents > TrustConstants.maxTransactionAmount) {
+    final paymentSteps = _buildPlanStepsToClearRemaining(amountInCents);
+    if (paymentSteps.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Maximum transaction amount is ${_formatCurrencyWithCommas(TrustConstants.maxTransactionAmount)}'),
-          backgroundColor: Colors.red,
+        const SnackBar(
+          content: Text('No remaining balance to fund'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
     }
+    final amountForThisPayment = paymentSteps.first;
 
     setState(() => _isLoading = true);
 
@@ -84,11 +356,19 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
           if (widget.trust.id != null) 'trust_id': widget.trust.id!,
           if (widget.trust.trustCode != null && widget.trust.trustCode!.isNotEmpty)
             'trust_code': widget.trust.trustCode!,
-          'amount_cents': amountInCents,
+          'amount_cents': amountForThisPayment,
+          'requested_total_amount_cents': amountInCents,
+          'payment_steps_count': paymentSteps.length,
         },
       );
       print('🟢 [TRUST PAYMENT] Starting payment flow...');
-      print('🟢 [TRUST PAYMENT] Amount: ${_formatCurrencyWithCommas(amountInCents)}');
+      print(
+        '🟢 [TRUST PAYMENT] Amount (current step): ${_formatCurrencyWithCommas(amountForThisPayment)}',
+      );
+      print(
+        '🟢 [TRUST PAYMENT] Requested total: ${_formatCurrencyWithCommas(amountInCents)}',
+      );
+      print('🟢 [TRUST PAYMENT] Total steps: ${paymentSteps.length}');
       print('🟢 [TRUST PAYMENT] Trust ID: ${widget.trust.id}');
       print('🟢 [TRUST PAYMENT] Trust Code: ${widget.trust.trustCode}');
 
@@ -103,7 +383,7 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
       final paymentResponse = await TrustPaymentService.instance.createPayment(
         trustId: widget.trust.id!,
         trustCode: widget.trust.trustCode ?? '',
-        amount: amountInCents,
+        amount: amountForThisPayment,
         clientId: clientId,
       );
       print('🟢 [TRUST PAYMENT] Payment response: ${paymentResponse.id}');
@@ -122,9 +402,23 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
           'trust funding checkout opened',
           properties: <String, Object>{
             if (widget.trust.id != null) 'trust_id': widget.trust.id!,
-            'amount_cents': amountInCents,
+            'amount_cents': amountForThisPayment,
+            'requested_total_amount_cents': amountInCents,
+            'payment_steps_count': paymentSteps.length,
           },
         );
+        if (paymentSteps.length > 1 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'At this payment amount, you will need ${paymentSteps.length} steps '
+                'to clear the remaining balance. '
+                'This checkout is step 1 (${_formatCurrencyWithCommas(amountForThisPayment)}).',
+              ),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
         await launchUrl(uri, mode: LaunchMode.externalApplication);
         print('🟢 [TRUST PAYMENT] Checkout URL opened successfully');
         if (mounted) {
@@ -163,9 +457,6 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final totalPaid = widget.trust.totalPaidInCents;
-    final remaining = widget.trust.remainingInCents;
-    final progress = widget.trust.progressPercentage;
 
     return Container(
       decoration: BoxDecoration(
@@ -182,9 +473,10 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
           top: 24,
           bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -215,92 +507,7 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Progress section
-              Card(
-                color: colorScheme.surfaceContainerHighest,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Trust Progress',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            '${progress.toStringAsFixed(1)}%',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      LinearProgressIndicator(
-                        value: progress / 100,
-                        backgroundColor: colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-                        minHeight: 8,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Paid',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              Text(
-                                _formatCurrencyWithCommas(totalPaid),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                'Remaining',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              Text(
-                                _formatCurrencyWithCommas(remaining),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: remaining > 0 ? Colors.orange : Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Minimum required: ${_formatCurrencyWithCommas(TrustConstants.minTrustAmount)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildPaymentStepsCard(theme: theme, colorScheme: colorScheme),
               const SizedBox(height: 24),
               // Amount input
               Text(
@@ -312,6 +519,9 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _amountController,
+                onChanged: (_) => setState(() {
+                  _showAllPaymentSteps = false;
+                }),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
@@ -332,7 +542,7 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
                     return 'Amount must be greater than 0';
                   }
                   if (amountInCents > TrustConstants.maxTransactionAmount) {
-                    return 'Maximum transaction amount is ${_formatCurrencyWithCommas(TrustConstants.maxTransactionAmount)}';
+                    return 'Maximum per payment is ${_formatCurrencyWithCommas(TrustConstants.maxTransactionAmount)}';
                   }
                   return null;
                 },
@@ -431,9 +641,9 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
                           context: context,
                           theme: theme,
                           colorScheme: colorScheme,
-                          label: AppLocalizations.of(context)!.pusaka,
+                          label: 'Execution (Post-Demised)',
                           amount: 'RM 25',
-                          frequency: 'Per post-demise instruction',
+                          frequency: 'Per instruction/transaction',
                         ),
                       ],
                     ),
@@ -484,6 +694,7 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
                 ],
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -540,3 +751,5 @@ class _TrustPaymentFormModalState extends State<TrustPaymentFormModal> {
     );
   }
 }
+
+enum _TimelineState { done, current, upcoming }

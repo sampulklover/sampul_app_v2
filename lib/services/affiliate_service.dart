@@ -117,11 +117,6 @@ class AffiliateService {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final alreadyClaimed = prefs.getString(_claimedKeyForUser(user.id));
-    if (alreadyClaimed != null && normalizeReferralCode(alreadyClaimed) == code) {
-      return true;
-    }
-
     try {
       // Uses Supabase Edge Function `claim-referral`.
       final resp = await SupabaseService.instance.client.functions.invoke(
@@ -139,6 +134,9 @@ class AffiliateService {
         }
       }
 
+      // Keep the claimed marker for this account/code pair.
+      // We still call the backend even when the marker exists to self-heal
+      // older rows where referral was recorded but coupons were not inserted.
       await prefs.setString(_claimedKeyForUser(user.id), code);
       await prefs.remove(_pendingReferralCodeKey);
       return true;

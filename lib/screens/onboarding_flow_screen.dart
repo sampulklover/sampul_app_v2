@@ -584,8 +584,10 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         );
         break;
       case OnboardingStepType.hibah:
-        await Navigator.of(context).push<void>(
-          MaterialPageRoute<void>(builder: (_) => const HibahInfoScreen()),
+        result = await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (_) => const HibahInfoScreen(autoStartPaymentAfterSubmit: true),
+          ),
         );
         break;
       case OnboardingStepType.execution:

@@ -14,6 +14,9 @@ CREATE TABLE public.accounts (
   kyc_status text,
   chip_customer_id text UNIQUE,
   onesignal_player_id text,
+  wasiat_subscription_period_start timestamp with time zone,
+  wasiat_subscription_period_end timestamp with time zone,
+  chip_trust_customer_id text,
   CONSTRAINT accounts_pkey PRIMARY KEY (id),
   CONSTRAINT public_accounts_ref_product_key_fkey FOREIGN KEY (ref_product_key) REFERENCES public.products(ref_key),
   CONSTRAINT public_accounts_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
@@ -98,6 +101,61 @@ CREATE TABLE public.ai_chat_settings (
   CONSTRAINT ai_chat_settings_pkey PRIMARY KEY (id),
   CONSTRAINT ai_chat_settings_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
   CONSTRAINT ai_chat_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ai_kb_chunks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  entry_id uuid NOT NULL,
+  chunk_index integer NOT NULL DEFAULT 0,
+  content text NOT NULL,
+  token_estimate integer,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  embedding USER-DEFINED,
+  CONSTRAINT ai_kb_chunks_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_kb_chunks_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.ai_kb_entries(id)
+);
+CREATE TABLE public.ai_kb_entries (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  source_id uuid NOT NULL,
+  category text,
+  product text,
+  language text,
+  question text,
+  answer text NOT NULL,
+  tags ARRAY NOT NULL DEFAULT '{}'::text[],
+  is_active boolean NOT NULL DEFAULT true,
+  priority integer NOT NULL DEFAULT 0,
+  canonical_key text,
+  raw_content text,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  created_by uuid,
+  updated_by uuid,
+  search_text text,
+  search_tsv tsvector DEFAULT to_tsvector('english'::regconfig, COALESCE(search_text, ''::text)),
+  CONSTRAINT ai_kb_entries_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_kb_entries_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.ai_kb_sources(id),
+  CONSTRAINT ai_kb_entries_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
+  CONSTRAINT ai_kb_entries_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.ai_kb_sources (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  source_type text NOT NULL DEFAULT 'file'::text,
+  source_uri text,
+  product text,
+  language text,
+  version text,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  created_by uuid,
+  updated_by uuid,
+  CONSTRAINT ai_kb_sources_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_kb_sources_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id),
+  CONSTRAINT ai_kb_sources_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
 CREATE TABLE public.beloved (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -502,10 +560,12 @@ CREATE TABLE public.hibah_payments (
   coupon_code character varying,
   discount_amount numeric DEFAULT 0,
   original_amount numeric,
+  user_coupon_id uuid,
   CONSTRAINT hibah_payments_pkey PRIMARY KEY (id),
   CONSTRAINT hibah_payments_hibah_id_fkey FOREIGN KEY (hibah_id) REFERENCES public.hibah(id),
   CONSTRAINT hibah_payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-  CONSTRAINT hibah_payments_coupon_id_fkey FOREIGN KEY (coupon_id) REFERENCES public.hibah_coupons(id)
+  CONSTRAINT hibah_payments_coupon_id_fkey FOREIGN KEY (coupon_id) REFERENCES public.hibah_coupons(id),
+  CONSTRAINT hibah_payments_user_coupon_id_fkey FOREIGN KEY (user_coupon_id) REFERENCES public.user_coupons(id)
 );
 CREATE TABLE public.inform_death (
   uuid uuid NOT NULL,
@@ -808,6 +868,23 @@ CREATE TABLE public.trust_payments (
   CONSTRAINT trust_payments_trust_id_fkey FOREIGN KEY (trust_id) REFERENCES public.trust(id),
   CONSTRAINT trust_payments_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
 );
+CREATE TABLE public.user_coupons (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  applies_to text NOT NULL CHECK (applies_to = ANY (ARRAY['hibah'::text, 'wasiat'::text])),
+  discount_percent integer NOT NULL DEFAULT 5 CHECK (discount_percent > 0 AND discount_percent <= 100),
+  status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'used'::text, 'expired'::text])),
+  source text NOT NULL,
+  expires_at timestamp with time zone NOT NULL,
+  used_at timestamp with time zone,
+  used_payment_kind text CHECK (used_payment_kind IS NULL OR (used_payment_kind = ANY (ARRAY['hibah'::text, 'wasiat'::text]))),
+  used_payment_id uuid,
+  referral_id bigint,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT user_coupons_pkey PRIMARY KEY (id),
+  CONSTRAINT user_coupons_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT user_coupons_referral_id_fkey FOREIGN KEY (referral_id) REFERENCES public.affiliate_referrals(id)
+);
 CREATE TABLE public.verification (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -824,6 +901,31 @@ CREATE TABLE public.verification (
   metadata jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT verification_pkey PRIMARY KEY (id),
   CONSTRAINT verification_sessions_uuid_fkey FOREIGN KEY (uuid) REFERENCES public.profiles(uuid)
+);
+CREATE TABLE public.wasiat_generated_documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  will_id bigint,
+  will_code text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  snapshot jsonb NOT NULL,
+  CONSTRAINT wasiat_generated_documents_pkey PRIMARY KEY (id),
+  CONSTRAINT wasiat_generated_documents_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.wasiat_subscription_payments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  status text,
+  amount bigint NOT NULL CHECK (amount > 0),
+  chip_client_id text,
+  chip_payment_id text UNIQUE,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  user_coupon_id uuid,
+  original_amount_cents bigint,
+  CONSTRAINT wasiat_subscription_payments_pkey PRIMARY KEY (id),
+  CONSTRAINT wasiat_subscription_payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT wasiat_subscription_payments_user_coupon_id_fkey FOREIGN KEY (user_coupon_id) REFERENCES public.user_coupons(id)
 );
 CREATE TABLE public.wills (
   created_at timestamp with time zone NOT NULL DEFAULT now(),

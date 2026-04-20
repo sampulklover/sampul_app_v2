@@ -44,6 +44,10 @@ class DiditConfig {
   /// Get this from your Didit Console under Workflows
   static String get workflowId => dotenv.env['DIDIT_WORKFLOW_ID'] ?? 
                                   dotenv.env['NEXT_PUBLIC_DIDIT_WORKFLOW_ID'] ?? '';
+
+  /// Optional secondary workflow for certificate re-authentication.
+  /// Recommended: biometric/liveness-only workflow for returning users.
+  static String get reauthWorkflowId => dotenv.env['DIDIT_REAUTH_WORKFLOW_ID'] ?? '';
   
   /// Redirect URL after verification completion
   /// Uses deep link to return to app (similar to Stripe)

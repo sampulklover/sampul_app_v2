@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/body.dart';
 import '../models/trust_charity.dart';
 import '../services/bodies_service.dart';
+import '../utils/form_decoration_helper.dart';
 
 /// Browse charitable bodies (from `bodies` table) and configure a simple
 /// instruction (amount + frequency) that will be stored as a `TrustCharity`.
 class TrustCharityBrowseScreen extends StatefulWidget {
-  const TrustCharityBrowseScreen({super.key});
+  /// When true, selecting a body pops a [BodyItem] (organisation only).
+  /// When false (default), selecting a body opens the contribution setup flow
+  /// and pops a configured [TrustCharity].
+  final bool pickOrganisationOnly;
+
+  const TrustCharityBrowseScreen({
+    super.key,
+    this.pickOrganisationOnly = false,
+  });
 
   @override
   State<TrustCharityBrowseScreen> createState() => _TrustCharityBrowseScreenState();
@@ -17,6 +27,22 @@ class _TrustCharityBrowseScreenState extends State<TrustCharityBrowseScreen> {
   final List<BodyItem> _allBodies = <BodyItem>[];
   List<BodyItem> _filteredBodies = <BodyItem>[];
   bool _isLoading = true;
+  
+  String? _categoryLabel(String? raw) {
+    final String v = (raw ?? '').trim().toLowerCase();
+    if (v.isEmpty) return null;
+    switch (v) {
+      case 'sadaqah_waqaf_zakat':
+        return 'Sadaqah • Waqf • Zakat';
+      default:
+        // Fallback: prettify snake_case to Title Case
+        final words = v.split('_').where((w) => w.isNotEmpty).toList();
+        if (words.isEmpty) return null;
+        return words
+            .map((w) => w.length <= 1 ? w.toUpperCase() : '${w[0].toUpperCase()}${w.substring(1)}')
+            .join(' ');
+    }
+  }
 
   @override
   void initState() {
@@ -66,6 +92,11 @@ class _TrustCharityBrowseScreenState extends State<TrustCharityBrowseScreen> {
   }
 
   Future<void> _openInstructionConfig(BodyItem body) async {
+    if (widget.pickOrganisationOnly) {
+      if (!mounted) return;
+      Navigator.of(context).pop<BodyItem>(body);
+      return;
+    }
     final TrustCharity? result = await Navigator.of(context).push<TrustCharity>(
       MaterialPageRoute<TrustCharity>(
         builder: (BuildContext context) => _TrustCharityInstructionScreen(body: body),
@@ -83,7 +114,7 @@ class _TrustCharityBrowseScreenState extends State<TrustCharityBrowseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Charitable instructions'),
+        title: const Text('Select organisation'),
       ),
       body: SafeArea(
         child: _isLoading
@@ -94,12 +125,11 @@ class _TrustCharityBrowseScreenState extends State<TrustCharityBrowseScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     child: TextField(
                       controller: _searchController,
-                      decoration: InputDecoration(
+                      decoration: FormDecorationHelper.roundedInputDecoration(
+                        context: context,
+                        labelText: 'Search',
                         hintText: 'Search by organisation name',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        prefixIcon: Icons.search,
                       ),
                     ),
                   ),
@@ -111,23 +141,9 @@ class _TrustCharityBrowseScreenState extends State<TrustCharityBrowseScreen> {
                       itemBuilder: (BuildContext context, int index) {
                         final BodyItem body = _filteredBodies[index];
                         return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: colorScheme.primary.withOpacity(0.1),
-                            child: Text(
-                              (body.name ?? '?').isNotEmpty
-                                  ? body.name![0].toUpperCase()
-                                  : '?',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                           title: Text(body.name ?? 'Organisation #${body.id}'),
                           subtitle: Text(
-                            (body.category ?? '').isNotEmpty
-                                ? body.category!
-                                : 'Charitable organisation',
+                            _categoryLabel(body.category) ?? 'Charity organisation',
                             style: theme.textTheme.bodySmall
                                 ?.copyWith(color: colorScheme.onSurfaceVariant),
                           ),
@@ -144,7 +160,7 @@ class _TrustCharityBrowseScreenState extends State<TrustCharityBrowseScreen> {
   }
 }
 
-/// Second step: choose contribution type (ongoing vs one-time) and amount.
+/// Second step: set amount + frequency (no one-time option).
 class _TrustCharityInstructionScreen extends StatefulWidget {
   final BodyItem body;
 
@@ -155,128 +171,177 @@ class _TrustCharityInstructionScreen extends StatefulWidget {
 }
 
 class _TrustCharityInstructionScreenState extends State<_TrustCharityInstructionScreen> {
-  bool _isOngoing = true;
-  double _percentage = 5;
-  String _frequency = 'yearly';
+  double? _amount = 50;
+  String _frequency = 'monthly';
+  late final TextEditingController _amountCtrl = TextEditingController(text: '50');
 
   void _confirm() {
-    // Map slider % into a simple RM amount placeholder of 0; actual RM will be
-    // decided at execution time, but we still store a nominal percentage.
+    final amount = _amount;
+    if (amount == null || amount <= 0) return;
+
     final TrustCharity charity = TrustCharity(
       organizationName: widget.body.name,
       // Leave category null here to avoid enum mismatches; it can be refined later
       // using the dedicated donationCategories options if needed.
       category: null,
-      donationAmount: _percentage, // interpret as percentage for now
-      donationDuration: _isOngoing ? _frequency : 'one_time',
+      donationAmount: amount,
+      donationDuration: _frequency,
     );
     Navigator.of(context).pop<TrustCharity>(charity);
+  }
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colorScheme = theme.colorScheme;
+    final List<int> presetAmounts = <int>[10, 50, 100];
+    final List<Map<String, String>> frequencies = const <Map<String, String>>[
+      {'value': 'weekly', 'label': 'Weekly'},
+      {'value': 'monthly', 'label': 'Monthly'},
+      {'value': 'quarterly', 'label': 'Quarterly'},
+      {'value': 'yearly', 'label': 'Yearly'},
+    ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isOngoing ? 'Ongoing contribution' : 'One-time contribution'),
+        title: const Text('Contribution setup'),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'How should this contribution be carried out?',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              ToggleButtons(
-                borderRadius: BorderRadius.circular(24),
-                isSelected: <bool>[_isOngoing, !_isOngoing],
-                onPressed: (int index) {
-                  setState(() {
-                    _isOngoing = index == 0;
-                  });
-                },
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Ongoing'),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.body.name ?? 'Charity organisation',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('One-time'),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Set the amount and frequency.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  TextField(
+                    controller: _amountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Amount (RM)',
+                      hintText: 'e.g. 50',
+                      prefixIcon: Icons.payments_outlined,
+                    ).copyWith(prefixText: 'RM '),
+                    onChanged: (String v) {
+                      setState(() => _amount = double.tryParse(v.trim()));
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: presetAmounts.map((int amt) {
+                      final bool selected = _amount != null && (_amount! - amt).abs() < 0.01;
+                      return ChoiceChip(
+                        label: Text('RM $amt'),
+                        selected: selected,
+                        onSelected: (bool on) {
+                          if (!on) return;
+                          setState(() {
+                            _amount = amt.toDouble();
+                            _amountCtrl.text = '$amt';
+                          });
+                        },
+                        selectedColor: theme.colorScheme.primaryContainer,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  DropdownButtonFormField<String>(
+                    value: _frequency,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Frequency',
+                      prefixIcon: Icons.calendar_today_outlined,
+                    ),
+                    items: frequencies
+                        .map(
+                          (f) => DropdownMenuItem<String>(
+                            value: f['value'],
+                            child: Text(f['label'] ?? f['value'] ?? ''),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v == null) return;
+                      setState(() => _frequency = v);
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Percentage of fund',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  '${_percentage.toStringAsFixed(0)}%',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SafeArea(
+                top: false,
+                bottom: true,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: (_amount ?? 0) > 0 ? _confirm : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+                      disabledForegroundColor: colorScheme.onSurfaceVariant,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      'Save',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: (_amount ?? 0) > 0
+                            ? colorScheme.onPrimary
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              Slider(
-                value: _percentage,
-                min: 1,
-                max: 20,
-                divisions: 19,
-                label: '${_percentage.toStringAsFixed(0)}%',
-                onChanged: (double v) {
-                  setState(() => _percentage = v);
-                },
-              ),
-              const SizedBox(height: 16),
-              if (_isOngoing) ...[
-                Text(
-                  'How often should this contribution be carried out?',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _buildFreqChip('monthly', 'Monthly'),
-                    _buildFreqChip('quarterly', 'Quarterly'),
-                    _buildFreqChip('yearly', 'Yearly'),
-                  ],
-                ),
-              ],
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _confirm,
-                  child: Text(_isOngoing ? 'Confirm ongoing instruction' : 'Confirm one-time instruction'),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildFreqChip(String value, String label) {
-    final ThemeData theme = Theme.of(context);
-    final bool selected = _frequency == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) => setState(() => _frequency = value),
-      selectedColor: theme.colorScheme.primaryContainer,
-    );
-  }
+  // Frequency is now a dropdown (matches other form steps).
 }
 

@@ -112,7 +112,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Include your important assets—both digital accounts and physical items—so your instructions are clear and accessible when needed.';
 
   @override
-  String get letsSetUpYourFamilyAccount => 'Set up your family account';
+  String get letsSetUpYourFamilyAccount => 'Set up your Family Account';
 
   @override
   String get trustDescription =>
@@ -151,6 +151,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startPropertyTrust => 'Start setting up';
 
   @override
+  String get supportingDocuments => 'Supporting documents';
+
+  @override
+  String get addDocument => 'Add document';
+
+  @override
   String get onboardingTitle1 => 'Put your wealth in\nwriting';
 
   @override
@@ -169,7 +175,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSubtitle3 =>
-      'A professional Pusaka ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.';
+      'A professional executor helps ensure your wasiat is followed—calm, clear, and structured.';
 
   @override
   String get next => 'Next';
@@ -237,6 +243,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyAccount => 'Family Account';
 
   @override
+  String get homeMoreWithSampul => 'More with Sampul';
+
+  @override
+  String get homeFridayFundTitle => 'Friday Sadaqah Fund';
+
+  @override
+  String get homeFridayFundDescription =>
+      'Give every Friday, with ongoing reward that continues for you over time.';
+
+  @override
   String get createYourFirstTrustFund => 'Add Your First Family Account';
 
   @override
@@ -267,10 +283,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checklist => 'Checklist';
 
   @override
-  String get execution => 'Pusaka';
+  String get execution => 'Executor';
 
   @override
-  String get pusaka => 'Pusaka';
+  String get pusaka => 'Executor';
 
   @override
   String get aftercare => 'Aftercare';
@@ -725,7 +741,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diditNotConfigured =>
-      'Didit is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.';
+      'Verification is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.';
 
   @override
   String get identityVerificationRequired =>
@@ -743,7 +759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providesAssurance =>
-      'Provides assurance to beneficiaries and Pusaka';
+      'Provides assurance to beneficiaries and your executor';
 
   @override
   String get regulatoryCompliance => 'Regulatory Compliance';
@@ -941,7 +957,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String publishWillConfirmation(String url) {
-    return 'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n$url\n\nMake sure you only share this link with trusted family members or Pusaka.';
+    return 'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n$url\n\nMake sure you only share this link with trusted family members or your executor.';
   }
 
   @override
@@ -980,6 +996,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wasiatDetailsPrivateNote =>
       'Private. Kept with Sampul while your plan is active. Only released with a valid request.';
+
+  @override
+  String get wasiatDetailsLockedTitle => 'Details are locked';
+
+  @override
+  String get wasiatDetailsLockedBody =>
+      'To view your full wasiat details, you’ll need an active yearly plan.';
+
+  @override
+  String get wasiatUpgradePlanCta => 'Upgrade plan';
+
+  @override
+  String get wasiatGeneratedHistoryTitle => 'Generated versions';
+
+  @override
+  String get wasiatGenerateNewVersionCta => 'Generate new version';
+
+  @override
+  String wasiatViewingGeneratedVersion(String date) {
+    return 'Viewing: $date';
+  }
 
   @override
   String get wasiatShareSheetTitle => 'Share certificate';
@@ -1028,6 +1065,47 @@ class AppLocalizationsEn extends AppLocalizations {
       'To turn on your certificate link, you’ll need an active yearly plan.\n\nTap View plans to continue.';
 
   @override
+  String get wasiatPublishBlockedByKyc =>
+      'To generate your certificate, please complete your identity verification first.';
+
+  @override
+  String get wasiatPublishBlockedByDidit =>
+      'We could not confirm your identity verification yet. Please complete verification and try again.';
+
+  @override
+  String get wasiatPublishVerificationChecklistTitle =>
+      'Before generating a new certificate version, please complete all required checks.';
+
+  @override
+  String get wasiatPublishVerificationSettingsHint =>
+      'Each new certificate generation needs a fresh identity verification. Start verification to continue.';
+
+  @override
+  String get wasiatEligibilityPlanStatusLabel => 'Yearly plan';
+
+  @override
+  String get wasiatEligibilityDiditKycStatusLabel => 'Identity verification';
+
+  @override
+  String get wasiatEligibilityKycStatusLabel => 'Identity verification (KYC)';
+
+  @override
+  String get wasiatEligibilityDiditStatusLabel =>
+      'Re-authentication for this certificate';
+
+  @override
+  String get wasiatEligibilityStatusActive => 'Active';
+
+  @override
+  String get wasiatEligibilityStatusInactive => 'Inactive';
+
+  @override
+  String get wasiatEligibilityStatusComplete => 'Complete';
+
+  @override
+  String get wasiatEligibilityStatusNotComplete => 'Not complete';
+
+  @override
   String wasiatPublishReadyUntil(String date) {
     return 'Plan active until $date';
   }
@@ -1072,27 +1150,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planPropertyTrustSummary =>
-      'From RM 2,500 for one asset. Larger bundles from RM 8,500. You will see the full amount before you pay.';
+      'From RM 2,500 for one asset. Larger bundles start from RM 2,500 with RM 500 per extra asset after 10. You will see the full amount before you pay.';
 
   @override
-  String get planSectionTrustTitle => 'Family Trust';
+  String get planSectionTrustTitle => 'Family Account';
 
   @override
   String planTrustSummary(String amount) {
-    return 'Minimum funding is $amount. Other fees are shown when you continue in Family Trust.';
+    return 'Minimum funding is $amount. Other fees are shown when you continue in Family Account.';
   }
 
   @override
   String get plansOpenPropertyTrust => 'Open Property';
 
   @override
-  String get plansOpenTrustDashboard => 'Open Family Trust';
+  String get plansOpenTrustDashboard => 'Open Family Account';
 
   @override
   String get plansPaymentHistoryForPropertyTrust => 'Property payments';
 
   @override
-  String get plansPaymentHistoryForTrust => 'Family Trust payments';
+  String get plansPaymentHistoryForTrust => 'Family Account payments';
 
   @override
   String get plansPaymentHistoryEmptyProduct => 'Nothing recorded yet.';
@@ -1107,7 +1185,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String plansPaymentTrustRefLabel(String id) {
-    return 'Family Trust #$id';
+    return 'Family Account #$id';
   }
 
   @override
@@ -1124,7 +1202,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wasiatAccessActiveNoEndDate => 'Access active';
 
   @override
-  String get wasiatAccessInlineInactive => 'Pay to publish';
+  String get wasiatAccessInlineInactive => 'Upgrade plan';
 
   @override
   String get wasiatManagePlan => 'Details';
@@ -1209,22 +1287,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateWill => 'Update Wasiat';
 
   @override
-  String get executors => 'Pusaka';
+  String get executorsAndGuardians => 'Executor & guardian';
 
   @override
-  String get aboutPusaka => 'About Pusaka';
+  String get executors => 'Executors';
 
   @override
-  String get noPusakaYet => 'No Pusaka yet';
+  String get yourExecutor => 'Your executor';
 
   @override
-  String get newToPusaka => 'New to Pusaka?';
+  String get aboutPusaka => 'About executors';
 
   @override
-  String get submitPusaka => 'Submit Pusaka';
+  String get noPusakaYet => 'No executor yet';
+
+  @override
+  String get newToPusaka => 'New to executors?';
+
+  @override
+  String get submitPusaka => 'Submit executor';
 
   @override
   String get guardians => 'Guardians';
+
+  @override
+  String get yourGuardian => 'Your guardian';
 
   @override
   String get extraWishes => 'Extra Wishes';
@@ -1233,17 +1320,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewSave => 'Review & Save';
 
   @override
-  String get primaryExecutor => 'Primary Pusaka';
+  String get primaryExecutor => 'Primary executor';
 
   @override
   String get selectPrimaryExecutor =>
-      'Select the primary Pusaka to carry out your will';
+      'Select the primary executor to carry out your will';
 
   @override
-  String get secondaryExecutor => 'Secondary Pusaka';
+  String get secondaryExecutor => 'Secondary executor';
 
   @override
-  String get selectSecondaryExecutor => 'Optional: Select a secondary Pusaka';
+  String get selectSecondaryExecutor => 'Optional: Select a secondary executor';
 
   @override
   String get primaryGuardian => 'Primary Guardian';
@@ -1271,7 +1358,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourAssets => 'Your Assets';
 
   @override
-  String get manageAll => 'Manage All';
+  String get manageAll => 'See all';
 
   @override
   String get noAssetsYet => 'No assets yet. Add one when you\'re ready.';
@@ -1467,7 +1554,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closeThisAccount => 'Close this account';
 
   @override
-  String get transferAccessToExecutor => 'Transfer access to my Pusaka';
+  String get transferAccessToExecutor => 'Transfer access to my executor';
 
   @override
   String get memorialiseIfApplicable => 'Memorialise (if applicable)';
@@ -1496,7 +1583,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get estimatedValueDescription =>
-      'An approximate value helps your Pusaka understand the asset\'s worth.';
+      'An approximate value helps your executor understand the asset\'s worth.';
 
   @override
   String get enterEstimatedValue => 'Enter estimated value (RM)';
@@ -1516,7 +1603,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get additionalNotesDescription =>
-      'Add any extra details that will help your Pusaka handle this asset.';
+      'Add any extra details that will help your executor handle this asset.';
 
   @override
   String get youMightWantToInclude => 'You might want to include:';
@@ -1622,7 +1709,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assetListConnectsToWill =>
-      'Your asset list connects to your will and estate planning. Add both digital and physical assets so your Pusaka knows exactly what to handle.';
+      'Your asset list connects to your will and estate planning. Add both digital and physical assets so your executor knows exactly what to handle.';
 
   @override
   String get assetType => 'Asset type';
@@ -1751,7 +1838,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get provideClearInstructionsToExecutor =>
-      'Provide clear instructions to your Pusaka';
+      'Provide clear instructions to your executor';
 
   @override
   String get weDoNotStorePasswords =>
@@ -2107,7 +2194,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addYourFirstAsset => 'Add your first asset';
 
   @override
-  String get startTrackingYourDigitalAssets => 'List your digital assets';
+  String get startTrackingYourDigitalAssets => 'List your assets';
 
   @override
   String get createYourWill => 'Create Your Wasiat';
@@ -2144,11 +2231,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referralCodeApplied => 'Referral code applied';
 
   @override
-  String get setUpYourFamilyTrustAccount => 'Set up your Family Trust account';
+  String get setUpYourFamilyTrustAccount => 'Set up your Family Account';
 
   @override
   String get createFamilyAccountForLongTermSupport =>
-      'Create a family account to manage long-term support (optional).';
+      'Create a Family Account to manage long-term support (optional).';
 
   @override
   String get pleaseCompleteAllStepsBeforeFinishing =>
@@ -2171,19 +2258,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get theRemainingSteps => 'the remaining steps';
 
   @override
-  String get familyTrustFund => 'Family Trust Fund';
+  String get familyTrustFund => 'Family Account';
 
   @override
-  String get aboutFamilyTrustFund => 'About Family Trust Fund';
+  String get aboutFamilyTrustFund => 'About Family Account';
 
   @override
-  String get noTrustFundsYet => 'No trust funds yet';
+  String get noTrustFundsYet => 'No Family Accounts yet';
 
   @override
   String get createNew => 'Create New';
 
   @override
-  String get createTrust => 'Create trust';
+  String get createTrust => 'Create Family Account';
 
   @override
   String get trustCodeUnique => 'Trust code (unique)';
@@ -2192,7 +2279,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get all => 'All';
 
   @override
-  String get aboutTrustFund => 'About Trust Fund';
+  String get aboutTrustFund => 'About Family Account';
 
   @override
   String get newToTrusts => 'New to trusts?';
@@ -2204,11 +2291,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startSettingUp => 'Start setting up';
 
   @override
-  String get whySetUpFamilyTrustFund => 'What a Family Trust Fund does for you';
+  String get whySetUpFamilyTrustFund => 'What a Family Account does for you';
 
   @override
   String get familyTrustFundDescription =>
-      'A Family Trust Fund lets you decide how your money supports your family—healthcare, education, living expenses. You can update it whenever you want.';
+      'A Family Account lets you decide how your money supports your family—healthcare, education, living expenses. You can update it whenever you want.';
 
   @override
   String get chooseHowMoneySpent =>
@@ -2229,21 +2316,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get learnMoreAboutPartners => 'Learn more about our partners';
 
   @override
-  String get trustFundDetails => 'Trust Fund Details';
+  String get trustFundDetails => 'Family Account Details';
 
   @override
-  String get deleteTrustFund => 'Delete Trust Fund';
+  String get deleteTrustFund => 'Delete Family Account';
 
   @override
   String get areYouSureDeleteTrustFund =>
-      'Are you sure you want to delete this trust fund? This action cannot be undone.';
+      'Are you sure you want to delete this Family Account? This action cannot be undone.';
 
   @override
-  String get trustFundDeleted => 'Trust Fund deleted';
+  String get trustFundDeleted => 'Family Account deleted';
 
   @override
   String failedToDeleteTrustFund(String error) {
-    return 'Failed to delete trust fund: $error';
+    return 'Failed to delete Family Account: $error';
   }
 
   @override
@@ -2285,7 +2372,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allocateWhatTrustFundWillCover =>
-      'Allocate what this trust fund will cover';
+      'Allocate what this Family Account will cover';
 
   @override
   String get education => 'Education';
@@ -2297,7 +2384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthcare => 'Healthcare';
 
   @override
-  String get charitable => 'Charitable';
+  String get charitable => 'Charity';
 
   @override
   String get debt => 'Debt';
@@ -2314,7 +2401,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get familyAccountCreated => 'Family account created';
+  String get familyAccountCreated => 'Family Account created';
 
   @override
   String get yourFamilyNowHasClearGuidance =>
@@ -2325,7 +2412,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyAccountSavedAndFollowed =>
-      'This family account is saved and will be followed according to the rules you\'ve set.';
+      'This Family Account is saved and will be followed according to the rules you\'ve set.';
 
   @override
   String get nextSteps => 'Next steps';
@@ -2342,10 +2429,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewInstructions => 'View instructions';
 
   @override
-  String get openTrust => 'Open trust';
+  String get openTrust => 'Open Family Account';
 
   @override
-  String get createTrustFund => 'Create Trust Fund';
+  String get createTrustFund => 'Create Family Account';
+
+  @override
+  String get editTrustFund => 'Edit Family Account';
 
   @override
   String get weCouldNotLoadYourProfile =>
@@ -2358,7 +2448,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fundSupport => 'Fund Support';
 
   @override
-  String get executorSelection => 'Pusaka Selection';
+  String get executorSelection => 'Executor selection';
+
+  @override
+  String get executorSelectionDisclaimer =>
+      'By appointing this executor, you authorise Sampul to notify them and grant access to your account and estate information only upon a verified Triggering Event (death, coma, or mental incapacity), and for them to work with Rakyat Trustee Berhad (RTB) to administer your estate on behalf of your beneficiaries.';
 
   @override
   String get financialInformation => 'Financial Information';
@@ -2412,7 +2506,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whenNeeded => 'When needed';
 
   @override
-  String get allAtOnceAtTheEnd => 'All at once at the end';
+  String get allAtOnceAtTheEnd =>
+      'All at once after a verified Triggering Event';
 
   @override
   String get someoneIKnow => 'Someone I Know';
@@ -2434,15 +2529,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get administrativeBurden => 'Administrative burden';
 
   @override
-  String get whosThisFamilyTrustAccountFor =>
-      'Who\'s this family trust account for?';
+  String get whosThisFamilyTrustAccountFor => 'Who\'s this Family Account for?';
 
   @override
   String get noFamilyMembersFound =>
       'No family members found. Add family members in your profile.';
 
   @override
-  String get sampulsProfessionalExecutor => 'Sampul\'s Professional Pusaka';
+  String get sampulsProfessionalExecutor => 'Sampul\'s Professional Executor';
 
   @override
   String get expertManagement => 'Expert management';
@@ -2451,11 +2545,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get neutralParty => 'Neutral party';
 
   @override
-  String get estFeeR4320yr => 'Est. Fee: RM4,320/yr (Paid from trust funds)';
+  String get estFeeR4320yr =>
+      'Est. Fee: RM4,320/yr (Paid from Family Account funds)';
 
   @override
   String get executorGoodToKnow =>
-      'Your Pusaka acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. At least 2 joint Pusaka are necessary when one of the beneficiaries is a minor. If one of your beneficiaries is under 18, you\'ll need at least two Pusaka working together. We\'ll remind you about this later.';
+      'Your executor acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. If one of your beneficiaries is under 18, you’ll need at least two executors working together. We’ll remind you about this later.';
 
   @override
   String get estimatedNetWorth => 'Estimated Net Worth';
@@ -2520,13 +2615,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get asNeededTrusteeDecides => 'As needed (trustee decides)';
 
   @override
-  String get lumpSumAtTheEnd => 'Lump sum at the end';
+  String get lumpSumAtTheEnd => 'Lump Sum';
 
   @override
-  String get executorType => 'Pusaka Type';
+  String get executorType => 'Executor type';
 
   @override
-  String get selectedExecutors => 'Selected Pusaka';
+  String get selectedExecutors => 'Selected executors';
 
   @override
   String familyMembersSelected(int count) {
@@ -2555,19 +2650,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Please select at least one fund support category and set up its details';
 
   @override
-  String get pleaseSelectAtLeastOneExecutor =>
-      'Please select at least one Pusaka';
+  String get pleaseSelectAtLeastOneExecutor => 'Please select an executor';
 
   @override
   String get pleaseCompleteYourProfileFirst =>
       'Please complete your profile first';
 
   @override
-  String get trustFundCreatedSuccessfully => 'Trust Fund created successfully';
+  String get trustFundCreatedSuccessfully => 'Family Account created';
+
+  @override
+  String get trustFundUpdatedSuccessfully => 'Changes saved';
 
   @override
   String failedToCreateTrustFund(String error) {
-    return 'Failed to create trust fund: $error';
+    return 'Failed to create Family Account: $error';
+  }
+
+  @override
+  String failedToUpdateTrustFund(String error) {
+    return 'Failed to update Family Account: $error';
   }
 
   @override
@@ -2684,7 +2786,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allFundsReleasedEnd =>
-      'All funds released when the trust period ends';
+      'Everything released upon a verified Triggering Event (death, coma, or mental incapacity)';
 
   @override
   String get cancelRequest => 'Cancel Request';
@@ -2770,11 +2872,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get everythingReleasedEnd =>
-      'Everything released when the trust period ends';
+      'Everything released upon a verified Triggering Event (death, coma, or mental incapacity)';
 
   @override
   String get thisIsAGuide =>
-      'This is a guide. Your Pusaka can adjust based on real needs.';
+      'This is a guide. Your executor can adjust based on real needs.';
 
   @override
   String get addCharitableOrganizationsDonate =>
@@ -2853,7 +2955,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set up instructions to protect your property.';
 
   @override
-  String get managePusaka => 'Manage Pusaka';
+  String get managePusaka => 'Manage executors';
 
   @override
   String get managePusakaDescription =>
@@ -2865,6 +2967,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get writeWasiatDescription =>
       'Document how your assets should be distributed.';
+
+  @override
+  String get executorInfoHeadline => 'Let\'s register as an executor';
+
+  @override
+  String get executorInfoSubtitle =>
+      'Register to manage and distribute a deceased person\'s estate according to their will or the law.';
+
+  @override
+  String get executorInfoWhatIsTitle => 'What is an executor?';
+
+  @override
+  String get executorInfoWhatIsBody =>
+      'An executor is appointed to manage and distribute the assets of a deceased person\'s estate. This involves handling legal matters, settling debts, and ensuring proper distribution to beneficiaries.';
+
+  @override
+  String get executorInfoFeatureManage =>
+      'Manage the deceased person\'s estate and assets.';
+
+  @override
+  String get executorInfoFeatureSettle =>
+      'Settle debts and handle legal matters.';
+
+  @override
+  String get executorInfoFeatureDistribute =>
+      'Distribute assets to beneficiaries according to the will or law.';
+
+  @override
+  String get executorInfoCta => 'Register as executor';
 
   @override
   String get getGuidanceTitle => 'Get guidance';
@@ -2888,7 +3019,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Protect your property with a trust';
 
   @override
-  String get setUpExecution => 'Set Up Pusaka';
+  String get setUpExecution => 'Set up executors';
 
   @override
   String get setUpExecutionDescription =>
@@ -2909,6 +3040,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Get personalized guidance from Sampul AI assistant';
 
   @override
+  String get chatWelcomeSampulAi =>
+      'Hello! I\'m Sampul AI, your estate planning assistant. How can I help you today?';
+
+  @override
+  String get chatErrorConnection =>
+      'Sorry, I\'m having trouble connecting right now. Please try again later.';
+
+  @override
+  String get chatErrorNotConfigured =>
+      'AI chat is not configured. Please check your environment variables.';
+
+  @override
+  String get chatErrorAuthFailed =>
+      'Authentication failed. Please check your API key configuration.';
+
+  @override
+  String get chatErrorRateLimit =>
+      'Rate limit exceeded. Please try again in a moment.';
+
+  @override
+  String get chatErrorServiceUnavailable =>
+      'The AI service is temporarily unavailable. Please try again later.';
+
+  @override
+  String get chatComposerPlaceholder => 'Ask me anything…';
+
+  @override
   String get setUpAftercare => 'Set Up Aftercare';
 
   @override
@@ -2917,7 +3075,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completeStepsFamilyAccount =>
-      'Complete these steps to set up your family account.';
+      'Complete these steps to set up your Family Account.';
 
   @override
   String get completeStepsProtectProperty =>
@@ -2925,7 +3083,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completeStepsManagePusaka =>
-      'Complete these steps to manage your inheritance matters.';
+      'Complete these steps to set up your executors.';
 
   @override
   String get completeStepsWriteWasiat =>
@@ -3001,11 +3159,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couponDescriptionHibah =>
-      'Hibah certificate fee—choose it under Payment on your Hibah screen before checkout.';
+      'Hibah certificate fee. Choose it under Payment on your Hibah screen before checkout.';
 
   @override
   String couponDescriptionWasiat(String screenTitle) {
-    return 'Wasiat yearly access—choose it on $screenTitle before you pay.';
+    return 'Wasiat yearly access. Choose it on $screenTitle before you pay.';
   }
 
   @override

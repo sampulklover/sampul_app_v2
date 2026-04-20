@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../services/openrouter_service.dart';
@@ -42,11 +43,12 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   }
 
   void _initializeChat() {
+    final l10n = AppLocalizations.of(context)!;
     // Add welcome message from Sampul AI if it's the first time
     if (widget.conversation.id == 'sampul_ai') {
       _messages.add(ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        content: "Hello! I'm Sampul AI, your estate planning assistant. How can I help you today?",
+        content: l10n.chatWelcomeSampulAi,
         isFromUser: false,
         timestamp: DateTime.now(),
       ));
@@ -123,10 +125,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       // Add error message
       final errorMessage = ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        content: "Sorry, I'm having trouble connecting right now. Please try again later.",
+        content: l10n.chatErrorConnection,
         isFromUser: false,
         timestamp: DateTime.now(),
       );

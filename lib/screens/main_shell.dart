@@ -14,24 +14,33 @@ import '../config/analytics_screens.dart';
 import '../services/analytics_service.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final int initialTabIndex;
+
+  const MainShell({super.key, this.initialTabIndex = 0});
+
+  static MainShellState? maybeOf(BuildContext context) {
+    return context.findAncestorStateOfType<MainShellState>();
+  }
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
-  int _currentIndex = 0;
+class MainShellState extends State<MainShell> {
+  late int _currentIndex;
   late final List<Widget> _tabs;
+  final GlobalKey<WillManagementScreenState> _wasiatTabKey =
+      GlobalKey<WillManagementScreenState>();
   bool _isOpeningAI = false;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialTabIndex.clamp(0, 3);
     _tabs = <Widget>[
       const HomeScreen(),
       const ResourcesInsightsScreen(),   // Learn
-      const WillManagementScreen(),      // Wasiat
+      WillManagementScreen(key: _wasiatTabKey), // Wasiat
       const SettingsScreen(),            // Settings
     ];
 
@@ -65,10 +74,21 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
-  void _selectTab(int index) {
+  void selectTab(int index) {
     if (_currentIndex == index) return;
     setState(() => _currentIndex = index);
     _logTabScreen(index);
+  }
+
+  Future<void> openWasiatCertificatePrompt() async {
+    if (_currentIndex != 2) {
+      setState(() => _currentIndex = 2);
+      _logTabScreen(2);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _wasiatTabKey.currentState?.openGenerateCertificatePrompt();
+    });
   }
 
   void _logTabScreen(int index) {
@@ -218,7 +238,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.home,
                   label: 'Home',
                   index: 0,
-                  onTap: () => _selectTab(0),
+                  onTap: () => selectTab(0),
                 ),
                 _buildNavItem(
                   context: context,
@@ -226,7 +246,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.learn,
                   label: 'Learn',
                   index: 1,
-                  onTap: () => _selectTab(1),
+                  onTap: () => selectTab(1),
                 ),
                 // Invisible spacer for center button
                 const SizedBox(width: 60),
@@ -236,7 +256,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.wasiat,
                   label: 'Wasiat',
                   index: 2,
-                  onTap: () => _selectTab(2),
+                  onTap: () => selectTab(2),
                 ),
                 _buildNavItem(
                   context: context,
@@ -244,7 +264,7 @@ class _MainShellState extends State<MainShell> {
                   icon: SampulIcons.settings,
                   label: 'Settings',
                   index: 3,
-                  onTap: () => _selectTab(3),
+                  onTap: () => selectTab(3),
                 ),
               ],
             ),

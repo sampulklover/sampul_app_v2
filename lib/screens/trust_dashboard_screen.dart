@@ -6,7 +6,7 @@ import '../models/trust.dart';
 import '../services/trust_service.dart';
 import '../services/supabase_service.dart';
 import '../controllers/auth_controller.dart';
-import 'trust_edit_screen.dart';
+import 'trust_create_screen.dart';
 import 'fund_support_config_screen.dart';
 import '../utils/card_decoration_helper.dart';
 import '../widgets/trust_payment_form_modal.dart';
@@ -44,6 +44,18 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
   int _previousPaymentCount = 0;
 
   Trust get _trust => _currentTrust ?? widget.trust;
+
+  void _showSnackBarSafe(SnackBar snackBar) {
+    if (!mounted) return;
+    // Showing a snackbar during route teardown / transition can throw
+    // "Looking up a deactivated widget's ancestor". Deferring to the next
+    // frame and using maybeOf keeps it safe.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger?.showSnackBar(snackBar);
+    });
+  }
 
   @override
   void initState() {
@@ -297,6 +309,11 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
     final config = _getCategoryConfig(categoryId);
     if (config == null) return 0.0;
 
+    // Debt: use the captured total debt amount.
+    if (categoryId == 'debt') {
+      return (config['debtAmount'] as num?)?.toDouble() ?? 0.0;
+    }
+
     // For regular payments, use paymentAmount
     final isRegularPayments = config['isRegularPayments'] as bool?;
     if (isRegularPayments == true) {
@@ -352,14 +369,12 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
     final l10n = AppLocalizations.of(context)!;
     final trustCode = _trust.trustCode;
     if (trustCode == null || trustCode.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.trustIdNotAvailable),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+      _showSnackBarSafe(
+        SnackBar(
+          content: Text(l10n.trustIdNotAvailable),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
@@ -370,15 +385,13 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
 
     await Clipboard.setData(ClipboardData(text: trustCode));
     
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.trustIdCopiedToClipboard),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
+    _showSnackBarSafe(
+      SnackBar(
+        content: Text(l10n.trustIdCopiedToClipboard),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 1),
+      ),
+    );
 
     // Reset cooldown after 2 seconds
     _cooldownTimer?.cancel();
@@ -584,7 +597,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
               if (value == 'edit') {
                 final bool? updated = await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
-                    builder: (_) => TrustEditScreen(initial: _trust),
+                    builder: (_) => TrustCreateScreen(initial: _trust),
                   ),
                 );
                 if (updated == true && mounted) {
@@ -618,7 +631,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                   try {
                     await TrustService.instance.deleteTrust(widget.trust.id!);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      _showSnackBarSafe(
                         SnackBar(
                           content: Text(l10n.trustFundDeleted),
                           backgroundColor: Colors.green,
@@ -628,7 +641,7 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      _showSnackBarSafe(
                         SnackBar(
                           content: Text(l10n.failedToDeleteTrustFund(e.toString())),
                           backgroundColor: Colors.red,
@@ -1079,6 +1092,9 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                                     ),
                                   ),
                                 );
+
+                                // Route may have been popped while awaiting.
+                                if (!mounted) return;
                                 
                                 // Persist updated config and refresh UI
                                 if (updatedConfig != null && widget.trust.id != null) {
@@ -1097,10 +1113,12 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                                       },
                                     );
                                     final updatedTrust = await TrustService.instance.getTrustById(widget.trust.id!);
-                                    if (mounted && updatedTrust != null) {
+                                    if (!mounted) return;
+                                    if (updatedTrust != null) {
                                       setState(() => _currentTrust = updatedTrust);
                                       await _loadData();
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      if (!mounted) return;
+                                      _showSnackBarSafe(
                                         SnackBar(
                                           content: Text(l10n.settingsSaved),
                                           backgroundColor: Colors.green,
@@ -1108,14 +1126,13 @@ class _TrustDashboardScreenState extends State<TrustDashboardScreen> with Widget
                                       );
                                     }
                                   } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(l10n.failedToSave(e.toString())),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
+                                    if (!mounted) return;
+                                    _showSnackBarSafe(
+                                      SnackBar(
+                                        content: Text(l10n.failedToSave(e.toString())),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
                                   }
                                 }
                               },

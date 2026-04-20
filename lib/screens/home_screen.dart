@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: _SectionHeader(
-                        title: l10n.myAssets,
+                        title: 'My Networths',
                         actionText: l10n.seeAll,
                         onAction: () async {
                           await Navigator.of(context).push(
@@ -349,6 +349,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 _FamilyList(key: _familyListKey, onRefresh: _refreshData),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _HomeAdsSection(
+                    onRefresh: _refreshData,
+                  ),
+                ),
                 const SizedBox(height: 100), // Extra padding for floating card
               ],
             ),
@@ -1044,7 +1051,7 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
     _FeatureStatus('Family', _hasFamily, Icons.family_restroom),
     _FeatureStatus('Assets', _hasAssets, Icons.account_balance_wallet_outlined),
     _FeatureStatus('Wasiat', _hasWill, Icons.description_outlined),
-    _FeatureStatus('Pusaka', _hasExecutors, Icons.assignment_turned_in_outlined),
+    _FeatureStatus('Executor', _hasExecutors, Icons.assignment_turned_in_outlined),
     _FeatureStatus('Trust', _hasTrusts, Icons.account_balance_outlined),
     _FeatureStatus('Hibah', _hasHibah, Icons.home_outlined),
   ];
@@ -1059,7 +1066,7 @@ class _EstatePlanningProgressCardState extends State<_EstatePlanningProgressCard
         return l10n.assets;
       case 'Wasiat':
         return l10n.will;
-      case 'Pusaka':
+      case 'Executor':
         return l10n.pusaka;
       case 'Trust':
         return l10n.trust;
@@ -2160,6 +2167,119 @@ class _AddCircle extends StatelessWidget {
       ],
     );
   }
+}
+
+class _HomeAdsSection extends StatelessWidget {
+  final VoidCallback? onRefresh;
+  const _HomeAdsSection({this.onRefresh});
+
+  Future<void> _handleTap(BuildContext context) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool hasSeenAbout = prefs.getBool('trust_about_seen') ?? false;
+
+    final Trust? createdTrust = await Navigator.of(context).push<Trust>(
+      MaterialPageRoute<Trust>(
+        settings: RouteSettings(
+          name: hasSeenAbout ? AnalyticsScreens.trustCreate : AnalyticsScreens.trustInfo,
+        ),
+        builder: (_) => hasSeenAbout ? const TrustCreateScreen() : const TrustInfoScreen(),
+      ),
+    );
+
+    if (createdTrust != null) {
+      onRefresh?.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text(
+              l10n.homeMoreWithSampul,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: () => _handleTap(context),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8E3F8),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          l10n.homeFridayFundTitle,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.homeFridayFundDescription,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            height: 1.3,
+                            color: theme.colorScheme.onSurface.withOpacity(0.78),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFD8CDFE),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward,
+                            size: 16,
+                            color: Color(0xFF533DE9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: Image.asset(
+                      'assets/trust-gold-coin.png',
+                      fit: BoxFit.contain,
+                      cacheWidth: 144,
+                      cacheHeight: 144,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 }
 
 class _Logo extends StatelessWidget {

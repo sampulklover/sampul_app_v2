@@ -142,11 +142,13 @@ class _TrustDonationsRecordScreenState extends State<TrustDonationsRecordScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final trustTitle = widget.trust.name?.trim().isNotEmpty == true ? widget.trust.name!.trim() : 'Trust Fund';
+    final trustTitle = widget.trust.name?.trim().isNotEmpty == true
+        ? widget.trust.name!.trim()
+        : 'Family Account';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trust Donations Record'),
+        title: const Text('Family Account Donations'),
         actions: [
           IconButton(
             tooltip: 'Refresh',

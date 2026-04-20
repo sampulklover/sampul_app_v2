@@ -18,6 +18,8 @@ import 'edit_profile_screen.dart';
 import '../widgets/stepper_footer_controls.dart';
 import '../config/analytics_screens.dart';
 import '../services/analytics_service.dart';
+import 'add_family_member_screen.dart';
+import 'family_list_screen.dart';
 
 class WillGenerationScreen extends StatefulWidget {
   final Will? existingWill;
@@ -292,36 +294,64 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
         state: _currentStep > 0 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: Text(l10n.executors),
-        content: _buildExecutorsStep(),
+        title: Text(l10n.executorsAndGuardians),
+        content: _buildExecutorsAndGuardiansStep(),
         isActive: _currentStep >= 1,
         state: _currentStep > 1 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: Text(l10n.guardians),
-        content: _buildGuardiansStep(),
+        title: Text(l10n.assets),
+        content: _buildAssetsStep(),
         isActive: _currentStep >= 2,
         state: _currentStep > 2 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: Text(l10n.assets),
-        content: _buildAssetsStep(),
+        title: Text(l10n.extraWishes),
+        content: _buildExtraWishesStep(),
         isActive: _currentStep >= 3,
         state: _currentStep > 3 ? StepState.complete : StepState.indexed,
       ),
       Step(
-        title: Text(l10n.extraWishes),
-        content: _buildExtraWishesStep(),
-        isActive: _currentStep >= 4,
-        state: _currentStep > 4 ? StepState.complete : StepState.indexed,
-      ),
-      Step(
         title: Text(l10n.reviewSave),
         content: _buildReviewStep(),
-        isActive: _currentStep >= 5,
+        isActive: _currentStep >= 4,
         state: StepState.indexed,
       ),
     ];
+  }
+
+  Widget _buildExecutorsAndGuardiansStep() {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SizedBox.shrink(),
+            TextButton.icon(
+              onPressed: () async {
+                final bool? changed = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(builder: (_) => const FamilyListScreen()),
+                );
+                if (changed == true) {
+                  await _initializeData();
+                }
+              },
+              icon: const Icon(Icons.list_alt, size: 16),
+              label: Text(l10n.manageAll),
+              style: TextButton.styleFrom(minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildExecutorsStep(),
+        const SizedBox(height: 18),
+        Divider(height: 1, color: Theme.of(context).colorScheme.outline.withOpacity(0.12)),
+        const SizedBox(height: 18),
+        _buildGuardiansStep(),
+      ],
+    );
   }
 
   Widget _buildPersonalInfoStep() {
@@ -580,43 +610,79 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
 
   Widget _buildExecutorsStep() {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        _buildFamilyMemberSelector(
-          title: l10n.primaryExecutor,
-          subtitle: l10n.selectPrimaryExecutor,
-          selectedId: _selectedCoSampul1,
-          onChanged: (value) => setState(() => _selectedCoSampul1 = value),
-        ),
-        const SizedBox(height: 16),
-        _buildFamilyMemberSelector(
-          title: l10n.secondaryExecutor,
-          subtitle: l10n.selectSecondaryExecutor,
-          selectedId: _selectedCoSampul2,
-          onChanged: (value) => setState(() => _selectedCoSampul2 = value),
-        ),
-      ],
+    final List<Map<String, dynamic>> executors = _familyMembers
+        .where((m) => (m['type'] as String?) == 'co_sampul')
+        .toList();
+
+    if (executors.isEmpty) {
+      return _buildEmptyInlineState(
+        text: l10n.noPusakaYet,
+        ctaLabel: l10n.addFamilyMemberTitle,
+        onCtaPressed: () async {
+          final bool? changed = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(builder: (_) => const AddFamilyMemberScreen()),
+          );
+          if (changed == true) {
+            await _initializeData();
+          }
+        },
+      );
+    }
+
+    return _buildRoleSelectionListCard(
+      primaryTitle: l10n.primaryExecutor,
+      primarySubtitle: l10n.selectPrimaryExecutor,
+      primaryIcon: Icons.gavel_rounded,
+      primarySelectedId: _selectedCoSampul1,
+      primaryExcludeId: _selectedCoSampul2,
+      onPickPrimary: (id) => setState(() => _selectedCoSampul1 = id),
+      secondaryTitle: l10n.secondaryExecutor,
+      secondarySubtitle: l10n.selectSecondaryExecutor,
+      secondaryIcon: Icons.gavel_outlined,
+      secondarySelectedId: _selectedCoSampul2,
+      secondaryExcludeId: _selectedCoSampul1,
+      onPickSecondary: (id) => setState(() => _selectedCoSampul2 = id),
+      candidates: executors,
+      primaryRequired: true,
     );
   }
 
   Widget _buildGuardiansStep() {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        _buildFamilyMemberSelector(
-          title: l10n.primaryGuardian,
-          subtitle: l10n.selectPrimaryGuardian,
-          selectedId: _selectedGuardian1,
-          onChanged: (value) => setState(() => _selectedGuardian1 = value),
-        ),
-        const SizedBox(height: 16),
-        _buildFamilyMemberSelector(
-          title: l10n.secondaryGuardian,
-          subtitle: l10n.selectSecondaryGuardian,
-          selectedId: _selectedGuardian2,
-          onChanged: (value) => setState(() => _selectedGuardian2 = value),
-        ),
-      ],
+    final List<Map<String, dynamic>> guardians = _familyMembers
+        .where((m) => (m['type'] as String?) == 'guardian')
+        .toList();
+
+    if (guardians.isEmpty) {
+      return _buildEmptyInlineState(
+        text: l10n.selectPrimaryGuardian,
+        ctaLabel: l10n.addFamilyMemberTitle,
+        onCtaPressed: () async {
+          final bool? changed = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(builder: (_) => const AddFamilyMemberScreen()),
+          );
+          if (changed == true) {
+            await _initializeData();
+          }
+        },
+      );
+    }
+
+    return _buildRoleSelectionListCard(
+      primaryTitle: l10n.primaryGuardian,
+      primarySubtitle: l10n.selectPrimaryGuardian,
+      primaryIcon: Icons.family_restroom_rounded,
+      primarySelectedId: _selectedGuardian1,
+      primaryExcludeId: _selectedGuardian2,
+      onPickPrimary: (id) => setState(() => _selectedGuardian1 = id),
+      secondaryTitle: l10n.secondaryGuardian,
+      secondarySubtitle: l10n.selectSecondaryGuardian,
+      secondaryIcon: Icons.family_restroom_outlined,
+      secondarySelectedId: _selectedGuardian2,
+      secondaryExcludeId: _selectedGuardian1,
+      onPickSecondary: (id) => setState(() => _selectedGuardian2 = id),
+      candidates: guardians,
+      primaryRequired: false,
     );
   }
 
@@ -838,124 +904,251 @@ class _WillGenerationScreenState extends State<WillGenerationScreen> {
     return '${member['name']} (${member['relationship'] ?? l10n.family})';
   }
 
-  Widget _buildFamilyMemberSelector({
-    required String title,
-    required String subtitle,
-    required int? selectedId,
-    required ValueChanged<int?> onChanged,
+  Widget _buildEmptyInlineState({
+    required String text,
+    required String ctaLabel,
+    required VoidCallback onCtaPressed,
   }) {
-    final selectedMember = _familyMembers.firstWhere(
-      (member) => member['id'] == selectedId,
-      orElse: () => <String, dynamic>{},
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Column(
+        children: [
+          Center(child: Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant))),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 40,
+            child: OutlinedButton.icon(
+              onPressed: onCtaPressed,
+              icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+              label: Text(ctaLabel),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildRoleSelectionListCard({
+    required String primaryTitle,
+    required String primarySubtitle,
+    required IconData primaryIcon,
+    required int? primarySelectedId,
+    required int? primaryExcludeId,
+    required ValueChanged<int?> onPickPrimary,
+    required String secondaryTitle,
+    required String secondarySubtitle,
+    required IconData secondaryIcon,
+    required int? secondarySelectedId,
+    required int? secondaryExcludeId,
+    required ValueChanged<int?> onPickSecondary,
+    required List<Map<String, dynamic>> candidates,
+    required bool primaryRequired,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    Map<String, dynamic> memberFor(int? id) => candidates.firstWhere(
+          (m) => m['id'] == id,
+          orElse: () => <String, dynamic>{},
+        );
+
+    final primaryMember = memberFor(primarySelectedId);
+    final secondaryMember = memberFor(secondarySelectedId);
+
+    Widget row({
+      required String title,
+      required String subtitle,
+      required IconData icon,
+      required int? selectedId,
+      required int? excludeId,
+      required bool allowNone,
+      required ValueChanged<int?> onPicked,
+      required Map<String, dynamic> selectedMember,
+    }) {
+      final bool isEmpty = selectedId == null;
+      final String name = selectedMember.isNotEmpty ? (selectedMember['name'] as String? ?? l10n.notFound) : l10n.noneSelected;
+      final String rel = selectedMember.isNotEmpty ? ((selectedMember['relationship'] as String?) ?? l10n.family) : subtitle;
+
+      return ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        onTap: () async {
+          final picked = await _openTaggedPeoplePicker(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            candidates: candidates,
+            selectedId: selectedId,
+            excludeId: excludeId,
+            allowNone: allowNone,
+          );
+          if (!mounted) return;
+          onPicked(picked);
+        },
+        leading: isEmpty ? Icon(icon, color: cs.onSurfaceVariant) : _buildSmallAvatar(selectedMember),
+        title: Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+        subtitle: Text(
+          selectedMember.isNotEmpty ? '$name • $rel' : name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        trailing: Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+      );
+    }
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return DropdownButtonFormField<int?>(
-                  value: selectedId,
-                  isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down_outlined),
-                  decoration: InputDecoration(
-                    labelText: l10n.selectFamilyMember,
-                  ),
-                  items: [
-                    DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text(l10n.noneSelected),
-                    ),
-                    ..._familyMembers.map((member) => DropdownMenuItem<int?>(
-                      value: member['id'] as int,
-                      child: Text('${member['name']} (${member['relationship'] ?? l10n.family})'),
-                    )),
-                  ],
-                  onChanged: onChanged,
-                );
-              },
-            ),
-            if (selectedMember.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
+      child: Column(
+        children: [
+          row(
+            title: primaryTitle,
+            subtitle: primarySubtitle,
+            icon: primaryIcon,
+            selectedId: primarySelectedId,
+            excludeId: primaryExcludeId,
+            allowNone: !primaryRequired,
+            onPicked: onPickPrimary,
+            selectedMember: primaryMember,
+          ),
+          Divider(height: 1, color: cs.outline.withOpacity(0.12)),
+          row(
+            title: secondaryTitle,
+            subtitle: secondarySubtitle,
+            icon: secondaryIcon,
+            selectedId: secondarySelectedId,
+            excludeId: secondaryExcludeId,
+            allowNone: true,
+            onPicked: onPickSecondary,
+            selectedMember: secondaryMember,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<int?> _openTaggedPeoplePicker({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Map<String, dynamic>> candidates,
+    required int? selectedId,
+    required int? excludeId,
+    required bool allowNone,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    final List<Map<String, dynamic>> filtered = candidates
+        .where((m) => excludeId == null || m['id'] != excludeId)
+        .toList();
+
+    return showModalBottomSheet<int?>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    // Profile Image
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child: selectedMember['image_path'] != null && selectedMember['image_path'].toString().isNotEmpty
-                            ? Image.network(
-                                SupabaseService.instance.getFullImageUrl(selectedMember['image_path']) ?? '',
-                                width: 40,
-                                height: 40,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.person,
-                                  size: 20,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              )
-                            : Icon(
-                                Icons.person,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                    Icon(icon, color: cs.primary, size: 18),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            selectedMember['name'] ?? 'Unknown',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            selectedMember['relationship'] ?? 'Family member',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
+                    if (selectedId != null)
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(null),
+                        child: Text(l10n.clear),
+                      ),
                   ],
                 ),
-              ),
-            ],
-          ],
-        ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                const SizedBox(height: 12),
+                if (allowNone)
+                  ListTile(
+                    onTap: () => Navigator.of(context).pop(null),
+                    leading: CircleAvatar(
+                      backgroundColor: cs.surfaceContainerHighest,
+                      child: Icon(Icons.not_interested_outlined, color: cs.onSurfaceVariant),
+                    ),
+                    title: Text(l10n.noneSelected),
+                    trailing: selectedId == null ? const Icon(Icons.check_rounded) : null,
+                  ),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => Divider(height: 1, color: cs.outline.withOpacity(0.12)),
+                    itemBuilder: (context, i) {
+                      final m = filtered[i];
+                      final int id = (m['id'] as num).toInt();
+                      final bool selected = id == selectedId;
+                      final String name = (m['name'] as String?) ?? l10n.notFound;
+                      final String relationship = (m['relationship'] as String?) ?? l10n.family;
+                      return ListTile(
+                        onTap: () => Navigator.of(context).pop(id),
+                        leading: _buildSmallAvatar(m),
+                        title: Text(name),
+                        subtitle: Text(relationship),
+                        trailing: selected ? Icon(Icons.check_circle_rounded, color: cs.primary) : null,
+                      );
+                    },
+                  ),
+                ),
+                if (filtered.isEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.noneSelected,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSmallAvatar(Map<String, dynamic> member) {
+    final cs = Theme.of(context).colorScheme;
+    final String? imagePath = member['image_path'] as String?;
+    final bool hasImage = (imagePath ?? '').isNotEmpty;
+    final String? url = hasImage ? SupabaseService.instance.getFullImageUrl(imagePath!) : null;
+
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: cs.outline.withOpacity(0.18)),
+      ),
+      child: ClipOval(
+        child: hasImage && (url ?? '').isNotEmpty
+            ? Image.network(
+                url!,
+                width: 36,
+                height: 36,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Icon(Icons.person, color: cs.onSurfaceVariant),
+              )
+            : Icon(Icons.person, color: cs.onSurfaceVariant),
       ),
     );
   }

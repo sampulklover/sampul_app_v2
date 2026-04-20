@@ -75,7 +75,6 @@ extension OnboardingGoalExtension on OnboardingGoal {
       case OnboardingGoal.protectProperty:
         return [
           OnboardingStepType.profile,
-          OnboardingStepType.asset,
           OnboardingStepType.hibah,
         ];
       case OnboardingGoal.managePusaka:
@@ -111,7 +110,7 @@ extension OnboardingGoalExtension on OnboardingGoal {
       case OnboardingGoal.familyAccount:
         return 2; // profile, family (trust is optional)
       case OnboardingGoal.protectProperty:
-        return 2; // profile, asset (hibah is optional enhancement)
+        return 1; // profile (hibah is optional enhancement)
       case OnboardingGoal.managePusaka:
         return 2; // profile, family (execution is optional)
       case OnboardingGoal.writeWasiat:

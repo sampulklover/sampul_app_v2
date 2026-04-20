@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sampul_app_v2/l10n/app_localizations.dart';
 import '../controllers/auth_controller.dart';
+import '../models/body.dart';
 import '../models/trust_charity.dart';
 import '../config/trust_constants.dart';
 import '../services/supabase_service.dart';
@@ -9,6 +11,7 @@ import 'family_info_screen.dart';
 import 'trust_charity_form_screen.dart';
 import 'trust_charity_browse_screen.dart';
 import '../utils/card_decoration_helper.dart';
+import '../utils/form_decoration_helper.dart';
 
 class FundSupportConfigScreen extends StatefulWidget {
   final String categoryId;
@@ -34,6 +37,7 @@ class FundSupportConfigScreen extends StatefulWidget {
 class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   late Map<String, dynamic> _config;
   late List<TrustCharity> _charities;
+  late List<TrustCharity> _debtInstitutions;
   late String _initialConfigJson;
   // Family members for "Who's this account for?" selection
   List<Map<String, dynamic>> _familyMembers = <Map<String, dynamic>>[];
@@ -52,6 +56,14 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
           widget.initialConfig['charities'] as List<dynamic>?;
       return charitiesData != null && charitiesData.isNotEmpty;
     }
+    if (widget.categoryId == 'debt') {
+      final double? debtAmount =
+          (widget.initialConfig['debtAmount'] as num?)?.toDouble();
+      final List<dynamic>? institutionsData =
+          widget.initialConfig['debtInstitutions'] as List<dynamic>?;
+      return debtAmount != null ||
+          (institutionsData != null && institutionsData.isNotEmpty);
+    }
 
     // For other categories, treat as configured only when key fields
     // actually have non-null values (not just present in the map).
@@ -62,7 +74,6 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
         widget.initialConfig['isRegularPayments'] as bool?;
     final String? releaseCondition =
         widget.initialConfig['releaseCondition'] as String?;
-
     return beneficiaryId != null ||
         durationType != null ||
         isRegularPayments != null ||
@@ -88,6 +99,17 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     } else {
       _charities = [];
     }
+    if (widget.categoryId == 'debt') {
+      final List<dynamic>? institutionsData = _config['debtInstitutions'] as List<dynamic>?;
+      _debtInstitutions = institutionsData != null
+          ? institutionsData
+              .whereType<Map>()
+              .map((i) => TrustCharity.fromJson(Map<String, dynamic>.from(i)))
+              .toList()
+          : <TrustCharity>[];
+    } else {
+      _debtInstitutions = <TrustCharity>[];
+    }
     // Pre-select previously chosen family member if exists
     final Object? rawId = _config['beneficiaryId'];
     if (rawId is num) {
@@ -101,7 +123,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
 
   bool get _hasUnsavedChanges => jsonEncode(_config) != _initialConfigJson;
 
-  /// Builds the "Who's this family trust account for?" selector per category.
+  /// Builds the "Who's this Family Account for?" selector per category.
   Widget _buildWhoIsThisForSection(ThemeData theme, ColorScheme colorScheme) {
     final TextStyle? titleStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.bold,
@@ -397,14 +419,14 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   Future<bool> _handleWillPop() async {
     // In preview mode, return saved config if available, otherwise return null
     if (!_isEditMode) {
-      if (_savedConfig != null) {
-        // Return saved config when navigating back from preview
-        Navigator.of(context).pop<Map<String, dynamic>>(_savedConfig);
-        return false; // we've handled the pop manually
-      }
-      // No changes made, return null to indicate no updates
-      Navigator.of(context).pop<Map<String, dynamic>?>(null);
-      return false; // we've handled the pop manually
+      // Avoid popping synchronously inside onWillPop (can lead to
+      // "Looking up a deactivated widget's ancestor" during route teardown).
+      final Map<String, dynamic>? result = _savedConfig;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pop<Map<String, dynamic>?>(result);
+      });
+      return false; // we'll pop on next frame with a result
     }
 
     // In edit mode, check for unsaved changes
@@ -483,6 +505,27 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     )}';
   }
 
+  bool _isSedekahJumaatCharity(TrustCharity charity) {
+    final String marker = (charity.addressLine2 ?? '').trim().toLowerCase();
+    final String name = (charity.organizationName ?? '').trim().toLowerCase();
+    return marker == 'sedekah_jumaat' || name.startsWith('sedekah jumaat');
+  }
+
+  int _extractSedekahYears(TrustCharity charity) {
+    final String raw = (charity.addressLine1 ?? '').trim();
+    if (raw.isEmpty) return 1;
+    final RegExpMatch? match = RegExp(r'(\d+)').firstMatch(raw);
+    final int years = int.tryParse(match?.group(1) ?? '') ?? 1;
+    return years.clamp(1, 20);
+  }
+
+  double _effectiveDonationAmount(TrustCharity charity) {
+    final double baseAmount = charity.donationAmount ?? 0.0;
+    if (!_isSedekahJumaatCharity(charity)) return baseAmount;
+    final int years = _extractSedekahYears(charity);
+    return baseAmount * 52 * years;
+  }
+
   String _getCategoryDescription(String categoryId, BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     switch (categoryId) {
@@ -504,10 +547,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
   Widget _buildCharitablePreview(ThemeData theme, ColorScheme colorScheme) {
     // Calculate total donations
     double totalAmount = 0.0;
-    for (var charity in _charities) {
-      if (charity.donationAmount != null) {
-        totalAmount += charity.donationAmount!;
-      }
+    for (final charity in _charities) {
+      totalAmount += _effectiveDonationAmount(charity);
     }
     
     final isPaused = _config['isPaused'] as bool? ?? false;
@@ -665,25 +706,32 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)!.totalDonations,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.totalDonations,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatAmount(totalAmount),
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatAmount(totalAmount),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
@@ -691,8 +739,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      _charities.length == 1 
-                          ? '${_charities.length} ${AppLocalizations.of(context)!.charity}'
+                      _charities.length == 1
+                          ? AppLocalizations.of(context)!.charitySelected
                           : AppLocalizations.of(context)!.charitiesSelected(_charities.length),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
@@ -750,6 +798,11 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                 durationText = TrustConstants.donationDurations
                     .firstWhere((d) => d['value'] == charity.donationDuration,
                         orElse: () => {'name': charity.donationDuration!})['name']!;
+                if (_isSedekahJumaatCharity(charity)) {
+                  final int years = _extractSedekahYears(charity);
+                  final String yearsText = years == 1 ? '1 year' : '$years years';
+                  durationText = '$durationText • $yearsText';
+                }
               }
               
               return Card(
@@ -867,6 +920,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     final paymentAmount = (_config['paymentAmount'] as num?)?.toDouble();
     final paymentFrequency = _config['paymentFrequency'] as String?;
     final releaseCondition = _config['releaseCondition'] as String?;
+    final debtAmount = (_config['debtAmount'] as num?)?.toDouble();
+    final bool isDebt = widget.categoryId == 'debt';
     final beneficiaryId = _config['beneficiaryId'] as int?;
     final isPaused = _config['isPaused'] as bool? ?? false;
     final hasPendingRequest = _config['hasPendingRequest'] as bool? ?? false;
@@ -1054,6 +1109,75 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             ),
           ),
           const SizedBox(height: 24),
+          if (widget.categoryId == 'debt' && debtAmount != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${AppLocalizations.of(context)!.amount} (RM)',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _formatAmount(debtAmount),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (widget.categoryId != 'debt' &&
+              widget.categoryId != 'charitable' &&
+              isRegularPayments == true &&
+              paymentAmount != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${AppLocalizations.of(context)!.amount} (RM)',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _formatAmount(paymentAmount),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
           if (annualTotal != null) ...[
             Container(
               padding: const EdgeInsets.all(16),
@@ -1114,13 +1238,28 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             ),
             const SizedBox(height: 24),
           ],
+          if (isDebt && _debtInstitutions.isNotEmpty) ...[
+            _buildEnhancedPreviewSection(
+              theme,
+              colorScheme,
+              'Institutions',
+              '${_debtInstitutions.length} selected',
+              _debtInstitutions
+                  .map((TrustCharity i) => (i.organizationName ?? '').trim())
+                  .where((String n) => n.isNotEmpty)
+                  .join(' • '),
+              Icons.account_balance_outlined,
+              colorScheme.secondaryContainer,
+            ),
+            const SizedBox(height: 16),
+          ],
           // Beneficiary section with avatar
-          if (beneficiaryData != null && beneficiaryData.isNotEmpty) ...[
+          if (!isDebt && beneficiaryData != null && beneficiaryData.isNotEmpty) ...[
             _buildBeneficiaryPreviewCard(theme, colorScheme, beneficiaryData),
             const SizedBox(height: 16),
           ],
           // Duration section
-          if (durationType != null) ...[
+          if (!isDebt && durationType != null) ...[
             _buildEnhancedPreviewSection(
               theme,
               colorScheme,
@@ -1146,16 +1285,6 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               '${_formatAmount(paymentAmount)} ${paymentFrequency != null ? paymentFrequencies[paymentFrequency] : ''}',
               Icons.payment_outlined,
               colorScheme.secondaryContainer,
-            ),
-          ] else if (releaseCondition == 'as_needed') ...[
-            _buildEnhancedPreviewSection(
-              theme,
-              colorScheme,
-              AppLocalizations.of(context)!.paymentMethod,
-              AppLocalizations.of(context)!.asNeeded,
-              AppLocalizations.of(context)!.trusteeDecidesRelease,
-              Icons.payment_outlined,
-              colorScheme.tertiaryContainer,
             ),
           ] else if (releaseCondition == 'lump_sum') ...[
             _buildEnhancedPreviewSection(
@@ -1651,7 +1780,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No charities/donations added yet',
+                    AppLocalizations.of(context)!.noCharitiesDonationsAddedYet,
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -1670,7 +1799,10 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               
               // Build subtitle text
               String subtitleText = '';
-              if (charity.category != null) {
+              final bool isSedekahJumaat = (charity.addressLine2 ?? '').trim().toLowerCase() == 'sedekah_jumaat';
+              if (isSedekahJumaat) {
+                subtitleText = 'Sedekah Jumaat';
+              } else if (charity.category != null) {
                 final categoryName = TrustConstants.donationCategories
                     .firstWhere((c) => c['value'] == charity.category,
                         orElse: () => {'name': charity.category!})['name']!;
@@ -1678,20 +1810,32 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               }
               if (charity.donationAmount != null) {
                 final amountText = 'RM ${charity.donationAmount!.toStringAsFixed(2)}';
-                final durationText = charity.donationDuration != null 
-                    ? ' (${TrustConstants.donationDurations.firstWhere((d) => d['value'] == charity.donationDuration, orElse: () => {'name': charity.donationDuration!})['name']})'
+                final String durationLabel = charity.donationDuration != null
+                    ? (TrustConstants.donationDurations
+                            .firstWhere(
+                              (d) => d['value'] == charity.donationDuration,
+                              orElse: () => {'name': charity.donationDuration!},
+                            )['name'] ??
+                        charity.donationDuration!)
                     : '';
+                final String durationText = durationLabel.isNotEmpty ? ' • $durationLabel' : '';
+                final String extraDuration = (charity.addressLine1 ?? '').trim();
+                final String extraText = extraDuration.isNotEmpty ? ' • $extraDuration' : '';
                 if (subtitleText.isNotEmpty) {
-                  subtitleText += ' • $amountText$durationText';
+                  subtitleText += ' • $amountText$durationText$extraText';
                 } else {
-                  subtitleText = '$amountText$durationText';
+                  subtitleText = '$amountText$durationText$extraText';
                 }
               }
               
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  title: Text(charity.organizationName ?? AppLocalizations.of(context)!.unnamedOrganization),
+                  title: Text(
+                    (charity.organizationName ?? '').trim().isNotEmpty
+                        ? (charity.organizationName ?? '').trim()
+                        : AppLocalizations.of(context)!.unnamedOrganization,
+                  ),
                   subtitle: subtitleText.isNotEmpty ? Text(subtitleText) : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1710,16 +1854,206 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               );
             }).toList(),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _addCharity,
-              icon: const Icon(Icons.add),
-              label: Text(AppLocalizations.of(context)!.addCharity),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 56,
+                  child: OutlinedButton.icon(
+                    onPressed: _addCharity,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: Text(
+                      AppLocalizations.of(context)!.addCharity,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: _addSedekahJumaat,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    icon: const Icon(Icons.mosque_outlined),
+                    label: Text(
+                      'Add Sedekah Jumaat',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _addSedekahJumaat() async {
+    final TrustCharity? result = await Navigator.push<TrustCharity>(
+      context,
+      MaterialPageRoute<TrustCharity>(
+        builder: (BuildContext context) => const _SedekahJumaatScreen(),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _charities.add(result);
+      });
+    }
+  }
+
+  void _syncDebtInstitutionsToConfig() {
+    if (_debtInstitutions.isEmpty) {
+      _config.remove('debtInstitutions');
+      return;
+    }
+    _config['debtInstitutions'] = _debtInstitutions
+        .map((TrustCharity institution) => <String, dynamic>{
+              'organization_name': (institution.organizationName ?? '').trim(),
+            })
+        .toList();
+  }
+
+  Future<void> _addDebtInstitution() async {
+    final BodyItem? picked = await Navigator.of(context).push<BodyItem>(
+      MaterialPageRoute<BodyItem>(
+        builder: (_) => const TrustCharityBrowseScreen(pickOrganisationOnly: true),
+      ),
+    );
+    if (!mounted || picked == null) return;
+    final String name = (picked.name ?? '').trim();
+    if (name.isEmpty) return;
+    setState(() {
+      final bool exists = _debtInstitutions.any(
+        (TrustCharity i) => (i.organizationName ?? '').trim().toLowerCase() == name.toLowerCase(),
+      );
+      if (!exists) {
+        _debtInstitutions.add(TrustCharity(organizationName: name));
+      }
+      _syncDebtInstitutionsToConfig();
+    });
+  }
+
+  Future<void> _addCustomDebtInstitution() async {
+    final String? value = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext sheetContext) => const _CustomDebtInstitutionSheet(),
+    );
+
+    final String name = (value ?? '').trim();
+    if (name.isEmpty || !mounted) return;
+    setState(() {
+      final bool exists = _debtInstitutions.any(
+        (TrustCharity i) => (i.organizationName ?? '').trim().toLowerCase() == name.toLowerCase(),
+      );
+      if (!exists) {
+        _debtInstitutions.add(TrustCharity(organizationName: name));
+      }
+      _syncDebtInstitutionsToConfig();
+    });
+  }
+
+  void _removeDebtInstitution(int index) {
+    setState(() {
+      _debtInstitutions.removeAt(index);
+      _syncDebtInstitutionsToConfig();
+    });
+  }
+
+  Widget _buildDebtInstitutionSection(ThemeData theme, ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Institution',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_debtInstitutions.isEmpty)
+          CardDecorationHelper.styledCard(
+            context: context,
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'No institution selected yet. Add one to keep debt instructions clear.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          ..._debtInstitutions.asMap().entries.map((entry) {
+            final int index = entry.key;
+            final TrustCharity institution = entry.value;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                title: Text(
+                  (institution.organizationName ?? '').trim().isEmpty
+                      ? 'Unnamed institution'
+                      : (institution.organizationName ?? '').trim(),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _removeDebtInstitution(index),
+                ),
+              ),
+            );
+          }),
+        const SizedBox(height: 12),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: _addDebtInstitution,
+                  icon: const Icon(Icons.account_balance_outlined),
+                  label: const Text('Choose institution'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: _addCustomDebtInstitution,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Add custom'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1730,6 +2064,8 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     final paymentAmount = (_config['paymentAmount'] as num?)?.toDouble() ?? 1000.0;
     final paymentFrequency = _config['paymentFrequency'] as String?;
     final releaseCondition = _config['releaseCondition'] as String?;
+    final debtAmount = (_config['debtAmount'] as num?)?.toDouble();
+    final bool isDebt = widget.categoryId == 'debt';
 
     final presetAmounts = [1000.0, 2000.0, 3000.0, 5000.0];
     final l10n = AppLocalizations.of(context)!;
@@ -1818,19 +2154,23 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          // Who is this family trust account for?
-          _buildWhoIsThisForSection(theme, colorScheme),
-          const SizedBox(height: 24),
-          // Support Duration Section
-          Text(
-            AppLocalizations.of(context)!.howLongShouldThisLast,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+          if (isDebt) ...[
+            _buildDebtInstitutionSection(theme, colorScheme),
+            const SizedBox(height: 24),
+          ] else ...[
+            // Who is this Family Account for?
+            _buildWhoIsThisForSection(theme, colorScheme),
+            const SizedBox(height: 24),
+            // Support Duration Section
+            Text(
+              AppLocalizations.of(context)!.howLongShouldThisLast,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          // Until a specific age option
-          InkWell(
+            const SizedBox(height: 12),
+            // Until a specific age option
+            InkWell(
               onTap: () {
                 setState(() {
                   _config['durationType'] = 'age';
@@ -1930,9 +2270,9 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                 ),
               ),
             ),
-          const SizedBox(height: 8),
-          // Their entire lifetime option
-          InkWell(
+            const SizedBox(height: 8),
+            // Their entire lifetime option
+            InkWell(
               onTap: () {
                 setState(() {
                   _config['durationType'] = 'lifetime';
@@ -1991,7 +2331,36 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
                 ),
               ),
             ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
+          ],
+          if (isDebt) ...[
+            Text(
+              '${l10n.amount} (RM)',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue: debtAmount?.toStringAsFixed(0) ?? '',
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              decoration: FormDecorationHelper.roundedInputDecoration(
+                context: context,
+                labelText: '${l10n.amount} (RM)',
+                hintText: 'e.g. 5000',
+                prefixIcon: Icons.payments_outlined,
+              ).copyWith(prefixText: 'RM '),
+              onChanged: (v) {
+                setState(() {
+                  _config['debtAmount'] = double.tryParse(v.trim());
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
           // Payment Configuration Section
           Text(
               AppLocalizations.of(context)!.paymentConfiguration,
@@ -2000,256 +2369,182 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               ),
             ),
           const SizedBox(height: 12),
-          // Regular payments option
-          InkWell(
-              onTap: () {
-                setState(() {
-                  _config['isRegularPayments'] = true;
-                  _config['releaseCondition'] = null;
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isRegularPayments == true
-                      ? colorScheme.primaryContainer.withOpacity(0.3)
-                      : colorScheme.surface,
-                  border: Border.all(
+          if (!isDebt) ...[
+            // Regular payments option
+            InkWell(
+                onTap: () {
+                  setState(() {
+                    _config['isRegularPayments'] = true;
+                    _config['releaseCondition'] = null;
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     color: isRegularPayments == true
-                        ? colorScheme.primary
-                        : colorScheme.outline.withOpacity(0.2),
-                    width: isRegularPayments == true ? 2 : 1,
+                        ? colorScheme.primaryContainer.withOpacity(0.3)
+                        : colorScheme.surface,
+                    border: Border.all(
+                      color: isRegularPayments == true
+                          ? colorScheme.primary
+                          : colorScheme.outline.withOpacity(0.2),
+                      width: isRegularPayments == true ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isRegularPayments == true
-                                ? colorScheme.primary
-                                : Colors.transparent,
-                            border: Border.all(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
                               color: isRegularPayments == true
                                   ? colorScheme.primary
-                                  : colorScheme.outline,
-                              width: 2,
-                            ),
-                          ),
-                          child: isRegularPayments == true
-                              ? Icon(
-                                  Icons.check,
-                                  size: 12,
-                                  color: colorScheme.onPrimary,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            AppLocalizations.of(context)!.regularPayments,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (isRegularPayments == true) ...[
-                      const SizedBox(height: 16),
-                      // Amount
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              'RM',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: isRegularPayments == true
+                                    ? colorScheme.primary
+                                    : colorScheme.outline,
+                                width: 2,
                               ),
                             ),
+                            child: isRegularPayments == true
+                                ? Icon(
+                                    Icons.check,
+                                    size: 12,
+                                    color: colorScheme.onPrimary,
+                                  )
+                                : null,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  paymentAmount.toStringAsFixed(2).replaceAllMapped(
-                                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                                    (Match m) => '${m[1]},',
-                                  ),
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Slider(
-                                  value: paymentAmount,
-                                  min: 100,
-                                  max: 10000,
-                                  divisions: 99,
-                                  label: 'RM ${paymentAmount.toStringAsFixed(0)}',
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _config['paymentAmount'] = value;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: presetAmounts.map((amount) {
-                                    final isSelected = (paymentAmount - amount).abs() < 0.01;
-                                    return ChoiceChip(
-                                      label: Text('RM ${amount.toStringAsFixed(0)}'),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(() {
-                                            _config['paymentAmount'] = amount;
-                                          });
-                                        }
-                                      },
-                                      selectedColor: colorScheme.primaryContainer,
-                                      labelStyle: TextStyle(
-                                        color: isSelected
-                                            ? colorScheme.onPrimaryContainer
-                                            : colorScheme.onSurface,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  AppLocalizations.of(context)!.howOftenContribution,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: paymentFrequencies.map((freq) {
-                                    final isSelected = paymentFrequency == freq['value'];
-                                    return ChoiceChip(
-                                      label: Text(freq['label']!),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(() {
-                                            _config['paymentFrequency'] = freq['value'] as String;
-                                          });
-                                        }
-                                      },
-                                      selectedColor: colorScheme.primaryContainer,
-                                      labelStyle: TextStyle(
-                                        color: isSelected
-                                            ? colorScheme.onPrimaryContainer
-                                            : colorScheme.onSurface,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ],
+                            child: Text(
+                              AppLocalizations.of(context)!.regularPayments,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 8),
-          // As needed option
-          InkWell(
-              onTap: () {
-                setState(() {
-                  _config['isRegularPayments'] = false;
-                  _config['releaseCondition'] = 'as_needed';
-                  _config['paymentAmount'] = null;
-                  _config['paymentFrequency'] = null;
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isRegularPayments == false && releaseCondition == 'as_needed'
-                      ? colorScheme.primaryContainer.withOpacity(0.3)
-                      : colorScheme.surface,
-                  border: Border.all(
-                    color: isRegularPayments == false && releaseCondition == 'as_needed'
-                        ? colorScheme.primary
-                        : colorScheme.outline.withOpacity(0.2),
-                    width: isRegularPayments == false && releaseCondition == 'as_needed' ? 2 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isRegularPayments == false && releaseCondition == 'as_needed'
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isRegularPayments == false && releaseCondition == 'as_needed'
-                              ? colorScheme.primary
-                              : colorScheme.outline,
-                          width: 2,
+                      if (isRegularPayments == true) ...[
+                        const SizedBox(height: 16),
+                        // Amount
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                'RM',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    paymentAmount.toStringAsFixed(2).replaceAllMapped(
+                                      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                      (Match m) => '${m[1]},',
+                                    ),
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Slider(
+                                    value: paymentAmount,
+                                    min: 100,
+                                    max: 10000,
+                                    divisions: 99,
+                                    label: 'RM ${paymentAmount.toStringAsFixed(0)}',
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _config['paymentAmount'] = value;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: presetAmounts.map((amount) {
+                                      final isSelected = (paymentAmount - amount).abs() < 0.01;
+                                      return ChoiceChip(
+                                        label: Text('RM ${amount.toStringAsFixed(0)}'),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          if (selected) {
+                                            setState(() {
+                                              _config['paymentAmount'] = amount;
+                                            });
+                                          }
+                                        },
+                                        selectedColor: colorScheme.primaryContainer,
+                                        labelStyle: TextStyle(
+                                          color: isSelected
+                                              ? colorScheme.onPrimaryContainer
+                                              : colorScheme.onSurface,
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    AppLocalizations.of(context)!.howOftenContribution,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: paymentFrequencies.map((freq) {
+                                      final isSelected = paymentFrequency == freq['value'];
+                                      return ChoiceChip(
+                                        label: Text(freq['label']!),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          if (selected) {
+                                            setState(() {
+                                              _config['paymentFrequency'] = freq['value'] as String;
+                                            });
+                                          }
+                                        },
+                                        selectedColor: colorScheme.primaryContainer,
+                                        labelStyle: TextStyle(
+                                          color: isSelected
+                                              ? colorScheme.onPrimaryContainer
+                                              : colorScheme.onSurface,
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      child: isRegularPayments == false && releaseCondition == 'as_needed'
-                          ? Icon(
-                              Icons.check,
-                              size: 12,
-                              color: colorScheme.onPrimary,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.asNeededTrusteeDecides,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            AppLocalizations.of(context)!.yourTrusteeReleasesMoney,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
+          ],
           // Lump sum option
           InkWell(
               onTap: () {
@@ -2326,13 +2621,6 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
               ),
             ),
           const SizedBox(height: 24),
-          Text(
-            AppLocalizations.of(context)!.thisIsAGuide,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
           ],
         ),
       );
@@ -2346,6 +2634,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
         builder: (BuildContext context) => const TrustCharityBrowseScreen(),
       ),
     );
+    if (!mounted) return;
     
     if (result != null) {
       setState(() {
@@ -2364,6 +2653,7 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
         ),
       ),
     );
+    if (!mounted) return;
     
     if (result != null) {
       setState(() {
@@ -2376,5 +2666,284 @@ class _FundSupportConfigScreenState extends State<FundSupportConfigScreen> {
     setState(() {
       _charities.removeAt(index);
     });
+  }
+}
+
+class _SedekahJumaatScreen extends StatefulWidget {
+  const _SedekahJumaatScreen();
+
+  @override
+  State<_SedekahJumaatScreen> createState() => _SedekahJumaatScreenState();
+}
+
+class _CustomDebtInstitutionSheet extends StatefulWidget {
+  const _CustomDebtInstitutionSheet();
+
+  @override
+  State<_CustomDebtInstitutionSheet> createState() => _CustomDebtInstitutionSheetState();
+}
+
+class _CustomDebtInstitutionSheetState extends State<_CustomDebtInstitutionSheet> {
+  final TextEditingController _nameCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            16 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.outline.withOpacity(0.35),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Add custom institution',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Add the bank or lender name so your debt instructions stay clear.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _nameCtrl,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (String v) => Navigator.of(context).pop(v.trim()),
+                decoration: FormDecorationHelper.roundedInputDecoration(
+                  context: context,
+                  labelText: 'Institution name',
+                  hintText: 'e.g. Bank Islam',
+                  prefixIcon: Icons.account_balance_outlined,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(_nameCtrl.text.trim()),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('Add'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SedekahJumaatScreenState extends State<_SedekahJumaatScreen> {
+  static const String _sedekahMarker = 'sedekah_jumaat';
+  final TextEditingController _placeCtrl = TextEditingController();
+  final TextEditingController _amountCtrl = TextEditingController(text: '10');
+
+  double? _amount = 10;
+  final String _frequency = 'weekly';
+  int _years = 1;
+
+  @override
+  void dispose() {
+    _placeCtrl.dispose();
+    _amountCtrl.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final String place = _placeCtrl.text.trim();
+    final double? amount = _amount;
+    if (place.isEmpty || amount == null || amount <= 0) return;
+
+    final TrustCharity charity = TrustCharity(
+      // Store only the masjid/surau name; Sedekah Jumaat is tracked via marker.
+      organizationName: place,
+      donationAmount: amount,
+      donationDuration: _frequency,
+      // Store human-readable duration safely in a text column (doesn't affect enums).
+      addressLine1: _years == 1 ? 'For 1 year' : 'For $_years years',
+      // Marker used for UI differentiation. Stored in a text column so it
+      // won't break any enum constraints downstream.
+      addressLine2: _sedekahMarker,
+      category: null,
+      bank: null,
+      accountNumber: null,
+      country: null,
+    );
+
+    Navigator.of(context).pop<TrustCharity>(charity);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colorScheme = theme.colorScheme;
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final List<int> presetAmounts = <int>[10, 50, 100];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sedekah Jumaat'),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  TextField(
+                    controller: _placeCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Masjid / Surau name',
+                      hintText: 'e.g. Masjid Al-Hidayah',
+                      prefixIcon: Icons.mosque_outlined,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _amountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'Amount (RM)',
+                      hintText: 'e.g. 10',
+                      prefixIcon: Icons.payments_outlined,
+                    ).copyWith(prefixText: 'RM '),
+                    onChanged: (String v) => setState(() => _amount = double.tryParse(v.trim())),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: presetAmounts.map((int amt) {
+                      final bool selected = _amount != null && (_amount! - amt).abs() < 0.01;
+                      return ChoiceChip(
+                        label: Text('RM $amt'),
+                        selected: selected,
+                        onSelected: (bool on) {
+                          if (!on) return;
+                          setState(() {
+                            _amount = amt.toDouble();
+                            _amountCtrl.text = '$amt';
+                          });
+                        },
+                        selectedColor: colorScheme.primaryContainer,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: _years,
+                    decoration: FormDecorationHelper.roundedInputDecoration(
+                      context: context,
+                      labelText: 'How many years?',
+                      prefixIcon: Icons.schedule_outlined,
+                    ),
+                    items: List<int>.generate(20, (i) => i + 1)
+                        .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
+                        .toList(),
+                    onChanged: (v) => setState(() => _years = v ?? 1),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SafeArea(
+                top: false,
+                bottom: true,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _save,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+                      disabledForegroundColor: colorScheme.onSurfaceVariant,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      l10n.add,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

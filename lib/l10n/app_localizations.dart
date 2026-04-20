@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @letsSetUpYourFamilyAccount.
   ///
   /// In en, this message translates to:
-  /// **'Set up your family account'**
+  /// **'Set up your Family Account'**
   String get letsSetUpYourFamilyAccount;
 
   /// No description provided for @trustDescription.
@@ -350,6 +350,18 @@ abstract class AppLocalizations {
   /// **'Start setting up'**
   String get startPropertyTrust;
 
+  /// No description provided for @supportingDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporting documents'**
+  String get supportingDocuments;
+
+  /// No description provided for @addDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Add document'**
+  String get addDocument;
+
   /// No description provided for @onboardingTitle1.
   ///
   /// In en, this message translates to:
@@ -383,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingSubtitle3.
   ///
   /// In en, this message translates to:
-  /// **'A professional Pusaka ensures your wasiat is followed—no family drama, no legal mess, just a smooth handover.'**
+  /// **'A professional executor helps ensure your wasiat is followed—calm, clear, and structured.'**
   String get onboardingSubtitle3;
 
   /// No description provided for @next.
@@ -512,6 +524,24 @@ abstract class AppLocalizations {
   /// **'Family Account'**
   String get familyAccount;
 
+  /// No description provided for @homeMoreWithSampul.
+  ///
+  /// In en, this message translates to:
+  /// **'More with Sampul'**
+  String get homeMoreWithSampul;
+
+  /// No description provided for @homeFridayFundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday Sadaqah Fund'**
+  String get homeFridayFundTitle;
+
+  /// No description provided for @homeFridayFundDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Give every Friday, with ongoing reward that continues for you over time.'**
+  String get homeFridayFundDescription;
+
   /// No description provided for @createYourFirstTrustFund.
   ///
   /// In en, this message translates to:
@@ -575,13 +605,13 @@ abstract class AppLocalizations {
   /// No description provided for @execution.
   ///
   /// In en, this message translates to:
-  /// **'Pusaka'**
+  /// **'Executor'**
   String get execution;
 
   /// No description provided for @pusaka.
   ///
   /// In en, this message translates to:
-  /// **'Pusaka'**
+  /// **'Executor'**
   String get pusaka;
 
   /// No description provided for @aftercare.
@@ -1421,7 +1451,7 @@ abstract class AppLocalizations {
   /// No description provided for @diditNotConfigured.
   ///
   /// In en, this message translates to:
-  /// **'Didit is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.'**
+  /// **'Verification is not configured. Please set DIDIT_CLIENT_ID (API key) and DIDIT_WORKFLOW_ID in your .env file.'**
   String get diditNotConfigured;
 
   /// No description provided for @identityVerificationRequired.
@@ -1451,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @providesAssurance.
   ///
   /// In en, this message translates to:
-  /// **'Provides assurance to beneficiaries and Pusaka'**
+  /// **'Provides assurance to beneficiaries and your executor'**
   String get providesAssurance;
 
   /// No description provided for @regulatoryCompliance.
@@ -1817,7 +1847,7 @@ abstract class AppLocalizations {
   /// No description provided for @publishWillConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or Pusaka.'**
+  /// **'Are you sure you want to publish this wasiat?\n\nOnce published, this wasiat will be accessible to anyone with the share link:\n{url}\n\nMake sure you only share this link with trusted family members or your executor.'**
   String publishWillConfirmation(String url);
 
   /// No description provided for @shareLinkCopiedToClipboard.
@@ -1885,6 +1915,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Private. Kept with Sampul while your plan is active. Only released with a valid request.'**
   String get wasiatDetailsPrivateNote;
+
+  /// No description provided for @wasiatDetailsLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details are locked'**
+  String get wasiatDetailsLockedTitle;
+
+  /// No description provided for @wasiatDetailsLockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To view your full wasiat details, you’ll need an active yearly plan.'**
+  String get wasiatDetailsLockedBody;
+
+  /// No description provided for @wasiatUpgradePlanCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade plan'**
+  String get wasiatUpgradePlanCta;
+
+  /// No description provided for @wasiatGeneratedHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated versions'**
+  String get wasiatGeneratedHistoryTitle;
+
+  /// No description provided for @wasiatGenerateNewVersionCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new version'**
+  String get wasiatGenerateNewVersionCta;
+
+  /// No description provided for @wasiatViewingGeneratedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing: {date}'**
+  String wasiatViewingGeneratedVersion(String date);
 
   /// No description provided for @wasiatShareSheetTitle.
   ///
@@ -1957,6 +2023,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To turn on your certificate link, you’ll need an active yearly plan.\n\nTap View plans to continue.'**
   String get wasiatPublishBlockedBody;
+
+  /// No description provided for @wasiatPublishBlockedByKyc.
+  ///
+  /// In en, this message translates to:
+  /// **'To generate your certificate, please complete your identity verification first.'**
+  String get wasiatPublishBlockedByKyc;
+
+  /// No description provided for @wasiatPublishBlockedByDidit.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not confirm your identity verification yet. Please complete verification and try again.'**
+  String get wasiatPublishBlockedByDidit;
+
+  /// No description provided for @wasiatPublishVerificationChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before generating a new certificate version, please complete all required checks.'**
+  String get wasiatPublishVerificationChecklistTitle;
+
+  /// No description provided for @wasiatPublishVerificationSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each new certificate generation needs a fresh identity verification. Start verification to continue.'**
+  String get wasiatPublishVerificationSettingsHint;
+
+  /// No description provided for @wasiatEligibilityPlanStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly plan'**
+  String get wasiatEligibilityPlanStatusLabel;
+
+  /// No description provided for @wasiatEligibilityDiditKycStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity verification'**
+  String get wasiatEligibilityDiditKycStatusLabel;
+
+  /// No description provided for @wasiatEligibilityKycStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity verification (KYC)'**
+  String get wasiatEligibilityKycStatusLabel;
+
+  /// No description provided for @wasiatEligibilityDiditStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-authentication for this certificate'**
+  String get wasiatEligibilityDiditStatusLabel;
+
+  /// No description provided for @wasiatEligibilityStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get wasiatEligibilityStatusActive;
+
+  /// No description provided for @wasiatEligibilityStatusInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get wasiatEligibilityStatusInactive;
+
+  /// No description provided for @wasiatEligibilityStatusComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get wasiatEligibilityStatusComplete;
+
+  /// No description provided for @wasiatEligibilityStatusNotComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Not complete'**
+  String get wasiatEligibilityStatusNotComplete;
 
   /// No description provided for @wasiatPublishReadyUntil.
   ///
@@ -2039,19 +2177,19 @@ abstract class AppLocalizations {
   /// No description provided for @planPropertyTrustSummary.
   ///
   /// In en, this message translates to:
-  /// **'From RM 2,500 for one asset. Larger bundles from RM 8,500. You will see the full amount before you pay.'**
+  /// **'From RM 2,500 for one asset. Larger bundles start from RM 2,500 with RM 500 per extra asset after 10. You will see the full amount before you pay.'**
   String get planPropertyTrustSummary;
 
   /// No description provided for @planSectionTrustTitle.
   ///
   /// In en, this message translates to:
-  /// **'Family Trust'**
+  /// **'Family Account'**
   String get planSectionTrustTitle;
 
   /// No description provided for @planTrustSummary.
   ///
   /// In en, this message translates to:
-  /// **'Minimum funding is {amount}. Other fees are shown when you continue in Family Trust.'**
+  /// **'Minimum funding is {amount}. Other fees are shown when you continue in Family Account.'**
   String planTrustSummary(String amount);
 
   /// No description provided for @plansOpenPropertyTrust.
@@ -2063,7 +2201,7 @@ abstract class AppLocalizations {
   /// No description provided for @plansOpenTrustDashboard.
   ///
   /// In en, this message translates to:
-  /// **'Open Family Trust'**
+  /// **'Open Family Account'**
   String get plansOpenTrustDashboard;
 
   /// No description provided for @plansPaymentHistoryForPropertyTrust.
@@ -2075,7 +2213,7 @@ abstract class AppLocalizations {
   /// No description provided for @plansPaymentHistoryForTrust.
   ///
   /// In en, this message translates to:
-  /// **'Family Trust payments'**
+  /// **'Family Account payments'**
   String get plansPaymentHistoryForTrust;
 
   /// No description provided for @plansPaymentHistoryEmptyProduct.
@@ -2099,7 +2237,7 @@ abstract class AppLocalizations {
   /// No description provided for @plansPaymentTrustRefLabel.
   ///
   /// In en, this message translates to:
-  /// **'Family Trust #{id}'**
+  /// **'Family Account #{id}'**
   String plansPaymentTrustRefLabel(String id);
 
   /// No description provided for @plansPaymentCertificateRefLabel.
@@ -2129,7 +2267,7 @@ abstract class AppLocalizations {
   /// No description provided for @wasiatAccessInlineInactive.
   ///
   /// In en, this message translates to:
-  /// **'Pay to publish'**
+  /// **'Upgrade plan'**
   String get wasiatAccessInlineInactive;
 
   /// No description provided for @wasiatManagePlan.
@@ -2282,34 +2420,46 @@ abstract class AppLocalizations {
   /// **'Update Wasiat'**
   String get updateWill;
 
+  /// No description provided for @executorsAndGuardians.
+  ///
+  /// In en, this message translates to:
+  /// **'Executor & guardian'**
+  String get executorsAndGuardians;
+
   /// No description provided for @executors.
   ///
   /// In en, this message translates to:
-  /// **'Pusaka'**
+  /// **'Executors'**
   String get executors;
+
+  /// No description provided for @yourExecutor.
+  ///
+  /// In en, this message translates to:
+  /// **'Your executor'**
+  String get yourExecutor;
 
   /// No description provided for @aboutPusaka.
   ///
   /// In en, this message translates to:
-  /// **'About Pusaka'**
+  /// **'About executors'**
   String get aboutPusaka;
 
   /// No description provided for @noPusakaYet.
   ///
   /// In en, this message translates to:
-  /// **'No Pusaka yet'**
+  /// **'No executor yet'**
   String get noPusakaYet;
 
   /// No description provided for @newToPusaka.
   ///
   /// In en, this message translates to:
-  /// **'New to Pusaka?'**
+  /// **'New to executors?'**
   String get newToPusaka;
 
   /// No description provided for @submitPusaka.
   ///
   /// In en, this message translates to:
-  /// **'Submit Pusaka'**
+  /// **'Submit executor'**
   String get submitPusaka;
 
   /// No description provided for @guardians.
@@ -2317,6 +2467,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Guardians'**
   String get guardians;
+
+  /// No description provided for @yourGuardian.
+  ///
+  /// In en, this message translates to:
+  /// **'Your guardian'**
+  String get yourGuardian;
 
   /// No description provided for @extraWishes.
   ///
@@ -2333,25 +2489,25 @@ abstract class AppLocalizations {
   /// No description provided for @primaryExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Primary Pusaka'**
+  /// **'Primary executor'**
   String get primaryExecutor;
 
   /// No description provided for @selectPrimaryExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Select the primary Pusaka to carry out your will'**
+  /// **'Select the primary executor to carry out your will'**
   String get selectPrimaryExecutor;
 
   /// No description provided for @secondaryExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Secondary Pusaka'**
+  /// **'Secondary executor'**
   String get secondaryExecutor;
 
   /// No description provided for @selectSecondaryExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Optional: Select a secondary Pusaka'**
+  /// **'Optional: Select a secondary executor'**
   String get selectSecondaryExecutor;
 
   /// No description provided for @primaryGuardian.
@@ -2405,7 +2561,7 @@ abstract class AppLocalizations {
   /// No description provided for @manageAll.
   ///
   /// In en, this message translates to:
-  /// **'Manage All'**
+  /// **'See all'**
   String get manageAll;
 
   /// No description provided for @noAssetsYet.
@@ -2753,7 +2909,7 @@ abstract class AppLocalizations {
   /// No description provided for @transferAccessToExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Transfer access to my Pusaka'**
+  /// **'Transfer access to my executor'**
   String get transferAccessToExecutor;
 
   /// No description provided for @memorialiseIfApplicable.
@@ -2807,7 +2963,7 @@ abstract class AppLocalizations {
   /// No description provided for @estimatedValueDescription.
   ///
   /// In en, this message translates to:
-  /// **'An approximate value helps your Pusaka understand the asset\'s worth.'**
+  /// **'An approximate value helps your executor understand the asset\'s worth.'**
   String get estimatedValueDescription;
 
   /// No description provided for @enterEstimatedValue.
@@ -2843,7 +2999,7 @@ abstract class AppLocalizations {
   /// No description provided for @additionalNotesDescription.
   ///
   /// In en, this message translates to:
-  /// **'Add any extra details that will help your Pusaka handle this asset.'**
+  /// **'Add any extra details that will help your executor handle this asset.'**
   String get additionalNotesDescription;
 
   /// No description provided for @youMightWantToInclude.
@@ -3023,7 +3179,7 @@ abstract class AppLocalizations {
   /// No description provided for @assetListConnectsToWill.
   ///
   /// In en, this message translates to:
-  /// **'Your asset list connects to your will and estate planning. Add both digital and physical assets so your Pusaka knows exactly what to handle.'**
+  /// **'Your asset list connects to your will and estate planning. Add both digital and physical assets so your executor knows exactly what to handle.'**
   String get assetListConnectsToWill;
 
   /// No description provided for @assetType.
@@ -3257,7 +3413,7 @@ abstract class AppLocalizations {
   /// No description provided for @provideClearInstructionsToExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Provide clear instructions to your Pusaka'**
+  /// **'Provide clear instructions to your executor'**
   String get provideClearInstructionsToExecutor;
 
   /// No description provided for @weDoNotStorePasswords.
@@ -3881,7 +4037,7 @@ abstract class AppLocalizations {
   /// No description provided for @startTrackingYourDigitalAssets.
   ///
   /// In en, this message translates to:
-  /// **'List your digital assets'**
+  /// **'List your assets'**
   String get startTrackingYourDigitalAssets;
 
   /// No description provided for @createYourWill.
@@ -3953,13 +4109,13 @@ abstract class AppLocalizations {
   /// No description provided for @setUpYourFamilyTrustAccount.
   ///
   /// In en, this message translates to:
-  /// **'Set up your Family Trust account'**
+  /// **'Set up your Family Account'**
   String get setUpYourFamilyTrustAccount;
 
   /// No description provided for @createFamilyAccountForLongTermSupport.
   ///
   /// In en, this message translates to:
-  /// **'Create a family account to manage long-term support (optional).'**
+  /// **'Create a Family Account to manage long-term support (optional).'**
   String get createFamilyAccountForLongTermSupport;
 
   /// No description provided for @pleaseCompleteAllStepsBeforeFinishing.
@@ -3995,19 +4151,19 @@ abstract class AppLocalizations {
   /// No description provided for @familyTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Family Trust Fund'**
+  /// **'Family Account'**
   String get familyTrustFund;
 
   /// No description provided for @aboutFamilyTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'About Family Trust Fund'**
+  /// **'About Family Account'**
   String get aboutFamilyTrustFund;
 
   /// No description provided for @noTrustFundsYet.
   ///
   /// In en, this message translates to:
-  /// **'No trust funds yet'**
+  /// **'No Family Accounts yet'**
   String get noTrustFundsYet;
 
   /// No description provided for @createNew.
@@ -4019,7 +4175,7 @@ abstract class AppLocalizations {
   /// No description provided for @createTrust.
   ///
   /// In en, this message translates to:
-  /// **'Create trust'**
+  /// **'Create Family Account'**
   String get createTrust;
 
   /// No description provided for @trustCodeUnique.
@@ -4037,7 +4193,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'About Trust Fund'**
+  /// **'About Family Account'**
   String get aboutTrustFund;
 
   /// No description provided for @newToTrusts.
@@ -4061,13 +4217,13 @@ abstract class AppLocalizations {
   /// No description provided for @whySetUpFamilyTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'What a Family Trust Fund does for you'**
+  /// **'What a Family Account does for you'**
   String get whySetUpFamilyTrustFund;
 
   /// No description provided for @familyTrustFundDescription.
   ///
   /// In en, this message translates to:
-  /// **'A Family Trust Fund lets you decide how your money supports your family—healthcare, education, living expenses. You can update it whenever you want.'**
+  /// **'A Family Account lets you decide how your money supports your family—healthcare, education, living expenses. You can update it whenever you want.'**
   String get familyTrustFundDescription;
 
   /// No description provided for @chooseHowMoneySpent.
@@ -4103,31 +4259,31 @@ abstract class AppLocalizations {
   /// No description provided for @trustFundDetails.
   ///
   /// In en, this message translates to:
-  /// **'Trust Fund Details'**
+  /// **'Family Account Details'**
   String get trustFundDetails;
 
   /// No description provided for @deleteTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Delete Trust Fund'**
+  /// **'Delete Family Account'**
   String get deleteTrustFund;
 
   /// No description provided for @areYouSureDeleteTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this trust fund? This action cannot be undone.'**
+  /// **'Are you sure you want to delete this Family Account? This action cannot be undone.'**
   String get areYouSureDeleteTrustFund;
 
   /// No description provided for @trustFundDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Trust Fund deleted'**
+  /// **'Family Account deleted'**
   String get trustFundDeleted;
 
   /// No description provided for @failedToDeleteTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Failed to delete trust fund: {error}'**
+  /// **'Failed to delete Family Account: {error}'**
   String failedToDeleteTrustFund(String error);
 
   /// No description provided for @trustIdNotAvailable.
@@ -4193,7 +4349,7 @@ abstract class AppLocalizations {
   /// No description provided for @allocateWhatTrustFundWillCover.
   ///
   /// In en, this message translates to:
-  /// **'Allocate what this trust fund will cover'**
+  /// **'Allocate what this Family Account will cover'**
   String get allocateWhatTrustFundWillCover;
 
   /// No description provided for @education.
@@ -4217,7 +4373,7 @@ abstract class AppLocalizations {
   /// No description provided for @charitable.
   ///
   /// In en, this message translates to:
-  /// **'Charitable'**
+  /// **'Charity'**
   String get charitable;
 
   /// No description provided for @debt.
@@ -4247,7 +4403,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyAccountCreated.
   ///
   /// In en, this message translates to:
-  /// **'Family account created'**
+  /// **'Family Account created'**
   String get familyAccountCreated;
 
   /// No description provided for @yourFamilyNowHasClearGuidance.
@@ -4265,7 +4421,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyAccountSavedAndFollowed.
   ///
   /// In en, this message translates to:
-  /// **'This family account is saved and will be followed according to the rules you\'ve set.'**
+  /// **'This Family Account is saved and will be followed according to the rules you\'ve set.'**
   String get familyAccountSavedAndFollowed;
 
   /// No description provided for @nextSteps.
@@ -4295,14 +4451,20 @@ abstract class AppLocalizations {
   /// No description provided for @openTrust.
   ///
   /// In en, this message translates to:
-  /// **'Open trust'**
+  /// **'Open Family Account'**
   String get openTrust;
 
   /// No description provided for @createTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Create Trust Fund'**
+  /// **'Create Family Account'**
   String get createTrustFund;
+
+  /// No description provided for @editTrustFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Family Account'**
+  String get editTrustFund;
 
   /// No description provided for @weCouldNotLoadYourProfile.
   ///
@@ -4325,8 +4487,14 @@ abstract class AppLocalizations {
   /// No description provided for @executorSelection.
   ///
   /// In en, this message translates to:
-  /// **'Pusaka Selection'**
+  /// **'Executor selection'**
   String get executorSelection;
+
+  /// No description provided for @executorSelectionDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'By appointing this executor, you authorise Sampul to notify them and grant access to your account and estate information only upon a verified Triggering Event (death, coma, or mental incapacity), and for them to work with Rakyat Trustee Berhad (RTB) to administer your estate on behalf of your beneficiaries.'**
+  String get executorSelectionDisclaimer;
 
   /// No description provided for @financialInformation.
   ///
@@ -4427,7 +4595,7 @@ abstract class AppLocalizations {
   /// No description provided for @allAtOnceAtTheEnd.
   ///
   /// In en, this message translates to:
-  /// **'All at once at the end'**
+  /// **'All at once after a verified Triggering Event'**
   String get allAtOnceAtTheEnd;
 
   /// No description provided for @someoneIKnow.
@@ -4469,7 +4637,7 @@ abstract class AppLocalizations {
   /// No description provided for @whosThisFamilyTrustAccountFor.
   ///
   /// In en, this message translates to:
-  /// **'Who\'s this family trust account for?'**
+  /// **'Who\'s this Family Account for?'**
   String get whosThisFamilyTrustAccountFor;
 
   /// No description provided for @noFamilyMembersFound.
@@ -4481,7 +4649,7 @@ abstract class AppLocalizations {
   /// No description provided for @sampulsProfessionalExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Sampul\'s Professional Pusaka'**
+  /// **'Sampul\'s Professional Executor'**
   String get sampulsProfessionalExecutor;
 
   /// No description provided for @expertManagement.
@@ -4499,13 +4667,13 @@ abstract class AppLocalizations {
   /// No description provided for @estFeeR4320yr.
   ///
   /// In en, this message translates to:
-  /// **'Est. Fee: RM4,320/yr (Paid from trust funds)'**
+  /// **'Est. Fee: RM4,320/yr (Paid from Family Account funds)'**
   String get estFeeR4320yr;
 
   /// No description provided for @executorGoodToKnow.
   ///
   /// In en, this message translates to:
-  /// **'Your Pusaka acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. At least 2 joint Pusaka are necessary when one of the beneficiaries is a minor. If one of your beneficiaries is under 18, you\'ll need at least two Pusaka working together. We\'ll remind you about this later.'**
+  /// **'Your executor acts as a safeguard — not a decision-maker. Choose someone organised and trustworthy. They should be at least 21 years old. If one of your beneficiaries is under 18, you’ll need at least two executors working together. We’ll remind you about this later.'**
   String get executorGoodToKnow;
 
   /// No description provided for @estimatedNetWorth.
@@ -4631,19 +4799,19 @@ abstract class AppLocalizations {
   /// No description provided for @lumpSumAtTheEnd.
   ///
   /// In en, this message translates to:
-  /// **'Lump sum at the end'**
+  /// **'Lump Sum'**
   String get lumpSumAtTheEnd;
 
   /// No description provided for @executorType.
   ///
   /// In en, this message translates to:
-  /// **'Pusaka Type'**
+  /// **'Executor type'**
   String get executorType;
 
   /// No description provided for @selectedExecutors.
   ///
   /// In en, this message translates to:
-  /// **'Selected Pusaka'**
+  /// **'Selected executors'**
   String get selectedExecutors;
 
   /// No description provided for @familyMembersSelected.
@@ -4691,7 +4859,7 @@ abstract class AppLocalizations {
   /// No description provided for @pleaseSelectAtLeastOneExecutor.
   ///
   /// In en, this message translates to:
-  /// **'Please select at least one Pusaka'**
+  /// **'Please select an executor'**
   String get pleaseSelectAtLeastOneExecutor;
 
   /// No description provided for @pleaseCompleteYourProfileFirst.
@@ -4703,14 +4871,26 @@ abstract class AppLocalizations {
   /// No description provided for @trustFundCreatedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'Trust Fund created successfully'**
+  /// **'Family Account created'**
   String get trustFundCreatedSuccessfully;
+
+  /// No description provided for @trustFundUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
+  String get trustFundUpdatedSuccessfully;
 
   /// No description provided for @failedToCreateTrustFund.
   ///
   /// In en, this message translates to:
-  /// **'Failed to create trust fund: {error}'**
+  /// **'Failed to create Family Account: {error}'**
   String failedToCreateTrustFund(String error);
+
+  /// No description provided for @failedToUpdateTrustFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update Family Account: {error}'**
+  String failedToUpdateTrustFund(String error);
 
   /// No description provided for @charitiesSelected.
   ///
@@ -4907,7 +5087,7 @@ abstract class AppLocalizations {
   /// No description provided for @allFundsReleasedEnd.
   ///
   /// In en, this message translates to:
-  /// **'All funds released when the trust period ends'**
+  /// **'Everything released upon a verified Triggering Event (death, coma, or mental incapacity)'**
   String get allFundsReleasedEnd;
 
   /// No description provided for @cancelRequest.
@@ -5045,13 +5225,13 @@ abstract class AppLocalizations {
   /// No description provided for @everythingReleasedEnd.
   ///
   /// In en, this message translates to:
-  /// **'Everything released when the trust period ends'**
+  /// **'Everything released upon a verified Triggering Event (death, coma, or mental incapacity)'**
   String get everythingReleasedEnd;
 
   /// No description provided for @thisIsAGuide.
   ///
   /// In en, this message translates to:
-  /// **'This is a guide. Your Pusaka can adjust based on real needs.'**
+  /// **'This is a guide. Your executor can adjust based on real needs.'**
   String get thisIsAGuide;
 
   /// No description provided for @addCharitableOrganizationsDonate.
@@ -5183,7 +5363,7 @@ abstract class AppLocalizations {
   /// No description provided for @managePusaka.
   ///
   /// In en, this message translates to:
-  /// **'Manage Pusaka'**
+  /// **'Manage executors'**
   String get managePusaka;
 
   /// No description provided for @managePusakaDescription.
@@ -5203,6 +5383,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Document how your assets should be distributed.'**
   String get writeWasiatDescription;
+
+  /// No description provided for @executorInfoHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s register as an executor'**
+  String get executorInfoHeadline;
+
+  /// No description provided for @executorInfoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Register to manage and distribute a deceased person\'s estate according to their will or the law.'**
+  String get executorInfoSubtitle;
+
+  /// No description provided for @executorInfoWhatIsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is an executor?'**
+  String get executorInfoWhatIsTitle;
+
+  /// No description provided for @executorInfoWhatIsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An executor is appointed to manage and distribute the assets of a deceased person\'s estate. This involves handling legal matters, settling debts, and ensuring proper distribution to beneficiaries.'**
+  String get executorInfoWhatIsBody;
+
+  /// No description provided for @executorInfoFeatureManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage the deceased person\'s estate and assets.'**
+  String get executorInfoFeatureManage;
+
+  /// No description provided for @executorInfoFeatureSettle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle debts and handle legal matters.'**
+  String get executorInfoFeatureSettle;
+
+  /// No description provided for @executorInfoFeatureDistribute.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute assets to beneficiaries according to the will or law.'**
+  String get executorInfoFeatureDistribute;
+
+  /// No description provided for @executorInfoCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Register as executor'**
+  String get executorInfoCta;
 
   /// No description provided for @getGuidanceTitle.
   ///
@@ -5243,7 +5471,7 @@ abstract class AppLocalizations {
   /// No description provided for @setUpExecution.
   ///
   /// In en, this message translates to:
-  /// **'Set Up Pusaka'**
+  /// **'Set up executors'**
   String get setUpExecution;
 
   /// No description provided for @setUpExecutionDescription.
@@ -5276,6 +5504,48 @@ abstract class AppLocalizations {
   /// **'Get personalized guidance from Sampul AI assistant'**
   String get sampulAIDescription;
 
+  /// No description provided for @chatWelcomeSampulAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! I\'m Sampul AI, your estate planning assistant. How can I help you today?'**
+  String get chatWelcomeSampulAi;
+
+  /// No description provided for @chatErrorConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorry, I\'m having trouble connecting right now. Please try again later.'**
+  String get chatErrorConnection;
+
+  /// No description provided for @chatErrorNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chat is not configured. Please check your environment variables.'**
+  String get chatErrorNotConfigured;
+
+  /// No description provided for @chatErrorAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Please check your API key configuration.'**
+  String get chatErrorAuthFailed;
+
+  /// No description provided for @chatErrorRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limit exceeded. Please try again in a moment.'**
+  String get chatErrorRateLimit;
+
+  /// No description provided for @chatErrorServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI service is temporarily unavailable. Please try again later.'**
+  String get chatErrorServiceUnavailable;
+
+  /// No description provided for @chatComposerPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me anything…'**
+  String get chatComposerPlaceholder;
+
   /// No description provided for @setUpAftercare.
   ///
   /// In en, this message translates to:
@@ -5291,7 +5561,7 @@ abstract class AppLocalizations {
   /// No description provided for @completeStepsFamilyAccount.
   ///
   /// In en, this message translates to:
-  /// **'Complete these steps to set up your family account.'**
+  /// **'Complete these steps to set up your Family Account.'**
   String get completeStepsFamilyAccount;
 
   /// No description provided for @completeStepsProtectProperty.
@@ -5303,7 +5573,7 @@ abstract class AppLocalizations {
   /// No description provided for @completeStepsManagePusaka.
   ///
   /// In en, this message translates to:
-  /// **'Complete these steps to manage your inheritance matters.'**
+  /// **'Complete these steps to set up your executors.'**
   String get completeStepsManagePusaka;
 
   /// No description provided for @completeStepsWriteWasiat.
@@ -5441,13 +5711,13 @@ abstract class AppLocalizations {
   /// No description provided for @couponDescriptionHibah.
   ///
   /// In en, this message translates to:
-  /// **'Hibah certificate fee—choose it under Payment on your Hibah screen before checkout.'**
+  /// **'Hibah certificate fee. Choose it under Payment on your Hibah screen before checkout.'**
   String get couponDescriptionHibah;
 
   /// No description provided for @couponDescriptionWasiat.
   ///
   /// In en, this message translates to:
-  /// **'Wasiat yearly access—choose it on {screenTitle} before you pay.'**
+  /// **'Wasiat yearly access. Choose it on {screenTitle} before you pay.'**
   String couponDescriptionWasiat(String screenTitle);
 
   /// No description provided for @couponDescriptionOther.

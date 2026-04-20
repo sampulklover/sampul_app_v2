@@ -5,7 +5,12 @@ import 'hibah_create_screen.dart';
 
 class HibahInfoScreen extends StatefulWidget {
   final bool fromHelpIcon;
-  const HibahInfoScreen({super.key, this.fromHelpIcon = false});
+  final bool autoStartPaymentAfterSubmit;
+  const HibahInfoScreen({
+    super.key,
+    this.fromHelpIcon = false,
+    this.autoStartPaymentAfterSubmit = false,
+  });
 
   @override
   State<HibahInfoScreen> createState() => _HibahInfoScreenState();
@@ -25,7 +30,9 @@ class _HibahInfoScreenState extends State<HibahInfoScreen> {
     
     final bool? created = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => const HibahCreateScreen(),
+        builder: (_) => HibahCreateScreen(
+          autoStartPaymentAfterSubmit: widget.autoStartPaymentAfterSubmit,
+        ),
       ),
     );
     

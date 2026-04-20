@@ -51,8 +51,8 @@ abstract final class AnalyticsScreens {
   static const String hibahAssetForm = 'Property trust asset';
   static const String hibahDocumentForm = 'Property trust document';
 
-  static const String executorManagement = 'Pusaka';
-  static const String executorInfo = 'About Pusaka';
+  static const String executorManagement = 'Executor';
+  static const String executorInfo = 'About Executor';
 
   static const String checklist = 'Checklist';
   static const String aftercare = 'Aftercare';

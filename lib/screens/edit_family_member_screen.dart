@@ -18,6 +18,7 @@ class EditFamilyMemberScreen extends StatefulWidget {
 
 class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  static const int _minimumAdultAge = 18;
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -105,6 +106,7 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!_validateAdultByNricForExecutorGuardian()) return;
     setState(() => _isSaving = true);
     try {
       final user = AuthController.instance.currentUser;
@@ -395,7 +397,28 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
                                 context: context,
                                 labelText: l10n.icNricNumber,
                                 prefixIcon: Icons.badge_outlined,
+                                errorMaxLines: 3,
                               ),
+                              validator: (String? v) {
+                                if (!(_type == 'co_sampul' || _type == 'guardian')) {
+                                  return null;
+                                }
+                                final String normalized = _normalizeNric(v ?? '');
+                                if (normalized.isEmpty) {
+                                  return 'IC diperlukan untuk executor atau guardian.';
+                                }
+                                if (!_isValidNricDate(normalized)) {
+                                  return 'Sila masukkan IC yang sah.';
+                                }
+                                final int? age = _extractAgeFromNric(normalized);
+                                if (age == null) {
+                                  return 'Sila masukkan IC yang sah.';
+                                }
+                                if (age < _minimumAdultAge) {
+                                  return 'Executor dan guardian mesti berumur sekurang-kurangnya 18 tahun.';
+                                }
+                                return null;
+                              },
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
@@ -607,6 +630,61 @@ class _EditFamilyMemberScreenState extends State<EditFamilyMemberScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  bool _validateAdultByNricForExecutorGuardian() {
+    if (!(_type == 'co_sampul' || _type == 'guardian')) {
+      return true;
+    }
+    final String normalized = _normalizeNric(_nricController.text);
+    final int? age = _extractAgeFromNric(normalized);
+    final bool isValid = normalized.isNotEmpty && _isValidNricDate(normalized) && age != null && age >= _minimumAdultAge;
+    if (isValid) return true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Executor dan guardian mesti berumur sekurang-kurangnya 18 tahun berdasarkan IC.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return false;
+  }
+
+  String _normalizeNric(String value) => value.replaceAll(RegExp(r'[^0-9]'), '');
+
+  bool _isValidNricDate(String normalizedNric) {
+    if (normalizedNric.length < 6) return false;
+    final int? yy = int.tryParse(normalizedNric.substring(0, 2));
+    final int? mm = int.tryParse(normalizedNric.substring(2, 4));
+    final int? dd = int.tryParse(normalizedNric.substring(4, 6));
+    if (yy == null || mm == null || dd == null) return false;
+    if (mm < 1 || mm > 12) return false;
+    if (dd < 1 || dd > 31) return false;
+
+    final int currentTwoDigitYear = DateTime.now().year % 100;
+    final int year = yy > currentTwoDigitYear ? 1900 + yy : 2000 + yy;
+    try {
+      final DateTime date = DateTime(year, mm, dd);
+      return date.year == year && date.month == mm && date.day == dd && !date.isAfter(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  int? _extractAgeFromNric(String normalizedNric) {
+    if (!_isValidNricDate(normalizedNric)) return null;
+    final int yy = int.parse(normalizedNric.substring(0, 2));
+    final int mm = int.parse(normalizedNric.substring(2, 4));
+    final int dd = int.parse(normalizedNric.substring(4, 6));
+    final int currentTwoDigitYear = DateTime.now().year % 100;
+    final int year = yy > currentTwoDigitYear ? 1900 + yy : 2000 + yy;
+    final DateTime dob = DateTime(year, mm, dd);
+    final DateTime now = DateTime.now();
+    int age = now.year - dob.year;
+    final bool hasBirthdayPassed =
+        now.month > dob.month || (now.month == dob.month && now.day >= dob.day);
+    if (!hasBirthdayPassed) age--;
+    return age;
   }
 }
 
